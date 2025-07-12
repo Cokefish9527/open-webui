@@ -710,6 +710,7 @@ def generate_openai_batch_embeddings(
                     is_embedding=True,
                 ) as credit_deduct:
                     if "usage" in data:
+                        credit_deduct.is_official_usage = True
                         prompt_tokens = data["usage"]["prompt_tokens"]
                         credit_deduct.usage.prompt_tokens = prompt_tokens
                         credit_deduct.usage.total_tokens = prompt_tokens
@@ -784,6 +785,7 @@ def generate_azure_openai_batch_embeddings(
                         is_embedding=True,
                     ) as credit_deduct:
                         if "usage" in data:
+                            credit_deduct.is_official_usage = True
                             prompt_tokens = data["usage"]["prompt_tokens"]
                             credit_deduct.usage.prompt_tokens = prompt_tokens
                             credit_deduct.usage.total_tokens = prompt_tokens

@@ -997,6 +997,7 @@ async def embeddings(request: Request, form_data: dict, user):
                     is_embedding=True,
                 ) as credit_deduct:
                     if "usage" in response_data:
+                        credit_deduct.is_official_usage = True
                         prompt_tokens = response_data["usage"]["prompt_tokens"]
                         credit_deduct.usage.prompt_tokens = prompt_tokens
                         credit_deduct.usage.total_tokens = prompt_tokens

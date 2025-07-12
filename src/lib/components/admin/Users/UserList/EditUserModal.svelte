@@ -102,7 +102,7 @@
 
 								<div class="flex-1">
 									<select
-										class="w-full dark:bg-gray-900 rounded-sm text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
+										class="w-full dark:bg-gray-900 text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
 										bind:value={_user.role}
 										disabled={_user.id == sessionUser.id}
 										required
@@ -119,13 +119,12 @@
 
 								<div class="flex-1">
 									<input
-										class="w-full rounded-sm text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
+										class="w-full text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
 										type="email"
 										bind:value={_user.email}
 										placeholder={$i18n.t('Enter Your Email')}
 										autocomplete="off"
 										required
-										disabled={_user.id == sessionUser.id}
 									/>
 								</div>
 							</div>
@@ -135,7 +134,7 @@
 
 								<div class="flex-1">
 									<input
-										class="w-full rounded-sm text-sm bg-transparent outline-hidden"
+										class="w-full text-sm bg-transparent outline-hidden"
 										type="text"
 										bind:value={_user.name}
 										placeholder={$i18n.t('Enter Your Name')}
@@ -164,7 +163,7 @@
 
 								<div class="flex-1">
 									<input
-										class="w-full rounded-sm text-sm bg-transparent outline-hidden"
+										class="w-full text-sm bg-transparent outline-hidden"
 										type="password"
 										placeholder={$i18n.t('Enter New Password')}
 										bind:value={_user.password}
