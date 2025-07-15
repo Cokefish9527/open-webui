@@ -1,0 +1,620 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI外贸短视频运营平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Alibaba+PuHuiTi+2.0:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Alibaba PuHuiTi 2.0', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #F8F9FA;
+            color: #2D3748;
+            margin: 0;
+            padding: 0;
+            min-width: 1200px;
+        }
+        
+        .layout-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 200px;
+            background-color: #0A1F44;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        
+        .main-content {
+            width: 50%;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-panel {
+            width: 50%;
+            background-color: white;
+            border-left: 1px solid #E2E8F0;
+            height: 100%;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .user-card {
+            padding: 24px;
+            background-color: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .menu-item {
+            padding: 16px 24px;
+            color: rgba(255,255,255,0.7);
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .menu-item:hover, .menu-item.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: #3A86FF;
+        }
+        
+        .history-item {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .histories-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .msg-bubble {
+            max-width: 75%;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 16px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+            position: relative;
+        }
+        
+        .user-bubble {
+            background-color: #3A86FF;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai-bubble {
+            background-color: white;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .input-container {
+            position: relative;
+            margin-top: 24px;
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .input-tools {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #F8F9FA;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #E2E8F0;
+        }
+        
+        .task-card {
+            padding: 16px;
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        .tab-button {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .tab-button.active {
+            color: #3A86FF;
+            border-bottom: 2px solid #3A86FF;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .connection-line {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, #6A5AE0, #3A86FF);
+            left: -20px;
+            top: 0;
+            transform-origin: top;
+            animation: slideConnection 0.3s ease-out;
+        }
+
+        @keyframes slideConnection {
+            from {
+                height: 0;
+            }
+            to {
+                height: 100%;
+            }
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #EDF2F7;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #6A5AE0, #3A86FF);
+        }
+        
+        .data-card {
+            padding: 16px;
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .chart-container {
+            height: 120px;
+            width: 100%;
+        }
+        
+        .alert-flash {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .msg-slide-in {
+            animation: slideIn 0.2s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 1199px) {
+            body { min-width: auto; }
+            .sidebar, .info-panel { position: fixed; z-index: 100; }
+            .sidebar { transform: translateX(-100%); }
+            .info-panel { transform: translateX(100%); right: 0; }
+            .sidebar.active, .info-panel.active { transform: translateX(0); }
+            .toggle-btn { display: flex; }
+        }
+        
+        @media (max-width: 767px) {
+            .main-content { padding: 16px; }
+            .msg-bubble { max-width: 90%; }
+        }
+        
+        .toggle-btn {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            background: #0A1F44;
+            color: white;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 101;
+        }
+        
+        .toggle-right-btn {
+            left: auto;
+            right: 16px;
+        }
+        
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #0A1F44 transparent transparent transparent;
+        }
+        
+        .file-upload {
+            border: 2px dashed #E2E8F0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            border-color: #3A86FF;
+            background-color: #F0F7FF;
+        }
+    </style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tab = this.dataset.tab;
+            
+            // Remove active class from all buttons
+            tabButtons.forEach(b => b.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Hide all tab panes
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+            // Show selected tab pane
+            document.getElementById(tab).classList.add('active');
+        });
+    });
+
+    // Add connection lines between related cards
+    function addConnectionLine(sourceCard, targetCard) {
+        const sourceRect = sourceCard.getBoundingClientRect();
+        const targetRect = targetCard.getBoundingClientRect();
+        
+        const connection = document.createElement('div');
+        connection.className = 'connection-line';
+        
+        // Position the connection line
+        connection.style.left = `${sourceRect.left + sourceRect.width}px`;
+        connection.style.top = `${sourceRect.top}px`;
+        connection.style.height = `${targetRect.top - sourceRect.top}px`;
+        
+        sourceCard.appendChild(connection);
+        
+        // Remove the connection line when either card is removed
+        sourceCard.addEventListener('remove', () => connection.remove());
+    }
+
+    // Example of adding connection lines between cards
+    // You would need to modify this to match your actual card structure
+    const sourceCard = document.querySelector('.main-content .msg-bubble:last-child');
+    const targetCard = document.querySelector('#result .task-card:first-child');
+    
+    if (sourceCard && targetCard) {
+        addConnectionLine(sourceCard, targetCard);
+    }
+});
+</script>
+</head>
+<body>
+    <!-- Mobile Toggle Buttons -->
+    <div class="toggle-btn" id="sidebarToggle">
+        <span class="iconify" data-icon="ci:menu-alt-01"></span>
+    </div>
+    <div class="toggle-btn toggle-right-btn" id="panelToggle">
+        <span class="iconify" data-icon="bx:stats"></span>
+    </div>
+
+    <div class="layout-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="user-card">
+                <div class="flex items-center">
+                    <div class="relative">
+                        <img id="1" src="https://modao.cc/ai/uploads/ai_pics/0/9470/aigp_1752489121.jpeg" alt="User profile avatar" class="w-12 h-12 rounded-full">
+                        <div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-white font-semibold">外贸经理</div>
+                        <div class="text-xs text-gray-300 mt-1">电商运营部</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="py-4">
+                <div class="menu-item active">
+                    <div class="flex items-center">
+                        <span class="iconify mr-3" data-icon="ic:outline-dashboard"></span>
+                        <span>战略中心</span>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="flex items-center">
+                        <span class="iconify mr-3" data-icon="mdi:content-paste"></span>
+                        <span>内容生产</span>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="flex items-center">
+                        <span class="iconify mr-3" data-icon="carbon:chart-line-data"></span>
+                        <span>数据分析</span>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="flex items-center">
+                        <span class="iconify mr-3" data-icon="clarity:settings-line"></span>
+                        <span>系统设置</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-4 py-2 text-xs text-gray-400 uppercase tracking-wider">对话历史</div>
+            <div class="histories-container">
+                <div class="history-item">
+                    <div class="font-semibold text-white truncate">北美市场拓展策略讨论</div>
+                    <div class="text-xs text-gray-400 mt-1">3小时前</div>
+                </div>
+                <div class="history-item">
+                    <div class="font-semibold text-white truncate">Q3短视频内容规划</div>
+                    <div class="text-xs text-gray-400 mt-1">昨天</div>
+                </div>
+                <div class="history-item">
+                    <div class="font-semibold text-white truncate">产品视频创意探讨</div>
+                    <div class="text-xs text-gray-400 mt-1">2023-07-12</div>
+                </div>
+                <div class="history-item">
+                    <div class="font-semibold text-white truncate">TikTok广告投放分析</div>
+                    <div class="text-xs text-gray-400 mt-1">2023-07-10</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <div class="text-2xl font-semibold mb-6">短视频策略工作台</div>
+            
+            <!-- Message Flow -->
+            <div class="flex-1 overflow-y-auto hide-scrollbar pb-6">
+                <div class="msg-bubble ai-bubble msg-slide-in">
+                    <div class="flex items-center mb-2">
+                        <div class="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-2">
+                            <span class="iconify text-blue-500" data-icon="carbon:assistant"></span>
+                        </div>
+                        <div class="font-semibold">AI策略助手</div>
+                    </div>
+                    <div class="typing-animation">
+                        您好！我是您的外贸短视频策略助手，根据您设定的"北美市场拓展计划"，我为本周生成了3个短视频方案<br><br>
+                        1. 产品拆解展示+使用场景演示<br>
+                        2. 客户证言+生产过程揭秘<br>
+                        3. 新品预告+限时促销活动<br><br>
+                        您需要查看具体方案细节还是调整策略方向？
+                    </div>
+                </div>
+                
+                <div class="msg-bubble user-bubble msg-slide-in">
+                    <div class="flex items-center mb-2">
+                        <div class="bg-blue-500 rounded-full w-8 h-8 flex items-center justify-center mr-2">
+                            <span class="iconify text-white" data-icon="mdi:user-circle"></span>
+                        </div>
+                        <div class="font-semibold">李明（您）</div>
+                    </div>
+                    <div>
+                        很好，请展示第一个方案的详细内容。另外，能分析下上周视频的数据表现吗？特别是北美地区的转化率情况。
+                    </div>
+                    <div class="flex items-center mt-2 text-xs text-blue-100">
+                        <span class="iconify mr-1" data-icon="mdi:check-all"></span>
+                        已读 · 10:30
+                    </div>
+                </div>
+                
+                <div class="msg-bubble ai-bubble msg-slide-in">
+                    <div class="flex items-center mb-2">
+                        <div class="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-2">
+                            <span class="iconify text-blue-500" data-icon="carbon:assistant"></span>
+                        </div>
+                        <div class="font-semibold">AI策略助手</div>
+                    </div>
+                    <div class="typing-animation">
+                        <div class="font-semibold">📝 方案一：产品拆解展示+使用场景演示</div>
+                        <div class="mt-3">
+                            <span class="font-semibold">核心内容：</span><br>
+                            - 15秒产品拆解展示（突出材质与工艺）<br>
+                            - 30秒多场景应用演示（家庭/办公/户外）<br>
+                            - 结尾添加北美用户使用反馈片段
+                        </div>
+                        <div class="mt-3">
+                            <span class="font-semibold">📊 上周数据简报：</span>
+                            <div class="flex mt-3">
+                                <div class="w-1/2 pr-2">
+                                    <div class="p-3 bg-gray-50 rounded-lg">
+                                        <div class="text-sm text-gray-500">展示次数</div>
+                                        <div class="text-xl font-bold mt-1">124,580</div>
+                                        <div class="text-sm text-green-500 flex items-center">
+                                            <span class="iconify" data-icon="mdi:trending-up"></span>
+                                            +12.4%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="w-1/2 pl-2">
+                                    <div class="p-3 bg-gray-50 rounded-lg">
+                                        <div class="text-sm text-gray-500">转化率</div>
+                                        <div class="text-xl font-bold mt-1">3.85%</div>
+                                        <div class="text-sm text-green-500 flex items-center">
+                                            <span class="iconify" data-icon="mdi:trending-up"></span>
+                                            +0.8%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="input-container">
+                <textarea placeholder="输入消息..." class="w-full bg-gray-50 rounded-lg p-3 min-h-[80px] outline-none resize-none"></textarea>
+                <div class="input-tools">
+                    <div class="action-btn">
+                        <span class="iconify" data-icon="mdi:microphone"></span>
+                    </div>
+                    <div class="action-btn">
+                        <span class="iconify" data-icon="mdi:paperclip"></span>
+                    </div>
+                    <div class="action-btn">
+                        <span class="iconify" data-icon="mdi:emoticon-happy-outline"></span>
+                    </div>
+                    <div class="action-btn ml-auto bg-blue-500 hover:bg-blue-600">
+                        <span class="iconify text-white" data-icon="mdi:send"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Info Panel -->
+        <div class="info-panel" id="infoPanel">
+            <div class="p-4">
+                <!-- Tab Navigation -->
+                <div class="border-b mb-4">
+                    <div class="flex space-x-4">
+                        <button class="tab-button active" data-tab="result">结果输出</button>
+                        <button class="tab-button" data-tab="status">工作台状态</button>
+                    </div>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Result Output Tab -->
+                    <div class="tab-pane active" id="result">
+                        <div class="space-y-4">
+                            <div class="task-card">
+                                <h3 class="text-lg font-semibold mb-2">方案展示</h3>
+                                <div class="space-y-2">
+                                    <div class="p-4 bg-gray-50 rounded-lg">方案内容...</div>
+                                </div>
+                            </div>
+                            <div class="task-card">
+                                <h3 class="text-lg font-semibold mb-2">报告展示</h3>
+                                <div class="space-y-2">
+                                    <div class="p-4 bg-gray-50 rounded-lg">报告内容...</div>
+                                </div>
+                            </div>
+                            <div class="task-card">
+                                <h3 class="text-lg font-semibold mb-2">视频预览</h3>
+                                <div class="aspect-w-16 aspect-h-9">
+                                    <video controls class="w-full rounded-lg">
+                                        <source src="" type="video/mp4">
+                                    </video>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workbench Status Tab -->
+                    <div class="tab-pane" id="status">
+                        <div class="space-y-4">
+                            <div class="text-xl font-semibold mb-4">工作台状态</div>
+                
+                <!-- Task Progress -->
+                <div class="task-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold">任务进度</div>
+                        <span class="iconify text-gray-400" data-icon="mdi:chevron-down"></span>
+                    </div>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>短视频方案生成</span>
+                            <span>80%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>竞品分析报告</span>
+                            <span>45%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>广告投放优化</span>
+                            <span>60%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Data Cards -->
+                <div class="data-card">
+                    <div class="font-semibold mb-3">实时数据监测</div>
+                    <div class="chart-container" id="dataChart"></div>
+                </div>
+                
+                <!-- Status Indicators -->
+                <div class="task-card">
+                    <div class="font-semibold mb-3">策略状态</div>
+                    </div>
+                        </div>
+                    </div>
+                </div>
+                </div></div></div></body></html>
