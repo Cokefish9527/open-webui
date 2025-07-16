@@ -91,7 +91,6 @@
 	import NotificationToast from '../NotificationToast.svelte';
 	import Spinner from '../common/Spinner.svelte';
 	import { fade } from 'svelte/transition';
-	import ResultPreview from '$lib/components/chat/ResultPreview.svelte';
 
 	export let chatIdProp = '';
 

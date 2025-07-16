@@ -50,7 +50,6 @@
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
 	import { get } from 'svelte/store';
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import ResultPreview from '$lib/components/chat/ResultPreview.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -97,7 +96,8 @@
 
 	onMount(async () => {
 		if ($user === undefined || $user === null) {
-			await goto('/auth');
+			const currentPath = window.location.pathname + window.location.search;
+			await goto(`/auth?redirect=${encodeURIComponent(currentPath)}`);
 		} else if (['user', 'admin'].includes($user?.role)) {
 			try {
 				// Check if IndexedDB exists
@@ -309,23 +309,13 @@
 
 {#if $user}
 	{#if $showSidebar}
-		<div class="main-layout with-sidebar" style="grid-template-columns: {$showSidebar ? '260px' : '0'} 1fr {$showPreview ? '1fr' : ''};">
+		<div class="main-layout with-sidebar" style="grid-template-columns: {$showSidebar ? '260px' : '0'} 1fr;">
 			<Sidebar />
 			<main class="main-content"><slot /></main>
-			{#if $showPreview}
-				<div class="preview-panel">
-					<ResultPreview content={$previewContent} />
-				</div>
-			{/if}
 		</div>
 	{:else}
-		<div class="main-layout no-sidebar" style="grid-template-columns: 1fr {$showPreview ? '1fr' : ''};">
+		<div class="main-layout no-sidebar" style="grid-template-columns: 1fr;">
 			<main class="main-content"><slot /></main>
-			{#if $showPreview}
-				<div class="preview-panel">
-					<ResultPreview content={$previewContent} />
-				</div>
-			{/if}
 		</div>
 	{/if}
 {/if}
