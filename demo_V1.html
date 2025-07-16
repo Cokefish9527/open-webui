@@ -108,6 +108,7 @@
             border-radius: 16px;
             padding: 16px;
             box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+            z-index: 50;  /* 确保输入框在连接线上方 */
         }
         
         .input-tools {
@@ -390,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 container.style.width = '100%';
                 container.style.height = '100%';
                 container.style.pointerEvents = 'none';
-                container.style.zIndex = '9999';
+                container.style.zIndex = '1'; // 设置为较低的z-index
                 document.body.appendChild(container);
             }
             return container;
@@ -401,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 确保容器存在
             const container = initContainer();
             
-            // 创建SVG容器
+            // 创建SVG元素
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.style.position = 'absolute';
             svg.style.top = '0';
@@ -409,12 +410,14 @@ document.addEventListener('DOMContentLoaded', function() {
             svg.style.width = '100%';
             svg.style.height = '100%';
             svg.style.pointerEvents = 'none';
+            svg.style.zIndex = '1';  // 设置为较低的z-index
             
-            // 创建路径
+            // 创建SVG路径
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('stroke', 'currentColor');
             path.setAttribute('stroke-width', '2');
             path.setAttribute('fill', 'none');
+            path.style.pointerEvents = 'none';  // 确保路径不拦截事件
             
             // 创建渐变
             const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
@@ -445,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 border-radius: 50%;
                 background: #6A5AE0;
                 pointer-events: none;
-                z-index: 1000;
+                z-index: 2;  // 设置为较低的z-index
                 transform: translate3d(0, 0, 0);
                 will-change: transform;
             `;
