@@ -357,87 +357,68 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Connection manager to handle the single connection
-    const connectionManager = {
-        connection: null,
-        container: null,
-        rafId: null,
+    // 连接管理器 - 高性能版
+    const connectionManager = (() => {
+        // 使用闭包保护私有变量
+        let connection = null;
+        let container = null;
+        let rafId = null;
+        let isUpdating = false;
+        let lastX1 = 0, lastY1 = 0, lastX2 = 0, lastY2 = 0;
         
-        init() {
-            if (!this.container) {
-                this.container = document.createElement('div');
-                this.container.className = 'connection-container';
-                document.body.appendChild(this.container);
-                
-                // Use requestAnimationFrame for smooth updates
-                const updateConnection = () => {
-                    if (this.connection) {
-                        this.updateConnection(this.connection);
-                    }
-                    this.rafId = requestAnimationFrame(updateConnection);
-                };
-                
-                updateConnection();
-                
-                // Handle window events with debounce
-                let resizeTimeout;
-                const handleResize = () => {
-                    cancelAnimationFrame(this.rafId);
-                    clearTimeout(resizeTimeout);
-                    resizeTimeout = setTimeout(() => {
-                        if (this.connection) {
-                            this.updateConnection(this.connection);
-                        }
-                        this.rafId = requestAnimationFrame(updateConnection);
-                    }, 100);
-                };
-                
-                window.addEventListener('resize', handleResize);
-                window.addEventListener('scroll', handleResize, true);
-                
-                // Clean up on page unload
-                window.addEventListener('beforeunload', () => {
-                    cancelAnimationFrame(this.rafId);
-                    window.removeEventListener('resize', handleResize);
-                    window.removeEventListener('scroll', handleResize, true);
-                });
-            }
-        },
-        
-        setConnection(sourceCard, targetCard) {
-            // Remove existing connection if any
-            if (this.connection) {
-                this.removeConnection();
-            }
-            
-            if (!sourceCard || !targetCard) return null;
-            
-            const connection = { 
-                sourceCard, 
-                targetCard,
-                elements: this.createConnectionElements()
+        // 简单的防抖函数
+        const debounce = (func, wait) => {
+            let timeout;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    func.apply(context, args);
+                }, wait);
             };
-            
-            this.connection = connection;
-            this.updateConnection(connection);
-            return connection;
-        },
+        };
         
-        createConnectionElements() {
-            // Create SVG container
+        // 初始化容器
+        const initContainer = () => {
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'connection-container';
+                container.style.position = 'fixed';
+                container.style.top = '0';
+                container.style.left = '0';
+                container.style.width = '100%';
+                container.style.height = '100%';
+                container.style.pointerEvents = 'none';
+                container.style.zIndex = '9999';
+                document.body.appendChild(container);
+            }
+            return container;
+        };
+
+        // 创建连接元素
+        const createConnectionElements = () => {
+            // 确保容器存在
+            const container = initContainer();
+            
+            // 创建SVG容器
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.style.position = 'fixed';
+            svg.style.position = 'absolute';
             svg.style.top = '0';
             svg.style.left = '0';
             svg.style.width = '100%';
             svg.style.height = '100%';
             svg.style.pointerEvents = 'none';
             
-            // Create gradient
-            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            // 创建路径
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('stroke', 'currentColor');
+            path.setAttribute('stroke-width', '2');
+            path.setAttribute('fill', 'none');
+            
+            // 创建渐变
             const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
-            const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`;
-            gradient.id = gradientId;
+            gradient.id = `gradient-${Math.random().toString(36).substr(2, 9)}`;
             gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
             
             const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
@@ -450,74 +431,202 @@ document.addEventListener('DOMContentLoaded', function() {
             
             gradient.appendChild(stop1);
             gradient.appendChild(stop2);
+            
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
             defs.appendChild(gradient);
             
-            // Create path
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('stroke', `url(#${gradientId})`);
-            path.setAttribute('stroke-width', '2');
-            path.setAttribute('fill', 'none');
-            
-            // Create anchors
+            // 创建锚点
             const startAnchor = document.createElement('div');
             startAnchor.className = 'connection-anchor start';
+            startAnchor.style.cssText = `
+                position: absolute;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #6A5AE0;
+                pointer-events: none;
+                z-index: 1000;
+                transform: translate3d(0, 0, 0);
+                will-change: transform;
+            `;
             
             const endAnchor = document.createElement('div');
             endAnchor.className = 'connection-anchor end';
+            endAnchor.style.cssText = startAnchor.style.cssText.replace('#6A5AE0', '#3A86FF');
             
-            // Add to DOM
+            // 添加到DOM
             svg.appendChild(defs);
             svg.appendChild(path);
-            this.container.innerHTML = ''; // Clear any existing elements
-            this.container.appendChild(svg);
-            this.container.appendChild(startAnchor);
-            this.container.appendChild(endAnchor);
+            container.innerHTML = '';
+            container.appendChild(svg);
+            container.appendChild(startAnchor);
+            container.appendChild(endAnchor);
             
             return { svg, path, startAnchor, endAnchor, gradient };
-        },
+        };
         
-        updateConnection(connection) {
-            if (!connection || !connection.sourceCard || !connection.targetCard) return;
+        // 更新连接 - 使用单次requestAnimationFrame确保同步更新
+        const updateConnection = (conn) => {
+            if (!conn || !conn.sourceCard || !conn.targetCard) return;
             
-            const { sourceCard, targetCard, elements } = connection;
-            const sourceRect = sourceCard.getBoundingClientRect();
-            const targetRect = targetCard.getBoundingClientRect();
+            // 如果正在更新，则跳过这一帧
+            if (isUpdating) return;
             
-            // Calculate positions
-            const startX = sourceRect.right;
-            const startY = sourceRect.top + sourceRect.height / 2;
-            const endX = targetRect.left;
-            const endY = targetRect.top + targetRect.height / 2;
-            
-            // Calculate control points for smooth curve
-            const dx = endX - startX;
-            const controlX1 = startX + Math.max(50, dx * 0.3);
-            const controlX2 = endX - Math.max(50, dx * 0.3);
-            
-            // Update path
-            const d = `M${startX},${startY} C${controlX1},${startY} ${controlX2},${endY} ${endX},${endY}`;
-            elements.path.setAttribute('d', d);
-            
-            // Update gradient
-            elements.gradient.setAttribute('x1', startX);
-            elements.gradient.setAttribute('y1', startY);
-            elements.gradient.setAttribute('x2', endX);
-            elements.gradient.setAttribute('y2', endY);
-            
-            // Update anchors
-            elements.startAnchor.style.transform = `translate(${startX}px, ${startY}px)`;
-            elements.endAnchor.style.transform = `translate(${endX}px, ${endY}px)`;
-        },
+            // 使用requestAnimationFrame确保所有DOM更新在同一帧内完成
+            rafId = requestAnimationFrame(() => {
+                isUpdating = true;
+                try {
+                    const { sourceCard, targetCard, elements } = conn;
+                    
+                    // 获取位置信息 - 使用getBoundingClientRect()
+                    const sourceRect = sourceCard.getBoundingClientRect();
+                    const targetRect = targetCard.getBoundingClientRect();
+                    
+                    // 计算位置
+                    const startX = sourceRect.right;
+                    const startY = sourceRect.top + sourceRect.height / 2;
+                    const endX = targetRect.left;
+                    const endY = targetRect.top + targetRect.height / 2;
+                    
+                    // 如果位置没有变化，则跳过更新
+                    if (Math.abs(startX - lastX1) < 0.5 && 
+                        Math.abs(startY - lastY1) < 0.5 &&
+                        Math.abs(endX - lastX2) < 0.5 && 
+                        Math.abs(endY - lastY2) < 0.5) {
+                        isUpdating = false;
+                        return;
+                    }
+                    
+                    // 保存当前位置
+                    lastX1 = startX;
+                    lastY1 = startY;
+                    lastX2 = endX;
+                    lastY2 = endY;
+                    
+                    // 计算控制点
+                    const dx = endX - startX;
+                    const controlX1 = startX + Math.max(50, dx * 0.3);
+                    const controlX2 = endX - Math.max(50, dx * 0.3);
+                    
+                    // 1. 更新路径
+                    elements.path.setAttribute('d', 
+                        `M${startX},${startY} C${controlX1},${startY} ${controlX2},${endY} ${endX},${endY}`);
+                    
+                    // 2. 更新渐变
+                    elements.gradient.setAttribute('x1', startX);
+                    elements.gradient.setAttribute('y1', startY);
+                    elements.gradient.setAttribute('x2', endX);
+                    elements.gradient.setAttribute('y2', endY);
+                    
+                    // 3. 更新路径样式
+                    elements.path.style.stroke = `url(#${elements.gradient.id})`;
+                    
+                    // 4. 更新锚点位置 - 使用transform3d进行硬件加速
+                    // 强制浏览器重绘
+                    elements.startAnchor.style.display = 'none';
+                    elements.startAnchor.offsetHeight; // 触发重绘
+                    elements.startAnchor.style.display = 'block';
+                    elements.startAnchor.style.transform = `translate3d(${startX - 4}px, ${startY - 4}px, 0)`;
+                    
+                    elements.endAnchor.style.display = 'none';
+                    elements.endAnchor.offsetHeight; // 触发重绘
+                    elements.endAnchor.style.display = 'block';
+                    elements.endAnchor.style.transform = `translate3d(${endX - 4}px, ${endY - 4}px, 0)`;
+                    
+                    // 如果连接仍然存在，安排下一次更新
+                    if (connection) {
+                        rafId = requestAnimationFrame(() => updateConnection(connection));
+                    }
+                } catch (e) {
+                    console.error('Error updating connection:', e);
+                } finally {
+                    isUpdating = false;
+                }
+            });
+        };
         
-        removeConnection() {
-            if (this.connection?.elements) {
-                this.container.innerHTML = ''; // Clear all elements
+        // 设置连接
+        const setConnection = (sourceCard, targetCard) => {
+            // 移除现有连接
+            removeConnection();
+            
+            if (!sourceCard || !targetCard) return null;
+            
+            // 创建新连接
+            connection = { 
+                sourceCard, 
+                targetCard,
+                elements: createConnectionElements()
+            };
+            
+            // 启动更新循环
+            const updateLoop = () => {
+                if (connection) {
+                    updateConnection(connection);
+                    rafId = requestAnimationFrame(updateLoop);
+                }
+            };
+            
+            updateLoop();
+            
+            return connection;
+        };
+        
+        // 移除连接
+        const removeConnection = () => {
+            if (connection?.elements) {
+                const { svg, startAnchor, endAnchor } = connection.elements;
+                if (svg && svg.parentNode) svg.parentNode.removeChild(svg);
+                if (startAnchor && startAnchor.parentNode) startAnchor.parentNode.removeChild(startAnchor);
+                if (endAnchor && endAnchor.parentNode) endAnchor.parentNode.removeChild(endAnchor);
             }
-            this.connection = null;
-        }
-    };
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+            connection = null;
+        };
+        
+        // 初始化
+        const init = () => {
+            initContainer();
+            
+            // 添加事件监听 - 使用防抖处理
+            const handleScroll = debounce(() => {
+                if (connection) {
+                    updateConnection(connection);
+                }
+            }, 16);
+            
+            // 添加事件监听
+            window.addEventListener('resize', handleScroll, { passive: true });
+            window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+            
+            // 清理
+            window.addEventListener('beforeunload', () => {
+                if (rafId) cancelAnimationFrame(rafId);
+                window.removeEventListener('resize', handleScroll);
+                window.removeEventListener('scroll', handleScroll, { capture: true });
+            });
+            
+            console.log('Connection manager initialized');
+        };
+        
+        // 公共API
+        return {
+            init: init,
+            setConnection: setConnection,
+            removeConnection: removeConnection,
+            updateConnection: updateConnection,
+            requestUpdate: function() {
+                if (connection) {
+                    updateConnection(connection);
+                }
+            }
+        };
+    })();
     
-    // Initialize connection manager
+    // 初始化连接管理器
     connectionManager.init();
     
     // Function to connect a message bubble to a result card
