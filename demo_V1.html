@@ -175,6 +175,43 @@
             animation: slideConnection 0.3s ease-out;
         }
 
+        .connection-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: visible;
+        }
+        
+        .connection-anchor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .connection-anchor:hover {
+            transform: translate(-50%, -50%) scale(1.3);
+        }
+        
+        .connection-anchor.start {
+            background: #6A5AE0;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #6A5AE0;
+        }
+        
+        .connection-anchor.end {
+            background: #3A86FF;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #3A86FF;
+        }
+
         @keyframes slideConnection {
             from {
                 height: 0;
@@ -320,33 +357,226 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add connection lines between related cards
-    function addConnectionLine(sourceCard, targetCard) {
-        const sourceRect = sourceCard.getBoundingClientRect();
-        const targetRect = targetCard.getBoundingClientRect();
+    // Connection manager to handle the single connection
+    const connectionManager = {
+        connection: null,
+        container: null,
+        rafId: null,
         
-        const connection = document.createElement('div');
-        connection.className = 'connection-line';
+        init() {
+            if (!this.container) {
+                this.container = document.createElement('div');
+                this.container.className = 'connection-container';
+                document.body.appendChild(this.container);
+                
+                // Use requestAnimationFrame for smooth updates
+                const updateConnection = () => {
+                    if (this.connection) {
+                        this.updateConnection(this.connection);
+                    }
+                    this.rafId = requestAnimationFrame(updateConnection);
+                };
+                
+                updateConnection();
+                
+                // Handle window events with debounce
+                let resizeTimeout;
+                const handleResize = () => {
+                    cancelAnimationFrame(this.rafId);
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                        if (this.connection) {
+                            this.updateConnection(this.connection);
+                        }
+                        this.rafId = requestAnimationFrame(updateConnection);
+                    }, 100);
+                };
+                
+                window.addEventListener('resize', handleResize);
+                window.addEventListener('scroll', handleResize, true);
+                
+                // Clean up on page unload
+                window.addEventListener('beforeunload', () => {
+                    cancelAnimationFrame(this.rafId);
+                    window.removeEventListener('resize', handleResize);
+                    window.removeEventListener('scroll', handleResize, true);
+                });
+            }
+        },
         
-        // Position the connection line
-        connection.style.left = `${sourceRect.left + sourceRect.width}px`;
-        connection.style.top = `${sourceRect.top}px`;
-        connection.style.height = `${targetRect.top - sourceRect.top}px`;
+        setConnection(sourceCard, targetCard) {
+            // Remove existing connection if any
+            if (this.connection) {
+                this.removeConnection();
+            }
+            
+            if (!sourceCard || !targetCard) return null;
+            
+            const connection = { 
+                sourceCard, 
+                targetCard,
+                elements: this.createConnectionElements()
+            };
+            
+            this.connection = connection;
+            this.updateConnection(connection);
+            return connection;
+        },
         
-        sourceCard.appendChild(connection);
+        createConnectionElements() {
+            // Create SVG container
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.style.position = 'fixed';
+            svg.style.top = '0';
+            svg.style.left = '0';
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+            svg.style.pointerEvents = 'none';
+            
+            // Create gradient
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+            const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`;
+            gradient.id = gradientId;
+            gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+            
+            const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+            stop1.setAttribute('offset', '0%');
+            stop1.setAttribute('stop-color', '#6A5AE0');
+            
+            const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+            stop2.setAttribute('offset', '100%');
+            stop2.setAttribute('stop-color', '#3A86FF');
+            
+            gradient.appendChild(stop1);
+            gradient.appendChild(stop2);
+            defs.appendChild(gradient);
+            
+            // Create path
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('stroke', `url(#${gradientId})`);
+            path.setAttribute('stroke-width', '2');
+            path.setAttribute('fill', 'none');
+            
+            // Create anchors
+            const startAnchor = document.createElement('div');
+            startAnchor.className = 'connection-anchor start';
+            
+            const endAnchor = document.createElement('div');
+            endAnchor.className = 'connection-anchor end';
+            
+            // Add to DOM
+            svg.appendChild(defs);
+            svg.appendChild(path);
+            this.container.innerHTML = ''; // Clear any existing elements
+            this.container.appendChild(svg);
+            this.container.appendChild(startAnchor);
+            this.container.appendChild(endAnchor);
+            
+            return { svg, path, startAnchor, endAnchor, gradient };
+        },
         
-        // Remove the connection line when either card is removed
-        sourceCard.addEventListener('remove', () => connection.remove());
-    }
-
-    // Example of adding connection lines between cards
-    // You would need to modify this to match your actual card structure
-    const sourceCard = document.querySelector('.main-content .msg-bubble:last-child');
-    const targetCard = document.querySelector('#result .task-card:first-child');
+        updateConnection(connection) {
+            if (!connection || !connection.sourceCard || !connection.targetCard) return;
+            
+            const { sourceCard, targetCard, elements } = connection;
+            const sourceRect = sourceCard.getBoundingClientRect();
+            const targetRect = targetCard.getBoundingClientRect();
+            
+            // Calculate positions
+            const startX = sourceRect.right;
+            const startY = sourceRect.top + sourceRect.height / 2;
+            const endX = targetRect.left;
+            const endY = targetRect.top + targetRect.height / 2;
+            
+            // Calculate control points for smooth curve
+            const dx = endX - startX;
+            const controlX1 = startX + Math.max(50, dx * 0.3);
+            const controlX2 = endX - Math.max(50, dx * 0.3);
+            
+            // Update path
+            const d = `M${startX},${startY} C${controlX1},${startY} ${controlX2},${endY} ${endX},${endY}`;
+            elements.path.setAttribute('d', d);
+            
+            // Update gradient
+            elements.gradient.setAttribute('x1', startX);
+            elements.gradient.setAttribute('y1', startY);
+            elements.gradient.setAttribute('x2', endX);
+            elements.gradient.setAttribute('y2', endY);
+            
+            // Update anchors
+            elements.startAnchor.style.transform = `translate(${startX}px, ${startY}px)`;
+            elements.endAnchor.style.transform = `translate(${endX}px, ${endY}px)`;
+        },
+        
+        removeConnection() {
+            if (this.connection?.elements) {
+                this.container.innerHTML = ''; // Clear all elements
+            }
+            this.connection = null;
+        }
+    };
     
-    if (sourceCard && targetCard) {
-        addConnectionLine(sourceCard, targetCard);
+    // Initialize connection manager
+    connectionManager.init();
+    
+    // Function to connect a message bubble to a result card
+    function connectMessageToResult(messageIndex, resultIndex) {
+        const messages = document.querySelectorAll('.main-content .msg-bubble');
+        const results = document.querySelectorAll('#result .task-card');
+        
+        if (messages[messageIndex] && results[resultIndex]) {
+            connectionManager.setConnection(messages[messageIndex], results[resultIndex]);
+        }
     }
+    
+    // Function to set up a random connection
+    function setupRandomConnection() {
+        const messages = document.querySelectorAll('.main-content .msg-bubble');
+        const results = document.querySelectorAll('#result .task-card');
+        
+        if (messages.length > 0 && results.length > 0) {
+            const randomMessageIndex = Math.floor(Math.random() * messages.length);
+            const randomResultIndex = Math.floor(Math.random() * results.length);
+            connectMessageToResult(randomMessageIndex, randomResultIndex);
+        }
+    }
+    
+    // Set up initial connection
+    setupRandomConnection();
+    
+    // Example: Connect a specific message to a specific result
+    // connectMessageToResult(0, 0); // Connects first message to first result
+    
+    // Handle window resize and scroll with debounce
+    let resizeTimer;
+    const handleResize = () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (connectionManager.connection) {
+                connectionManager.updateConnection(connectionManager.connection);
+            }
+        }, 100);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize, true);
+    
+    // Optional: Add a button to change the connection
+    const changeConnectionBtn = document.createElement('button');
+    changeConnectionBtn.textContent = 'Change Connection';
+    changeConnectionBtn.style.position = 'fixed';
+    changeConnectionBtn.style.bottom = '20px';
+    changeConnectionBtn.style.right = '20px';
+    changeConnectionBtn.style.zIndex = '1000';
+    changeConnectionBtn.style.padding = '8px 16px';
+    changeConnectionBtn.style.borderRadius = '4px';
+    changeConnectionBtn.style.backgroundColor = '#3A86FF';
+    changeConnectionBtn.style.color = 'white';
+    changeConnectionBtn.style.border = 'none';
+    changeConnectionBtn.style.cursor = 'pointer';
+    changeConnectionBtn.addEventListener('click', setupRandomConnection);
+    document.body.appendChild(changeConnectionBtn);
 });
 </script>
 </head>
@@ -551,6 +781,22 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <h3 class="text-lg font-semibold mb-2">报告展示</h3>
                                 <div class="space-y-2">
                                     <div class="p-4 bg-gray-50 rounded-lg">报告内容...</div>
+                                </div>
+                            </div>
+                            <div class="task-card">
+                                <h3 class="text-lg font-semibold mb-2">视频预览</h3>
+                                <div class="aspect-w-16 aspect-h-9">
+                                    <video controls class="w-full rounded-lg">
+                                        <source src="" type="video/mp4">
+                                    </video>
+                                </div>
+                            </div>
+                            <div class="task-card">
+                                <h3 class="text-lg font-semibold mb-2">视频预览</h3>
+                                <div class="aspect-w-16 aspect-h-9">
+                                    <video controls class="w-full rounded-lg">
+                                        <source src="" type="video/mp4">
+                                    </video>
                                 </div>
                             </div>
                             <div class="task-card">
