@@ -341,22 +341,51 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tab switching
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabPanes = document.querySelectorAll('.tab-pane');
+    let currentTab = 'result'; // 默认显示结果输出标签页
 
+
+
+    function handleTabSwitch(tab) {
+        // 移除所有按钮的active类
+        tabButtons.forEach(b => b.classList.remove('active'));
+        // 隐藏所有标签页内容
+        tabPanes.forEach(pane => pane.classList.remove('active'));
+        
+        // 添加active类到当前按钮
+        const activeButton = Array.from(tabButtons).find(btn => btn.dataset.tab === tab);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+        
+        // 显示当前标签页内容
+        const activePane = document.getElementById(tab);
+        if (activePane) {
+            activePane.classList.add('active');
+        }
+        
+        // 处理连接线的显示/隐藏
+        if (tab === 'result') {
+            // 切换到结果输出标签页，创建新的随机连接
+            setupRandomConnection();
+        } else {
+            // 切换到其他标签页，移除连接
+            connectionManager.removeConnection();
+        }
+        
+        currentTab = tab;
+    }
+
+    // 初始化标签页点击事件
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const tab = this.dataset.tab;
-            
-            // Remove active class from all buttons
-            tabButtons.forEach(b => b.classList.remove('active'));
-            // Add active class to clicked button
-            this.classList.add('active');
-            
-            // Hide all tab panes
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-            // Show selected tab pane
-            document.getElementById(tab).classList.add('active');
+            handleTabSwitch(this.dataset.tab);
         });
     });
+    
+    // 初始化显示结果输出标签页
+    setTimeout(() => {
+        handleTabSwitch('result');
+    }, 100); // 添加延迟确保DOM完全加载
 
     // 连接管理器 - 高性能版
     const connectionManager = (() => {
@@ -625,6 +654,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (connection) {
                     updateConnection(connection);
                 }
+            },
+            // 添加对当前连接的访问
+            getConnection: function() {
+                return connection;
             }
         };
     })();
@@ -654,8 +687,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Set up initial connection
-    setupRandomConnection();
+    // 初始连接将在handleTabSwitch('result')中设置
     
     // Example: Connect a specific message to a specific result
     // connectMessageToResult(0, 0); // Connects first message to first result
@@ -665,8 +697,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const handleResize = () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            if (connectionManager.connection) {
-                connectionManager.updateConnection(connectionManager.connection);
+            const currentConnection = connectionManager.getConnection();
+            if (currentConnection) {
+                connectionManager.updateConnection(currentConnection);
             }
         }, 100);
     };
