@@ -8,7 +8,7 @@ from pathlib import Path
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 from concurrent.futures import ThreadPoolExecutor
-from typing import Optional
+from typing import Optional, List
 
 from fnmatch import fnmatch
 import aiohttp
@@ -168,7 +168,7 @@ class STTConfigForm(BaseModel):
     OPENAI_API_KEY: str
     ENGINE: str
     MODEL: str
-    SUPPORTED_CONTENT_TYPES: list[str] = []
+    SUPPORTED_CONTENT_TYPES: List[str] = []
     WHISPER_MODEL: str
     DEEPGRAM_API_KEY: str
     AZURE_API_KEY: str
@@ -977,7 +977,7 @@ def transcription(
         )
 
 
-def get_available_models(request: Request) -> list[dict]:
+def get_available_models(request: Request) -> List[dict]:
     available_models = []
     if request.app.state.config.TTS_ENGINE == "openai":
         # Use custom endpoint if not using the official OpenAI API URL

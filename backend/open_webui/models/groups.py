@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from typing import Optional
+from typing import List, Optional
 import uuid
 
 from open_webui.internal.db import Base, get_db
@@ -53,7 +53,7 @@ class GroupModel(BaseModel):
     meta: Optional[dict] = None
 
     permissions: Optional[dict] = None
-    user_ids: list[str] = []
+    user_ids: List[str] = []
 
     created_at: int  # timestamp in epoch
     updated_at: int  # timestamp in epoch
@@ -72,7 +72,7 @@ class GroupResponse(BaseModel):
     permissions: Optional[dict] = None
     data: Optional[dict] = None
     meta: Optional[dict] = None
-    user_ids: list[str] = []
+    user_ids: List[str] = []
     created_at: int  # timestamp in epoch
     updated_at: int  # timestamp in epoch
 
@@ -84,7 +84,7 @@ class GroupForm(BaseModel):
 
 
 class GroupUpdateForm(GroupForm):
-    user_ids: Optional[list[str]] = None
+    user_ids: Optional[List[str]] = None
 
 
 class GroupTable:
@@ -115,14 +115,14 @@ class GroupTable:
             except Exception:
                 return None
 
-    def get_groups(self) -> list[GroupModel]:
+    def get_groups(self) -> List[GroupModel]:
         with get_db() as db:
             return [
                 GroupModel.model_validate(group)
                 for group in db.query(Group).order_by(Group.updated_at.desc()).all()
             ]
 
-    def get_groups_by_member_id(self, user_id: str) -> list[GroupModel]:
+    def get_groups_by_member_id(self, user_id: str) -> List[GroupModel]:
         with get_db() as db:
             return [
                 GroupModel.model_validate(group)
@@ -208,8 +208,8 @@ class GroupTable:
                 return False
 
     def create_groups_by_group_names(
-        self, user_id: str, group_names: list[str]
-    ) -> list[GroupModel]:
+        self, user_id: str, group_names: List[str]
+    ) -> List[GroupModel]:
 
         # check for existing groups
         existing_groups = self.get_groups()
@@ -239,7 +239,7 @@ class GroupTable:
                         continue
             return new_groups
 
-    def sync_groups_by_group_names(self, user_id: str, group_names: list[str]) -> bool:
+    def sync_groups_by_group_names(self, user_id: str, group_names: List[str]) -> bool:
         with get_db() as db:
             try:
                 groups = db.query(Group).filter(Group.name.in_(group_names)).all()

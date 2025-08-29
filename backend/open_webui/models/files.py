@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Optional
+from typing import Dict, List, Optional
 
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
@@ -143,11 +143,11 @@ class FilesTable:
             except Exception:
                 return None
 
-    def get_files(self) -> list[FileModel]:
+    def get_files(self) -> List[FileModel]:
         with get_db() as db:
             return [FileModel.model_validate(file) for file in db.query(File).all()]
 
-    def get_files_by_ids(self, ids: list[str]) -> list[FileModel]:
+    def get_files_by_ids(self, ids: List[str]) -> List[FileModel]:
         with get_db() as db:
             return [
                 FileModel.model_validate(file)
@@ -157,7 +157,7 @@ class FilesTable:
                 .all()
             ]
 
-    def get_file_metadatas_by_ids(self, ids: list[str]) -> list[FileMetadataResponse]:
+    def get_file_metadatas_by_ids(self, ids: List[str]) -> List[FileMetadataResponse]:
         with get_db() as db:
             return [
                 FileMetadataResponse(
@@ -172,7 +172,7 @@ class FilesTable:
                 .all()
             ]
 
-    def get_files_by_user_id(self, user_id: str) -> list[FileModel]:
+    def get_files_by_user_id(self, user_id: str) -> List[FileModel]:
         with get_db() as db:
             return [
                 FileModel.model_validate(file)

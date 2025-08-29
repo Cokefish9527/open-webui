@@ -1,7 +1,7 @@
 import json
 import time
 import uuid
-from typing import Optional
+from typing import Optional, List
 
 from open_webui.internal.db import Base, get_db
 from open_webui.utils.access_control import has_access
@@ -88,14 +88,14 @@ class ChannelTable:
             db.commit()
             return channel
 
-    def get_channels(self) -> list[ChannelModel]:
+    def get_channels(self) -> List[ChannelModel]:
         with get_db() as db:
             channels = db.query(Channel).all()
             return [ChannelModel.model_validate(channel) for channel in channels]
 
     def get_channels_by_user_id(
         self, user_id: str, permission: str = "read"
-    ) -> list[ChannelModel]:
+    ) -> List[ChannelModel]:
         channels = self.get_channels()
         return [
             channel

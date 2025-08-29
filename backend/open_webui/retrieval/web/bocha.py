@@ -1,6 +1,7 @@
 import logging
-from typing import Optional
+from typing import Optional, List
 
+import logging
 import requests
 import json
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
@@ -35,8 +36,8 @@ def _parse_response(response):
 
 
 def search_bocha(
-    api_key: str, query: str, count: int, filter_list: Optional[list[str]] = None
-) -> list[SearchResult]:
+    api_key: str, query: str, count: int, filter_list: Optional[List[str]] = None
+) -> List[SearchResult]:
     """Search using Bocha's Search API and return the results as a list of SearchResult objects.
 
     Args:

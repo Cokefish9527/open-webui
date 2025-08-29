@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Optional
+from typing import Optional, List
 
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
@@ -184,11 +184,11 @@ class ModelsTable:
             log.exception(f"Failed to insert a new model: {e}")
             return None
 
-    def get_all_models(self) -> list[ModelModel]:
+    def get_all_models(self) -> List[ModelModel]:
         with get_db() as db:
             return [ModelModel.model_validate(model) for model in db.query(Model).all()]
 
-    def get_models(self) -> list[ModelUserResponse]:
+    def get_models(self) -> List[ModelUserResponse]:
         with get_db() as db:
             models = []
             for model in db.query(Model).filter(Model.base_model_id != None).all():
@@ -203,7 +203,7 @@ class ModelsTable:
                 )
             return models
 
-    def get_base_models(self) -> list[ModelModel]:
+    def get_base_models(self) -> List[ModelModel]:
         with get_db() as db:
             return [
                 ModelModel.model_validate(model)
@@ -212,7 +212,7 @@ class ModelsTable:
 
     def get_models_by_user_id(
         self, user_id: str, permission: str = "write"
-    ) -> list[ModelUserResponse]:
+    ) -> List[ModelUserResponse]:
         models = self.get_models()
         return [
             model

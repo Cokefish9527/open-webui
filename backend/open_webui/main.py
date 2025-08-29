@@ -77,6 +77,10 @@ from open_webui.routers import (
     users,
     utils,
     credit,
+    hsai_materials,
+    hsai_tasks,
+    hsai_matrix,
+    hsai_ai,
 )
 
 from open_webui.routers.retrieval import (
@@ -1196,6 +1200,12 @@ app.include_router(
 )
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
+# HSAI Extension Routes
+app.include_router(hsai_materials.router, prefix="/api/v1", tags=["hsai"])
+app.include_router(hsai_tasks.router, prefix="/api/v1", tags=["hsai"])
+app.include_router(hsai_matrix.router, prefix="/api/v1", tags=["hsai"])
+app.include_router(hsai_ai.router, prefix="/api/v1/hsai/ai", tags=["hsai"])
+
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)
 except ValueError as e:
@@ -1220,6 +1230,19 @@ if audit_level != AuditLevel.NONE:
 
 @app.get("/api/models")
 async def get_models(request: Request, user=Depends(get_verified_user)):
+    """
+    获取当前用户可访问的所有AI模型列表。
+    
+    返回经过权限过滤的模型列表，包括模型ID、名称、标签和价格等信息。
+    模型按照配置的顺序排序，并根据用户权限进行过滤。
+    
+    Args:
+        request (Request): 请求上下文
+        user (UserModel): 已认证的用户
+        
+    Returns:
+        dict: 包含过滤后的模型列表
+    """
     def get_filtered_models(models, user):
         filtered_models = []
         for model in models:
@@ -1298,6 +1321,21 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
 
 @app.get("/api/models/base")
 async def get_base_models(request: Request, user=Depends(get_admin_user)):
+    """
+    获取所有基础模型列表（仅管理员可访问）。
+    
+    返回系统中所有可用的基础模型，不受用户权限限制。
+    
+    Args:
+        request (Request): 请求上下文
+        user (UserModel): 已认证的管理员用户
+        
+    Returns:
+        dict: 包含所有基础模型的列表
+        
+    Note:
+        此接口仅限管理员访问
+    """
     models = await get_all_base_models(request, user=user)
     return {"data": models}
 
@@ -1312,19 +1350,19 @@ async def embeddings(
     request: Request, form_data: dict, user=Depends(get_verified_user)
 ):
     """
-    OpenAI-compatible embeddings endpoint.
+    OpenAI兼容的文本嵌入接口。
 
-    This handler:
-      - Performs user/model checks and dispatches to the correct backend.
-      - Supports OpenAI, Ollama, arena models, pipelines, and any compatible provider.
+    该处理器:
+      - 执行用户/模型检查并分发到正确的后端。
+      - 支持OpenAI、Ollama、竞技场模型、管道和任何兼容的提供商。
 
     Args:
-        request (Request): Request context.
-        form_data (dict): OpenAI-like payload (e.g., {"model": "...", "input": [...]})
-        user (UserModel): Authenticated user.
+        request (Request): 请求上下文。
+        form_data (dict): OpenAI格式的负载 (例如: {"model": "...", "input": [...]})
+        user (UserModel): 已认证的用户。
 
     Returns:
-        dict: OpenAI-compatible embeddings response.
+        dict: OpenAI兼容的嵌入向量响应。
     """
     # Make sure models are loaded in app state
     if not request.app.state.MODELS:
@@ -1339,6 +1377,26 @@ async def chat_completion(
     form_data: dict,
     user=Depends(get_verified_user),
 ):
+    """
+    聊天完成接口，处理AI对话请求。
+    
+    该接口支持:
+      - 多种模型类型(OpenAI、Ollama等)
+      - 工具调用和函数调用
+      - 文件上传和处理
+      - 背景任务处理
+      
+    Args:
+        request (Request): 请求上下文
+        form_data (dict): 包含模型ID、消息历史、参数等的请求体
+        user (UserModel): 已认证的用户
+        
+    Returns:
+        dict: 包含AI生成内容的响应
+        
+    Raises:
+        HTTPException: 当积分不足、模型访问受限或处理失败时
+    """
     check_credit_by_user_id(user_id=user.id, form_data=form_data)
 
     if not request.app.state.MODELS:
@@ -1454,6 +1512,22 @@ generate_chat_completion = chat_completion
 async def chat_completed(
     request: Request, form_data: dict, user=Depends(get_verified_user)
 ):
+    """
+    标记聊天会话为已完成状态。
+    
+    在聊天完成后调用此接口，用于更新聊天状态、处理后续任务和清理资源。
+    
+    Args:
+        request (Request): 请求上下文
+        form_data (dict): 包含聊天会话信息的请求体
+        user (UserModel): 已认证的用户
+        
+    Returns:
+        dict: 操作结果
+        
+    Raises:
+        HTTPException: 当处理失败时
+    """
     try:
         model_item = form_data.pop("model_item", {})
 
@@ -1473,6 +1547,23 @@ async def chat_completed(
 async def chat_action(
     request: Request, action_id: str, form_data: dict, user=Depends(get_verified_user)
 ):
+    """
+    执行聊天相关的特定动作。
+    
+    根据action_id执行不同的聊天操作，如重新生成回复、继续生成等。
+    
+    Args:
+        request (Request): 请求上下文
+        action_id (str): 要执行的动作ID
+        form_data (dict): 包含动作参数的请求体
+        user (UserModel): 已认证的用户
+        
+    Returns:
+        dict: 动作执行结果
+        
+    Raises:
+        HTTPException: 当动作执行失败时
+    """
     try:
         model_item = form_data.pop("model_item", {})
 
@@ -1492,6 +1583,20 @@ async def chat_action(
 async def stop_task_endpoint(
     request: Request, task_id: str, user=Depends(get_verified_user)
 ):
+    """
+    停止指定的后台任务。
+    
+    Args:
+        request (Request): 请求上下文
+        task_id (str): 要停止的任务ID
+        user (UserModel): 已认证的用户
+        
+    Returns:
+        dict: 包含停止操作结果的响应
+        
+    Raises:
+        HTTPException: 当任务不存在或无法停止时
+    """
     try:
         result = await stop_task(request, task_id)
         return result
@@ -1501,6 +1606,18 @@ async def stop_task_endpoint(
 
 @app.get("/api/tasks")
 async def list_tasks_endpoint(request: Request, user=Depends(get_verified_user)):
+    """
+    列出所有当前运行的后台任务。
+    
+    返回系统中所有正在运行的任务列表，包括任务ID、状态和相关信息。
+    
+    Args:
+        request (Request): 请求上下文
+        user (UserModel): 已认证的用户
+        
+    Returns:
+        dict: 包含任务列表的响应
+    """
     return {"tasks": await list_tasks(request)}
 
 
@@ -1508,6 +1625,20 @@ async def list_tasks_endpoint(request: Request, user=Depends(get_verified_user))
 async def list_tasks_by_chat_id_endpoint(
     request: Request, chat_id: str, user=Depends(get_verified_user)
 ):
+    """
+    获取指定聊天会话相关的所有任务ID。
+    
+    Args:
+        request (Request): 请求上下文
+        chat_id (str): 聊天会话ID
+        user (UserModel): 已认证的用户
+        
+    Returns:
+        dict: 包含与指定聊天相关的任务ID列表
+        
+    Note:
+        如果聊天不存在或不属于当前用户，将返回空列表
+    """
     chat = Chats.get_chat_by_id(chat_id)
     if chat is None or chat.user_id != user.id:
         return {"task_ids": []}
@@ -1527,6 +1658,18 @@ async def list_tasks_by_chat_id_endpoint(
 
 @app.get("/api/config")
 async def get_app_config(request: Request):
+    """
+    获取应用程序配置信息。
+    
+    返回系统配置信息，包括功能开关、默认设置、OAuth提供商等。
+    根据用户是否登录返回不同级别的配置信息。
+    
+    Args:
+        request (Request): 请求上下文
+        
+    Returns:
+        dict: 包含应用配置的字典
+    """
     user = None
     if "token" in request.cookies:
         token = request.cookies.get("token")
@@ -1703,8 +1846,16 @@ async def get_app_changelog():
 @app.get("/api/usage")
 async def get_current_usage(user=Depends(get_verified_user)):
     """
-    Get current usage statistics for Open WebUI.
-    This is an experimental endpoint and subject to change.
+    获取Open WebUI的当前使用统计信息。
+    
+    返回当前活跃的模型ID列表和用户ID列表，用于监控系统负载和使用情况。
+    此接口为实验性功能，可能会在未来版本中变更。
+    
+    Returns:
+        dict: 包含活跃模型ID和用户ID的字典
+        
+    Raises:
+        HTTPException: 当获取统计信息失败时返回500错误
     """
     try:
         return {"model_ids": get_models_in_use(), "user_ids": get_active_user_ids()}
@@ -1791,11 +1942,30 @@ async def get_opensearch_xml():
 
 @app.get("/health")
 async def healthcheck():
+    """
+    健康检查接口。
+    
+    用于监控系统是否正常运行，返回简单的状态指示。
+    
+    Returns:
+        dict: 包含状态标志的响应
+    """
     return {"status": True}
 
 
 @app.get("/health/db")
 async def healthcheck_with_db():
+    """
+    数据库健康检查接口。
+    
+    检查数据库连接是否正常，执行简单查询验证数据库可用性。
+    
+    Returns:
+        dict: 包含状态标志的响应
+        
+    Raises:
+        HTTPException: 当数据库连接失败时
+    """
     Session.execute(text("SELECT 1;")).all()
     return {"status": True}
 

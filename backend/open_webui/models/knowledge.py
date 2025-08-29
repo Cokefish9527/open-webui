@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from typing import Optional
+from typing import Optional, List, Union
 import uuid
 
 from open_webui.internal.db import Base, get_db
@@ -85,11 +85,11 @@ class KnowledgeUserModel(KnowledgeModel):
 
 
 class KnowledgeResponse(KnowledgeModel):
-    files: Optional[list[FileMetadataResponse | dict]] = None
+    files: Optional[List[Union[FileMetadataResponse, dict]]] = None
 
 
 class KnowledgeUserResponse(KnowledgeUserModel):
-    files: Optional[list[FileMetadataResponse | dict]] = None
+    files: Optional[List[Union[FileMetadataResponse, dict]]] = None
 
 
 class KnowledgeForm(BaseModel):
@@ -126,7 +126,7 @@ class KnowledgeTable:
             except Exception:
                 return None
 
-    def get_knowledge_bases(self) -> list[KnowledgeUserModel]:
+    def get_knowledge_bases(self) -> List[KnowledgeUserModel]:
         with get_db() as db:
             knowledge_bases = []
             for knowledge in (
@@ -145,7 +145,7 @@ class KnowledgeTable:
 
     def get_knowledge_bases_by_user_id(
         self, user_id: str, permission: str = "write"
-    ) -> list[KnowledgeUserModel]:
+    ) -> List[KnowledgeUserModel]:
         knowledge_bases = self.get_knowledge_bases()
         return [
             knowledge_base

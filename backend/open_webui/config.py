@@ -7,7 +7,7 @@ import redis
 
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, Optional, TypeVar
+from typing import Dict, Generic, Optional, TypeVar
 from urllib.parse import urlparse
 
 import requests
@@ -210,7 +210,7 @@ class PersistentConfig(Generic[T]):
 
 
 class AppConfig:
-    _state: dict[str, PersistentConfig]
+    _state: "Dict[str, PersistentConfig]"
     _redis: Optional[redis.Redis] = None
 
     def __init__(
@@ -1723,16 +1723,19 @@ Ensure that the tools are effectively utilized to achieve the highest-quality an
 # Vector Database
 ####################################
 
-VECTOR_DB = os.environ.get("VECTOR_DB", "chroma")
+# 暂时禁用 Chroma 以解决 SQLite 版本问题
+VECTOR_DB = os.environ.get("VECTOR_DB", "none")
 
 # Chroma
 CHROMA_DATA_PATH = f"{DATA_DIR}/vector_db"
 
-if VECTOR_DB == "chroma":
-    import chromadb
+if False:  # 暂时禁用 Chroma 初始化
+    # 暂时注释掉 chromadb 导入以解决 SQLite 版本问题
+    # import chromadb
+    pass
 
-    CHROMA_TENANT = os.environ.get("CHROMA_TENANT", chromadb.DEFAULT_TENANT)
-    CHROMA_DATABASE = os.environ.get("CHROMA_DATABASE", chromadb.DEFAULT_DATABASE)
+    CHROMA_TENANT = os.environ.get("CHROMA_TENANT", "default")
+    CHROMA_DATABASE = os.environ.get("CHROMA_DATABASE", "default")
     CHROMA_HTTP_HOST = os.environ.get("CHROMA_HTTP_HOST", "")
     CHROMA_HTTP_PORT = int(os.environ.get("CHROMA_HTTP_PORT", "8000"))
     CHROMA_CLIENT_AUTH_PROVIDER = os.environ.get("CHROMA_CLIENT_AUTH_PROVIDER", "")

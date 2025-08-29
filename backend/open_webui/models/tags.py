@@ -1,7 +1,7 @@
 import logging
 import time
 import uuid
-from typing import Optional
+from typing import List, Optional
 
 from open_webui.internal.db import Base, get_db
 
@@ -75,7 +75,7 @@ class TagTable:
         except Exception:
             return None
 
-    def get_tags_by_user_id(self, user_id: str) -> list[TagModel]:
+    def get_tags_by_user_id(self, user_id: str) -> "List[TagModel]":
         with get_db() as db:
             return [
                 TagModel.model_validate(tag)
@@ -83,8 +83,8 @@ class TagTable:
             ]
 
     def get_tags_by_ids_and_user_id(
-        self, ids: list[str], user_id: str
-    ) -> list[TagModel]:
+        self, ids: "List[str]", user_id: str
+    ) -> "List[TagModel]":
         with get_db() as db:
             return [
                 TagModel.model_validate(tag)

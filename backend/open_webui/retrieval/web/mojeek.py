@@ -1,6 +1,7 @@
 import logging
-from typing import Optional
+from typing import Optional, List
 
+import logging
 import requests
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
@@ -10,8 +11,8 @@ log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
 def search_mojeek(
-    api_key: str, query: str, count: int, filter_list: Optional[list[str]] = None
-) -> list[SearchResult]:
+    api_key: str, query: str, count: int, filter_list: Optional[List[str]] = None
+) -> List[SearchResult]:
     """Search using Mojeek's Search API and return the results as a list of SearchResult objects.
 
     Args:

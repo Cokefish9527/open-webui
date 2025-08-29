@@ -251,7 +251,7 @@ class TradeTicketTable:
 
     def get_ticket_by_time(
         self, start_time: int, end_time: int
-    ) -> list[TradeTicketModel]:
+    ) -> List[TradeTicketModel]:
         try:
             with get_db() as db:
                 logs = (
@@ -288,7 +288,7 @@ TradeTickets = TradeTicketTable()
 
 
 class CreditLogTable:
-    def count_credit_log(self, user_ids: list[str] = None) -> int:
+    def count_credit_log(self, user_ids: List[str] = None) -> int:
         with get_db() as db:
             query = db.query(CreditLog).order_by(CreditLog.created_at.desc())
             if user_ids:
@@ -297,10 +297,10 @@ class CreditLogTable:
 
     def get_credit_log_by_page(
         self,
-        user_ids: list[str] = None,
+        user_ids: List[str] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
-    ) -> list[CreditLogSimpleModel]:
+    ) -> List[CreditLogSimpleModel]:
         with get_db() as db:
             query = db.query(CreditLog).order_by(CreditLog.created_at.desc())
             if user_ids:
@@ -314,7 +314,7 @@ class CreditLogTable:
 
     def get_log_by_time(
         self, start_time: int, end_time: int
-    ) -> list[CreditLogSimpleModel]:
+    ) -> List[CreditLogSimpleModel]:
         try:
             with get_db() as db:
                 logs = (

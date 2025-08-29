@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Program Files\python\lib\runpy.py", line 185, in _run_module_as_main
+    mod_name, mod_spec, code = _get_module_details(mod_name, _Error)
+  File "C:\Program Files\python\lib\runpy.py", line 111, in _get_module_details
+    __import__(pkg_name)
+  File "D:\Work\hsch\open-webui\backend\open_webui\__init__.py", line 6, in <module>
+    import typer
+ModuleNotFoundError: No module named 'typer'

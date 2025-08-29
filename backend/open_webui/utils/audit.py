@@ -7,6 +7,7 @@ from typing import (
     Any,
     AsyncGenerator,
     Dict,
+    List,
     MutableMapping,
     Optional,
     cast,
@@ -37,7 +38,7 @@ if TYPE_CHECKING:
 class AuditLogEntry:
     # `Metadata` audit level properties
     id: str
-    user: Optional[dict[str, Any]]
+    user: Optional[Dict[str, Any]]
     audit_level: str
     verb: str
     request_uri: str
@@ -129,7 +130,7 @@ class AuditLoggingMiddleware:
         self,
         app: ASGI3Application,
         *,
-        excluded_paths: Optional[list[str]] = None,
+        excluded_paths: Optional[List[str]] = None,
         max_body_size: int = MAX_BODY_LOG_SIZE,
         audit_level: AuditLevel = AuditLevel.NONE,
     ) -> None:

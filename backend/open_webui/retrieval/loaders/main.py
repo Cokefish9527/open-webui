@@ -3,6 +3,7 @@ import logging
 import ftfy
 import sys
 import json
+from typing import List, Dict, Any, Optional, Union
 
 from langchain_community.document_loaders import (
     AzureAIDocumentIntelligenceLoader,
@@ -96,7 +97,7 @@ class TikaLoader:
 
         self.extract_images = extract_images
 
-    def load(self) -> list[Document]:
+    def load(self) -> List[Document]:
         with open(self.file_path, "rb") as f:
             data = f.read()
 
@@ -137,7 +138,7 @@ class DoclingLoader:
 
         self.params = params or {}
 
-    def load(self) -> list[Document]:
+    def load(self) -> List[Document]:
         with open(self.file_path, "rb") as f:
             files = {
                 "files": (
@@ -213,7 +214,7 @@ class Loader:
 
     def load(
         self, filename: str, file_content_type: str, file_path: str
-    ) -> list[Document]:
+    ) -> List[Document]:
         loader = self._get_loader(filename, file_content_type, file_path)
         docs = loader.load()
 

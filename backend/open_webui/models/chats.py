@@ -2,7 +2,7 @@ import logging
 import json
 import time
 import uuid
-from typing import Optional
+from typing import Dict, List, Optional
 
 from open_webui.internal.db import Base, get_db
 from open_webui.models.tags import TagModel, Tag, Tags
@@ -76,7 +76,7 @@ class ChatImportForm(ChatForm):
 
 class ChatTitleMessagesForm(BaseModel):
     title: str
-    messages: list[dict]
+    messages: List[Dict]
 
 
 class ChatTitleForm(BaseModel):
@@ -183,7 +183,7 @@ class ChatTable:
         return self.update_chat_by_id(id, chat)
 
     def update_chat_tags_by_id(
-        self, id: str, tags: list[str], user
+        self, id: str, tags: List[str], user
     ) -> Optional[ChatModel]:
         chat = self.get_chat_by_id(id)
         if chat is None:
@@ -382,7 +382,7 @@ class ChatTable:
         filter: Optional[dict] = None,
         skip: int = 0,
         limit: int = 50,
-    ) -> list[ChatModel]:
+    ) -> List[ChatModel]:
 
         with get_db() as db:
             query = db.query(Chat).filter_by(user_id=user_id, archived=True)
@@ -420,7 +420,7 @@ class ChatTable:
         filter: Optional[dict] = None,
         skip: int = 0,
         limit: int = 50,
-    ) -> list[ChatModel]:
+    ) -> List[ChatModel]:
         with get_db() as db:
             query = db.query(Chat).filter_by(user_id=user_id)
             if not include_archived:
@@ -458,7 +458,7 @@ class ChatTable:
         include_archived: bool = False,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
-    ) -> list[ChatTitleIdResponse]:
+    ) -> List[ChatTitleIdResponse]:
         with get_db() as db:
             query = db.query(Chat).filter_by(user_id=user_id).filter_by(folder_id=None)
             query = query.filter(or_(Chat.pinned == False, Chat.pinned == None))
@@ -491,8 +491,8 @@ class ChatTable:
             ]
 
     def get_chat_list_by_chat_ids(
-        self, chat_ids: list[str], skip: int = 0, limit: int = 50
-    ) -> list[ChatModel]:
+        self, chat_ids: List[str], skip: int = 0, limit: int = 50
+    ) -> List[ChatModel]:
         with get_db() as db:
             all_chats = (
                 db.query(Chat)
@@ -533,7 +533,7 @@ class ChatTable:
         except Exception:
             return None
 
-    def get_chats(self, skip: int = 0, limit: int = 50) -> list[ChatModel]:
+    def get_chats(self, skip: int = 0, limit: int = 50) -> List[ChatModel]:
         with get_db() as db:
             all_chats = (
                 db.query(Chat)
@@ -542,7 +542,7 @@ class ChatTable:
             )
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
-    def get_chats_by_user_id(self, user_id: str) -> list[ChatModel]:
+    def get_chats_by_user_id(self, user_id: str) -> List[ChatModel]:
         with get_db() as db:
             all_chats = (
                 db.query(Chat)
@@ -551,7 +551,7 @@ class ChatTable:
             )
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
-    def get_pinned_chats_by_user_id(self, user_id: str) -> list[ChatModel]:
+    def get_pinned_chats_by_user_id(self, user_id: str) -> List[ChatModel]:
         with get_db() as db:
             all_chats = (
                 db.query(Chat)
@@ -560,7 +560,7 @@ class ChatTable:
             )
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
-    def get_archived_chats_by_user_id(self, user_id: str) -> list[ChatModel]:
+    def get_archived_chats_by_user_id(self, user_id: str) -> List[ChatModel]:
         with get_db() as db:
             all_chats = (
                 db.query(Chat)
@@ -576,7 +576,7 @@ class ChatTable:
         include_archived: bool = False,
         skip: int = 0,
         limit: int = 60,
-    ) -> list[ChatModel]:
+    ) -> List[ChatModel]:
         """
         Filters chats based on a search query using Python, allowing pagination using skip and limit.
         """
@@ -724,7 +724,7 @@ class ChatTable:
 
     def get_chats_by_folder_id_and_user_id(
         self, folder_id: str, user_id: str
-    ) -> list[ChatModel]:
+    ) -> List[ChatModel]:
         with get_db() as db:
             query = db.query(Chat).filter_by(folder_id=folder_id, user_id=user_id)
             query = query.filter(or_(Chat.pinned == False, Chat.pinned == None))
@@ -736,8 +736,8 @@ class ChatTable:
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
     def get_chats_by_folder_ids_and_user_id(
-        self, folder_ids: list[str], user_id: str
-    ) -> list[ChatModel]:
+        self, folder_ids: List[str], user_id: str
+    ) -> List[ChatModel]:
         with get_db() as db:
             query = db.query(Chat).filter(
                 Chat.folder_id.in_(folder_ids), Chat.user_id == user_id
@@ -765,7 +765,7 @@ class ChatTable:
         except Exception:
             return None
 
-    def get_chat_tags_by_id_and_user_id(self, id: str, user_id: str) -> list[TagModel]:
+    def get_chat_tags_by_id_and_user_id(self, id: str, user_id: str) -> List[TagModel]:
         with get_db() as db:
             chat = db.get(Chat, id)
             tags = chat.meta.get("tags", [])
@@ -773,7 +773,7 @@ class ChatTable:
 
     def get_chat_list_by_user_id_and_tag_name(
         self, user_id: str, tag_name: str, skip: int = 0, limit: int = 50
-    ) -> list[ChatModel]:
+    ) -> List[ChatModel]:
         with get_db() as db:
             query = db.query(Chat).filter_by(user_id=user_id)
             tag_id = tag_name.replace(" ", "_").lower()

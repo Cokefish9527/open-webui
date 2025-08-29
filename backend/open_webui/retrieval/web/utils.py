@@ -588,7 +588,7 @@ class SafeWebBaseLoader(WebBaseLoader):
                 metadata["language"] = html.get("lang", "No language found.")
             yield Document(page_content=text, metadata=metadata)
 
-    async def aload(self) -> list[Document]:
+    async def aload(self) -> List[Document]:
         """Load data into Document objects."""
         return [document async for document in self.alazy_load()]
 

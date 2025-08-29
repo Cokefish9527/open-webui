@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import List, Optional
 
 from open_webui.internal.db import Base, JSONField, get_db
 
@@ -70,7 +70,7 @@ class UserModel(BaseModel):
 
 
 class UserListResponse(BaseModel):
-    users: list[UserModel]
+    users: List[UserModel]
     total: int
 
 
@@ -243,7 +243,7 @@ class UsersTable:
                 "total": db.query(User).count(),
             }
 
-    def get_users_by_user_ids(self, user_ids: list[str]) -> list[UserModel]:
+    def get_users_by_user_ids(self, user_ids: List[str]) -> List[UserModel]:
         with get_db() as db:
             users = db.query(User).filter(User.id.in_(user_ids)).all()
             return [UserModel.model_validate(user) for user in users]
@@ -393,7 +393,7 @@ class UsersTable:
         except Exception:
             return None
 
-    def get_valid_user_ids(self, user_ids: list[str]) -> list[str]:
+    def get_valid_user_ids(self, user_ids: List[str]) -> List[str]:
         with get_db() as db:
             users = db.query(User).filter(User.id.in_(user_ids)).all()
             return [user.id for user in users]
