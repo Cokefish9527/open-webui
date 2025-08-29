@@ -6,7 +6,7 @@ from typing import Optional, List
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, Field
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
@@ -202,37 +202,37 @@ class HSAIMaterialTagForm(BaseModel):
 
 
 class HSAIMaterialFolderResponse(BaseModel):
-    id: str
-    name: str
-    description: Optional[str] = None
-    parent_id: Optional[str] = None
-    settings: Optional[dict] = None
-    sort_order: int = 0
-    children: Optional[List['HSAIMaterialFolderResponse']] = None
-    material_count: Optional[int] = None
-    created_at: int
-    updated_at: int
+    id: str = Field(description="文件夹唯一标识符")
+    name: str = Field(description="文件夹名称")
+    description: Optional[str] = Field(default=None, description="文件夹描述")
+    parent_id: Optional[str] = Field(default=None, description="父文件夹ID")
+    settings: Optional[dict] = Field(default=None, description="文件夹配置")
+    sort_order: int = Field(default=0, description="排序权重")
+    children: Optional[List['HSAIMaterialFolderResponse']] = Field(default=None, description="子文件夹列表")
+    material_count: Optional[int] = Field(default=None, description="文件夹内素材数量")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIMaterialResponse(BaseModel):
-    id: str
-    name: str
-    description: Optional[str] = None
-    material_type: str
-    folder_id: Optional[str] = None
-    file_path: Optional[str] = None
-    file_size: Optional[int] = None
-    mime_type: Optional[str] = None
-    material_metadata: Optional[dict] = None
-    tags: Optional[List[str]] = None
-    ai_analysis: Optional[dict] = None
-    usage_count: int = 0
-    last_used_at: Optional[int] = None
-    status: str = "active"
-    thumbnail_url: Optional[str] = None  # 缩略图URL
-    download_url: Optional[str] = None   # 下载URL
-    created_at: int
-    updated_at: int
+    id: str = Field(description="素材唯一标识符")
+    name: str = Field(description="素材名称")
+    description: Optional[str] = Field(default=None, description="素材描述")
+    material_type: str = Field(description="素材类型 (video, image, audio, text, document)")
+    folder_id: Optional[str] = Field(default=None, description="所属文件夹ID")
+    file_path: Optional[str] = Field(default=None, description="文件路径")
+    file_size: Optional[int] = Field(default=None, description="文件大小(字节)")
+    mime_type: Optional[str] = Field(default=None, description="MIME类型")
+    material_metadata: Optional[dict] = Field(default=None, description="素材元数据(分辨率、时长等)")
+    tags: Optional[List[str]] = Field(default=None, description="标签列表")
+    ai_analysis: Optional[dict] = Field(default=None, description="AI分析结果")
+    usage_count: int = Field(default=0, description="使用次数")
+    last_used_at: Optional[int] = Field(default=None, description="最后使用时间戳")
+    status: str = Field(default="active", description="状态 (active, archived, deleted)")
+    thumbnail_url: Optional[str] = Field(default=None, description="缩略图URL")
+    download_url: Optional[str] = Field(default=None, description="下载URL")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 ####################

@@ -7,7 +7,7 @@ from enum import Enum
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
@@ -322,36 +322,36 @@ class HSAITaskUpdateForm(BaseModel):
 
 
 class HSAITaskResponse(BaseModel):
-    id: str
-    title: str
-    description: Optional[str] = None
-    task_type: str
-    status: str
-    progress: int = 0
-    priority: int = 0
-    tags: Optional[List[str]] = None
-    started_at: Optional[int] = None
-    completed_at: Optional[int] = None
-    error_message: Optional[str] = None
-    estimated_duration: Optional[int] = None  # 预估耗时(秒)
-    created_at: int
-    updated_at: int
+    id: str = Field(description="任务唯一标识符")
+    title: str = Field(description="任务标题")
+    description: Optional[str] = Field(default=None, description="任务详细描述")
+    task_type: str = Field(description="任务类型")
+    status: str = Field(description="任务状态")
+    progress: int = Field(default=0, description="任务进度百分比 (0-100)")
+    priority: int = Field(default=0, description="任务优先级")
+    tags: Optional[List[str]] = Field(default=None, description="任务标签列表")
+    started_at: Optional[int] = Field(default=None, description="任务开始时间戳")
+    completed_at: Optional[int] = Field(default=None, description="任务完成时间戳")
+    error_message: Optional[str] = Field(default=None, description="错误信息")
+    estimated_duration: Optional[int] = Field(default=None, description="预估耗时(秒)")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAICardResponse(BaseModel):
-    id: str
-    title: str
-    description: Optional[str] = None
-    card_type: str
-    content: Optional[dict] = None
-    actions: Optional[dict] = None
-    position: Optional[dict] = None
-    style: Optional[dict] = None
-    is_pinned: bool = False
-    is_collapsed: bool = False
-    task_status: Optional[str] = None  # 关联任务的状态
-    created_at: int
-    updated_at: int
+    id: str = Field(description="卡片唯一标识符")
+    title: str = Field(description="卡片标题")
+    description: Optional[str] = Field(default=None, description="卡片描述")
+    card_type: str = Field(description="卡片类型")
+    content: Optional[dict] = Field(default=None, description="卡片内容数据")
+    actions: Optional[dict] = Field(default=None, description="卡片操作配置")
+    position: Optional[dict] = Field(default=None, description="卡片位置信息")
+    style: Optional[dict] = Field(default=None, description="卡片样式配置")
+    is_pinned: bool = Field(default=False, description="是否置顶")
+    is_collapsed: bool = Field(default=False, description="是否折叠")
+    task_status: Optional[str] = Field(default=None, description="关联任务的状态")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 ####################

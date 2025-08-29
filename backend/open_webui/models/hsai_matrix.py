@@ -7,7 +7,7 @@ from enum import Enum
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
@@ -339,51 +339,51 @@ class HSAIAccountGroupForm(BaseModel):
 
 
 class HSAIPlatformAccountResponse(BaseModel):
-    id: str
-    name: str
-    platform_type: str
-    username: str
-    display_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    status: str
-    follower_count: int = 0
-    following_count: int = 0
-    posts_count: int = 0
-    last_sync_at: Optional[int] = None
-    is_token_valid: bool = True
-    group_name: Optional[str] = None
-    created_at: int
-    updated_at: int
+    id: str = Field(description="账号唯一标识符")
+    name: str = Field(description="账号名称")
+    platform_type: str = Field(description="平台类型")
+    username: str = Field(description="用户名")
+    display_name: Optional[str] = Field(default=None, description="显示名称")
+    avatar_url: Optional[str] = Field(default=None, description="头像URL")
+    status: str = Field(description="账号状态")
+    follower_count: int = Field(default=0, description="粉丝数量")
+    following_count: int = Field(default=0, description="关注数量")
+    posts_count: int = Field(default=0, description="发布数量")
+    last_sync_at: Optional[int] = Field(default=None, description="最后同步时间戳")
+    is_token_valid: bool = Field(default=True, description="令牌是否有效")
+    group_name: Optional[str] = Field(default=None, description="分组名称")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIPublishTaskResponse(BaseModel):
-    id: str
-    title: str
-    description: Optional[str] = None
-    content_type: str
-    status: str
-    progress: int = 0
-    platforms: List[str]
-    scheduled_at: Optional[int] = None
-    published_at: Optional[int] = None
-    success_count: int = 0  # 成功发布的平台数
-    total_count: int = 0    # 总平台数
-    error_message: Optional[str] = None
-    created_at: int
-    updated_at: int
+    id: str = Field(description="发布任务唯一标识符")
+    title: str = Field(description="任务标题")
+    description: Optional[str] = Field(default=None, description="任务描述")
+    content_type: str = Field(description="内容类型")
+    status: str = Field(description="任务状态")
+    progress: int = Field(default=0, description="任务进度百分比 (0-100)")
+    platforms: List[str] = Field(description="目标平台列表")
+    scheduled_at: Optional[int] = Field(default=None, description="计划发布时间戳")
+    published_at: Optional[int] = Field(default=None, description="实际发布时间戳")
+    success_count: int = Field(default=0, description="成功发布的平台数")
+    total_count: int = Field(default=0, description="总平台数")
+    error_message: Optional[str] = Field(default=None, description="错误信息")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIPublishStatsResponse(BaseModel):
     """发布统计响应"""
-    total_posts: int = 0
-    published_posts: int = 0
-    scheduled_posts: int = 0
-    failed_posts: int = 0
-    total_views: int = 0
-    total_likes: int = 0
-    total_comments: int = 0
-    total_shares: int = 0
-    engagement_rate: float = 0.0
+    total_posts: int = Field(default=0, description="总发布数")
+    published_posts: int = Field(default=0, description="已发布数")
+    scheduled_posts: int = Field(default=0, description="计划发布数")
+    failed_posts: int = Field(default=0, description="失败发布数")
+    total_views: int = Field(default=0, description="总浏览量")
+    total_likes: int = Field(default=0, description="总点赞数")
+    total_comments: int = Field(default=0, description="总评论数")
+    total_shares: int = Field(default=0, description="总分享数")
+    engagement_rate: float = Field(default=0.0, description="互动率")
 
 
 ####################
