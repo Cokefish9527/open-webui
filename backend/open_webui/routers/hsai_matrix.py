@@ -2,7 +2,7 @@ import logging
 import time
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from pydantic import BaseModel
 
 from open_webui.models.hsai_matrix import (
@@ -42,8 +42,8 @@ router = APIRouter(prefix="/hsai/matrix", tags=["hsai_matrix"])
 
 @router.get("/accounts", response_model=List[HSAIPlatformAccountResponse])
 async def get_platform_accounts(
-    platform_type: Optional[str] = None,
-    status: Optional[str] = None,
+    platform_type: Optional[str] = Query(None, description="平台类型过滤：linkedin(领英)、facebook(脸书)、twitter(推特)、youtube(油管)、tiktok(抖音海外版)"),
+    status: Optional[str] = Query(None, description="账号状态过滤：active(活跃)、inactive(未激活)、suspended(暂停)、expired(过期)"),
     user=Depends(get_verified_user)
 ):
     """
@@ -428,7 +428,7 @@ async def create_account_group(
 
 @router.get("/publish-tasks", response_model=List[HSAIPublishTaskResponse])
 async def get_publish_tasks(
-    status: Optional[str] = None,
+    status: Optional[str] = Query(None, description="发布状态过滤：pending(待发布)、publishing(发布中)、published(已发布)、failed(发布失败)、cancelled(已取消)"),
     user=Depends(get_verified_user)
 ):
     """
@@ -858,8 +858,8 @@ async def oauth_callback(
 
 @router.get("/stats", response_model=HSAIPublishStatsResponse)
 async def get_publish_stats(
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
+    start_date: Optional[str] = Query(None, description="开始日期，格式：YYYY-MM-DD，用于统计时间范围过滤"),
+    end_date: Optional[str] = Query(None, description="结束日期，格式：YYYY-MM-DD，用于统计时间范围过滤"),
     user=Depends(get_verified_user)
 ):
     """

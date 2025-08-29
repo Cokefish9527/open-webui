@@ -2,7 +2,7 @@ import logging
 import time
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from pydantic import BaseModel
 
 from open_webui.models.hsai_tasks import (
@@ -39,9 +39,9 @@ router = APIRouter(prefix="/hsai/tasks", tags=["hsai_tasks"])
 
 @router.get("/", response_model=List[HSAITaskResponse])
 async def get_tasks(
-    status: Optional[str] = None,
-    task_type: Optional[str] = None,
-    chat_id: Optional[str] = None,
+    status: Optional[str] = Query(None, description="任务状态过滤：pending(待执行)、in_progress(执行中)、completed(已完成)、failed(执行失败)、cancelled(已取消)"),
+    task_type: Optional[str] = Query(None, description="任务类型过滤：video_creation(视频创作)、content_analysis(内容分析)、image_generation(图像生成)、text_processing(文本处理)"),
+    chat_id: Optional[str] = Query(None, description="聊天会话ID，用于过滤特定会话的任务"),
     user=Depends(get_verified_user)
 ):
     """

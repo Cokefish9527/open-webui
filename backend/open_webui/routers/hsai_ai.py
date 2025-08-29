@@ -1,7 +1,7 @@
 import logging
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.utils.hsai_ai_service import hsai_ai_service
@@ -17,43 +17,123 @@ router = APIRouter()
 
 
 class VideoScriptRequest(BaseModel):
-    product_name: str
-    target_audience: str
-    key_points: List[str]
-    duration: Optional[int] = 60
-    style_requirements: Optional[str] = "专业、有趣、易懂"
+    product_name: str = Field(..., description="产品或服务名称", example="高速激光切割机")
+    target_audience: str = Field(..., description="目标受众描述", example="外贸B2B采购经理")
+    key_points: List[str] = Field(..., description="关键卖点列表", example=["高精度", "节能", "稳定性强"])
+    duration: int = Field(60, description="目标视频时长（秒）", example=60)
+    style_requirements: str = Field("专业、有趣、易懂", description="脚本风格要求", example="专业、可信、简洁")
 
 
 class ProductAnalysisRequest(BaseModel):
-    product_info: str
-    market_context: Optional[str] = ""
-    competition_info: Optional[str] = ""
+    product_info: str = Field(..., description="产品详细信息", example="型号X100，适用于不锈钢切割，功率3kW")
+    market_context: str = Field("", description="市场背景信息", example="目标市场为东南亚地区，价格敏感")
+    competition_info: str = Field("", description="主要竞争对手与对比信息", example="竞品A价格低但精度不足")
 
 
 class MaterialOptimizationRequest(BaseModel):
-    material_id: str
-    usage_context: Optional[str] = ""
+    material_id: str = Field(..., description="要优化的素材ID", example="mat_123456")
+    usage_context: str = Field("", description="素材使用场景描述", example="用于LinkedIn品牌宣传")
 
 
 class ContentIdeasRequest(BaseModel):
-    industry: str
-    target_audience: str
-    content_type: Optional[str] = "video"
-    count: Optional[int] = 5
+    industry: str = Field(..., description="所属行业", example="机械制造")
+    target_audience: str = Field(..., description="目标受众", example="海外采购商")
+    content_type: str = Field("video", description="内容类型", example="video")
+    count: int = Field(5, description="生成创意数量", example=5)
 
 
 class ChatRequest(BaseModel):
-    message: str
-    context: Optional[dict] = None
-    task_type: Optional[str] = "general"
+    message: str = Field(..., description="用户消息", example="帮我生成一个关于X100激光切割机的30秒视频脚本")
+    context: Optional[Dict[str, Any]] = Field(None, description="上下文参数（根据不同任务类型包含不同键）", example={"product_name":"X100","target_audience":"采购经理"})
+    task_type: Optional[str] = Field("general", description="任务类型", example="video_script")
 
+
+####################
+# Response Models (for Swagger)
+####################
+
+class VideoScriptResponse(BaseModel):
+    script: str = Field(..., description="完整脚本文本", example="开场：产品介绍\
+主体：功能展示\
+结尾：行动号召")
+    scenes: Optional[List[Dict[str, Any]]] = Field(None, description="分镜头脚本列表", example=[{"order":1,"content":"展示产品外观","duration":5}])
+    duration_estimate: Optional[int] = Field(None, description="预估时长（秒）", example=60)
+    suggestions: Optional[List[str]] = Field(None, description="优化建议", example=["突出价格优势","增加行动号召"])
+    class Config:
+        extra = "allow"
+
+class ProductAnalysisResponse(BaseModel):
+    market_positioning: Optional[str] = Field(None, description="市场定位分析", example="高端工业设备，主打精度与稳定性")
+    target_audience: Optional[Dict[str, Any]] = Field(None, description="目标受众画像", example={"roles":["采购经理","工厂负责人"]})
+    competitive_advantages: Optional[List[str]] = Field(None, description="竞争优势", example=["精度高","能耗低"])
+    marketing_strategies: Optional[List[str]] = Field(None, description="营销策略建议", example=["案例视频推广","渠道合作"])
+    swot_analysis: Optional[Dict[str, Any]] = Field(None, description="SWOT分析")
+    recommendations: Optional[List[str]] = Field(None, description="具体建议")
+    class Config:
+        extra = "allow"
+
+class MaterialOptimizationResponse(BaseModel):
+    optimized_description: Optional[str] = Field(None, description="优化后的描述")
+    usage_suggestions: Optional[List[str]] = Field(None, description="使用建议")
+    improvement_tips: Optional[List[str]] = Field(None, description="改进建议")
+    suitable_scenarios: Optional[List[str]] = Field(None, description="适用场景")
+    tags: Optional[List[str]] = Field(None, description="推荐标签")
+    class Config:
+        extra = "allow"
+
+class ContentIdeasIdea(BaseModel):
+    title: str = Field(..., description="创意标题", example="3个理由：为什么选择X100激光切割机")
+    description: Optional[str] = Field(None, description="创意描述")
+    key_points: Optional[List[str]] = Field(None, description="关键点")
+    suggested_format: Optional[str] = Field(None, description="建议格式", example="短视频")
+
+class ContentIdeasResponse(BaseModel):
+    ideas: List[ContentIdeasIdea] = Field(..., description="创意列表")
+    themes: Optional[List[str]] = Field(None, description="相关主题")
+    trending_elements: Optional[List[str]] = Field(None, description="热门元素")
+    class Config:
+        extra = "allow"
+
+class ChatResponse(BaseModel):
+    status: str = Field(..., description="状态", example="success")
+    message: Optional[str] = Field(None, description="AI回复或提示信息")
+    suggestions: Optional[List[Dict[str, Any]]] = Field(None, description="行动建议列表")
+    required_fields: Optional[List[Dict[str, Any]]] = Field(None, description="缺失的必填字段提示")
+    class Config:
+        extra = "allow"
+
+class TaskFieldModel(BaseModel):
+    field: str = Field(..., description="字段名")
+    label: str = Field(..., description="显示标签")
+    type: str = Field(..., description="字段类型")
+    required: Optional[bool] = Field(None, description="是否必填")
+    default: Optional[Any] = Field(None, description="默认值")
+    options: Optional[List[str]] = Field(None, description="可选项")
+
+class TaskTemplateModel(BaseModel):
+    id: str = Field(..., description="模板ID")
+    name: str = Field(..., description="模板名称")
+    description: str = Field(..., description="模板描述")
+    icon: Optional[str] = Field(None, description="图标")
+    fields: List[TaskFieldModel] = Field(..., description="模板表单字段")
+
+class TaskTemplatesResponse(BaseModel):
+    templates: List[TaskTemplateModel] = Field(..., description="任务模板列表")
 
 ####################
 # API Routes
 ####################
 
 
-@router.post("/generate-video-script")
+@router.post(
+    "/generate-video-script",
+    summary="生成视频脚本",
+    description="基于产品信息和目标受众，使用AI生成专业的短视频脚本内容",
+    response_model=VideoScriptResponse,
+    responses={
+        500: {"description": "AI服务调用失败", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
+    },
+)
 async def generate_video_script(
     request: VideoScriptRequest,
     user=Depends(get_verified_user)
@@ -104,7 +184,15 @@ async def generate_video_script(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/analyze-product")
+@router.post(
+    "/analyze-product",
+    summary="产品市场分析",
+    description="分析产品定位、竞争优势与营销策略建议",
+    response_model=ProductAnalysisResponse,
+    responses={
+        500: {"description": "AI服务调用失败", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
+    },
+)
 async def analyze_product(
     request: ProductAnalysisRequest,
     user=Depends(get_verified_user)
@@ -153,7 +241,16 @@ async def analyze_product(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/optimize-material")
+@router.post(
+    "/optimize-material",
+    summary="优化素材内容",
+    description="分析并优化素材，提供使用建议与改进方案",
+    response_model=MaterialOptimizationResponse,
+    responses={
+        404: {"description": "素材不存在", "content": {"application/json": {"example": {"detail": "Not Found"}}}},
+        500: {"description": "AI服务调用失败", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
+    },
+)
 async def optimize_material(
     request: MaterialOptimizationRequest,
     user=Depends(get_verified_user)
@@ -199,7 +296,15 @@ async def optimize_material(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/generate-content-ideas")
+@router.post(
+    "/generate-content-ideas",
+    summary="生成内容创意",
+    description="基于主题和要求生成多样化的内容创意",
+    response_model=ContentIdeasResponse,
+    responses={
+        500: {"description": "AI服务调用失败", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
+    },
+)
 async def generate_content_ideas(
     request: ContentIdeasRequest,
     user=Depends(get_verified_user)
@@ -250,7 +355,15 @@ async def generate_content_ideas(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/chat")
+@router.post(
+    "/chat",
+    summary="HSAI 智能对话",
+    description="支持视频脚本、产品分析、内容创意等任务的智能对话接口",
+    response_model=ChatResponse,
+    responses={
+        500: {"description": "内部错误", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
+    },
+)
 async def hsai_chat(
     request: ChatRequest,
     user=Depends(get_verified_user)
@@ -362,7 +475,12 @@ async def hsai_chat(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/task-templates")
+@router.get(
+    "/task-templates",
+    summary="获取AI任务模板",
+    description="返回可用的AI任务模板及其表单字段定义",
+    response_model=TaskTemplatesResponse,
+)
 async def get_task_templates(user=Depends(get_verified_user)):
     """获取AI任务模板"""
     return {

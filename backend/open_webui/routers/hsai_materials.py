@@ -4,7 +4,7 @@ import uuid
 from typing import Optional, List
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -259,8 +259,8 @@ async def delete_material_folder(
 
 @router.get("/", response_model=List[HSAIMaterialResponse])
 async def get_materials(
-    folder_id: Optional[str] = None,
-    material_type: Optional[str] = None,
+    folder_id: Optional[str] = Query(None, description="文件夹ID，为空则获取所有素材"),
+    material_type: Optional[str] = Query(None, description="素材类型过滤：image(图片)、video(视频)、audio(音频)、text(文本)、document(文档)"),
     user=Depends(get_verified_user)
 ):
     """
@@ -324,8 +324,8 @@ async def get_materials(
 
 @router.get("/search", response_model=List[HSAIMaterialResponse])
 async def search_materials(
-    query: str,
-    material_type: Optional[str] = None,
+    query: str = Query(..., description="搜索关键词，用于匹配素材名称、描述和标签"),
+    material_type: Optional[str] = Query(None, description="素材类型过滤：image(图片)、video(视频)、audio(音频)、text(文本)、document(文档)"),
     user=Depends(get_verified_user)
 ):
     """
