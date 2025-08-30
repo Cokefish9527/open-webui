@@ -45,29 +45,10 @@ HSAI_MATERIALS_DIR.mkdir(parents=True, exist_ok=True)
 # 文件夹管理
 ############################
 
-@router.get("/folders", response_model=List[HSAIMaterialFolderResponse])
+@router.get("/folders", response_model=List[HSAIMaterialFolderResponse], summary="获取素材文件夹")
 async def get_material_folders(user=Depends(get_verified_user)):
     """
-    获取用户的素材文件夹树形结构。
-    
-    返回当前用户创建的所有素材文件夹，以树形结构组织，包含子文件夹和素材数量统计。
-    
-    Args:
-        user: 已认证的用户对象
-        
-    Returns:
-        List[HSAIMaterialFolderResponse]: 文件夹树形结构列表
-        - id: 文件夹唯一标识
-        - name: 文件夹名称
-        - description: 文件夹描述
-        - parent_id: 父文件夹ID（根文件夹为None）
-        - children: 子文件夹列表
-        - material_count: 文件夹内素材数量
-        - created_at: 创建时间
-        - updated_at: 更新时间
-        
-    Raises:
-        HTTPException: 500 - 服务器内部错误
+    获取用户的素材文件夹树形结构，包含子文件夹和素材数量统计。
     """
     try:
         folders = HSAIMaterialFolders.get_folders_by_user_id(user.id)
@@ -100,27 +81,13 @@ async def get_material_folders(user=Depends(get_verified_user)):
         )
 
 
-@router.post("/folders", response_model=HSAIMaterialFolderResponse)
+@router.post("/folders", response_model=HSAIMaterialFolderResponse, summary="创建素材文件夹")
 async def create_material_folder(
     form_data: HSAIMaterialFolderForm,
     user=Depends(get_verified_user)
 ):
     """
     创建新的素材文件夹。
-    
-    Args:
-        form_data (HSAIMaterialFolderForm): 文件夹创建表单
-        - name: 文件夹名称（必填）
-        - description: 文件夹描述（可选）
-        - parent_id: 父文件夹ID（可选，为空则创建根文件夹）
-        user: 已认证的用户对象
-        
-    Returns:
-        HSAIMaterialFolderResponse: 创建的文件夹信息
-        
-    Raises:
-        HTTPException: 400 - 创建失败
-        HTTPException: 500 - 服务器内部错误
     """
     try:
         folder = HSAIMaterialFolders.insert_new_folder(user.id, form_data)
@@ -144,7 +111,7 @@ async def create_material_folder(
         )
 
 
-@router.put("/folders/{folder_id}", response_model=HSAIMaterialFolderResponse)
+@router.put("/folders/{folder_id}", response_model=HSAIMaterialFolderResponse, summary="更新素材文件夹")
 async def update_material_folder(
     folder_id: str,
     form_data: HSAIMaterialFolderForm,
@@ -152,22 +119,6 @@ async def update_material_folder(
 ):
     """
     更新素材文件夹信息。
-    
-    Args:
-        folder_id (str): 要更新的文件夹ID
-        form_data (HSAIMaterialFolderForm): 更新表单数据
-        - name: 新的文件夹名称
-        - description: 新的文件夹描述
-        - parent_id: 新的父文件夹ID（可用于移动文件夹）
-        user: 已认证的用户对象
-        
-    Returns:
-        HSAIMaterialFolderResponse: 更新后的文件夹信息
-        
-    Raises:
-        HTTPException: 404 - 文件夹不存在或无权限访问
-        HTTPException: 400 - 更新失败
-        HTTPException: 500 - 服务器内部错误
     """
     try:
         # 验证文件夹所有权
@@ -201,7 +152,7 @@ async def update_material_folder(
         )
 
 
-@router.delete("/folders/{folder_id}", response_model=bool)
+@router.delete("/folders/{folder_id}", response_model=bool, summary="删除素材文件夹")
 async def delete_material_folder(
     folder_id: str,
     user=Depends(get_verified_user)
@@ -257,7 +208,7 @@ async def delete_material_folder(
 # 素材管理
 ############################
 
-@router.get("/", response_model=List[HSAIMaterialResponse])
+@router.get("/", response_model=List[HSAIMaterialResponse], summary="获取素材列表")
 async def get_materials(
     folder_id: Optional[str] = Query(None, description="文件夹ID，为空则获取所有素材"),
     material_type: Optional[str] = Query(None, description="素材类型过滤：image(图片)、video(视频)、audio(音频)、text(文本)、document(文档)"),
@@ -322,7 +273,7 @@ async def get_materials(
         )
 
 
-@router.get("/search", response_model=List[HSAIMaterialResponse])
+@router.get("/search", response_model=List[HSAIMaterialResponse], summary="搜索素材")
 async def search_materials(
     query: str = Query(..., description="搜索关键词，用于匹配素材名称、描述和标签"),
     material_type: Optional[str] = Query(None, description="素材类型过滤：image(图片)、video(视频)、audio(音频)、text(文本)、document(文档)"),
@@ -384,7 +335,7 @@ async def calculate_file_hash(file_path: Path) -> str:
     return hash_md5.hexdigest()
 
 
-@router.post("/upload", response_model=HSAIMaterialResponse)
+@router.post("/upload", response_model=HSAIMaterialResponse, summary="上传素材")
 async def upload_material(
     file: UploadFile = File(...),
     name: Optional[str] = Form(None),
@@ -517,7 +468,7 @@ async def upload_material(
         )
 
 
-@router.get("/{material_id}/download")
+@router.get("/{material_id}/download", summary="下载素材")
 async def download_material(
     material_id: str,
     user=Depends(get_verified_user)
@@ -578,7 +529,7 @@ async def download_material(
         )
 
 
-@router.get("/{material_id}/thumbnail")
+@router.get("/{material_id}/thumbnail", summary="获取素材缩略图")
 async def get_material_thumbnail(
     material_id: str,
     user=Depends(get_verified_user)
@@ -646,7 +597,7 @@ async def get_material_thumbnail(
         )
 
 
-@router.put("/{material_id}", response_model=HSAIMaterialResponse)
+@router.put("/{material_id}", response_model=HSAIMaterialResponse, summary="更新素材信息")
 async def update_material(
     material_id: str,
     form_data: HSAIMaterialForm,
@@ -711,7 +662,7 @@ async def update_material(
         )
 
 
-@router.delete("/{material_id}", response_model=bool)
+@router.delete("/{material_id}", response_model=bool, summary="删除素材")
 async def delete_material(
     material_id: str,
     user=Depends(get_verified_user)
@@ -780,7 +731,7 @@ class MaterialStatsResponse(BaseModel):
     recent_uploads: int
 
 
-@router.get("/stats", response_model=MaterialStatsResponse)
+@router.get("/stats", response_model=MaterialStatsResponse, summary="获取素材统计")
 async def get_material_stats(user=Depends(get_verified_user)):
     """
     获取素材统计信息。

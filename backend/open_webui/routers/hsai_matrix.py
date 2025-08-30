@@ -40,7 +40,7 @@ router = APIRouter(prefix="/hsai/matrix", tags=["hsai_matrix"])
 # 平台账号管理
 ############################
 
-@router.get("/accounts", response_model=List[HSAIPlatformAccountResponse])
+@router.get("/accounts", response_model=List[HSAIPlatformAccountResponse], summary="获取平台账号")
 async def get_platform_accounts(
     platform_type: Optional[str] = Query(None, description="平台类型过滤：linkedin(领英)、facebook(脸书)、twitter(推特)、youtube(油管)、tiktok(抖音海外版)"),
     status: Optional[str] = Query(None, description="账号状态过滤：active(活跃)、inactive(未激活)、suspended(暂停)、expired(过期)"),
@@ -111,7 +111,7 @@ async def get_platform_accounts(
         )
 
 
-@router.post("/accounts", response_model=HSAIPlatformAccountResponse)
+@router.post("/accounts", response_model=HSAIPlatformAccountResponse, summary="创建平台账号")
 async def create_platform_account(
     form_data: HSAIPlatformAccountForm,
     user=Depends(get_verified_user)
@@ -174,7 +174,7 @@ async def create_platform_account(
         )
 
 
-@router.put("/accounts/{account_id}/token")
+@router.put("/accounts/{account_id}/token", summary="更新账号令牌")
 async def update_account_token(
     account_id: str,
     access_token: str,
@@ -214,7 +214,7 @@ async def update_account_token(
         )
 
 
-@router.put("/accounts/{account_id}/stats")
+@router.put("/accounts/{account_id}/stats", summary="更新账号统计")
 async def update_account_stats(
     account_id: str,
     follower_count: int,
@@ -254,7 +254,7 @@ async def update_account_stats(
         )
 
 
-@router.post("/accounts/{account_id}/sync")
+@router.post("/accounts/{account_id}/sync", summary="同步账号数据")
 async def sync_account_data(
     account_id: str,
     user=Depends(get_verified_user)
@@ -371,7 +371,7 @@ async def sync_account_data(
 # 账号分组管理
 ############################
 
-@router.get("/groups", response_model=List[HSAIAccountGroupModel])
+@router.get("/groups", response_model=List[HSAIAccountGroupModel], summary="获取账号分组")
 async def get_account_groups(
     user=Depends(get_verified_user)
 ):
@@ -389,7 +389,7 @@ async def get_account_groups(
         )
 
 
-@router.post("/groups", response_model=HSAIAccountGroupModel)
+@router.post("/groups", response_model=HSAIAccountGroupModel, summary="创建账号分组")
 async def create_account_group(
     form_data: HSAIAccountGroupForm,
     user=Depends(get_verified_user)
@@ -426,7 +426,7 @@ async def create_account_group(
 # 发布任务管理
 ############################
 
-@router.get("/publish-tasks", response_model=List[HSAIPublishTaskResponse])
+@router.get("/publish-tasks", response_model=List[HSAIPublishTaskResponse], summary="获取发布任务")
 async def get_publish_tasks(
     status: Optional[str] = Query(None, description="发布状态过滤：pending(待发布)、publishing(发布中)、published(已发布)、failed(发布失败)、cancelled(已取消)"),
     user=Depends(get_verified_user)
@@ -492,7 +492,7 @@ async def get_publish_tasks(
         )
 
 
-@router.post("/publish-tasks", response_model=HSAIPublishTaskResponse)
+@router.post("/publish-tasks", response_model=HSAIPublishTaskResponse, summary="创建发布任务")
 async def create_publish_task(
     form_data: HSAIPublishTaskForm,
     user=Depends(get_verified_user)
@@ -567,7 +567,7 @@ async def create_publish_task(
         )
 
 
-@router.post("/publish-tasks/{task_id}/execute")
+@router.post("/publish-tasks/{task_id}/execute", summary="执行发布任务")
 async def execute_publish_task(
     task_id: str,
     user=Depends(get_verified_user)
@@ -645,7 +645,7 @@ async def execute_publish_task(
         )
 
 
-@router.put("/publish-tasks/{task_id}/status")
+@router.put("/publish-tasks/{task_id}/status", summary="更新发布任务状态")
 async def update_publish_task_status(
     task_id: str,
     status: str,
@@ -707,7 +707,7 @@ class OAuthUrlResponse(BaseModel):
     state: str
 
 
-@router.get("/oauth/{platform_type}/url", response_model=OAuthUrlResponse)
+@router.get("/oauth/{platform_type}/url", response_model=OAuthUrlResponse, summary="获取OAuth授权链接")
 async def get_oauth_url(
     platform_type: str,
     redirect_uri: str,
@@ -768,7 +768,7 @@ async def get_oauth_url(
         )
 
 
-@router.post("/oauth/{platform_type}/callback")
+@router.post("/oauth/{platform_type}/callback", summary="OAuth回调处理")
 async def oauth_callback(
     platform_type: str,
     code: str,
@@ -856,7 +856,7 @@ async def oauth_callback(
 # 统计数据
 ############################
 
-@router.get("/stats", response_model=HSAIPublishStatsResponse)
+@router.get("/stats", response_model=HSAIPublishStatsResponse, summary="获取发布统计")
 async def get_publish_stats(
     start_date: Optional[str] = Query(None, description="开始日期，格式：YYYY-MM-DD，用于统计时间范围过滤"),
     end_date: Optional[str] = Query(None, description="结束日期，格式：YYYY-MM-DD，用于统计时间范围过滤"),
@@ -945,31 +945,11 @@ class PlatformInfoResponse(BaseModel):
     oauth_supported: bool
 
 
-@router.get("/platforms", response_model=List[PlatformInfoResponse])
+@router.get("/platforms", response_model=List[PlatformInfoResponse], summary="获取支持的平台")
 async def get_supported_platforms():
     """
     获取支持的平台列表及其限制信息。
-    
     返回系统支持的所有社交媒体平台及其技术规格和限制。
-    
-    Returns:
-        List[PlatformInfoResponse]: 支持的平台列表
-        - platform_type: 平台类型标识
-        - display_name: 平台显示名称
-        - supported_content_types: 支持的内容类型
-          - "image": 图片内容
-          - "video": 视频内容
-          - "carousel": 轮播图内容
-        - max_video_size: 最大视频文件大小（MB）
-        - max_video_duration: 最大视频时长（秒）
-        - supported_formats: 支持的文件格式
-        - oauth_supported: 是否支持OAuth授权
-        
-    Note:
-        - 不同平台有不同的内容限制
-        - 建议在上传前检查文件规格
-        - OAuth支持情况影响账号绑定方式
-        - 平台规格可能随时更新
     """
     platforms = [
         PlatformInfoResponse(

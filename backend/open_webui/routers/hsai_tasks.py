@@ -37,7 +37,7 @@ router = APIRouter(prefix="/hsai/tasks", tags=["hsai_tasks"])
 # 任务管理
 ############################
 
-@router.get("/", response_model=List[HSAITaskResponse])
+@router.get("/", response_model=List[HSAITaskResponse], summary="获取任务列表")
 async def get_tasks(
     status: Optional[str] = Query(None, description="任务状态过滤：pending(待执行)、in_progress(执行中)、completed(已完成)、failed(执行失败)、cancelled(已取消)"),
     task_type: Optional[str] = Query(None, description="任务类型过滤：video_creation(视频创作)、content_analysis(内容分析)、image_generation(图像生成)、text_processing(文本处理)"),
@@ -113,7 +113,7 @@ async def get_tasks(
         )
 
 
-@router.post("/", response_model=HSAITaskResponse)
+@router.post("/", response_model=HSAITaskResponse, summary="创建任务")
 async def create_task(
     form_data: HSAITaskForm,
     user=Depends(get_verified_user)
@@ -200,7 +200,7 @@ async def create_task(
         )
 
 
-@router.get("/{task_id}", response_model=HSAITaskResponse)
+@router.get("/{task_id}", response_model=HSAITaskResponse, summary="获取任务详情")
 async def get_task(
     task_id: str,
     user=Depends(get_verified_user)
@@ -226,7 +226,7 @@ async def get_task(
         )
 
 
-@router.put("/{task_id}", response_model=HSAITaskResponse)
+@router.put("/{task_id}", response_model=HSAITaskResponse, summary="更新任务")
 async def update_task(
     task_id: str,
     form_data: HSAITaskUpdateForm,
@@ -288,7 +288,7 @@ async def update_task(
         )
 
 
-@router.post("/{task_id}/start", response_model=HSAITaskResponse)
+@router.post("/{task_id}/start", response_model=HSAITaskResponse, summary="启动任务")
 async def start_task(
     task_id: str,
     user=Depends(get_verified_user)
@@ -372,7 +372,7 @@ async def start_task(
         )
 
 
-@router.post("/{task_id}/cancel", response_model=HSAITaskResponse)
+@router.post("/{task_id}/cancel", response_model=HSAITaskResponse, summary="取消任务")
 async def cancel_task(
     task_id: str,
     user=Depends(get_verified_user)
@@ -452,7 +452,7 @@ async def cancel_task(
         )
 
 
-@router.put("/{task_id}/progress", response_model=bool)
+@router.put("/{task_id}/progress", response_model=bool, summary="更新任务进度")
 async def update_task_progress(
     task_id: str,
     progress: int,
@@ -523,7 +523,7 @@ async def update_task_progress(
 # 卡片管理
 ############################
 
-@router.get("/cards/chat/{chat_id}", response_model=List[HSAICardResponse])
+@router.get("/cards/chat/{chat_id}", response_model=List[HSAICardResponse], summary="获取聊天卡片")
 async def get_chat_cards(
     chat_id: str,
     user=Depends(get_verified_user)
@@ -585,7 +585,7 @@ async def get_chat_cards(
         )
 
 
-@router.post("/cards", response_model=HSAICardResponse)
+@router.post("/cards", response_model=HSAICardResponse, summary="创建卡片")
 async def create_card(
     form_data: HSAICardForm,
     user=Depends(get_verified_user)
@@ -611,7 +611,7 @@ async def create_card(
         )
 
 
-@router.put("/cards/{card_id}", response_model=HSAICardResponse)
+@router.put("/cards/{card_id}", response_model=HSAICardResponse, summary="更新卡片")
 async def update_card(
     card_id: str,
     updates: dict,
@@ -652,7 +652,7 @@ class TaskStatsResponse(BaseModel):
     avg_completion_time: Optional[float] = None
 
 
-@router.get("/stats", response_model=TaskStatsResponse)
+@router.get("/stats", response_model=TaskStatsResponse, summary="获取任务统计")
 async def get_task_stats(user=Depends(get_verified_user)):
     """
     获取任务统计信息。
