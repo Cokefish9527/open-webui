@@ -79,8 +79,10 @@ from open_webui.routers import (
     credit,
     hsai_materials,
     hsai_tasks,
-    hsai_matrix,
     hsai_ai,
+    hsai_dashboard,
+    hsai_chat,
+    hsai_workflows,
 )
 
 from open_webui.routers.retrieval import (
@@ -1203,8 +1205,10 @@ app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 # HSAI Extension Routes
 app.include_router(hsai_materials.router, prefix="/api/v1", tags=["hsai"])
 app.include_router(hsai_tasks.router, prefix="/api/v1", tags=["hsai"])
-app.include_router(hsai_matrix.router, prefix="/api/v1", tags=["hsai"])
 app.include_router(hsai_ai.router, prefix="/api/v1/hsai/ai", tags=["hsai"])
+app.include_router(hsai_dashboard.router, prefix="/api/v1", tags=["hsai"])
+app.include_router(hsai_chat.router, prefix="/api/v1", tags=["hsai"])
+app.include_router(hsai_workflows.router, prefix="/api/v1", tags=["hsai"])
 
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)

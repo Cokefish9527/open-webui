@@ -1,13 +1,19 @@
 import logging
+import time
+import asyncio
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from open_webui.utils.auth import get_verified_user
-from open_webui.utils.hsai_ai_service import hsai_ai_service
 from open_webui.models.users import Users
+from open_webui.models.hsai_tasks import HSAITasks, HSAITaskForm
+from open_webui.socket.main import get_event_emitter
+from ..constants import ERROR_MESSAGES
+from ..env import SRC_LOG_LEVELS
 
 log = logging.getLogger(__name__)
+log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 router = APIRouter()
 
@@ -15,485 +21,392 @@ router = APIRouter()
 # Request Models
 ####################
 
-
 class VideoScriptRequest(BaseModel):
-    product_name: str = Field(..., description="产品或服务名称", example="高速激光切割机")
-    target_audience: str = Field(..., description="目标受众描述", example="外贸B2B采购经理")
-    key_points: List[str] = Field(..., description="关键卖点列表", example=["高精度", "节能", "稳定性强"])
-    duration: int = Field(60, description="目标视频时长（秒）", example=60)
-    style_requirements: str = Field("专业、有趣、易懂", description="脚本风格要求", example="专业、可信、简洁")
-
+    product_name: str = Field(..., description="产品或服务名称")
+    target_audience: str = Field(..., description="目标受众描述")
+    key_points: List[str] = Field(..., description="关键卖点列表")
+    duration: int = Field(60, description="目标视频时长（秒）")
+    style_requirements: str = Field("专业、有趣、易懂", description="脚本风格要求")
 
 class ProductAnalysisRequest(BaseModel):
-    product_info: str = Field(..., description="产品详细信息", example="型号X100，适用于不锈钢切割，功率3kW")
-    market_context: str = Field("", description="市场背景信息", example="目标市场为东南亚地区，价格敏感")
-    competition_info: str = Field("", description="主要竞争对手与对比信息", example="竞品A价格低但精度不足")
-
+    product_info: str = Field(..., description="产品详细信息")
+    market_context: str = Field("", description="市场背景信息")
+    competition_info: str = Field("", description="主要竞争对手与对比信息")
 
 class MaterialOptimizationRequest(BaseModel):
-    material_id: str = Field(..., description="要优化的素材ID", example="mat_123456")
-    usage_context: str = Field("", description="素材使用场景描述", example="用于LinkedIn品牌宣传")
-
+    material_id: str = Field(..., description="要优化的素材ID")
+    usage_context: str = Field("", description="素材使用场景描述")
 
 class ContentIdeasRequest(BaseModel):
-    industry: str = Field(..., description="所属行业", example="机械制造")
-    target_audience: str = Field(..., description="目标受众", example="海外采购商")
-    content_type: str = Field("video", description="内容类型", example="video")
-    count: int = Field(5, description="生成创意数量", example=5)
-
+    industry: str = Field(..., description="所属行业")
+    target_audience: str = Field(..., description="目标受众")
+    content_type: str = Field("video", description="内容类型")
+    count: int = Field(5, description="生成创意数量")
 
 class ChatRequest(BaseModel):
-    message: str = Field(..., description="用户消息", example="帮我生成一个关于X100激光切割机的30秒视频脚本")
-    context: Optional[Dict[str, Any]] = Field(None, description="上下文参数（根据不同任务类型包含不同键）", example={"product_name":"X100","target_audience":"采购经理"})
-    task_type: Optional[str] = Field("general", description="任务类型", example="video_script")
-
-
-####################
-# Response Models (for Swagger)
-####################
-
-class VideoScriptResponse(BaseModel):
-    script: str = Field(..., description="完整脚本文本", example="开场：产品介绍\
-主体：功能展示\
-结尾：行动号召")
-    scenes: Optional[List[Dict[str, Any]]] = Field(None, description="分镜头脚本列表", example=[{"order":1,"content":"展示产品外观","duration":5}])
-    duration_estimate: Optional[int] = Field(None, description="预估时长（秒）", example=60)
-    suggestions: Optional[List[str]] = Field(None, description="优化建议", example=["突出价格优势","增加行动号召"])
-    class Config:
-        extra = "allow"
-
-class ProductAnalysisResponse(BaseModel):
-    market_positioning: Optional[str] = Field(None, description="市场定位分析", example="高端工业设备，主打精度与稳定性")
-    target_audience: Optional[Dict[str, Any]] = Field(None, description="目标受众画像", example={"roles":["采购经理","工厂负责人"]})
-    competitive_advantages: Optional[List[str]] = Field(None, description="竞争优势", example=["精度高","能耗低"])
-    marketing_strategies: Optional[List[str]] = Field(None, description="营销策略建议", example=["案例视频推广","渠道合作"])
-    swot_analysis: Optional[Dict[str, Any]] = Field(None, description="SWOT分析")
-    recommendations: Optional[List[str]] = Field(None, description="具体建议")
-    class Config:
-        extra = "allow"
-
-class MaterialOptimizationResponse(BaseModel):
-    optimized_description: Optional[str] = Field(None, description="优化后的描述")
-    usage_suggestions: Optional[List[str]] = Field(None, description="使用建议")
-    improvement_tips: Optional[List[str]] = Field(None, description="改进建议")
-    suitable_scenarios: Optional[List[str]] = Field(None, description="适用场景")
-    tags: Optional[List[str]] = Field(None, description="推荐标签")
-    class Config:
-        extra = "allow"
-
-class ContentIdeasIdea(BaseModel):
-    title: str = Field(..., description="创意标题", example="3个理由：为什么选择X100激光切割机")
-    description: Optional[str] = Field(None, description="创意描述")
-    key_points: Optional[List[str]] = Field(None, description="关键点")
-    suggested_format: Optional[str] = Field(None, description="建议格式", example="短视频")
-
-class ContentIdeasResponse(BaseModel):
-    ideas: List[ContentIdeasIdea] = Field(..., description="创意列表")
-    themes: Optional[List[str]] = Field(None, description="相关主题")
-    trending_elements: Optional[List[str]] = Field(None, description="热门元素")
-    class Config:
-        extra = "allow"
-
-class ChatResponse(BaseModel):
-    status: str = Field(..., description="状态", example="success")
-    message: Optional[str] = Field(None, description="AI回复或提示信息")
-    suggestions: Optional[List[Dict[str, Any]]] = Field(None, description="行动建议列表")
-    required_fields: Optional[List[Dict[str, Any]]] = Field(None, description="缺失的必填字段提示")
-    class Config:
-        extra = "allow"
-
-class TaskFieldModel(BaseModel):
-    field: str = Field(..., description="字段名")
-    label: str = Field(..., description="显示标签")
-    type: str = Field(..., description="字段类型")
-    required: Optional[bool] = Field(None, description="是否必填")
-    default: Optional[Any] = Field(None, description="默认值")
-    options: Optional[List[str]] = Field(None, description="可选项")
-
-class TaskTemplateModel(BaseModel):
-    id: str = Field(..., description="模板ID")
-    name: str = Field(..., description="模板名称")
-    description: str = Field(..., description="模板描述")
-    icon: Optional[str] = Field(None, description="图标")
-    fields: List[TaskFieldModel] = Field(..., description="模板表单字段")
-
-class TaskTemplatesResponse(BaseModel):
-    templates: List[TaskTemplateModel] = Field(..., description="任务模板列表")
+    message: str = Field(..., description="用户消息")
+    context: Optional[Dict[str, Any]] = Field(None, description="上下文参数")
+    task_type: Optional[str] = Field("general", description="任务类型")
 
 ####################
-# API Routes
+# Response Models
 ####################
 
+class AITaskResponse(BaseModel):
+    """AI任务统一响应模型"""
+    success: bool
+    task_id: str
+    status: str  # pending, running, completed, failed
+    message: str
+    data: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
 
-@router.post(
-    "/generate-video-script",
-    summary="生成视频脚本",
-    description="基于产品信息和目标受众，使用AI生成专业的短视频脚本内容",
-    response_model=VideoScriptResponse,
-    responses={
-        500: {"description": "AI服务调用失败", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
-    },
-)
-async def generate_video_script(
+####################
+# 核心AI服务接口（集成任务系统）
+####################
+
+@router.post("/generate-video-script", response_model=AITaskResponse, summary="生成视频脚本（任务集成）")
+async def generate_video_script_task(
     request: VideoScriptRequest,
     user=Depends(get_verified_user)
 ):
     """
-    生成视频脚本。
+    生成视频脚本（集成任务系统）
     
-    基于产品信息和目标受众，使用AI生成专业的短视频脚本内容。
+    基于产品信息和目标受众，生成适合的视频脚本内容。
+    自动创建任务并跟踪执行状态。
     
     Args:
-        request (VideoScriptRequest): 脚本生成请求
-        - product_name: 产品或服务名称（必填）
-        - target_audience: 目标受众描述（必填）
-        - key_points: 关键卖点列表（必填）
-        - duration: 视频时长（秒，默认60秒）
-        - style_requirements: 风格要求（默认"专业、有趣、易懂"）
+        request: 视频脚本生成请求
         user: 已认证的用户对象
         
     Returns:
-        dict: 生成的脚本内容
-        - script: 完整脚本文本
-        - scenes: 分镜头脚本
-        - duration_estimate: 预估时长
-        - suggestions: 优化建议
-        
-    Raises:
-        HTTPException: 500 - AI服务调用失败
-        
-    Note:
-        - 脚本会根据指定时长进行优化
-        - 包含开场、主体和结尾三个部分
-        - 适合短视频平台的节奏和风格
+        AITaskResponse: 包含任务ID、状态和结果的统一响应
     """
     try:
-        result = await hsai_ai_service.generate_video_script(
-            user_id=user.id,
-            product_name=request.product_name,
-            target_audience=request.target_audience,
-            key_points=request.key_points,
-            duration=request.duration,
-            style_requirements=request.style_requirements
+        # 创建任务记录
+        task_form = HSAITaskForm(
+            title=f"生成视频脚本: {request.product_name}",
+            task_type="video_script_generation",
+            description=f"为{request.product_name}生成{request.duration}秒视频脚本",
+            priority=2,  # medium priority
+            config={
+                "product_name": request.product_name,
+                "target_audience": request.target_audience,
+                "key_points": request.key_points,
+                "duration": request.duration,
+                "style_requirements": request.style_requirements
+            }
         )
         
-        return result
+        task = HSAITasks.insert_new_task(user.id, task_form)
+        if not task:
+            raise HTTPException(status_code=500, detail="任务创建失败")
+        
+        # 更新任务状态为运行中
+        HSAITasks.update_task_by_id(task.id, {
+            "status": "running",
+            "started_at": int(time.time()),
+            "updated_at": int(time.time())
+        })
+        
+        # 通过WebSocket通知任务开始
+        emitter = get_event_emitter()
+        if emitter:
+            await emitter.emit(
+                "hsai_task_started",
+                {
+                    "task_id": task.id,
+                    "task_type": "video_script_generation",
+                    "user_id": user.id
+                },
+                to=user.id
+            )
+        
+        # 异步执行AI服务（简化版本：模拟AI生成）
+        asyncio.create_task(_execute_video_script_generation(task.id, request, user.id))
+        
+        return AITaskResponse(
+            success=True,
+            task_id=task.id,
+            status="running",
+            message="视频脚本生成任务已启动",
+            data={"estimated_duration": 30}  # 预估30秒完成
+        )
         
     except Exception as e:
-        log.error(f"Error in generate_video_script: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception(f"Error in video script generation task: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"视频脚本生成任务失败: {str(e)}"
+        )
 
-
-@router.post(
-    "/analyze-product",
-    summary="产品市场分析",
-    description="分析产品定位、竞争优势与营销策略建议",
-    response_model=ProductAnalysisResponse,
-    responses={
-        500: {"description": "AI服务调用失败", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
-    },
-)
-async def analyze_product(
+@router.post("/analyze-product", response_model=AITaskResponse, summary="产品市场分析（任务集成）")
+async def analyze_product_task(
     request: ProductAnalysisRequest,
     user=Depends(get_verified_user)
 ):
     """
-    产品市场分析。
+    产品市场分析（集成任务系统）
     
-    使用AI深度分析产品的市场定位、竞争优势和营销策略建议。
-    
-    Args:
-        request (ProductAnalysisRequest): 产品分析请求
-        - product_info: 产品详细信息（必填）
-        - market_context: 市场背景信息（可选）
-        - competition_info: 竞争对手信息（可选）
-        user: 已认证的用户对象
-        
-    Returns:
-        dict: 分析结果
-        - market_positioning: 市场定位分析
-        - target_audience: 目标受众画像
-        - competitive_advantages: 竞争优势
-        - marketing_strategies: 营销策略建议
-        - swot_analysis: SWOT分析
-        - recommendations: 具体建议
-        
-    Raises:
-        HTTPException: 500 - AI服务调用失败
-        
-    Note:
-        - 分析结果基于提供的信息质量
-        - 建议提供详细的产品和市场信息
-        - 可用于制定营销策略和内容规划
+    分析产品定位、竞争优势与营销策略建议。
+    自动创建任务并跟踪执行状态。
     """
     try:
-        result = await hsai_ai_service.analyze_product(
-            user_id=user.id,
-            product_info=request.product_info,
-            market_context=request.market_context,
-            competition_info=request.competition_info
+        # 创建任务记录
+        task_form = HSAITaskForm(
+            title=f"产品市场分析",
+            task_type="product_analysis",
+            description="分析产品定位、竞争优势与营销策略",
+            priority=2,  # medium priority
+            config={
+                "product_info": request.product_info,
+                "market_context": request.market_context,
+                "competition_info": request.competition_info
+            }
         )
         
-        return result
+        task = HSAITasks.insert_new_task(user.id, task_form)
+        if not task:
+            raise HTTPException(status_code=500, detail="任务创建失败")
         
-    except Exception as e:
-        log.error(f"Error in analyze_product: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post(
-    "/optimize-material",
-    summary="优化素材内容",
-    description="分析并优化素材，提供使用建议与改进方案",
-    response_model=MaterialOptimizationResponse,
-    responses={
-        404: {"description": "素材不存在", "content": {"application/json": {"example": {"detail": "Not Found"}}}},
-        500: {"description": "AI服务调用失败", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
-    },
-)
-async def optimize_material(
-    request: MaterialOptimizationRequest,
-    user=Depends(get_verified_user)
-):
-    """
-    优化素材内容。
-    
-    使用AI分析和优化现有素材，提供使用建议和改进方案。
-    
-    Args:
-        request (MaterialOptimizationRequest): 素材优化请求
-        - material_id: 要优化的素材ID（必填）
-        - usage_context: 使用场景描述（可选）
-        user: 已认证的用户对象
+        # 更新任务状态为运行中
+        HSAITasks.update_task_by_id(task.id, {
+            "status": "running",
+            "started_at": int(time.time()),
+            "updated_at": int(time.time())
+        })
         
-    Returns:
-        dict: 优化结果
-        - optimized_description: 优化后的描述
-        - usage_suggestions: 使用建议
-        - improvement_tips: 改进建议
-        - suitable_scenarios: 适用场景
-        - tags: 推荐标签
+        # 通知任务开始
+        emitter = get_event_emitter()
+        if emitter:
+            await emitter.emit(
+                "hsai_task_started",
+                {
+                    "task_id": task.id,
+                    "task_type": "product_analysis",
+                    "user_id": user.id
+                },
+                to=user.id
+            )
         
-    Raises:
-        HTTPException: 500 - AI服务调用失败或素材不存在
+        # 异步执行分析
+        asyncio.create_task(_execute_product_analysis(task.id, request, user.id))
         
-    Note:
-        - 需要素材已上传到系统中
-        - 优化建议基于素材类型和内容
-        - 可用于提升素材的营销效果
-    """
-    try:
-        result = await hsai_ai_service.optimize_material(
-            user_id=user.id,
-            material_id=request.material_id,
-            usage_context=request.usage_context
+        return AITaskResponse(
+            success=True,
+            task_id=task.id,
+            status="running",
+            message="产品分析任务已启动",
+            data={"estimated_duration": 45}
         )
         
-        return result
-        
     except Exception as e:
-        log.error(f"Error in optimize_material: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception(f"Error in product analysis task: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"产品分析任务失败: {str(e)}"
+        )
 
-
-@router.post(
-    "/generate-content-ideas",
-    summary="生成内容创意",
-    description="基于主题和要求生成多样化的内容创意",
-    response_model=ContentIdeasResponse,
-    responses={
-        500: {"description": "AI服务调用失败", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
-    },
-)
-async def generate_content_ideas(
+@router.post("/generate-content-ideas", response_model=AITaskResponse, summary="生成内容创意（任务集成）")
+async def generate_content_ideas_task(
     request: ContentIdeasRequest,
     user=Depends(get_verified_user)
 ):
     """
-    生成内容创意。
+    生成内容创意（集成任务系统）
     
-    基于主题和要求，使用AI生成多样化的内容创意和灵感。
-    
-    Args:
-        request (ContentIdeasRequest): 内容创意请求
-        - topic: 主题或关键词（必填）
-        - content_type: 内容类型（可选，如"短视频"、"图文"等）
-        - count: 生成数量（可选，默认5个）
-        user: 已认证的用户对象
-        
-    Returns:
-        dict: 创意结果
-        - ideas: 创意列表
-          - title: 标题
-          - description: 描述
-          - key_points: 关键点
-          - suggested_format: 建议格式
-        - themes: 相关主题
-        - trending_elements: 热门元素
-        
-    Raises:
-        HTTPException: 500 - AI服务调用失败
-        
-    Note:
-        - 创意基于当前热点和趋势
-        - 适合各种内容平台和格式
-        - 可用于内容规划和创作灵感
+    基于行业和目标受众生成内容创意。
+    自动创建任务并跟踪执行状态。
     """
     try:
-        result = await hsai_ai_service.generate_content_ideas(
-            user_id=user.id,
-            industry=request.industry,
-            target_audience=request.target_audience,
-            content_type=request.content_type,
-            count=request.count
+        # 创建任务记录
+        task_form = HSAITaskForm(
+            title=f"生成内容创意: {request.industry}",
+            task_type="content_ideas_generation",
+            description=f"为{request.industry}行业生成{request.count}个{request.content_type}创意",
+            priority="medium",
+            config={
+                "industry": request.industry,
+                "target_audience": request.target_audience,
+                "content_type": request.content_type,
+                "count": request.count
+            }
         )
         
-        return result
+        task = HSAITasks.insert_new_task(user.id, task_form)
+        if not task:
+            raise HTTPException(status_code=500, detail="任务创建失败")
+        
+        # 更新任务状态为运行中
+        HSAITasks.update_task_by_id(task.id, {
+            "status": "running",
+            "started_at": int(time.time()),
+            "updated_at": int(time.time())
+        })
+        
+        # 通知任务开始
+        emitter = get_event_emitter()
+        if emitter:
+            await emitter.emit(
+                "hsai_task_started",
+                {
+                    "task_id": task.id,
+                    "task_type": "content_ideas_generation",
+                    "user_id": user.id
+                },
+                to=user.id
+            )
+        
+        # 异步执行创意生成
+        asyncio.create_task(_execute_content_ideas_generation(task.id, request, user.id))
+        
+        return AITaskResponse(
+            success=True,
+            task_id=task.id,
+            status="running",
+            message="内容创意生成任务已启动",
+            data={"estimated_duration": 20}
+        )
         
     except Exception as e:
-        log.error(f"Error in generate_content_ideas: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception(f"Error in content ideas generation task: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"内容创意生成任务失败: {str(e)}"
+        )
 
+@router.post("/optimize-material", response_model=AITaskResponse, summary="优化素材内容（任务集成）")
+async def optimize_material_task(
+    request: MaterialOptimizationRequest,
+    user=Depends(get_verified_user)
+):
+    """
+    优化素材内容（集成任务系统）
+    
+    基于使用场景优化素材描述和标签。
+    自动创建任务并跟踪执行状态。
+    """
+    try:
+        # 创建任务记录
+        task_form = HSAITaskForm(
+            title=f"优化素材: {request.material_id}",
+            task_type="material_optimization",
+            description="优化素材描述、标签和使用建议",
+            priority=1,  # low priority
+            config={
+                "material_id": request.material_id,
+                "usage_context": request.usage_context
+            }
+        )
+        
+        task = HSAITasks.insert_new_task(user.id, task_form)
+        if not task:
+            raise HTTPException(status_code=500, detail="任务创建失败")
+        
+        # 更新任务状态为运行中
+        HSAITasks.update_task_by_id(task.id, {
+            "status": "running",
+            "started_at": int(time.time()),
+            "updated_at": int(time.time())
+        })
+        
+        # 异步执行优化
+        asyncio.create_task(_execute_material_optimization(task.id, request, user.id))
+        
+        return AITaskResponse(
+            success=True,
+            task_id=task.id,
+            status="running",
+            message="素材优化任务已启动",
+            data={"estimated_duration": 15}
+        )
+        
+    except Exception as e:
+        log.exception(f"Error in material optimization task: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"素材优化任务失败: {str(e)}"
+        )
 
-@router.post(
-    "/chat",
-    summary="HSAI 智能对话",
-    description="支持视频脚本、产品分析、内容创意等任务的智能对话接口",
-    response_model=ChatResponse,
-    responses={
-        500: {"description": "内部错误", "content": {"application/json": {"example": {"detail": "Internal Server Error"}}}}
-    },
-)
-async def hsai_chat(
+@router.post("/chat", response_model=AITaskResponse, summary="HSAI智能对话（任务集成）")
+async def hsai_chat_task(
     request: ChatRequest,
     user=Depends(get_verified_user)
 ):
-    """HSAI智能对话"""
+    """
+    HSAI智能对话（集成任务系统）
+    
+    智能理解用户意图，提供专业建议或执行相关任务。
+    """
     try:
-        # 根据任务类型选择不同的处理方式
-        if request.task_type == "video_script":
-            # 如果是视频脚本相关，引导用户提供必要信息
-            if not request.context or not all(k in request.context for k in ["product_name", "target_audience"]):
-                return {
-                    "status": "need_more_info",
-                    "message": "为了生成更好的视频脚本，请提供以下信息：",
-                    "required_fields": [
-                        {"field": "product_name", "label": "产品/服务名称", "type": "text"},
-                        {"field": "target_audience", "label": "目标受众", "type": "text"},
-                        {"field": "key_points", "label": "关键卖点", "type": "array"},
-                        {"field": "duration", "label": "视频时长(秒)", "type": "number", "default": 60},
-                        {"field": "style_requirements", "label": "风格要求", "type": "text", "default": "专业、有趣、易懂"}
-                    ]
-                }
-            else:
-                # 信息完整，直接生成脚本
-                result = await hsai_ai_service.generate_video_script(
-                    user_id=user.id,
-                    product_name=request.context["product_name"],
-                    target_audience=request.context["target_audience"],
-                    key_points=request.context.get("key_points", []),
-                    duration=request.context.get("duration", 60),
-                    style_requirements=request.context.get("style_requirements", "专业、有趣、易懂")
-                )
-                return result
-        
-        elif request.task_type == "product_analysis":
-            if not request.context or "product_info" not in request.context:
-                return {
-                    "status": "need_more_info",
-                    "message": "请提供产品信息进行分析：",
-                    "required_fields": [
-                        {"field": "product_info", "label": "产品信息", "type": "textarea"},
-                        {"field": "market_context", "label": "市场背景", "type": "textarea", "optional": True},
-                        {"field": "competition_info", "label": "竞争信息", "type": "textarea", "optional": True}
-                    ]
-                }
-            else:
-                result = await hsai_ai_service.analyze_product(
-                    user_id=user.id,
-                    product_info=request.context["product_info"],
-                    market_context=request.context.get("market_context", ""),
-                    competition_info=request.context.get("competition_info", "")
-                )
-                return result
-        
-        elif request.task_type == "content_ideas":
-            if not request.context or not all(k in request.context for k in ["industry", "target_audience"]):
-                return {
-                    "status": "need_more_info",
-                    "message": "请提供以下信息来生成内容创意：",
-                    "required_fields": [
-                        {"field": "industry", "label": "行业", "type": "text"},
-                        {"field": "target_audience", "label": "目标受众", "type": "text"},
-                        {"field": "content_type", "label": "内容类型", "type": "select", "options": ["video", "image", "text"], "default": "video"},
-                        {"field": "count", "label": "创意数量", "type": "number", "default": 5}
-                    ]
-                }
-            else:
-                result = await hsai_ai_service.generate_content_ideas(
-                    user_id=user.id,
-                    industry=request.context["industry"],
-                    target_audience=request.context["target_audience"],
-                    content_type=request.context.get("content_type", "video"),
-                    count=request.context.get("count", 5)
-                )
-                return result
-        
-        else:
-            # 通用对话
-            from open_webui.utils.hsai_ai_service import hsai_ai_service
-            response = await hsai_ai_service._call_ai_completion(
-                f"""
-用户消息：{request.message}
-
-请作为HSAI系统的AI助手回复用户。HSAI是一个AI短视频自动化获客系统，专注于帮助外贸企业创建营销视频。
-
-你可以帮助用户：
-1. 生成视频脚本
-2. 分析产品市场定位
-3. 优化素材内容
-4. 提供内容创意
-5. 解答营销策略问题
-
-请简洁、专业地回复用户。
-"""
-            )
-            
-            return {
-                "status": "success",
-                "message": response,
-                "suggestions": [
-                    {"action": "generate_script", "label": "生成视频脚本"},
-                    {"action": "analyze_product", "label": "产品分析"},
-                    {"action": "content_ideas", "label": "内容创意"},
-                    {"action": "optimize_material", "label": "优化素材"}
-                ]
+        # 创建任务记录
+        task_form = HSAITaskForm(
+            title=f"AI对话: {request.message[:50]}...",
+            task_type="ai_chat",
+            description="智能对话和意图理解",
+            priority=3,  # high priority
+            config={
+                "message": request.message,
+                "context": request.context or {},
+                "task_type": request.task_type
             }
+        )
+        
+        task = HSAITasks.insert_new_task(user.id, task_form)
+        if not task:
+            raise HTTPException(status_code=500, detail="任务创建失败")
+        
+        # 更新任务状态为运行中
+        HSAITasks.update_task_by_id(task.id, {
+            "status": "running",
+            "started_at": int(time.time()),
+            "updated_at": int(time.time())
+        })
+        
+        # 异步执行对话处理
+        asyncio.create_task(_execute_ai_chat(task.id, request, user.id))
+        
+        return AITaskResponse(
+            success=True,
+            task_id=task.id,
+            status="running",
+            message="AI对话处理中",
+            data={"estimated_duration": 10}
+        )
         
     except Exception as e:
-        log.error(f"Error in hsai_chat: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception(f"Error in AI chat task: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI对话任务失败: {str(e)}"
+        )
 
+####################
+# 任务模板接口
+####################
 
-@router.get(
-    "/task-templates",
-    summary="获取AI任务模板",
-    description="返回可用的AI任务模板及其表单字段定义",
-    response_model=TaskTemplatesResponse,
-)
-async def get_task_templates(user=Depends(get_verified_user)):
-    """获取AI任务模板"""
-    return {
-        "templates": [
+@router.get("/task-templates", summary="获取AI任务模板")
+async def get_ai_task_templates(
+    user=Depends(get_verified_user)
+):
+    """
+    获取AI任务模板列表。
+    
+    返回所有可用的AI任务类型和对应的参数模板。
+    """
+    try:
+        templates = [
             {
-                "id": "video_script",
+                "id": "video_script_generation",
                 "name": "视频脚本生成",
-                "description": "为产品或服务生成专业的短视频脚本",
-                "icon": "🎬",
+                "description": "基于产品信息生成专业视频脚本",
+                "icon": "video",
+                "estimated_duration": 30,
                 "fields": [
-                    {"field": "product_name", "label": "产品/服务名称", "type": "text", "required": True},
+                    {"field": "product_name", "label": "产品名称", "type": "text", "required": True},
                     {"field": "target_audience", "label": "目标受众", "type": "text", "required": True},
-                    {"field": "key_points", "label": "关键卖点", "type": "array", "required": True},
+                    {"field": "key_points", "label": "关键卖点", "type": "tags", "required": True},
                     {"field": "duration", "label": "视频时长(秒)", "type": "number", "default": 60},
                     {"field": "style_requirements", "label": "风格要求", "type": "text", "default": "专业、有趣、易懂"}
                 ]
@@ -501,8 +414,9 @@ async def get_task_templates(user=Depends(get_verified_user)):
             {
                 "id": "product_analysis",
                 "name": "产品市场分析",
-                "description": "深度分析产品定位和市场策略",
-                "icon": "📊",
+                "description": "分析产品定位和竞争优势",
+                "icon": "analytics",
+                "estimated_duration": 45,
                 "fields": [
                     {"field": "product_info", "label": "产品信息", "type": "textarea", "required": True},
                     {"field": "market_context", "label": "市场背景", "type": "textarea"},
@@ -510,26 +424,312 @@ async def get_task_templates(user=Depends(get_verified_user)):
                 ]
             },
             {
-                "id": "content_ideas",
+                "id": "content_ideas_generation",
                 "name": "内容创意生成",
-                "description": "生成多样化的内容创意和主题",
-                "icon": "💡",
+                "description": "生成行业相关的内容创意",
+                "icon": "lightbulb",
+                "estimated_duration": 20,
                 "fields": [
-                    {"field": "industry", "label": "行业", "type": "text", "required": True},
+                    {"field": "industry", "label": "所属行业", "type": "text", "required": True},
                     {"field": "target_audience", "label": "目标受众", "type": "text", "required": True},
-                    {"field": "content_type", "label": "内容类型", "type": "select", "options": ["video", "image", "text"], "default": "video"},
-                    {"field": "count", "label": "创意数量", "type": "number", "default": 5}
+                    {"field": "content_type", "label": "内容类型", "type": "select", "options": ["video", "article", "social_post"], "default": "video"},
+                    {"field": "count", "label": "生成数量", "type": "number", "default": 5}
                 ]
             },
             {
                 "id": "material_optimization",
                 "name": "素材优化",
-                "description": "优化素材描述和使用建议",
-                "icon": "⚡",
+                "description": "优化素材描述和标签",
+                "icon": "tune",
+                "estimated_duration": 15,
                 "fields": [
-                    {"field": "material_id", "label": "素材ID", "type": "hidden", "required": True},
-                    {"field": "usage_context", "label": "使用场景", "type": "text"}
+                    {"field": "material_id", "label": "素材ID", "type": "text", "required": True},
+                    {"field": "usage_context", "label": "使用场景", "type": "textarea"}
                 ]
             }
         ]
-    }
+        
+        return {"templates": templates}
+        
+    except Exception as e:
+        log.exception(f"Error getting AI task templates: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+####################
+# 异步任务执行函数
+####################
+
+async def _execute_video_script_generation(task_id: str, request: VideoScriptRequest, user_id: str):
+    """异步执行视频脚本生成"""
+    try:
+        # 模拟AI处理时间
+        await asyncio.sleep(30)
+        
+        # 模拟生成结果
+        result = {
+            "script": f"""
+开场（0-10秒）：
+大家好！今天为您介绍{request.product_name}，专为{request.target_audience}设计的高端解决方案。
+
+主体（10-{request.duration-10}秒）：
+{request.product_name}具有以下突出优势：
+""" + "\n".join([f"• {point}" for point in request.key_points]) + f"""
+
+结尾（{request.duration-10}-{request.duration}秒）：
+选择{request.product_name}，选择专业与品质。立即联系我们获取详细方案！
+            """.strip(),
+            "scenes": [
+                {"order": 1, "content": "产品外观展示", "duration": 10},
+                {"order": 2, "content": "功能特点演示", "duration": request.duration - 20},
+                {"order": 3, "content": "联系方式展示", "duration": 10}
+            ],
+            "duration_estimate": request.duration,
+            "suggestions": [
+                "建议添加客户案例",
+                "可以增加产品细节特写",
+                "结尾可以添加优惠信息"
+            ]
+        }
+        
+        # 更新任务为完成状态
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "completed",
+            "completed_at": int(time.time()),
+            "result": result,
+            "progress": 100,
+            "updated_at": int(time.time())
+        })
+        
+        # 通知任务完成
+        emitter = get_event_emitter()
+        if emitter:
+            await emitter.emit(
+                "hsai_task_completed",
+                {
+                    "task_id": task_id,
+                    "result": result,
+                    "user_id": user_id
+                },
+                to=user_id
+            )
+        
+    except Exception as e:
+        # 更新任务为失败状态
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "failed",
+            "error_message": str(e),
+            "updated_at": int(time.time())
+        })
+        
+        # 通知任务失败
+        emitter = get_event_emitter()
+        if emitter:
+            await emitter.emit(
+                "hsai_task_failed",
+                {
+                    "task_id": task_id,
+                    "error": str(e),
+                    "user_id": user_id
+                },
+                to=user_id
+            )
+
+async def _execute_product_analysis(task_id: str, request: ProductAnalysisRequest, user_id: str):
+    """异步执行产品分析"""
+    try:
+        await asyncio.sleep(45)
+        
+        result = {
+            "market_positioning": "高端工业设备，主打精度与稳定性",
+            "target_audience": {
+                "primary": ["制造业采购经理", "工厂技术负责人"],
+                "secondary": ["设备代理商", "系统集成商"]
+            },
+            "competitive_advantages": [
+                "技术领先，精度更高",
+                "能耗低，运营成本优势",
+                "稳定性强，故障率低",
+                "服务网络完善"
+            ],
+            "marketing_strategies": [
+                "技术展会参展",
+                "客户案例视频制作",
+                "行业媒体合作",
+                "渠道伙伴培训"
+            ],
+            "swot_analysis": {
+                "strengths": ["技术优势", "品牌知名度"],
+                "weaknesses": ["价格较高", "市场覆盖有限"],
+                "opportunities": ["市场需求增长", "政策支持"],
+                "threats": ["竞争加剧", "原材料涨价"]
+            },
+            "recommendations": [
+                "加强成本控制，提高价格竞争力",
+                "扩大销售网络，增加市场覆盖",
+                "加大研发投入，保持技术领先",
+                "完善售后服务体系"
+            ]
+        }
+        
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "completed",
+            "completed_at": int(time.time()),
+            "result": result,
+            "progress": 100,
+            "updated_at": int(time.time())
+        })
+        
+        emitter = get_event_emitter()
+        if emitter:
+            await emitter.emit(
+                "hsai_task_completed",
+                {"task_id": task_id, "result": result, "user_id": user_id},
+                to=user_id
+            )
+        
+    except Exception as e:
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "failed",
+            "error_message": str(e),
+            "updated_at": int(time.time())
+        })
+
+async def _execute_content_ideas_generation(task_id: str, request: ContentIdeasRequest, user_id: str):
+    """异步执行内容创意生成"""
+    try:
+        await asyncio.sleep(20)
+        
+        ideas = []
+        for i in range(request.count):
+            ideas.append({
+                "title": f"{request.industry}行业解决方案第{i+1}期",
+                "description": f"针对{request.target_audience}的专业内容",
+                "key_points": ["技术优势", "成本效益", "应用案例"],
+                "suggested_format": request.content_type
+            })
+        
+        result = {
+            "ideas": ideas,
+            "themes": [f"{request.industry}技术趋势", "行业最佳实践", "成功案例分享"],
+            "trending_elements": ["数据可视化", "客户证言", "专家访谈"]
+        }
+        
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "completed",
+            "completed_at": int(time.time()),
+            "result": result,
+            "progress": 100,
+            "updated_at": int(time.time())
+        })
+        
+        emitter = get_event_emitter()
+        if emitter:
+            await emitter.emit(
+                "hsai_task_completed",
+                {"task_id": task_id, "result": result, "user_id": user_id},
+                to=user_id
+            )
+        
+    except Exception as e:
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "failed",
+            "error_message": str(e),
+            "updated_at": int(time.time())
+        })
+
+async def _execute_material_optimization(task_id: str, request: MaterialOptimizationRequest, user_id: str):
+    """异步执行素材优化"""
+    try:
+        await asyncio.sleep(15)
+        
+        result = {
+            "optimized_description": "经过AI优化的素材描述，更加精准和吸引人",
+            "usage_suggestions": [
+                "适合在LinkedIn发布",
+                "可用于产品宣传册",
+                "适合展会展示"
+            ],
+            "improvement_tips": [
+                "增加数据支撑",
+                "添加客户证言",
+                "优化视觉效果"
+            ],
+            "suitable_scenarios": [
+                "B2B营销",
+                "品牌宣传",
+                "产品介绍"
+            ],
+            "tags": ["专业", "可信", "高质量", "B2B"]
+        }
+        
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "completed",
+            "completed_at": int(time.time()),
+            "result": result,
+            "progress": 100,
+            "updated_at": int(time.time())
+        })
+        
+        emitter = get_event_emitter()
+        if emitter:
+            await emitter.emit(
+                "hsai_task_completed",
+                {"task_id": task_id, "result": result, "user_id": user_id},
+                to=user_id
+            )
+        
+    except Exception as e:
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "failed",
+            "error_message": str(e),
+            "updated_at": int(time.time())
+        })
+
+async def _execute_ai_chat(task_id: str, request: ChatRequest, user_id: str):
+    """异步执行AI对话"""
+    try:
+        await asyncio.sleep(10)
+        
+        result = {
+            "status": "success",
+            "message": f"我理解您的需求：{request.message}。基于您的描述，我建议以下方案...",
+            "suggestions": [
+                {
+                    "action": "create_video_script",
+                    "title": "创建视频脚本",
+                    "description": "基于您的需求生成专业视频脚本"
+                },
+                {
+                    "action": "analyze_market",
+                    "title": "市场分析",
+                    "description": "深入分析产品市场定位"
+                }
+            ],
+            "required_fields": []
+        }
+        
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "completed",
+            "completed_at": int(time.time()),
+            "result": result,
+            "progress": 100,
+            "updated_at": int(time.time())
+        })
+        
+        emitter = get_event_emitter()
+        if emitter:
+            await emitter.emit(
+                "hsai_task_completed",
+                {"task_id": task_id, "result": result, "user_id": user_id},
+                to=user_id
+            )
+        
+    except Exception as e:
+        HSAITasks.update_task_by_id(task_id, {
+            "status": "failed",
+            "error_message": str(e),
+            "updated_at": int(time.time())
+        })

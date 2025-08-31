@@ -6,7 +6,8 @@ from typing import Optional, Dict, Any
 from urllib.parse import urlencode, parse_qs, urlparse
 
 import requests
-from open_webui.models.hsai_matrix import HSAIPlatformAccounts, HSAIPlatformAccountForm, HSAIAccountStatus
+# 注释掉矩阵管理相关的导入，因为该模块已被移除
+# from open_webui.models.hsai_matrix import HSAIPlatformAccounts, HSAIPlatformAccountForm, HSAIAccountStatus
 
 log = logging.getLogger(__name__)
 
