@@ -7,7 +7,15 @@ from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import JSON, BigInteger, Column, Numeric, String
 
-from open_webui.config import CREDIT_EXCHANGE_RATIO
+import importlib.util
+import os
+
+# 直接导入config.py文件
+config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.py')
+spec = importlib.util.spec_from_file_location("config", config_path)
+config_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(config_module)
+CREDIT_EXCHANGE_RATIO = config_module.CREDIT_EXCHANGE_RATIO
 from open_webui.internal.db import Base, get_db
 
 

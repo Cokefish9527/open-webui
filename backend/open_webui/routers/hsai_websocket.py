@@ -1,13 +1,21 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends, HTTPException
 from open_webui.socket.hsai_chat_handler import chat_handler
 from open_webui.utils.viral_learning_scheduler import viral_learning_scheduler
-from open_webui.utils.viral_learning_scheduler import viral_learning_scheduler
-from open_webui.utils.auth import get_verified_user
+from open_webui.utils.auth import get_current_user as get_verified_user
 from open_webui.models.users import Users
+
+# 导入新的工作流集成模块
+from open_webui.utils.n8n_workflow_manager import workflow_manager
+from open_webui.utils.workflow_selector import workflow_selector, SelectionContext
+from open_webui.utils.n8n_client import n8n_client, ExecutionRequest
+from open_webui.utils.message_processor import message_processor
+
 import json
 import logging
 import jwt
 import time
+import asyncio
+from typing import Dict, List, Optional
 from open_webui.config import JWT_SECRET_KEY
 
 log = logging.getLogger(__name__)
@@ -18,6 +26,14 @@ async def startup_event():
     """应用启动时的初始化"""
     log.info("HSAI WebSocket router starting up...")
     
+    # 初始化工作流管理器
+    await workflow_manager.initialize()
+    log.info("Workflow manager initialized")
+    
+    # 初始化N8N客户端
+    await n8n_client.initialize()
+    log.info("N8N client initialized")
+    
     # 启动爆款学习工作流定时调度器
     await viral_learning_scheduler.start()
     log.info("Viral learning scheduler started")
@@ -26,6 +42,10 @@ async def startup_event():
 async def shutdown_event():
     """应用关闭时的清理"""
     log.info("HSAI WebSocket router shutting down...")
+    
+    # 关闭N8N客户端
+    await n8n_client.close()
+    log.info("N8N client closed")
     
     # 停止爆款学习工作流定时调度器
     await viral_learning_scheduler.stop()
@@ -43,11 +63,72 @@ async def get_user_from_token(token: str):
         log.error(f"Token validation failed: {e}")
     return None
 
+# 连接管理器
+class ConnectionManager:
+    """WebSocket连接管理器"""
+    
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
+        self.user_sessions: Dict[str, List[str]] = {}  # user_id -> [session_ids]
+        
+    async def connect(self, websocket: WebSocket, user_id: str, session_id: str = None):
+        """建立连接"""
+        await websocket.accept()
+        connection_key = f"{user_id}_{session_id}" if session_id else user_id
+        self.active_connections[connection_key] = websocket
+        
+        if user_id not in self.user_sessions:
+            self.user_sessions[user_id] = []
+        if session_id and session_id not in self.user_sessions[user_id]:
+            self.user_sessions[user_id].append(session_id)
+            
+        log.info(f"WebSocket connected: {connection_key}")
+        
+    def disconnect(self, user_id: str, session_id: str = None):
+        """断开连接"""
+        connection_key = f"{user_id}_{session_id}" if session_id else user_id
+        if connection_key in self.active_connections:
+            del self.active_connections[connection_key]
+            
+        if session_id and user_id in self.user_sessions:
+            if session_id in self.user_sessions[user_id]:
+                self.user_sessions[user_id].remove(session_id)
+                
+        log.info(f"WebSocket disconnected: {connection_key}")
+        
+    async def send_personal_message(self, message: dict, user_id: str, session_id: str = None):
+        """发送个人消息"""
+        connection_key = f"{user_id}_{session_id}" if session_id else user_id
+        websocket = self.active_connections.get(connection_key)
+        
+        if websocket:
+            try:
+                await websocket.send_text(json.dumps(message, ensure_ascii=False))
+                return True
+            except Exception as e:
+                log.error(f"Error sending message to {connection_key}: {e}")
+                self.disconnect(user_id, session_id)
+                return False
+        return False
+        
+    async def broadcast_to_user(self, message: dict, user_id: str):
+        """向用户的所有会话广播消息"""
+        sent_count = 0
+        if user_id in self.user_sessions:
+            for session_id in self.user_sessions[user_id]:
+                if await self.send_personal_message(message, user_id, session_id):
+                    sent_count += 1
+        return sent_count
+
+# 全局连接管理器
+connection_manager = ConnectionManager()
+
 @router.websocket("/hsai/ws/{user_id}")
 async def hsai_websocket_endpoint(
     websocket: WebSocket, 
     user_id: str,
-    token: str = Query(...)
+    token: str = Query(...),
+    session_id: str = Query(None)
 ):
     """
     HSAI WebSocket端点 - OpenWebUI与n8n协同核心

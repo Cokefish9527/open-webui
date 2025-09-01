@@ -70,6 +70,7 @@ run_migrations()
 
 class Config(Base):
     __tablename__ = "config"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True)
     data = Column(JSON, nullable=False)

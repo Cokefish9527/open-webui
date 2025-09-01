@@ -1,0 +1,49 @@
+# 智能对话消息转发与n8n工作流集成系统
+
+## Core Features
+
+- 智能工作流选择
+
+- 动态Webhook调度
+
+- 结果结构化处理
+
+- 实时消息推送
+
+- 工作流管理
+
+## Tech Stack
+
+{
+  "Backend": "Python FastAPI + WebSocket",
+  "HTTP Client": "aiohttp",
+  "Async Processing": "asyncio",
+  "Config Management": "Pydantic",
+  "Logging": "Python logging"
+}
+
+## Design
+
+事件驱动的异步架构，支持智能路由、实时推送和完善的错误处理机制
+
+## Plan
+
+Note: 
+
+- [ ] is holding
+- [/] is doing
+- [X] is done
+
+---
+
+[X] 实现工作流配置管理模块，支持从n8n_node目录动态加载工作流JSON配置
+
+[X] 开发智能工作流选择器，基于消息内容和场景规则匹配合适的工作流
+
+[X] 构建n8n webhook调用客户端，支持异步HTTP请求和错误处理
+
+[X] 实现消息结构化处理器，将n8n返回结果转换为标准格式
+
+[X] 集成WebSocket实时推送功能，支持流式响应和状态更新
+
+[X] 添加完整的错误处理和日志监控机制

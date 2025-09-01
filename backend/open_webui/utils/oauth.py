@@ -17,7 +17,7 @@ from starlette.responses import RedirectResponse
 from open_webui.models.auths import Auths
 from open_webui.models.users import Users
 from open_webui.models.groups import Groups, GroupModel, GroupUpdateForm, GroupForm
-from open_webui.config import (
+from open_webui.config_module import (
     DEFAULT_USER_ROLE,
     ENABLE_OAUTH_SIGNUP,
     OAUTH_MERGE_ACCOUNTS_BY_EMAIL,

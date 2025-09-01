@@ -4,8 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, Literal
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.config import get_config, save_config
-from open_webui.config import BannerModel
+from open_webui.config_module import get_config, save_config, BannerModel
 
 from open_webui.utils.tools import get_tool_server_data, get_tool_servers_data
 

@@ -1,0 +1,12 @@
+{
+  "name": "异步视频爬取关键词分析",
+  "description": "分析视频内容和关键词",
+  "webhook_url": "http://localhost:5678/webhook/video-analysis",
+  "keywords": ["视频", "分析", "关键词", "内容"],
+  "priority": 3,
+  "enabled": true,
+  "config": {
+    "timeout": 120,
+    "retry_count": 1
+  }
+}

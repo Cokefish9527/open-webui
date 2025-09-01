@@ -1,0 +1,12 @@
+{
+  "name": "主工作流",
+  "description": "主要的对话处理工作流",
+  "webhook_url": "http://localhost:5678/webhook/main",
+  "keywords": ["对话", "聊天", "问答", "咨询"],
+  "priority": 1,
+  "enabled": true,
+  "config": {
+    "timeout": 30,
+    "retry_count": 3
+  }
+}

@@ -5,7 +5,7 @@ n8n工作流配置管理
 """
 
 import os
-from typing import Dict, List
+from typing import Dict, List, Any
 from enum import Enum
 
 class N8NWorkflowType(str, Enum):
@@ -48,6 +48,69 @@ WORKFLOW_TRIGGER_KEYWORDS = {
 
 # 工作流超时配置（秒）
 WORKFLOW_TIMEOUTS = {
+    N8NWorkflowType.MAIN: 30,
+    N8NWorkflowType.COMPANY_INFO: 60,
+    N8NWorkflowType.VIRAL_LEARNING: 45
+}
+
+# 爆款学习工作流定时配置
+VIRAL_LEARNING_SCHEDULE_CONFIG = {
+    "enabled": True,
+    "interval_minutes": 30,  # 每30分钟执行一次
+    "max_daily_executions": 48,  # 每天最多48次
+    "retry_attempts": 3,
+    "retry_delay_seconds": 60,
+    "execution_timeout": 300  # 5分钟超时
+}
+
+def get_workflow_config(workflow_type: N8NWorkflowType) -> Dict[str, Any]:
+    """获取工作流配置"""
+    return {
+        "name": workflow_type.value,
+        "webhook_url": N8N_WORKFLOW_WEBHOOKS.get(workflow_type),
+        "timeout": WORKFLOW_TIMEOUTS.get(workflow_type, 30),
+        "trigger_keywords": WORKFLOW_TRIGGER_KEYWORDS.get(workflow_type, []),
+        "description": f"{workflow_type.value} workflow configuration"
+    }
+
+def get_all_workflow_configs() -> Dict[str, Dict[str, Any]]:
+    """获取所有工作流配置"""
+    return {
+        workflow_type.value: get_workflow_config(workflow_type)
+        for workflow_type in N8NWorkflowType
+    }
+
+def get_workflow_by_entry_type(entry_type: str) -> N8NWorkflowType:
+    """根据入口类型获取工作流"""
+    return ENTRY_TYPE_WORKFLOW_MAPPING.get(entry_type, N8NWorkflowType.MAIN)
+
+def is_scheduled_workflow(workflow_type: N8NWorkflowType) -> bool:
+    """判断是否为定时调度工作流"""
+    return workflow_type == N8NWorkflowType.VIRAL_LEARNING
+
+def get_viral_learning_schedule_config() -> Dict[str, Any]:
+    """获取爆款学习工作流定时配置"""
+    return VIRAL_LEARNING_SCHEDULE_CONFIG.copy()
+
+def detect_entry_type(message_data: Dict[str, Any]) -> str:
+    """检测对话入口类型"""
+    # 从消息数据中提取入口类型
+    entry_type = message_data.get("entry_type", "default")
+    
+    # 如果没有明确的入口类型，尝试从消息内容推断
+    if entry_type == "default":
+        content = message_data.get("content", "").lower()
+        
+        # 检查是否包含公司信息相关关键词
+        company_keywords = ["公司", "企业", "信息", "作战", "地图", "竞品", "分析", "调研"]
+        if any(keyword in content for keyword in company_keywords):
+            entry_type = "company"
+    
+    return entry_type
+
+
+# N8N工作流超时配置（秒）
+N8N_WORKFLOW_TIMEOUT = {
     N8NWorkflowType.MAIN: 30,
     N8NWorkflowType.COMPANY_INFO: 60,
     N8NWorkflowType.VIRAL_LEARNING: 45
