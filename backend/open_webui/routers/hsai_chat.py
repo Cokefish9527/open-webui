@@ -69,6 +69,74 @@ class ChatStatsResponse(BaseModel):
     most_used_model: Optional[str] = None
     total_tokens_used: int = 0
 
+
+############################
+# 对话统计接口
+############################
+
+@router.get("/statistics", response_model=ChatStatsResponse, summary="获取对话统计")
+async def get_chat_stats(
+    days: int = Query(30, description="统计天数，默认30天"),
+    user=Depends(get_verified_user)
+):
+    """
+    获取用户对话统计信息。
+    
+    Args:
+        days (int): 统计天数，默认30天
+        user: 已认证的用户对象
+        
+    Returns:
+        ChatStatsResponse: 对话统计数据
+    """
+    try:
+        # 获取用户的所有对话
+        user_chats = Chats.get_chats_by_user_id(user.id)
+        
+        # 计算时间范围
+        end_time = int(time.time())
+        start_time = end_time - (days * 24 * 3600)
+        period_chats = [c for c in user_chats if c.created_at >= start_time]
+        
+        total_sessions = len(period_chats)
+        
+        # 计算消息总数和平均消息数
+        total_messages = 0
+        model_usage = {}
+        
+        for chat in period_chats:
+            if chat.chat and isinstance(chat.chat, dict):
+                messages = chat.chat.get("messages", [])
+                total_messages += len(messages)
+                
+                # 统计模型使用情况
+                model = chat.chat.get("model")
+                if model:
+                    model_usage[model] = model_usage.get(model, 0) + 1
+        
+        avg_messages_per_session = total_messages / total_sessions if total_sessions > 0 else 0
+        
+        # 找到使用最多的模型
+        most_used_model = None
+        if model_usage:
+            most_used_model = max(model_usage, key=model_usage.get)
+        
+        return ChatStatsResponse(
+            total_sessions=total_sessions,
+            active_sessions=len([c for c in period_chats if c.updated_at >= end_time - (24 * 3600)]),  # 24小时内活跃的会话
+            total_messages=total_messages,
+            avg_messages_per_session=avg_messages_per_session,
+            most_used_model=most_used_model,
+            total_tokens_used=0  # 简化处理，实际应用中可能需要计算
+        )
+        
+    except Exception as e:
+        log.exception(f"Error getting chat stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
 ############################
 # 对话会话管理
 ############################
@@ -581,75 +649,6 @@ async def send_chat_message(
         raise
     except Exception as e:
         log.exception(f"Error sending chat message: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-############################
-# 统计接口
-############################
-
-@router.get("/stats", response_model=ChatStatsResponse, summary="获取对话统计")
-async def get_chat_stats(
-    user=Depends(get_verified_user)
-):
-    """
-    获取用户的对话统计数据。
-    
-    Args:
-        user: 已认证的用户对象
-        
-    Returns:
-        ChatStatsResponse: 对话统计数据
-        
-    Raises:
-        HTTPException: 500 - 服务器内部错误
-    """
-    try:
-        # 获取用户的所有对话
-        user_chats = Chats.get_chats_by_user_id(user.id)
-        
-        total_sessions = len(user_chats)
-        active_sessions = 0
-        total_messages = 0
-        model_usage = {}
-        
-        for chat in user_chats:
-            # 检查是否为活跃会话（最近7天有更新）
-            if chat.updated_at > int(time.time()) - 7 * 24 * 3600:
-                active_sessions += 1
-            
-            # 统计消息数量
-            if chat.chat and "messages" in chat.chat:
-                messages = chat.chat["messages"]
-                total_messages += len(messages)
-                
-                # 统计模型使用情况
-                for msg in messages:
-                    if isinstance(msg, dict) and msg.get("model"):
-                        model = msg["model"]
-                        model_usage[model] = model_usage.get(model, 0) + 1
-        
-        # 计算平均消息数
-        avg_messages_per_session = total_messages / total_sessions if total_sessions > 0 else 0
-        
-        # 找出最常用的模型
-        most_used_model = None
-        if model_usage:
-            most_used_model = max(model_usage, key=model_usage.get)
-        
-        return ChatStatsResponse(
-            total_sessions=total_sessions,
-            active_sessions=active_sessions,
-            total_messages=total_messages,
-            avg_messages_per_session=round(avg_messages_per_session, 2),
-            most_used_model=most_used_model,
-            total_tokens_used=0  # 需要从实际使用记录中获取
-        )
-        
-    except Exception as e:
-        log.exception(f"Error getting chat stats: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()

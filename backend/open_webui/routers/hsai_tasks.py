@@ -34,6 +34,105 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 router = APIRouter(prefix="/hsai/tasks", tags=["hsai_tasks"])
 
 ############################
+# 任务统计
+############################
+
+class TaskStatsResponse(BaseModel):
+    total_tasks: int
+    pending_tasks: int
+    in_progress_tasks: int
+    completed_tasks: int
+    failed_tasks: int
+    tasks_by_type: dict
+    avg_completion_time: Optional[float] = None
+
+
+@router.get("/statistics", response_model=TaskStatsResponse, summary="获取任务统计")
+async def get_task_stats(user=Depends(get_verified_user)):
+    """
+    获取任务统计信息。
+    
+    提供用户任务的详细统计数据，用于仪表板展示和性能分析。
+    
+    Args:
+        user: 已认证的用户对象
+        
+    Returns:
+        TaskStatsResponse: 统计信息
+        - total_tasks: 任务总数量
+        - pending_tasks: 待执行任务数量
+        - in_progress_tasks: 执行中任务数量
+        - completed_tasks: 已完成任务数量
+        - failed_tasks: 失败任务数量
+        - tasks_by_type: 按类型分组的任务数量
+          - video_creation: 视频创作任务数量
+          - content_analysis: 内容分析任务数量
+          - image_generation: 图像生成任务数量
+          - text_processing: 文本处理任务数量
+        - avg_completion_time: 平均完成时间（秒）
+        
+    Raises:
+        HTTPException: 500 - 服务器内部错误
+        
+    Note:
+        - 统计数据仅包含当前用户的任务
+        - 平均完成时间基于已完成任务计算
+        - 用于性能监控和用户行为分析
+    """
+    try:
+        log.info(f"Getting task stats for user_id: {user.id}")
+        tasks = HSAITasks.get_tasks_by_user_id(user.id)
+        log.info(f"Retrieved {len(tasks)} tasks for user_id: {user.id}")
+        
+        # 统计各状态任务数量
+        stats = {
+            "total_tasks": len(tasks),
+            "pending_tasks": 0,
+            "in_progress_tasks": 0,
+            "completed_tasks": 0,
+            "failed_tasks": 0,
+            "tasks_by_type": {}
+        }
+        
+        completion_times = []
+        
+        for task in tasks:
+            # 按状态统计
+            if task.status == HSAITaskStatus.PENDING:
+                stats["pending_tasks"] += 1
+            elif task.status == HSAITaskStatus.IN_PROGRESS:
+                stats["in_progress_tasks"] += 1
+            elif task.status == HSAITaskStatus.COMPLETED:
+                stats["completed_tasks"] += 1
+                # 计算完成时间
+                if task.started_at and task.completed_at:
+                    completion_times.append(task.completed_at - task.started_at)
+            elif task.status == HSAITaskStatus.FAILED:
+                stats["failed_tasks"] += 1
+            
+            # 按类型统计
+            if task.task_type not in stats["tasks_by_type"]:
+                stats["tasks_by_type"][task.task_type] = 0
+            stats["tasks_by_type"][task.task_type] += 1
+        
+        # 计算平均完成时间
+        if completion_times:
+            stats["avg_completion_time"] = sum(completion_times) / len(completion_times)
+        
+        log.info(f"Task stats for user_id {user.id}: {stats}")
+        return TaskStatsResponse(**stats)
+        
+    except HTTPException:
+        # 重新抛出HTTP异常
+        raise
+    except Exception as e:
+        log.exception(f"Error getting task stats for user {user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+############################
 # 任务管理
 ############################
 
@@ -518,7 +617,6 @@ async def update_task_progress(
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
-
 ############################
 # 卡片管理
 ############################
@@ -637,96 +735,3 @@ async def update_card(
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
-
-############################
-# 任务统计
-############################
-
-class TaskStatsResponse(BaseModel):
-    total_tasks: int
-    pending_tasks: int
-    in_progress_tasks: int
-    completed_tasks: int
-    failed_tasks: int
-    tasks_by_type: dict
-    avg_completion_time: Optional[float] = None
-
-
-@router.get("/stats", response_model=TaskStatsResponse, summary="获取任务统计")
-async def get_task_stats(user=Depends(get_verified_user)):
-    """
-    获取任务统计信息。
-    
-    提供用户任务的详细统计数据，用于仪表板展示和性能分析。
-    
-    Args:
-        user: 已认证的用户对象
-        
-    Returns:
-        TaskStatsResponse: 统计信息
-        - total_tasks: 任务总数量
-        - pending_tasks: 待执行任务数量
-        - in_progress_tasks: 执行中任务数量
-        - completed_tasks: 已完成任务数量
-        - failed_tasks: 失败任务数量
-        - tasks_by_type: 按类型分组的任务数量
-          - video_creation: 视频创作任务数量
-          - content_analysis: 内容分析任务数量
-          - image_generation: 图像生成任务数量
-          - text_processing: 文本处理任务数量
-        - avg_completion_time: 平均完成时间（秒）
-        
-    Raises:
-        HTTPException: 500 - 服务器内部错误
-        
-    Note:
-        - 统计数据仅包含当前用户的任务
-        - 平均完成时间基于已完成任务计算
-        - 用于性能监控和用户行为分析
-    """
-    try:
-        tasks = HSAITasks.get_tasks_by_user_id(user.id)
-        
-        # 统计各状态任务数量
-        stats = {
-            "total_tasks": len(tasks),
-            "pending_tasks": 0,
-            "in_progress_tasks": 0,
-            "completed_tasks": 0,
-            "failed_tasks": 0,
-            "tasks_by_type": {}
-        }
-        
-        completion_times = []
-        
-        for task in tasks:
-            # 按状态统计
-            if task.status == HSAITaskStatus.PENDING:
-                stats["pending_tasks"] += 1
-            elif task.status == HSAITaskStatus.IN_PROGRESS:
-                stats["in_progress_tasks"] += 1
-            elif task.status == HSAITaskStatus.COMPLETED:
-                stats["completed_tasks"] += 1
-                # 计算完成时间
-                if task.started_at and task.completed_at:
-                    completion_times.append(task.completed_at - task.started_at)
-            elif task.status == HSAITaskStatus.FAILED:
-                stats["failed_tasks"] += 1
-            
-            # 按类型统计
-            if task.task_type not in stats["tasks_by_type"]:
-                stats["tasks_by_type"][task.task_type] = 0
-            stats["tasks_by_type"][task.task_type] += 1
-        
-        # 计算平均完成时间
-        if completion_times:
-            stats["avg_completion_time"] = sum(completion_times) / len(completion_times)
-        
-        return TaskStatsResponse(**stats)
-        
-    except Exception as e:
-        log.exception(f"Error getting task stats: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )

@@ -548,7 +548,15 @@ async def search_materials(
 # 素材统计
 ############################
 
-@router.get("/stats", summary="获取素材统计")
+class MaterialStatsResponse(BaseModel):
+    total_materials: int
+    folders_count: int
+    type_distribution: dict
+    total_size_mb: int
+    recent_uploads: int
+
+
+@router.get("/statistics", summary="获取素材统计")
 async def get_material_stats(user=Depends(get_verified_user)):
     """
     获取用户的素材统计信息。
@@ -579,13 +587,13 @@ async def get_material_stats(user=Depends(get_verified_user)):
             if material.created_at > week_ago:
                 recent_uploads += 1
         
-        return {
-            "total_materials": len(materials),
-            "folders_count": len(folders),
-            "type_distribution": type_stats,
-            "total_size_mb": total_size // (1024 * 1024),
-            "recent_uploads": recent_uploads
-        }
+        return MaterialStatsResponse(
+            total_materials=len(materials),
+            folders_count=len(folders),
+            type_distribution=type_stats,
+            total_size_mb=total_size // (1024 * 1024),
+            recent_uploads=recent_uploads
+        )
         
     except Exception as e:
         log.exception(f"Error getting material stats: {e}")
