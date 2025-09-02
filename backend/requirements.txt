@@ -34,6 +34,10 @@ RestrictedPython==7.4
 
 loguru==0.7.3
 asgiref==3.8.1
+typer==0.12.5
+typing_extensions
+httpx
+python-dotenv
 
 # AI libraries
 openai
@@ -69,12 +73,13 @@ unstructured==0.16.17
 nltk==3.9.1
 Markdown==3.7
 pypandoc==1.15
+PyYAML
 # pandas==2.2.3
 # tabulate==0.9.0
 openpyxl==3.1.5
 pyxlsb==1.0.10
 xlrd==2.0.1
-# validators==0.35.0
+validators==0.35.0
 psutil
 sentencepiece
 soundfile==0.13.1
