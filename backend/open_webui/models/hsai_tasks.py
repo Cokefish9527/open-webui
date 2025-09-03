@@ -354,6 +354,26 @@ class HSAICardResponse(BaseModel):
     updated_at: int = Field(description="更新时间戳")
 
 
+class PaginationData(BaseModel):
+    """分页数据模型"""
+    total: int = Field(description="总记录数")
+    page: int = Field(description="当前页码")
+    size: int = Field(description="每页大小")
+    total_pages: int = Field(description="总页数")
+
+
+class PaginatedHSAITaskResponse(BaseModel):
+    """分页的任务响应模型"""
+    data: List[HSAITaskResponse]
+    pagination: PaginationData
+
+
+class PaginatedHSAICardResponse(BaseModel):
+    """分页的卡片响应模型"""
+    data: List[HSAICardResponse]
+    pagination: PaginationData
+
+
 ####################
 # Database Tables
 ####################
@@ -390,7 +410,9 @@ class HSAITasksTable:
         user_id: str, 
         status: Optional[str] = None,
         task_type: Optional[str] = None,
-        chat_id: Optional[str] = None
+        chat_id: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0
     ) -> List[HSAITaskModel]:
         with get_db() as db:
             try:
@@ -406,12 +428,36 @@ class HSAITasksTable:
                 tasks = query.order_by(
                     HSAITask.priority.desc(),
                     HSAITask.updated_at.desc()
-                ).all()
+                ).limit(limit).offset(offset).all()
                 
                 return [HSAITaskModel.model_validate(task) for task in tasks]
             except Exception as e:
                 log.exception(f"Error getting tasks: {e}")
                 return []
+
+    def get_tasks_count(
+        self, 
+        user_id: str, 
+        status: Optional[str] = None,
+        task_type: Optional[str] = None,
+        chat_id: Optional[str] = None
+    ) -> int:
+        """获取任务总数"""
+        with get_db() as db:
+            try:
+                query = db.query(HSAITask).filter_by(user_id=user_id)
+                
+                if status:
+                    query = query.filter_by(status=status)
+                if task_type:
+                    query = query.filter_by(task_type=task_type)
+                if chat_id:
+                    query = query.filter_by(chat_id=chat_id)
+                    
+                return query.count()
+            except Exception as e:
+                log.exception(f"Error counting tasks: {e}")
+                return 0
 
     def get_task_by_id(self, task_id: str) -> Optional[HSAITaskModel]:
         with get_db() as db:
@@ -493,17 +539,30 @@ class HSAICardsTable:
                 log.exception(f"Error creating card: {e}")
                 return None
 
-    def get_cards_by_chat_id(self, chat_id: str) -> List[HSAICardModel]:
+    def get_cards_by_chat_id(
+        self, chat_id: str, limit: int = 20, offset: int = 0
+    ) -> List[HSAICardModel]:
         with get_db() as db:
             try:
                 cards = db.query(HSAICard).filter_by(
                     chat_id=chat_id, status="active"
-                ).order_by(HSAICard.sort_order.asc()).all()
+                ).order_by(HSAICard.sort_order.asc()).limit(limit).offset(offset).all()
                 
                 return [HSAICardModel.model_validate(card) for card in cards]
             except Exception as e:
                 log.exception(f"Error getting cards: {e}")
                 return []
+
+    def get_cards_count(self, chat_id: str) -> int:
+        """获取卡片总数"""
+        with get_db() as db:
+            try:
+                return db.query(HSAICard).filter_by(
+                    chat_id=chat_id, status="active"
+                ).count()
+            except Exception as e:
+                log.exception(f"Error counting cards: {e}")
+                return 0
 
     def update_card_by_id(
         self, card_id: str, updates: dict

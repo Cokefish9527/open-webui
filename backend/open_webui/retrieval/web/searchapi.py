@@ -1,5 +1,6 @@
+from __future__ import annotations
 import logging
-from typing import Optional
+from typing import Optional, List
 from urllib.parse import urlencode
 
 import requests
@@ -15,8 +16,8 @@ def search_searchapi(
     engine: str,
     query: str,
     count: int,
-    filter_list: Optional[list[str]] = None,
-) -> list[SearchResult]:
+    filter_list: Optional[List[str]] = None,
+) -> List[SearchResult]:
     """Search using searchapi.io's API and return the results as a list of SearchResult objects.
 
     Args:

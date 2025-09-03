@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import List, Union, Optional
 
@@ -122,4 +123,4 @@ class MessageItem(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     role: str
-    content: Union[str, list[MessageContent]] = Field(default="")
+    content: Union[str, List[MessageContent]] = Field(default="")

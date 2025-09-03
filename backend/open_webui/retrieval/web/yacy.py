@@ -1,5 +1,6 @@
+from __future__ import annotations
 import logging
-from typing import Optional
+from typing import Optional, List
 
 import requests
 from requests.auth import HTTPDigestAuth
@@ -16,8 +17,8 @@ def search_yacy(
     password: Optional[str],
     query: str,
     count: int,
-    filter_list: Optional[list[str]] = None,
-) -> list[SearchResult]:
+    filter_list: Optional[List[str]] = None,
+) -> List[SearchResult]:
     """
     Search a Yacy instance for a given query and return the results as a list of SearchResult objects.
 
@@ -31,7 +32,7 @@ def search_yacy(
         count (int): The maximum number of results to retrieve from the search.
 
     Returns:
-        list[SearchResult]: A list of SearchResults sorted by relevance score in descending order.
+        List[SearchResult]: A list of SearchResults sorted by relevance score in descending order.
 
     Raise:
         requests.exceptions.RequestException: If a request error occurs during the search process.

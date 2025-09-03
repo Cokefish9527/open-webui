@@ -1,7 +1,8 @@
+from __future__ import annotations
 import logging
 import time
 import uuid
-from typing import Optional
+from typing import Optional, List
 
 from open_webui.internal.db import Base, get_db
 from open_webui.models.chats import Chats

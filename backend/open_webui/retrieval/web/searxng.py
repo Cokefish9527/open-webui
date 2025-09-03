@@ -1,5 +1,6 @@
+from __future__ import annotations
 import logging
-from typing import Optional
+from typing import Optional, List
 
 import requests
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
@@ -13,9 +14,9 @@ def search_searxng(
     query_url: str,
     query: str,
     count: int,
-    filter_list: Optional[list[str]] = None,
+    filter_list: Optional[List[str]] = None,
     **kwargs,
-) -> list[SearchResult]:
+) -> List[SearchResult]:
     """
     Search a SearXNG instance for a given query and return the results as a list of SearchResult objects.
 

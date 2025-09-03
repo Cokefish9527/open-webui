@@ -12,6 +12,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from pydantic import Field
 
 from open_webui.models.hsai_materials import (
     HSAIMaterialFolder,
@@ -29,7 +30,11 @@ from open_webui.models.hsai_materials import (
     HSAIMaterialCategories,
     HSAIMaterialCategoryForm,
     HSAIMaterialCategoryModel,
-    HSAIMaterialCategoryResponse
+    HSAIMaterialCategoryResponse,
+    # 添加分页相关的导入
+    PaginationData,
+    PaginatedHSAIMaterialResponse,
+    PaginatedHSAIMaterialCategoryResponse
 )
 
 from open_webui.utils.auth import get_verified_user
@@ -802,26 +807,36 @@ async def get_material_download_url(
 # 素材管理
 ############################
 
-@router.get("/", response_model=List[HSAIMaterialResponse], summary="获取素材列表")
+@router.get("/", response_model=PaginatedHSAIMaterialResponse, summary="获取素材列表")
 async def get_materials(
     folder_id: Optional[str] = Query(None, description="文件夹ID，为空则获取根目录素材"),
     material_type: Optional[str] = Query(None, description="素材类型过滤"),
-    limit: int = Query(20, description="返回数量限制"),
-    offset: int = Query(0, description="偏移量"),
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引，从1开始", ge=1),
     user=Depends(get_verified_user)
 ):
     """
-    获取用户的素材列表。
+    获取用户的素材列表（分页）。
     
     支持按文件夹和类型过滤，支持分页查询。
     """
     try:
+        # 计算offset
+        offset = (pi - 1) * ps
+        
         materials = HSAIMaterials.get_materials_by_user_id(
             user.id, 
             folder_id=folder_id,
             material_type=material_type,
-            limit=limit,
+            limit=ps,
             offset=offset
+        )
+        
+        # 获取总数
+        total = HSAIMaterials.get_materials_count(
+            user.id,
+            folder_id=folder_id,
+            material_type=material_type
         )
         
         responses = []
@@ -839,7 +854,20 @@ async def get_materials(
             )
             responses.append(response)
         
-        return responses
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
+        
+        pagination = PaginationData(
+            total=total,
+            page=pi,
+            size=ps,
+            total_pages=total_pages
+        )
+        
+        return PaginatedHSAIMaterialResponse(
+            data=responses,
+            pagination=pagination
+        )
         
     except Exception as e:
         log.exception(f"Error getting materials: {e}")
@@ -1058,6 +1086,9 @@ async def get_material_stats(user=Depends(get_verified_user)):
 # 素材属性查询
 ############################
 
+# 调试语句，确认Field是否可用
+# print(f"Field is available: {Field}")
+
 class MaterialPropertiesResponse(BaseModel):
     """素材属性响应模型"""
     id: str = Field(description="素材唯一标识符")
@@ -1139,28 +1170,48 @@ async def get_material_properties(
 # 素材分类管理
 ############################
 
-@router.get("/categories", response_model=List[HSAIMaterialCategoryResponse], summary="获取素材分类列表")
+@router.get("/categories", response_model=PaginatedHSAIMaterialCategoryResponse, summary="获取素材分类列表")
 async def get_material_categories(
-    category_type: Optional[str] = Query(None, description="分类类型：scene, technique, property")
+    category_type: Optional[str] = Query(None, description="分类类型过滤：scene(场景)、technique(手法)、property(属性)"),
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引，从1开始", ge=1)
 ):
     """
-    获取素材分类列表，可按分类类型过滤。
+    获取素材分类列表（分页），可按分类类型过滤。
     
     Args:
         category_type (str, optional): 分类类型过滤
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
         
     Returns:
-        List[HSAIMaterialCategoryResponse]: 分类列表
+        PaginatedHSAIMaterialCategoryResponse: 分页的分类列表
+        - data: 分类列表
+        - pagination: 分页信息
+          - total: 总记录数
+          - page: 当前页码
+          - size: 每页大小
+          - total_pages: 总页数
     """
     try:
+        # 计算offset
+        offset = (pi - 1) * ps
+        
+        # 获取分类列表
         if category_type:
             categories = HSAIMaterialCategories.get_categories_by_type(category_type)
         else:
             categories = HSAIMaterialCategories.get_all_categories()
         
+        # 应用分页（在内存中分页）
+        total = len(categories)
+        start_idx = offset
+        end_idx = offset + ps
+        paginated_categories = categories[start_idx:end_idx]
+        
         # 转换为响应模型
         responses = []
-        for category in categories:
+        for category in paginated_categories:
             response = HSAIMaterialCategoryResponse(
                 id=category.id,
                 name=category.name,
@@ -1173,7 +1224,20 @@ async def get_material_categories(
             )
             responses.append(response)
         
-        return responses
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
+        
+        pagination = PaginationData(
+            total=total,
+            page=pi,
+            size=ps,
+            total_pages=total_pages
+        )
+        
+        return PaginatedHSAIMaterialCategoryResponse(
+            data=responses,
+            pagination=pagination
+        )
         
     except Exception as e:
         log.exception(f"Error getting material categories: {e}")

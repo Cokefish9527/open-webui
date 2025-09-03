@@ -1,3 +1,4 @@
+from __future__ import annotations
 import hashlib
 import re
 import time
@@ -5,7 +6,7 @@ import uuid
 import logging
 from datetime import timedelta
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Optional, List, Tuple, Dict, Any
 import json
 
 
@@ -25,7 +26,7 @@ def deep_update(d, u):
     return d
 
 
-def get_message_list(messages, message_id):
+def get_message_list(messages: Dict[str, Any], message_id: str) -> List[Dict[str, Any]]:
     """
     Reconstructs a list of messages in order up to the specified message_id.
 
@@ -57,7 +58,7 @@ def get_message_list(messages, message_id):
     return message_list
 
 
-def get_messages_content(messages: list[dict]) -> str:
+def get_messages_content(messages: List[Dict[str, Any]]) -> str:
     return "\n".join(
         [
             f"{message['role'].upper()}: {get_content_from_message(message)}"
@@ -66,14 +67,14 @@ def get_messages_content(messages: list[dict]) -> str:
     )
 
 
-def get_last_user_message_item(messages: list[dict]) -> Optional[dict]:
+def get_last_user_message_item(messages: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     for message in reversed(messages):
         if message["role"] == "user":
             return message
     return None
 
 
-def get_content_from_message(message: dict) -> Optional[str]:
+def get_content_from_message(message: Dict[str, Any]) -> Optional[str]:
     if isinstance(message.get("content"), list):
         for item in message["content"]:
             if item["type"] == "text":
@@ -83,45 +84,45 @@ def get_content_from_message(message: dict) -> Optional[str]:
     return None
 
 
-def get_last_user_message(messages: list[dict]) -> Optional[str]:
+def get_last_user_message(messages: List[Dict[str, Any]]) -> Optional[str]:
     message = get_last_user_message_item(messages)
     if message is None:
         return None
     return get_content_from_message(message)
 
 
-def get_last_assistant_message_item(messages: list[dict]) -> Optional[dict]:
+def get_last_assistant_message_item(messages: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     for message in reversed(messages):
         if message["role"] == "assistant":
             return message
     return None
 
 
-def get_last_assistant_message(messages: list[dict]) -> Optional[str]:
+def get_last_assistant_message(messages: List[Dict[str, Any]]) -> Optional[str]:
     for message in reversed(messages):
         if message["role"] == "assistant":
             return get_content_from_message(message)
     return None
 
 
-def get_system_message(messages: list[dict]) -> Optional[dict]:
+def get_system_message(messages: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     for message in messages:
         if message["role"] == "system":
             return message
     return None
 
 
-def remove_system_message(messages: list[dict]) -> list[dict]:
+def remove_system_message(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return [message for message in messages if message["role"] != "system"]
 
 
-def pop_system_message(messages: list[dict]) -> tuple[Optional[dict], list[dict]]:
+def pop_system_message(messages: List[Dict[str, Any]]) -> Tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
     return get_system_message(messages), remove_system_message(messages)
 
 
 def prepend_to_first_user_message_content(
-    content: str, messages: list[dict]
-) -> list[dict]:
+    content: str, messages: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
     for message in messages:
         if message["role"] == "user":
             if isinstance(message["content"], list):
@@ -135,7 +136,7 @@ def prepend_to_first_user_message_content(
 
 
 def add_or_update_system_message(
-    content: str, messages: list[dict], append: bool = False
+    content: str, messages: List[Dict[str, Any]], append: bool = False
 ):
     """
     Adds a new system message at the beginning of the messages list
@@ -158,7 +159,7 @@ def add_or_update_system_message(
     return messages
 
 
-def add_or_update_user_message(content: str, messages: list[dict]):
+def add_or_update_user_message(content: str, messages: List[Dict[str, Any]]):
     """
     Adds a new user message at the end of the messages list
     or updates the existing user message at the end.
@@ -177,7 +178,7 @@ def add_or_update_user_message(content: str, messages: list[dict]):
     return messages
 
 
-def append_or_update_assistant_message(content: str, messages: list[dict]):
+def append_or_update_assistant_message(content: str, messages: List[Dict[str, Any]]):
     """
     Adds a new assistant message at the end of the messages list
     or updates the existing assistant message at the end.

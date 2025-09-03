@@ -7,7 +7,7 @@ from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean
+from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean, Integer
 from sqlalchemy.orm import relationship
 
 log = logging.getLogger(__name__)
@@ -329,7 +329,15 @@ class HSAIMaterialResponse(BaseModel):
     updated_at: int = Field(description="更新时间戳")
 
 
-# 添加分类响应模型
+# 添加分页响应模型
+class PaginationData(BaseModel):
+    """分页数据模型"""
+    total: int = Field(description="总记录数")
+    page: int = Field(description="当前页码")
+    size: int = Field(description="每页大小")
+    total_pages: int = Field(description="总页数")
+
+
 class HSAIMaterialCategoryResponse(BaseModel):
     id: str = Field(description="分类唯一标识符")
     name: str = Field(description="分类名称（英文）")
@@ -339,6 +347,18 @@ class HSAIMaterialCategoryResponse(BaseModel):
     is_active: bool = Field(default=True, description="是否启用")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
+
+
+class PaginatedHSAIMaterialResponse(BaseModel):
+    """分页的素材响应模型"""
+    data: List[HSAIMaterialResponse]
+    pagination: PaginationData
+
+
+class PaginatedHSAIMaterialCategoryResponse(BaseModel):
+    """分页的素材分类响应模型"""
+    data: List[HSAIMaterialCategoryResponse]
+    pagination: PaginationData
 
 
 ####################
@@ -448,7 +468,8 @@ class HSAIMaterialsTable:
                 return None
 
     def get_materials_by_user_id(
-        self, user_id: str, folder_id: Optional[str] = None, material_type: Optional[str] = None
+        self, user_id: str, folder_id: Optional[str] = None, material_type: Optional[str] = None,
+        limit: int = 20, offset: int = 0
     ) -> List[HSAIMaterialModel]:
         with get_db() as db:
             try:
@@ -459,11 +480,29 @@ class HSAIMaterialsTable:
                 if material_type:
                     query = query.filter_by(material_type=material_type)
                     
-                materials = query.order_by(HSAIMaterial.updated_at.desc()).all()
+                materials = query.order_by(HSAIMaterial.updated_at.desc()).limit(limit).offset(offset).all()
                 return [HSAIMaterialModel.model_validate(material) for material in materials]
             except Exception as e:
                 log.exception(f"Error getting materials: {e}")
                 return []
+
+    def get_materials_count(
+        self, user_id: str, folder_id: Optional[str] = None, material_type: Optional[str] = None
+    ) -> int:
+        """获取素材总数"""
+        with get_db() as db:
+            try:
+                query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
+                
+                if folder_id:
+                    query = query.filter_by(folder_id=folder_id)
+                if material_type:
+                    query = query.filter_by(material_type=material_type)
+                    
+                return query.count()
+            except Exception as e:
+                log.exception(f"Error counting materials: {e}")
+                return 0
 
     def get_material_by_id(self, material_id: str) -> Optional[HSAIMaterialModel]:
         with get_db() as db:
@@ -570,23 +609,37 @@ class HSAIMaterialCategoriesTable:
                 log.exception(f"Error creating category: {e}")
                 return None
 
-    def get_categories_by_type(self, category_type: str) -> List[HSAIMaterialCategoryModel]:
+    def get_categories_by_type(self, category_type: str, limit: int = 20, offset: int = 0) -> List[HSAIMaterialCategoryModel]:
         with get_db() as db:
             try:
-                categories = db.query(HSAIMaterialCategory).filter_by(category_type=category_type, is_active=True).all()
+                categories = db.query(HSAIMaterialCategory).filter_by(category_type=category_type, is_active=True).limit(limit).offset(offset).all()
                 return [HSAIMaterialCategoryModel.model_validate(category) for category in categories]
             except Exception as e:
                 log.exception(f"Error getting categories: {e}")
                 return []
 
-    def get_all_categories(self) -> List[HSAIMaterialCategoryModel]:
+    def get_all_categories(self, limit: int = 20, offset: int = 0) -> List[HSAIMaterialCategoryModel]:
         with get_db() as db:
             try:
-                categories = db.query(HSAIMaterialCategory).filter_by(is_active=True).all()
+                categories = db.query(HSAIMaterialCategory).filter_by(is_active=True).limit(limit).offset(offset).all()
                 return [HSAIMaterialCategoryModel.model_validate(category) for category in categories]
             except Exception as e:
                 log.exception(f"Error getting all categories: {e}")
                 return []
+
+    def get_categories_count(self, category_type: Optional[str] = None) -> int:
+        """获取分类总数"""
+        with get_db() as db:
+            try:
+                query = db.query(HSAIMaterialCategory).filter_by(is_active=True)
+                
+                if category_type:
+                    query = query.filter_by(category_type=category_type)
+                    
+                return query.count()
+            except Exception as e:
+                log.exception(f"Error counting categories: {e}")
+                return 0
 
     def get_category_by_id(self, category_id: str) -> Optional[HSAIMaterialCategoryModel]:
         with get_db() as db:

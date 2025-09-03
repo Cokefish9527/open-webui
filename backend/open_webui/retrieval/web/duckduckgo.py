@@ -1,18 +1,24 @@
+from __future__ import annotations
 import logging
-from typing import Optional
+from typing import Optional, List
+from pydantic import BaseModel
 
-from open_webui.retrieval.web.main import SearchResult, get_filtered_results
-from duckduckgo_search import DDGS
-from duckduckgo_search.exceptions import RatelimitException
 from open_webui.env import SRC_LOG_LEVELS
+from open_webui.retrieval.web.main import SearchResult, get_filtered_results
+
+try:
+    from duckduckgo_search import DDGS, RatelimitException
+except ImportError:
+    DDGS = None
+    RatelimitException = None
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
 def search_duckduckgo(
-    query: str, count: int, filter_list: Optional[list[str]] = None
-) -> list[SearchResult]:
+    query: str, count: int, filter_list: Optional[List[str]] = None
+) -> List[SearchResult]:
     """
     Search using DuckDuckGo's Search API and return the results as a list of SearchResult objects.
     Args:

@@ -1,5 +1,6 @@
+from __future__ import annotations
 import logging
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 import requests
 
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
@@ -23,17 +24,17 @@ def search_perplexity(
     api_key: str,
     query: str,
     count: int,
-    filter_list: Optional[list[str]] = None,
+    filter_list: Optional[List[str]] = None,
     model: MODELS = "sonar",
     search_context_usage: SEARCH_CONTEXT_USAGE_LEVELS = "medium",
-) -> list[SearchResult]:
+) -> List[SearchResult]:
     """Search using Perplexity API and return the results as a list of SearchResult objects.
 
     Args:
       api_key (str): A Perplexity API key
       query (str): The query to search for
       count (int): Maximum number of results to return
-      filter_list (Optional[list[str]]): List of domains to filter results
+      filter_list (Optional[List[str]]): List of domains to filter results
       model (str): The Perplexity model to use (sonar, sonar-pro)
       search_context_usage (str): Search context usage level (low, medium, high)
 

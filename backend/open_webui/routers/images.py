@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import base64
 import io
@@ -6,7 +7,7 @@ import logging
 import mimetypes
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union, List, Dict
 
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
@@ -70,7 +71,7 @@ class OpenAIConfigForm(BaseModel):
 class Automatic1111ConfigForm(BaseModel):
     AUTOMATIC1111_BASE_URL: str
     AUTOMATIC1111_API_AUTH: str
-    AUTOMATIC1111_CFG_SCALE: Optional[str | float | int]
+    AUTOMATIC1111_CFG_SCALE: Optional[Union[str, float, int]]
     AUTOMATIC1111_SAMPLER: Optional[str]
     AUTOMATIC1111_SCHEDULER: Optional[str]
 
@@ -79,7 +80,7 @@ class ComfyUIConfigForm(BaseModel):
     COMFYUI_BASE_URL: str
     COMFYUI_API_KEY: str
     COMFYUI_WORKFLOW: str
-    COMFYUI_WORKFLOW_NODES: list[dict]
+    COMFYUI_WORKFLOW_NODES: List[Dict]
 
 
 class GeminiConfigForm(BaseModel):

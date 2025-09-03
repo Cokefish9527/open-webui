@@ -1,10 +1,11 @@
+from __future__ import annotations
 import logging
 import os
 import uuid
 import json
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union, List
 from urllib.parse import quote
 
 from fastapi import (
@@ -86,7 +87,7 @@ def has_access_to_file(
 def upload_file(
     request: Request,
     file: UploadFile = File(...),
-    metadata: Optional[dict | str] = Form(None),
+    metadata: Optional[Union[dict, str]] = Form(None),
     process: bool = Query(True),
     internal: bool = False,
     user=Depends(get_verified_user),
@@ -217,7 +218,7 @@ def upload_file(
 ############################
 
 
-@router.get("/", response_model=list[FileModelResponse])
+@router.get("/", response_model=List[FileModelResponse])
 async def list_files(user=Depends(get_verified_user), content: bool = Query(True)):
     if user.role == "admin":
         files = Files.get_files()
@@ -237,7 +238,7 @@ async def list_files(user=Depends(get_verified_user), content: bool = Query(True
 ############################
 
 
-@router.get("/search", response_model=list[FileModelResponse])
+@router.get("/search", response_model=List[FileModelResponse])
 async def search_files(
     filename: str = Query(
         ...,

@@ -1,4 +1,6 @@
+from __future__ import annotations
 import logging
+from typing import List
 
 import requests
 from open_webui.retrieval.web.main import SearchResult
@@ -9,7 +11,7 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-def search_jina(api_key: str, query: str, count: int) -> list[SearchResult]:
+def search_jina(api_key: str, query: str, count: int) -> List[SearchResult]:
     """
     Search using Jina's Search API and return the results as a list of SearchResult objects.
     Args:

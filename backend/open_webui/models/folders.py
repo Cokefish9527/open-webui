@@ -1,14 +1,14 @@
+from __future__ import annotations
 import logging
 import time
 import uuid
-from typing import Optional
+from typing import Optional, List
 
 from open_webui.internal.db import Base, get_db
-from open_webui.models.chats import Chats
-
 from open_webui.env import SRC_LOG_LEVELS
+
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Column, Text, JSON, Boolean
+from sqlalchemy import BigInteger, Boolean, Column, Text, String, JSON
 from open_webui.utils.access_control import get_permissions
 
 

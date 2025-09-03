@@ -1,7 +1,8 @@
+from __future__ import annotations
 import logging
 import os
 from pprint import pprint
-from typing import Optional
+from typing import Optional, List
 import requests
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
@@ -20,8 +21,8 @@ def search_bing(
     locale: str,
     query: str,
     count: int,
-    filter_list: Optional[list[str]] = None,
-) -> list[SearchResult]:
+    filter_list: Optional[List[str]] = None,
+) -> List[SearchResult]:
     mkt = locale
     params = {"q": query, "mkt": mkt, "count": count}
     headers = {"Ocp-Apim-Subscription-Key": subscription_key}

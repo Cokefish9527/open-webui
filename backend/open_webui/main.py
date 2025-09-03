@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import json
 import logging
@@ -7,6 +8,7 @@ import sys
 import time
 import random
 from uuid import uuid4
+
 
 from contextlib import asynccontextmanager
 from urllib.parse import urlencode, parse_qs, urlparse

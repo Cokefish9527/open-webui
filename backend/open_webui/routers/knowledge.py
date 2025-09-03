@@ -38,7 +38,7 @@ router = APIRouter()
 ############################
 
 
-@router.get("/", response_model=list[KnowledgeUserResponse])
+@router.get("/", response_model=List[KnowledgeUserResponse])
 async def get_knowledge(user=Depends(get_verified_user)):
     knowledge_bases = []
 
@@ -86,7 +86,7 @@ async def get_knowledge(user=Depends(get_verified_user)):
     return knowledge_with_files
 
 
-@router.get("/list", response_model=list[KnowledgeUserResponse])
+@router.get("/list", response_model=List[KnowledgeUserResponse])
 async def get_knowledge_list(user=Depends(get_verified_user)):
     knowledge_bases = []
 
@@ -248,7 +248,7 @@ async def reindex_knowledge_files(request: Request, user=Depends(get_verified_us
 
 
 class KnowledgeFilesResponse(KnowledgeResponse):
-    files: list[FileMetadataResponse]
+    files: List[FileMetadataResponse]
 
 
 @router.get("/{id}", response_model=Optional[KnowledgeFilesResponse])
@@ -681,7 +681,7 @@ async def reset_knowledge_by_id(id: str, user=Depends(get_verified_user)):
 def add_files_to_knowledge_batch(
     request: Request,
     id: str,
-    form_data: list[KnowledgeFileIdForm],
+    form_data: List[KnowledgeFileIdForm],
     user=Depends(get_verified_user),
 ):
     """

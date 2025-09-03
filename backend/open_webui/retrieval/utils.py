@@ -1,6 +1,7 @@
+from __future__ import annotations
 import logging
 import os
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import requests
 import hashlib
@@ -54,7 +55,7 @@ class VectorSearchRetriever(BaseRetriever):
         query: str,
         *,
         run_manager: CallbackManagerForRetrieverRun,
-    ) -> list[Document]:
+    ) -> List[Document]:
         result = VECTOR_DB_CLIENT.search(
             collection_name=self.collection_name,
             vectors=[self.embedding_function(query, RAG_EMBEDDING_QUERY_PREFIX)],
@@ -77,7 +78,7 @@ class VectorSearchRetriever(BaseRetriever):
 
 
 def query_doc(
-    collection_name: str, query_embedding: list[float], k: int, user: UserModel = None
+    collection_name: str, query_embedding: List[float], k: int, user: UserModel = None
 ):
     try:
         log.debug(f"query_doc:doc {collection_name}")
@@ -190,7 +191,7 @@ def query_doc_with_hybrid_search(
         raise e
 
 
-def merge_get_results(get_results: list[dict]) -> dict:
+def merge_get_results(get_results: List[dict]) -> dict:
     # Initialize lists to store combined data
     combined_documents = []
     combined_metadatas = []
@@ -211,7 +212,7 @@ def merge_get_results(get_results: list[dict]) -> dict:
     return result
 
 
-def merge_and_sort_query_results(query_results: list[dict], k: int) -> dict:
+def merge_and_sort_query_results(query_results: List[dict], k: int) -> dict:
     # Initialize lists to store combined data
     combined = dict()  # To store documents with unique document hashes
 
@@ -251,7 +252,7 @@ def merge_and_sort_query_results(query_results: list[dict], k: int) -> dict:
     }
 
 
-def get_all_items_from_collections(collection_names: list[str]) -> dict:
+def get_all_items_from_collections(collection_names: List[str]) -> dict:
     results = []
 
     for collection_name in collection_names:
@@ -269,8 +270,8 @@ def get_all_items_from_collections(collection_names: list[str]) -> dict:
 
 
 def query_collection(
-    collection_names: list[str],
-    queries: list[str],
+    collection_names: List[str],
+    queries: List[str],
     embedding_function,
     k: int,
 ) -> dict:
@@ -321,8 +322,8 @@ def query_collection(
 
 
 def query_collection_with_hybrid_search(
-    collection_names: list[str],
-    queries: list[str],
+    collection_names: List[str],
+    queries: List[str],
     embedding_function,
     k: int,
     reranking_function,
@@ -659,12 +660,12 @@ def get_model_path(model: str, update_model: bool = False):
 
 def generate_openai_batch_embeddings(
     model: str,
-    texts: list[str],
+    texts: List[str],
     url: str = "https://api.openai.com/v1",
     key: str = "",
     prefix: str = None,
     user: UserModel = None,
-) -> Optional[list[list[float]]]:
+) -> Optional[List[List[float]]]:
 
     # check credit
     if user:
@@ -726,13 +727,13 @@ def generate_openai_batch_embeddings(
 
 def generate_azure_openai_batch_embeddings(
     model: str,
-    texts: list[str],
+    texts: List[str],
     url: str,
     key: str = "",
     version: str = "",
     prefix: str = None,
     user: UserModel = None,
-) -> Optional[list[list[float]]]:
+) -> Optional[List[List[float]]]:
 
     # check credit
     if user:
@@ -803,12 +804,12 @@ def generate_azure_openai_batch_embeddings(
 
 def generate_ollama_batch_embeddings(
     model: str,
-    texts: list[str],
+    texts: List[str],
     url: str,
     key: str = "",
     prefix: str = None,
     user: UserModel = None,
-) -> Optional[list[list[float]]]:
+) -> Optional[List[List[float]]]:
 
     # check credit
     if user:
@@ -868,7 +869,7 @@ def generate_ollama_batch_embeddings(
 def generate_embeddings(
     engine: str,
     model: str,
-    text: Union[str, list[str]],
+    text: Union[str, List[str]],
     prefix: Union[str, None] = None,
     **kwargs,
 ):

@@ -3,7 +3,7 @@ import time
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from open_webui.models.hsai_tasks import (
     HSAITask,
@@ -19,7 +19,11 @@ from open_webui.models.hsai_tasks import (
     HSAICardResponse,
     HSAITaskStatus,
     HSAITaskType,
-    HSAICardType
+    HSAICardType,
+    # 添加分页相关的导入
+    PaginationData,
+    PaginatedHSAITaskResponse,
+    PaginatedHSAICardResponse
 )
 
 from open_webui.utils.auth import get_verified_user
@@ -136,15 +140,17 @@ async def get_task_stats(user=Depends(get_verified_user)):
 # 任务管理
 ############################
 
-@router.get("/", response_model=List[HSAITaskResponse], summary="获取任务列表")
+@router.get("/", response_model=PaginatedHSAITaskResponse, summary="获取任务列表")
 async def get_tasks(
     status: Optional[str] = Query(None, description="任务状态过滤：pending(待执行)、in_progress(执行中)、completed(已完成)、failed(执行失败)、cancelled(已取消)"),
     task_type: Optional[str] = Query(None, description="任务类型过滤：video_creation(视频创作)、content_analysis(内容分析)、image_generation(图像生成)、text_processing(文本处理)"),
     chat_id: Optional[str] = Query(None, description="聊天会话ID，用于过滤特定会话的任务"),
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引，从1开始", ge=1),
     user=Depends(get_verified_user)
 ):
     """
-    获取用户的任务列表。
+    获取用户的任务列表（分页）。
     
     支持按状态、类型和聊天会话进行过滤，返回任务的详细信息和预估执行时间。
     
@@ -161,26 +167,37 @@ async def get_tasks(
         - "image_generation": 图像生成
         - "text_processing": 文本处理
         chat_id (Optional[str]): 聊天会话ID过滤
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
         user: 已认证的用户对象
         
     Returns:
-        List[HSAITaskResponse]: 任务列表
-        - id: 任务唯一标识
-        - title: 任务标题
-        - description: 任务描述
-        - task_type: 任务类型
-        - status: 当前状态
-        - progress: 执行进度（0-100）
-        - estimated_duration: 预估执行时间（秒）
-        - created_at: 创建时间
-        - started_at: 开始时间
-        - completed_at: 完成时间
+        PaginatedHSAITaskResponse: 分页的任务列表
+        - data: 任务列表
+        - pagination: 分页信息
+          - total: 总记录数
+          - page: 当前页码
+          - size: 每页大小
+          - total_pages: 总页数
         
     Raises:
         HTTPException: 500 - 服务器内部错误
     """
     try:
+        # 计算offset
+        offset = (pi - 1) * ps
+        
         tasks = HSAITasks.get_tasks_by_user_id(
+            user.id,
+            status=status,
+            task_type=task_type,
+            chat_id=chat_id,
+            limit=ps,
+            offset=offset
+        )
+        
+        # 获取总数
+        total = HSAITasks.get_tasks_count(
             user.id,
             status=status,
             task_type=task_type,
@@ -202,7 +219,20 @@ async def get_tasks(
             )
             responses.append(response)
         
-        return responses
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
+        
+        pagination = PaginationData(
+            total=total,
+            page=pi,
+            size=ps,
+            total_pages=total_pages
+        )
+        
+        return PaginatedHSAITaskResponse(
+            data=responses,
+            pagination=pagination
+        )
         
     except Exception as e:
         log.exception(f"Error getting tasks: {e}")
@@ -621,31 +651,32 @@ async def update_task_progress(
 # 卡片管理
 ############################
 
-@router.get("/cards/chat/{chat_id}", response_model=List[HSAICardResponse], summary="获取聊天卡片")
+@router.get("/cards/chat/{chat_id}", response_model=PaginatedHSAICardResponse, summary="获取聊天卡片")
 async def get_chat_cards(
     chat_id: str,
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引，从1开始", ge=1),
     user=Depends(get_verified_user)
 ):
     """
-    获取聊天会话中的所有卡片。
+    获取聊天会话中的卡片列表（分页）。
     
-    返回指定聊天会话中的所有交互卡片，包括任务卡片、结果卡片等。
+    返回指定聊天会话中的所有卡片，支持分页查询。
     
     Args:
         chat_id (str): 聊天会话ID
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
         user: 已认证的用户对象
         
     Returns:
-        List[HSAICardResponse]: 卡片列表
-        - id: 卡片唯一标识
-        - title: 卡片标题
-        - description: 卡片描述
-        - card_type: 卡片类型
-        - content: 卡片内容（JSON格式）
-        - actions: 可用操作按钮
-        - task_id: 关联的任务ID（如果有）
-        - task_status: 关联任务的状态（如果有）
-        - created_at: 创建时间
+        PaginatedHSAICardResponse: 分页的卡片列表
+        - data: 卡片列表
+        - pagination: 分页信息
+          - total: 总记录数
+          - page: 当前页码
+          - size: 每页大小
+          - total_pages: 总页数
         
     Raises:
         HTTPException: 500 - 服务器内部错误
@@ -656,7 +687,13 @@ async def get_chat_cards(
         - 用于在聊天界面中显示交互式内容
     """
     try:
-        cards = HSAICards.get_cards_by_chat_id(chat_id)
+        # 计算offset
+        offset = (pi - 1) * ps
+        
+        cards = HSAICards.get_cards_by_chat_id(chat_id, limit=ps, offset=offset)
+        
+        # 获取总数
+        total = HSAICards.get_cards_count(chat_id)
         
         responses = []
         for card in cards:
@@ -673,7 +710,20 @@ async def get_chat_cards(
             )
             responses.append(response)
         
-        return responses
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
+        
+        pagination = PaginationData(
+            total=total,
+            page=pi,
+            size=ps,
+            total_pages=total_pages
+        )
+        
+        return PaginatedHSAICardResponse(
+            data=responses,
+            pagination=pagination
+        )
         
     except Exception as e:
         log.exception(f"Error getting chat cards: {e}")

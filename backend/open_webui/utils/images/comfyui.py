@@ -1,10 +1,11 @@
+from __future__ import annotations
 import asyncio
 import json
 import logging
 import random
 import urllib.parse
 import urllib.request
-from typing import Optional
+from typing import Optional, List
 
 import websocket  # NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
 from open_webui.env import SRC_LOG_LEVELS
@@ -93,14 +94,14 @@ def get_images(ws, prompt, client_id, base_url, api_key):
 
 class ComfyUINodeInput(BaseModel):
     type: Optional[str] = None
-    node_ids: list[str] = []
+    node_ids: List[str] = []
     key: Optional[str] = "text"
     value: Optional[str] = None
 
 
 class ComfyUIWorkflow(BaseModel):
     workflow: str
-    nodes: list[ComfyUINodeInput]
+    nodes: List[ComfyUINodeInput]
 
 
 class ComfyUIGenerateImageForm(BaseModel):

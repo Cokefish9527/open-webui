@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 import logging
 import mimetypes
@@ -196,6 +197,17 @@ def get_rf(
 
 
 router = APIRouter()
+
+
+def search_web(request: Request, engine: str, query: str) -> List[SearchResult]:
+    search_func = get_web_loader(engine)
+    if search_func is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.INVALID_ENGINE,
+        )
+
+    return search_func(request, query)
 
 
 class CollectionNameForm(BaseModel):
@@ -2011,7 +2023,7 @@ def query_doc_handler(
 
 
 class QueryCollectionsForm(BaseModel):
-    collection_names: list[str]
+    collection_names: List[str]
     query: str
     k: Optional[int] = None
     k_reranker: Optional[int] = None
