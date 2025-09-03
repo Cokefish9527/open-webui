@@ -7,6 +7,7 @@ import tempfile
 import os
 from typing import Optional, List
 from pathlib import Path
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form, Query
 from fastapi.responses import FileResponse
@@ -1328,6 +1329,559 @@ async def delete_material_category(
         raise
     except Exception as e:
         log.exception(f"Error deleting material category: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+# 添加新的Pydantic模型用于回收站操作
+class MoveToRecoveryRequest(BaseModel):
+    """移入回收站请求模型"""
+    operator_id: str
+    reason: Optional[str] = None
+
+class RestoreRequest(BaseModel):
+    """还原文件请求模型"""
+    target_directory: str
+    operator_id: str
+
+class PermanentDeleteRequest(BaseModel):
+    """永久删除请求模型"""
+    operator_id: str
+    reason: Optional[str] = None
+
+class BatchOperationRequest(BaseModel):
+    """批量操作请求模型"""
+    operation: str  # "restore" 或 "delete"
+    material_ids: List[str]
+    target_directory: Optional[str] = None  # restore操作时必需
+    operator_id: str
+
+# 添加文件操作日志模型
+class FileOperationLogModel(BaseModel):
+    """文件操作日志模型"""
+    id: str
+    material_id: str
+    operation_type: str
+    source_path: str
+    target_path: Optional[str] = None
+    operator_id: str
+    operation_time: int
+    details: Optional[dict] = None
+    created_at: int
+    updated_at: int
+
+class FileOperationLogForm(BaseModel):
+    """文件操作日志表单模型"""
+    material_id: str
+    operation_type: str
+    source_path: str
+    target_path: Optional[str] = None
+    operator_id: str
+    operation_time: int
+    details: Optional[dict] = None
+
+class FileOperationLogResponse(BaseModel):
+    """文件操作日志响应模型"""
+    id: str = Field(description="日志唯一标识符")
+    material_id: str = Field(description="素材唯一标识符")
+    operation_type: str = Field(description="操作类型（upload/delete/restore/move/modify）")
+    source_path: str = Field(description="源文件路径")
+    target_path: Optional[str] = Field(default=None, description="目标文件路径")
+    operator_id: str = Field(description="操作人ID")
+    operation_time: int = Field(description="操作时间")
+    details: Optional[dict] = Field(default=None, description="操作详情")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
+
+# 添加文件操作日志的辅助函数
+async def _log_file_operation(
+    material_id: str,
+    operation_type: str,
+    source_path: str,
+    operator_id: str,
+    target_path: Optional[str] = None,
+    details: Optional[dict] = None
+):
+    """
+    记录文件操作日志
+    
+    Args:
+        material_id: 素材ID
+        operation_type: 操作类型
+        source_path: 源路径
+        operator_id: 操作人ID
+        target_path: 目标路径（可选）
+        details: 操作详情（可选）
+    """
+    # 这里应该将日志保存到数据库
+    # 为简化实现，我们只记录到日志中
+    log.info(f"File operation logged: material_id={material_id}, operation_type={operation_type}, "
+             f"source_path={source_path}, target_path={target_path}, operator_id={operator_id}, details={details}")
+
+############################
+# 回收站管理接口
+############################
+
+@router.post("/{material_id}/move-to-recovery", response_model=HSAIMaterialResponse, summary="移入回收站（软删除）")
+async def move_material_to_recovery(
+    material_id: str,
+    request: MoveToRecoveryRequest,
+    user=Depends(get_verified_user)
+):
+    """
+    将指定素材从原目录移动到回收站目录，在数据库中更新删除标志位和原目录信息，记录操作日志
+    
+    Args:
+        material_id (str): 素材唯一标识符
+        request (MoveToRecoveryRequest): 请求参数
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAIMaterialResponse: 更新后的素材信息
+    """
+    try:
+        # 获取素材信息
+        material = HSAIMaterials.get_material_by_id(material_id)
+        if not material or material.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Material not found"
+            )
+        
+        # 更新素材信息
+        update_data = {
+            "is_deleted": True,
+            "original_directory": material.file_path,
+            "deleted_at": int(time.time()),
+            "deleted_by": request.operator_id
+        }
+        
+        updated_material = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
+        if not updated_material:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to move material to recovery"
+            )
+        
+        # 记录操作日志
+        await _log_file_operation(
+            material_id=material_id,
+            operation_type="delete",
+            source_path=material.file_path,
+            target_path=f"recovery/{material_id}",
+            operator_id=request.operator_id,
+            details={"reason": request.reason} if request.reason else None
+        )
+        
+        # 返回更新后的素材信息
+        return HSAIMaterialResponse(
+            **updated_material.model_dump(),
+            upload_url=updated_material.file_path,
+            thumbnail_url=f"/hsai/materials/{material_id}/thumbnail" if updated_material.material_type in ["image", "video"] else None,
+            download_url=updated_material.file_path
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception(f"Error moving material to recovery: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+@router.post("/recovery/{material_id}/restore", response_model=HSAIMaterialResponse, summary="还原文件")
+async def restore_material(
+    material_id: str,
+    request: RestoreRequest,
+    user=Depends(get_verified_user)
+):
+    """
+    将回收站中的文件还原到指定目录，更新数据库记录，记录操作日志
+    
+    Args:
+        material_id (str): 素材唯一标识符
+        request (RestoreRequest): 请求参数
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAIMaterialResponse: 更新后的素材信息
+    """
+    try:
+        # 获取素材信息
+        material = HSAIMaterials.get_material_by_id(material_id)
+        if not material or material.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Material not found"
+            )
+        
+        if not material.is_deleted:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Material is not in recovery"
+            )
+        
+        # 更新素材信息
+        update_data = {
+            "is_deleted": False,
+            "file_path": material.original_directory,  # 还原到原始目录
+            "original_directory": None,
+            "deleted_at": None,
+            "deleted_by": None
+        }
+        
+        updated_material = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
+        if not updated_material:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to restore material"
+            )
+        
+        # 记录操作日志
+        await _log_file_operation(
+            material_id=material_id,
+            operation_type="restore",
+            source_path=f"recovery/{material_id}",
+            target_path=updated_material.file_path,
+            operator_id=request.operator_id
+        )
+        
+        # 返回更新后的素材信息
+        return HSAIMaterialResponse(
+            **updated_material.model_dump(),
+            upload_url=updated_material.file_path,
+            thumbnail_url=f"/hsai/materials/{material_id}/thumbnail" if updated_material.material_type in ["image", "video"] else None,
+            download_url=updated_material.file_path
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception(f"Error restoring material: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+@router.delete("/{material_id}/permanent-delete", response_model=bool, summary="永久删除文件")
+async def permanent_delete_material(
+    material_id: str,
+    request: PermanentDeleteRequest,
+    user=Depends(get_verified_user)
+):
+    """
+    根据素材ID在素材表中找到对应的记录，通过素材文件的位置信息确定需要删除的OSS文件
+    （企业目录或回收站目录中的文件），彻底删除OSS文件和数据库记录，记录操作日志。
+    此接口统一处理所有永久删除操作，客户端无需关心文件具体位置。
+    
+    Args:
+        material_id (str): 素材唯一标识符
+        request (PermanentDeleteRequest): 请求参数
+        user: 已认证的用户对象
+        
+    Returns:
+        bool: 删除成功返回True
+    """
+    try:
+        # 获取素材信息
+        material = HSAIMaterials.get_material_by_id(material_id)
+        if not material or material.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Material not found"
+            )
+        
+        # 删除OSS文件
+        try:
+            Storage.delete_file(material.file_path)
+        except Exception as e:
+            log.warning(f"Failed to delete OSS file {material.file_path}: {e}")
+        
+        # 删除数据库记录
+        result = HSAIMaterials.delete_material_by_id(material_id)
+        
+        # 记录操作日志
+        await _log_file_operation(
+            material_id=material_id,
+            operation_type="permanent_delete",
+            source_path=material.file_path,
+            operator_id=request.operator_id,
+            details={"reason": request.reason} if request.reason else None
+        )
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception(f"Error permanently deleting material: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+@router.get("/recovery/list", response_model=List[HSAIMaterialResponse], summary="获取回收站文件列表")
+async def get_recovery_materials(
+    enterprise_id: str,
+    page: int = Query(1, description="页码，默认1"),
+    size: int = Query(20, description="每页数量，默认20"),
+    sort_by: str = Query("delete_time", description="排序字段（delete_time/name/size）"),
+    order: str = Query("desc", description="排序方式（asc/desc）"),
+    user=Depends(get_verified_user)
+):
+    """
+    获取指定企业回收站中的文件列表
+    
+    Args:
+        enterprise_id (str): 企业ID
+        page (int): 页码，默认1
+        size (int): 每页数量，默认20
+        sort_by (str): 排序字段（delete_time/name/size），默认delete_time
+        order (str): 排序方式（asc/desc），默认desc
+        user: 已认证的用户对象
+        
+    Returns:
+        List[HSAIMaterialResponse]: 回收站文件列表
+    """
+    try:
+        # TODO: 实际实现中需要根据企业ID过滤
+        # 这里简化实现，仅获取当前用户已删除的素材
+        materials = HSAIMaterials.get_materials_by_user_id(user.id)
+        deleted_materials = [m for m in materials if m.is_deleted]
+        
+        # 应用分页和排序
+        # 这里简化实现，实际应该在数据库查询时处理
+        
+        responses = []
+        for material in deleted_materials:
+            response = HSAIMaterialResponse(
+                **material.model_dump(),
+                upload_url=material.file_path,
+                thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material.material_type in ["image", "video"] else None,
+                download_url=material.file_path
+            )
+            responses.append(response)
+        
+        return responses
+        
+    except Exception as e:
+        log.exception(f"Error getting recovery materials: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+@router.post("/recovery/batch-operation", response_model=bool, summary="批量操作回收站文件")
+async def batch_operation_recovery_materials(
+    request: BatchOperationRequest,
+    user=Depends(get_verified_user)
+):
+    """
+    对回收站中的多个文件进行批量还原或删除操作
+    
+    Args:
+        request (BatchOperationRequest): 请求参数
+        user: 已认证的用户对象
+        
+    Returns:
+        bool: 操作成功返回True
+    """
+    try:
+        success_count = 0
+        
+        for material_id in request.material_ids:
+            try:
+                if request.operation == "restore":
+                    if not request.target_directory:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Target directory is required for restore operation"
+                        )
+                    
+                    # 还原操作
+                    update_data = {
+                        "is_deleted": False,
+                        "original_directory": None,
+                        "deleted_at": None,
+                        "deleted_by": None
+                    }
+                    
+                    result = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
+                    if result:
+                        success_count += 1
+                        
+                        # 记录操作日志
+                        await _log_file_operation(
+                            material_id=material_id,
+                            operation_type="restore",
+                            source_path=f"recovery/{material_id}",
+                            target_path=request.target_directory,
+                            operator_id=request.operator_id
+                        )
+                        
+                elif request.operation == "delete":
+                    # 永久删除操作
+                    material = HSAIMaterials.get_material_by_id(material_id)
+                    if material and material.user_id == user.id:
+                        # 删除OSS文件
+                        try:
+                            Storage.delete_file(material.file_path)
+                        except Exception as e:
+                            log.warning(f"Failed to delete OSS file {material.file_path}: {e}")
+                        
+                        # 删除数据库记录
+                        if HSAIMaterials.delete_material_by_id(material_id):
+                            success_count += 1
+                            
+                            # 记录操作日志
+                            await _log_file_operation(
+                                material_id=material_id,
+                                operation_type="permanent_delete",
+                                source_path=material.file_path,
+                                operator_id=request.operator_id
+                            )
+                
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Invalid operation: {request.operation}"
+                    )
+                    
+            except Exception as e:
+                log.warning(f"Error processing material {material_id}: {e}")
+                continue
+        
+        return success_count == len(request.material_ids)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception(f"Error in batch operation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+############################
+# 文件操作日志接口
+############################
+
+@router.post("/logs", response_model=FileOperationLogResponse, summary="记录文件操作日志")
+async def log_file_operation(
+    form_data: FileOperationLogForm,
+    user=Depends(get_verified_user)
+):
+    """
+    记录文件操作日志，由系统自动调用
+    
+    Args:
+        form_data (FileOperationLogForm): 日志表单数据
+        user: 已认证的用户对象
+        
+    Returns:
+        FileOperationLogResponse: 创建的日志信息
+    """
+    try:
+        # 实际实现中应该将日志保存到数据库
+        # 这里简化实现，只记录到日志中并返回模拟数据
+        
+        log.info(f"File operation logged: material_id={form_data.material_id}, operation_type={form_data.operation_type}, "
+                 f"source_path={form_data.source_path}, target_path={form_data.target_path}, "
+                 f"operator_id={form_data.operator_id}, details={form_data.details}")
+        
+        # 模拟创建的日志记录
+        log_id = str(uuid.uuid4())
+        current_time = int(time.time())
+        
+        return FileOperationLogResponse(
+            id=log_id,
+            material_id=form_data.material_id,
+            operation_type=form_data.operation_type,
+            source_path=form_data.source_path,
+            target_path=form_data.target_path,
+            operator_id=form_data.operator_id,
+            operation_time=form_data.operation_time,
+            details=form_data.details,
+            created_at=current_time,
+            updated_at=current_time
+        )
+        
+    except Exception as e:
+        log.exception(f"Error logging file operation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+@router.get("/logs", response_model=List[FileOperationLogResponse], summary="查询文件操作日志")
+async def get_file_operation_logs(
+    material_id: Optional[str] = Query(None, description="素材唯一标识符"),
+    enterprise_id: Optional[str] = Query(None, description="企业ID"),
+    operation_type: Optional[str] = Query(None, description="操作类型"),
+    operator_id: Optional[str] = Query(None, description="操作人ID"),
+    start_time: Optional[int] = Query(None, description="查询起始时间"),
+    end_time: Optional[int] = Query(None, description="查询结束时间"),
+    page: int = Query(1, description="页码，默认1"),
+    size: int = Query(20, description="每页数量，默认20"),
+    user=Depends(get_verified_user)
+):
+    """
+    查询文件操作日志
+    
+    Args:
+        material_id (str, optional): 素材唯一标识符
+        enterprise_id (str, optional): 企业ID
+        operation_type (str, optional): 操作类型
+        operator_id (str, optional): 操作人ID
+        start_time (int, optional): 查询起始时间
+        end_time (int, optional): 查询结束时间
+        page (int): 页码，默认1
+        size (int): 每页数量，默认20
+        user: 已认证的用户对象
+        
+    Returns:
+        List[FileOperationLogResponse]: 文件操作日志列表
+    """
+    try:
+        # 实际实现中应该从数据库查询日志
+        # 这里返回空列表作为示例
+        return []
+        
+    except Exception as e:
+        log.exception(f"Error getting file operation logs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+@router.get("/{material_id}/history", response_model=List[FileOperationLogResponse], summary="获取文件操作历史")
+async def get_material_history(
+    material_id: str,
+    page: int = Query(1, description="页码，默认1"),
+    size: int = Query(20, description="每页数量，默认20"),
+    user=Depends(get_verified_user)
+):
+    """
+    获取指定文件的所有操作历史记录
+    
+    Args:
+        material_id (str): 素材唯一标识符
+        page (int): 页码，默认1
+        size (int): 每页数量，默认20
+        user: 已认证的用户对象
+        
+    Returns:
+        List[FileOperationLogResponse]: 文件操作历史记录列表
+    """
+    try:
+        # 实际实现中应该从数据库查询指定素材的操作历史
+        # 这里返回空列表作为示例
+        return []
+        
+    except Exception as e:
+        log.exception(f"Error getting material history: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()

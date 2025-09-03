@@ -97,6 +97,12 @@ class HSAIMaterial(Base):
     oss_bucket = Column(String, nullable=True)
     oss_key = Column(String, nullable=True)
     
+    # 回收站功能相关字段
+    is_deleted = Column(Boolean, default=False)     # 删除标志位（true表示已删除）
+    original_directory = Column(String, nullable=True)  # 原始目录（软删除时保存文件原始所在目录）
+    deleted_at = Column(BigInteger, nullable=True)      # 删除时间（软删除时间）
+    deleted_by = Column(String, nullable=True)          # 删除人ID（软删除操作人）
+    
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
 
@@ -182,6 +188,11 @@ class HSAIMaterialModel(BaseModel):
     resolution: Optional[str] = None
     oss_bucket: Optional[str] = None
     oss_key: Optional[str] = None
+    # 回收站相关字段
+    is_deleted: bool = False
+    original_directory: Optional[str] = None
+    deleted_at: Optional[int] = None
+    deleted_by: Optional[str] = None
     created_at: int
     updated_at: int
 
@@ -245,6 +256,11 @@ class HSAIMaterialForm(BaseModel):
     resolution: Optional[str] = None
     oss_bucket: Optional[str] = None
     oss_key: Optional[str] = None
+    # 回收站相关字段
+    is_deleted: bool = False
+    original_directory: Optional[str] = None
+    deleted_at: Optional[int] = None
+    deleted_by: Optional[str] = None
 
 
 class HSAIMaterialTagForm(BaseModel):
@@ -304,6 +320,11 @@ class HSAIMaterialResponse(BaseModel):
     resolution: Optional[str] = Field(default=None, description="视频分辨率")
     oss_bucket: Optional[str] = Field(default=None, description="OSS Bucket")
     oss_key: Optional[str] = Field(default=None, description="OSS对象键")
+    # 回收站相关字段
+    is_deleted: bool = Field(default=False, description="删除标志位（true表示已删除）")
+    original_directory: Optional[str] = Field(default=None, description="原始目录（软删除时保存文件原始所在目录）")
+    deleted_at: Optional[int] = Field(default=None, description="删除时间（软删除时间）")
+    deleted_by: Optional[str] = Field(default=None, description="删除人ID（软删除操作人）")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
