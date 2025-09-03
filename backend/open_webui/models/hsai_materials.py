@@ -6,7 +6,7 @@ from typing import Optional, List
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict, Field, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
@@ -84,6 +84,19 @@ class HSAIMaterial(Base):
     # 访问控制
     access_control = Column(JSON, nullable=True)
     
+    # 文件属性（用于文件名拼接）
+    scene_code = Column(String, nullable=True)      # 场景代码
+    technique_code = Column(String, nullable=True)  # 手法代码
+    properties_code = Column(String, nullable=True) # 属性代码（多个属性用下划线分隔）
+    
+    # 视频元数据
+    duration = Column(Integer, nullable=True)       # 视频时长（秒）
+    resolution = Column(String, nullable=True)      # 视频分辨率
+    
+    # OSS信息
+    oss_bucket = Column(String, nullable=True)
+    oss_key = Column(String, nullable=True)
+    
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
 
@@ -102,6 +115,21 @@ class HSAIMaterialTag(Base):
     
     # 使用统计
     usage_count = Column(BigInteger, default=0)
+    
+    created_at = Column(BigInteger)
+    updated_at = Column(BigInteger)
+
+
+class HSAIMaterialCategory(Base):
+    """HSAI素材分类表"""
+    __tablename__ = "hsai_material_categories"
+    
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)        # 分类名称（英文）
+    display_name = Column(String, nullable=False) # 显示名称（中文）
+    category_type = Column(String, nullable=False) # 分类类型：scene, technique, property
+    description = Column(Text, nullable=True)    # 描述
+    is_active = Column(Boolean, default=True)    # 是否启用
     
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
@@ -146,6 +174,14 @@ class HSAIMaterialModel(BaseModel):
     last_used_at: Optional[int] = None
     status: str = "active"
     access_control: Optional[dict] = None
+    # 新增字段
+    scene_code: Optional[str] = None
+    technique_code: Optional[str] = None
+    properties_code: Optional[str] = None
+    duration: Optional[int] = None
+    resolution: Optional[str] = None
+    oss_bucket: Optional[str] = None
+    oss_key: Optional[str] = None
     created_at: int
     updated_at: int
 
@@ -159,6 +195,19 @@ class HSAIMaterialTagModel(BaseModel):
     category: Optional[str] = None
     user_id: str
     usage_count: int = 0
+    created_at: int
+    updated_at: int
+
+
+class HSAIMaterialCategoryModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: str
+    name: str
+    display_name: str
+    category_type: str
+    description: Optional[str] = None
+    is_active: bool = True
     created_at: int
     updated_at: int
 
@@ -188,12 +237,28 @@ class HSAIMaterialForm(BaseModel):
     material_metadata: Optional[dict] = None
     tags: Optional[List[str]] = None
     access_control: Optional[dict] = None
+    # 新增字段
+    scene_code: Optional[str] = None
+    technique_code: Optional[str] = None
+    properties_code: Optional[str] = None
+    duration: Optional[int] = None
+    resolution: Optional[str] = None
+    oss_bucket: Optional[str] = None
+    oss_key: Optional[str] = None
 
 
 class HSAIMaterialTagForm(BaseModel):
     name: str
     color: Optional[str] = None
     category: Optional[str] = None
+
+
+class HSAIMaterialCategoryForm(BaseModel):
+    name: str
+    display_name: str
+    category_type: str
+    description: Optional[str] = None
+    is_active: bool = True
 
 
 ####################
@@ -231,6 +296,26 @@ class HSAIMaterialResponse(BaseModel):
     status: str = Field(default="active", description="状态 (active, archived, deleted)")
     thumbnail_url: Optional[str] = Field(default=None, description="缩略图URL")
     download_url: Optional[str] = Field(default=None, description="下载URL")
+    # 新增字段
+    scene_code: Optional[str] = Field(default=None, description="场景代码")
+    technique_code: Optional[str] = Field(default=None, description="手法代码")
+    properties_code: Optional[List[str]] = Field(default=None, description="属性代码列表")
+    duration: Optional[int] = Field(default=None, description="视频时长（秒）")
+    resolution: Optional[str] = Field(default=None, description="视频分辨率")
+    oss_bucket: Optional[str] = Field(default=None, description="OSS Bucket")
+    oss_key: Optional[str] = Field(default=None, description="OSS对象键")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
+
+
+# 添加分类响应模型
+class HSAIMaterialCategoryResponse(BaseModel):
+    id: str = Field(description="分类唯一标识符")
+    name: str = Field(description="分类名称（英文）")
+    display_name: str = Field(description="显示名称（中文）")
+    category_type: str = Field(description="分类类型：scene, technique, property")
+    description: Optional[str] = Field(default=None, description="分类描述")
+    is_active: bool = Field(default=True, description="是否启用")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -439,6 +524,91 @@ class HSAIMaterialsTable:
                 return False
 
 
+class HSAIMaterialCategoriesTable:
+    def insert_new_category(
+        self, form_data: HSAIMaterialCategoryForm
+    ) -> Optional[HSAIMaterialCategoryModel]:
+        with get_db() as db:
+            id = str(uuid.uuid4())
+            category = HSAIMaterialCategoryModel(
+                **{
+                    "id": id,
+                    **form_data.model_dump(),
+                    "created_at": int(time.time()),
+                    "updated_at": int(time.time()),
+                }
+            )
+            
+            try:
+                result = HSAIMaterialCategory(**category.model_dump())
+                db.add(result)
+                db.commit()
+                db.refresh(result)
+                return HSAIMaterialCategoryModel.model_validate(result) if result else None
+            except Exception as e:
+                log.exception(f"Error creating category: {e}")
+                return None
+
+    def get_categories_by_type(self, category_type: str) -> List[HSAIMaterialCategoryModel]:
+        with get_db() as db:
+            try:
+                categories = db.query(HSAIMaterialCategory).filter_by(category_type=category_type, is_active=True).all()
+                return [HSAIMaterialCategoryModel.model_validate(category) for category in categories]
+            except Exception as e:
+                log.exception(f"Error getting categories: {e}")
+                return []
+
+    def get_all_categories(self) -> List[HSAIMaterialCategoryModel]:
+        with get_db() as db:
+            try:
+                categories = db.query(HSAIMaterialCategory).filter_by(is_active=True).all()
+                return [HSAIMaterialCategoryModel.model_validate(category) for category in categories]
+            except Exception as e:
+                log.exception(f"Error getting all categories: {e}")
+                return []
+
+    def get_category_by_id(self, category_id: str) -> Optional[HSAIMaterialCategoryModel]:
+        with get_db() as db:
+            try:
+                category = db.get(HSAIMaterialCategory, category_id)
+                return HSAIMaterialCategoryModel.model_validate(category) if category else None
+            except Exception:
+                return None
+
+    def update_category_by_id(
+        self, category_id: str, form_data: HSAIMaterialCategoryForm
+    ) -> Optional[HSAIMaterialCategoryModel]:
+        with get_db() as db:
+            try:
+                category = db.get(HSAIMaterialCategory, category_id)
+                if category:
+                    for key, value in form_data.model_dump(exclude_unset=True).items():
+                        setattr(category, key, value)
+                    category.updated_at = int(time.time())
+                    db.commit()
+                    db.refresh(category)
+                    return HSAIMaterialCategoryModel.model_validate(category)
+                return None
+            except Exception as e:
+                log.exception(f"Error updating category: {e}")
+                return None
+
+    def delete_category_by_id(self, category_id: str) -> bool:
+        with get_db() as db:
+            try:
+                category = db.get(HSAIMaterialCategory, category_id)
+                if category:
+                    category.is_active = False
+                    category.updated_at = int(time.time())
+                    db.commit()
+                    return True
+                return False
+            except Exception as e:
+                log.exception(f"Error deleting category: {e}")
+                return False
+
+
 # 全局实例
 HSAIMaterialFolders = HSAIMaterialFoldersTable()
 HSAIMaterials = HSAIMaterialsTable()
+HSAIMaterialCategories = HSAIMaterialCategoriesTable()
