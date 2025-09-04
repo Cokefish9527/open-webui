@@ -488,6 +488,225 @@
 
 ---
 
+## 🔄 4. 任务管理模块 (hsai_tasks.py)
+
+### 模块定位
+**核心功能**: AI任务管理和执行系统  
+**设计目标**: 提供完整的任务生命周期管理  
+**技术特点**: 异步执行、状态跟踪、指派管理
+
+### 4.1 任务查询接口
+
+#### GET `/hsai/tasks/` - 获取任务列表
+**功能描述**: 分页获取用户的任务列表，支持多种过滤条件
+```json
+// 查询参数
+{
+  "status": "pending",           // 可选，状态过滤
+  "task_type": "video_creation", // 可选，类型过滤
+  "assignee_id": "user_123",     // 可选，指派人过滤
+  "chat_id": "chat_456",         // 可选，聊天会话过滤
+  "ps": 20,                      // 分页大小
+  "pi": 1                        // 分页索引
+}
+
+// 返回格式 (PaginatedHSAITaskResponse)
+{
+  "data": [
+    {
+      "id": "task_789",
+      "title": "视频创作任务",
+      "description": "创建产品介绍视频",
+      "task_type": "video_creation",
+      "status": "pending",
+      "assignee_id": "user_123",
+      "progress": 0,
+      "priority": 5,
+      "tags": ["urgent", "marketing"],
+      "created_at": 1693478400,
+      "updated_at": 1693478400
+    }
+  ],
+  "pagination": {
+    "total": 45,
+    "page": 1,
+    "size": 20,
+    "total_pages": 3
+  }
+}
+```
+
+#### GET `/hsai/tasks/{task_id}` - 获取任务详情
+**功能描述**: 获取单个任务的详细信息
+```json
+// 返回格式
+{
+  "id": "task_789",
+  "title": "视频创作任务",
+  "description": "创建产品介绍视频",
+  "task_type": "video_creation",
+  "status": "pending",
+  "assignee_id": "user_123",
+  "progress": 0,
+  "priority": 5,
+  "tags": ["urgent", "marketing"],
+  "created_at": 1693478400,
+  "updated_at": 1693478400
+}
+```
+
+### 4.2 任务创建接口
+
+#### POST `/hsai/tasks/` - 创建任务
+**功能描述**: 创建新的AI任务
+```json
+// 请求参数
+{
+  "title": "数据分析报告",
+  "description": "分析上月销售数据",
+  "task_type": "content_analysis",
+  "chat_id": "chat_456",      // 可选，关联聊天会话
+  "priority": 3,              // 可选，优先级(1-10)
+  "tags": ["sales", "monthly"] // 可选，标签
+}
+
+// 返回格式
+{
+  "id": "task_789",
+  "title": "数据分析报告",
+  "description": "分析上月销售数据",
+  "task_type": "content_analysis",
+  "status": "pending",
+  "assignee_id": null,
+  "progress": 0,
+  "priority": 3,
+  "tags": ["sales", "monthly"],
+  "created_at": 1693478400,
+  "updated_at": 1693478400
+}
+```
+
+### 4.3 任务更新接口
+
+#### PUT `/hsai/tasks/{task_id}` - 更新任务
+**功能描述**: 更新任务信息
+```json
+// 请求参数 (HSAITaskUpdateForm)
+{
+  "title": "更新后的任务标题",      // 可选
+  "description": "更新后的描述",    // 可选
+  "status": "in_progress",        // 可选
+  "assignee_id": "user_456",      // 可选，指派人
+  "priority": 8,                  // 可选
+  "tags": ["updated", "important"] // 可选
+}
+
+// 返回格式
+{
+  "id": "task_789",
+  "title": "更新后的任务标题",
+  "description": "更新后的描述",
+  "task_type": "content_analysis",
+  "status": "in_progress",
+  "assignee_id": "user_456",
+  "progress": 0,
+  "priority": 8,
+  "tags": ["updated", "important"],
+  "created_at": 1693478400,
+  "updated_at": 1693478500
+}
+```
+
+### 4.4 任务指派接口
+
+#### POST `/hsai/tasks/{task_id}/assign` - 指派任务
+**功能描述**: 将任务指派给指定用户
+```json
+// 请求参数 (Query)
+{
+  "assignee_id": "user_456"  // 指派给的用户ID
+}
+
+// 返回格式
+{
+  "id": "task_789",
+  "title": "数据分析报告",
+  "description": "分析上月销售数据",
+  "task_type": "content_analysis",
+  "status": "pending",
+  "assignee_id": "user_456",
+  "progress": 0,
+  "priority": 3,
+  "tags": ["sales", "monthly"],
+  "created_at": 1693478400,
+  "updated_at": 1693478500
+}
+```
+
+### 4.5 任务操作接口
+
+#### POST `/hsai/tasks/{task_id}/start` - 启动任务
+**功能描述**: 启动待执行的任务
+```json
+// 返回格式
+{
+  "id": "task_789",
+  "title": "数据分析报告",
+  "description": "分析上月销售数据",
+  "task_type": "content_analysis",
+  "status": "in_progress",
+  "assignee_id": "user_456",
+  "progress": 0,
+  "priority": 3,
+  "tags": ["sales", "monthly"],
+  "started_at": 1693478500,
+  "created_at": 1693478400,
+  "updated_at": 1693478500
+}
+```
+
+#### POST `/hsai/tasks/{task_id}/cancel` - 取消任务
+**功能描述**: 取消执行中的任务
+```json
+// 返回格式
+{
+  "id": "task_789",
+  "title": "数据分析报告",
+  "description": "分析上月销售数据",
+  "task_type": "content_analysis",
+  "status": "cancelled",
+  "assignee_id": "user_456",
+  "progress": 0,
+  "priority": 3,
+  "tags": ["sales", "monthly"],
+  "created_at": 1693478400,
+  "updated_at": 1693478500
+}
+```
+
+### 4.6 任务统计接口
+
+#### GET `/hsai/tasks/statistics` - 获取任务统计
+**功能描述**: 获取用户任务统计信息
+```json
+// 返回格式
+{
+  "total_tasks": 45,
+  "pending_tasks": 8,
+  "in_progress_tasks": 12,
+  "completed_tasks": 20,
+  "failed_tasks": 5,
+  "tasks_by_type": {
+    "video_creation": 15,
+    "content_analysis": 20,
+    "material_processing": 10
+  },
+  "avg_completion_time": 180.5
+}
+```
+
+---
+
 ## 🔄 4. 工作流集成模块 (hsai_workflows.py)
 
 ### 模块定位

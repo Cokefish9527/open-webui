@@ -144,6 +144,7 @@ async def get_task_stats(user=Depends(get_verified_user)):
 async def get_tasks(
     status: Optional[str] = Query(None, description="任务状态过滤：pending(待执行)、in_progress(执行中)、completed(已完成)、failed(执行失败)、cancelled(已取消)"),
     task_type: Optional[str] = Query(None, description="任务类型过滤：video_creation(视频创作)、content_analysis(内容分析)、image_generation(图像生成)、text_processing(文本处理)"),
+    assignee_id: Optional[str] = Query(None, description="指派人ID过滤"),
     chat_id: Optional[str] = Query(None, description="聊天会话ID，用于过滤特定会话的任务"),
     ps: int = Query(20, description="分页大小", ge=1, le=100),
     pi: int = Query(1, description="分页索引，从1开始", ge=1),
@@ -152,7 +153,7 @@ async def get_tasks(
     """
     获取用户的任务列表（分页）。
     
-    支持按状态、类型和聊天会话进行过滤，返回任务的详细信息和预估执行时间。
+    支持按状态、类型、指派人和聊天会话进行过滤，返回任务的详细信息和预估执行时间。
     
     Args:
         status (Optional[str]): 任务状态过滤
@@ -166,6 +167,7 @@ async def get_tasks(
         - "content_analysis": 内容分析
         - "image_generation": 图像生成
         - "text_processing": 文本处理
+        assignee_id (Optional[str]): 指派人ID过滤
         chat_id (Optional[str]): 聊天会话ID过滤
         ps (int): 分页大小，范围1-100
         pi (int): 分页索引，从1开始
@@ -191,6 +193,7 @@ async def get_tasks(
             user.id,
             status=status,
             task_type=task_type,
+            assignee_id=assignee_id,
             chat_id=chat_id,
             limit=ps,
             offset=offset
@@ -201,6 +204,7 @@ async def get_tasks(
             user.id,
             status=status,
             task_type=task_type,
+            assignee_id=assignee_id,
             chat_id=chat_id
         )
         
@@ -572,6 +576,64 @@ async def update_task_progress(
         raise
     except Exception as e:
         log.exception(f"Error updating task progress: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+
+@router.post("/{task_id}/assign", response_model=HSAITaskResponse, summary="指派任务")
+async def assign_task(
+    task_id: str,
+    assignee_id: str,
+    user=Depends(get_verified_user)
+):
+    """
+    指派任务给指定用户。
+    
+    Args:
+        task_id (str): 要指派的任务ID
+        assignee_id (str): 指派给的用户ID
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAITaskResponse: 更新后的任务信息
+        
+    Raises:
+        HTTPException: 404 - 任务不存在或无权限访问
+        HTTPException: 500 - 指派失败
+        
+    Note:
+        - 任务创建者或管理员可以指派任务
+        - 指派后会更新任务的assignee_id字段
+    """
+    try:
+        # 验证任务所有权
+        existing_task = HSAITasks.get_task_by_id(task_id)
+        if not existing_task or existing_task.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Task not found"
+            )
+        
+        # 更新任务指派人
+        update_form = HSAITaskUpdateForm(
+            assignee_id=assignee_id
+        )
+        
+        task = HSAITasks.update_task_by_id(task_id, update_form)
+        if not task:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to assign task"
+            )
+        
+        return HSAITaskResponse(**task.model_dump())
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception(f"Error assigning task: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()

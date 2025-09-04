@@ -60,6 +60,7 @@ class HSAITask(Base):
     
     # 所属用户和会话
     user_id = Column(String, nullable=False)
+    assignee_id = Column(String, nullable=True)  # 指派人ID
     chat_id = Column(String, nullable=True)  # 关联的聊天会话ID
     
     # 任务配置和参数
@@ -201,6 +202,7 @@ class HSAITaskModel(BaseModel):
     task_type: str
     status: str = HSAITaskStatus.PENDING
     user_id: str
+    assignee_id: Optional[str] = None  # 指派人ID
     chat_id: Optional[str] = None
     config: Optional[dict] = None
     inputs: Optional[dict] = None
@@ -269,6 +271,7 @@ class HSAITaskForm(BaseModel):
     title: str
     description: Optional[str] = None
     task_type: str
+    assignee_id: Optional[str] = None
     chat_id: Optional[str] = None
     config: Optional[dict] = None
     inputs: Optional[dict] = None
@@ -307,6 +310,7 @@ class HSAITaskUpdateForm(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
+    assignee_id: Optional[str] = None  # 指派人ID
     config: Optional[dict] = None
     inputs: Optional[dict] = None
     outputs: Optional[dict] = None
@@ -327,6 +331,7 @@ class HSAITaskResponse(BaseModel):
     description: Optional[str] = Field(default=None, description="任务详细描述")
     task_type: str = Field(description="任务类型")
     status: str = Field(description="任务状态")
+    assignee_id: Optional[str] = Field(default=None, description="任务指派人ID")
     progress: int = Field(default=0, description="任务进度百分比 (0-100)")
     priority: int = Field(default=0, description="任务优先级")
     tags: Optional[List[str]] = Field(default=None, description="任务标签列表")
@@ -410,6 +415,7 @@ class HSAITasksTable:
         user_id: str, 
         status: Optional[str] = None,
         task_type: Optional[str] = None,
+        assignee_id: Optional[str] = None,
         chat_id: Optional[str] = None,
         limit: int = 20,
         offset: int = 0
@@ -422,6 +428,8 @@ class HSAITasksTable:
                     query = query.filter_by(status=status)
                 if task_type:
                     query = query.filter_by(task_type=task_type)
+                if assignee_id:
+                    query = query.filter_by(assignee_id=assignee_id)
                 if chat_id:
                     query = query.filter_by(chat_id=chat_id)
                     
@@ -440,6 +448,7 @@ class HSAITasksTable:
         user_id: str, 
         status: Optional[str] = None,
         task_type: Optional[str] = None,
+        assignee_id: Optional[str] = None,
         chat_id: Optional[str] = None
     ) -> int:
         """获取任务总数"""
@@ -451,6 +460,8 @@ class HSAITasksTable:
                     query = query.filter_by(status=status)
                 if task_type:
                     query = query.filter_by(task_type=task_type)
+                if assignee_id:
+                    query = query.filter_by(assignee_id=assignee_id)
                 if chat_id:
                     query = query.filter_by(chat_id=chat_id)
                     
