@@ -14,15 +14,12 @@ class N8NWorkflowType(str, Enum):
     COMPANY_INFO = "company_info"  # 公司信息收集及作战地图梳理.json
     VIRAL_LEARNING = "viral_learning"  # 被动触发爆款学习.json（定时调用）
 
-# n8n服务器配置
-N8N_BASE_URL = os.getenv("N8N_BASE_URL", "https://webhook-n8n.hsai.cc")
-N8N_WEBHOOK_PREFIX = os.getenv("N8N_WEBHOOK_PREFIX", "/webhook")
-
-# 工作流webhook映射 - 基于实际的n8n工作流
+# n8n工作流webhook映射 - 基于实际的n8n工作流
+# 更新为新的工作流地址
 N8N_WORKFLOW_WEBHOOKS = {
-    N8NWorkflowType.MAIN: f"{N8N_BASE_URL}{N8N_WEBHOOK_PREFIX}/main-workflow",
-    N8NWorkflowType.COMPANY_INFO: f"{N8N_BASE_URL}{N8N_WEBHOOK_PREFIX}/company-info",
-    N8NWorkflowType.VIRAL_LEARNING: f"{N8N_BASE_URL}{N8N_WEBHOOK_PREFIX}/viral-learning"
+    N8NWorkflowType.MAIN: os.getenv("N8N_MAIN_WORKFLOW_URL", "https://n8n.hsai.cc/webhook-test/n8n_chat"),
+    N8NWorkflowType.COMPANY_INFO: os.getenv("N8N_COMPANY_INFO_WORKFLOW_URL", "https://n8n.hsai.cc/webhook-test/business_information_get"),
+    N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://n8n.hsai.cc/webhook-test/viral-learning")
 }
 
 # 对话入口类型配置 - 根据入口选择工作流
