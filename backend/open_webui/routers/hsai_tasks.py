@@ -304,18 +304,7 @@ async def create_task(
             
             card = HSAICards.insert_new_card(user.id, card_form)
             
-            # 通过WebSocket通知前端
-            emitter = get_event_emitter()
-            if emitter:
-                await emitter.emit(
-                    "hsai_task_created",
-                    {
-                        "task_id": task.id,
-                        "chat_id": form_data.chat_id,
-                        "user_id": user.id
-                    },
-                    to=user.id
-                )
+            # 移除了WebSocket通知，改为HTTP轮询方式
         
         return HSAITaskResponse(**task.model_dump())
         
@@ -389,21 +378,6 @@ async def update_task(
                         "progress": task.progress
                     }
                     HSAICards.update_card_by_id(card.id, {"content": updated_content})
-            
-            # 通过WebSocket通知前端
-            emitter = get_event_emitter()
-            if emitter:
-                await emitter.emit(
-                    "hsai_task_updated",
-                    {
-                        "task_id": task_id,
-                        "chat_id": existing_task.chat_id,
-                        "status": task.status,
-                        "progress": task.progress,
-                        "user_id": user.id
-                    },
-                    to=user.id
-                )
         
         return HSAITaskResponse(**task.model_dump())
         
@@ -442,8 +416,7 @@ async def start_task(
     Note:
         - 只有"pending"状态的任务可以启动
         - 启动后任务状态变为"in_progress"
-        - 会通过WebSocket实时通知前端
-        - 实际的AI处理逻辑需要通过队列系统异步执行
+        - 客户端需要主动轮询获取任务状态
     """
     try:
         # 验证任务所有权和状态
@@ -475,19 +448,6 @@ async def start_task(
         
         # 在这里可以添加异步任务执行逻辑
         # 例如：通过Celery或其他队列系统执行实际的AI处理
-        
-        # 通过WebSocket通知前端
-        emitter = get_event_emitter()
-        if emitter and existing_task.chat_id:
-            await emitter.emit(
-                "hsai_task_started",
-                {
-                    "task_id": task_id,
-                    "chat_id": existing_task.chat_id,
-                    "user_id": user.id
-                },
-                to=user.id
-            )
         
         return HSAITaskResponse(**task.model_dump())
         
@@ -526,8 +486,7 @@ async def cancel_task(
     Note:
         - 已完成或已取消的任务无法再次取消
         - 取消后任务状态变为"cancelled"
-        - 会通过WebSocket通知前端更新状态
-        - 需要确保后台处理进程也能正确停止
+        - 客户端需要主动轮询获取任务状态
     """
     try:
         # 验证任务所有权
@@ -554,19 +513,6 @@ async def cancel_task(
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to cancel task"
-            )
-        
-        # 通过WebSocket通知前端
-        emitter = get_event_emitter()
-        if emitter and existing_task.chat_id:
-            await emitter.emit(
-                "hsai_task_cancelled",
-                {
-                    "task_id": task_id,
-                    "chat_id": existing_task.chat_id,
-                    "user_id": user.id
-                },
-                to=user.id
             )
         
         return HSAITaskResponse(**task.model_dump())
@@ -606,8 +552,7 @@ async def update_task_progress(
         
     Note:
         - 进度值应在0-100之间
-        - 会通过WebSocket实时推送进度更新
-        - 前端可以据此显示进度条
+        - 客户端需要主动轮询获取任务进度
         - 通常由异步任务处理器调用
     """
     try:
@@ -620,21 +565,6 @@ async def update_task_progress(
             )
         
         result = HSAITasks.update_task_progress(task_id, progress)
-        
-        if result and existing_task.chat_id:
-            # 通过WebSocket实时更新进度
-            emitter = get_event_emitter()
-            if emitter:
-                await emitter.emit(
-                    "hsai_task_progress",
-                    {
-                        "task_id": task_id,
-                        "chat_id": existing_task.chat_id,
-                        "progress": progress,
-                        "user_id": user.id
-                    },
-                    to=user.id
-                )
         
         return result
         

@@ -14,48 +14,6 @@ def register_hsai_events():
         log.warning("WebSocket emitter not available for HSAI events registration")
         return
     
-    @emitter.on("hsai_task_subscribe")
-    async def handle_task_subscribe(sid, data):
-        """处理任务订阅事件"""
-        try:
-            task_id = data.get("task_id")
-            user_id = data.get("user_id")
-            
-            if task_id and user_id:
-                # 将用户加入任务房间
-                await emitter.enter_room(sid, f"task_{task_id}")
-                log.info(f"User {user_id} subscribed to task {task_id}")
-                
-                # 发送订阅确认
-                await emitter.emit("hsai_task_subscribed", {
-                    "task_id": task_id,
-                    "status": "subscribed"
-                }, to=sid)
-            
-        except Exception as e:
-            log.error(f"Error handling task subscribe: {e}")
-    
-    @emitter.on("hsai_task_unsubscribe")
-    async def handle_task_unsubscribe(sid, data):
-        """处理任务取消订阅事件"""
-        try:
-            task_id = data.get("task_id")
-            user_id = data.get("user_id")
-            
-            if task_id and user_id:
-                # 将用户从任务房间移除
-                await emitter.leave_room(sid, f"task_{task_id}")
-                log.info(f"User {user_id} unsubscribed from task {task_id}")
-                
-                # 发送取消订阅确认
-                await emitter.emit("hsai_task_unsubscribed", {
-                    "task_id": task_id,
-                    "status": "unsubscribed"
-                }, to=sid)
-            
-        except Exception as e:
-            log.error(f"Error handling task unsubscribe: {e}")
-    
     @emitter.on("hsai_dashboard_subscribe")
     async def handle_dashboard_subscribe(sid, data):
         """处理工作台订阅事件"""
@@ -159,13 +117,6 @@ def register_hsai_events():
 
 # WebSocket事件类型定义
 HSAI_WEBSOCKET_EVENTS = {
-    # 任务相关事件
-    "TASK_STARTED": "hsai_task_started",
-    "TASK_PROGRESS": "hsai_task_progress", 
-    "TASK_COMPLETED": "hsai_task_completed",
-    "TASK_FAILED": "hsai_task_failed",
-    "TASK_CANCELLED": "hsai_task_cancelled",
-    
     # 工作流相关事件
     "WORKFLOW_STARTED": "hsai_workflow_started",
     "WORKFLOW_PROGRESS": "hsai_workflow_progress",

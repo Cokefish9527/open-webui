@@ -90,7 +90,6 @@ class DashboardResponse(BaseModel):
 
 ```python
 # 支持的事件类型
-- 任务相关: hsai_task_started/progress/completed/failed
 - 工作流相关: hsai_workflow_status/progress
 - 聊天相关: hsai_chat_message/user_joined/user_left
 - 工作台相关: hsai_dashboard_update/kpi_update
@@ -104,8 +103,7 @@ class DashboardResponse(BaseModel):
 # AI服务异步执行
 async def _execute_video_script_generation(task_id, request, user_id):
     # 异步AI处理
-    # 实时状态更新
-    # WebSocket通知
+    # 状态更新通过HTTP轮询获取
 
 # 文件处理异步
 async def process_uploaded_file(file_path):
@@ -122,14 +120,14 @@ async def process_uploaded_file(file_path):
 ```
 创建任务 → 状态跟踪 → 执行监控 → 结果处理 → 完成通知
    ↓         ↓         ↓         ↓         ↓
- POST /tasks GET /tasks/{id} WebSocket  PUT /tasks/{id} WebSocket
+ POST /tasks GET /tasks/{id}  PUT /tasks/{id}  GET /tasks/{id}
 ```
 
 ##### 对话管理流程 ✅
 ```
 创建会话 → 发送消息 → AI处理 → 结果展示 → 历史记录
    ↓         ↓        ↓        ↓         ↓
-POST /chats POST /messages AI集成 WebSocket GET /messages
+POST /chats POST /messages AI集成 GET /messages GET /messages
 ```
 
 ##### 素材管理流程 ✅
@@ -150,11 +148,11 @@ POST /upload AI服务 PUT /materials GET /usage GET /stats
 
 | 功能模块 | 接口总数 | CRUD完整性 | 高级功能 | WebSocket集成 |
 |----------|----------|------------|----------|---------------|
-| 任务系统 | 18个 | ✅ 完整 | ✅ 批量操作、状态管理 | ✅ 实时通知 |
+| 任务系统 | 18个 | ✅ 完整 | ✅ 批量操作、状态管理 | ❌ 无实时通知 |
 | 对话管理 | 15个 | ✅ 完整 | ✅ 搜索、统计、会话管理 | ✅ 实时消息 |
 | 素材管理 | 22个 | ✅ 完整 | ✅ AI分析、批量处理 | ✅ 上传进度 |
 | 个人工作台 | 12个 | ✅ 完整 | ✅ 数据可视化、KPI监控 | ✅ 实时更新 |
-| AI服务 | 8个 | ✅ 完整 | ✅ 任务集成、模板管理 | ✅ 执行状态 |
+| AI服务 | 8个 | ✅ 完整 | ✅ 任务集成、模板管理 | ❌ 无实时状态 |
 | 工作流 | 10个 | ✅ 完整 | ✅ 触发器、状态查询 | ✅ 进度通知 |
 
 **总计**: 85个API接口，100%功能覆盖
@@ -406,7 +404,7 @@ CREATE INDEX idx_hsai_materials_user_type ON hsai_materials(user_id, material_ty
 
 **综合评分**: **89/100** ✅
 
-该项目为HSAI系统建立了坚实的技术基础，完全满足了业务需求，为后续发展奠定了良好基础。建议按照后续发展规划持续优化和完善系统功能。
+该项目为HSAI系统建立了坚实的技术基础，完全满足了业务需求，为后续发展奠定了良好基础。建议按照后续发展规划持续优化和完善系统功能.
 
 ---
 

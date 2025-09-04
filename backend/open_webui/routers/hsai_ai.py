@@ -46,7 +46,7 @@ class ContentIdeasRequest(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(..., description="用户消息")
     context: Optional[Dict[str, Any]] = Field(None, description="上下文参数")
-    task_type: Optional[str] = Field("general", description="任务类型")
+    chat_history: Optional[List[Dict[str, Any]]] = Field(None, description="对话历史记录")
 
 ####################
 # Response Models
@@ -73,29 +73,22 @@ async def generate_video_script_task(
     """
     生成视频脚本（集成任务系统）
     
-    基于产品信息和目标受众，生成适合的视频脚本内容。
+    根据产品信息和目标受众生成营销视频脚本。
     自动创建任务并跟踪执行状态。
-    
-    Args:
-        request: 视频脚本生成请求
-        user: 已认证的用户对象
-        
-    Returns:
-        AITaskResponse: 包含任务ID、状态和结果的统一响应
     """
     try:
         # 创建任务记录
         task_form = HSAITaskForm(
-            title=f"生成视频脚本: {request.product_name}",
+            title=f"视频脚本生成: {request.product_name}",
             task_type="video_script_generation",
-            description=f"为{request.product_name}生成{request.duration}秒视频脚本",
-            priority=2,  # medium priority
+            description=f"为{request.product_name}生成营销视频脚本",
+            priority=3,  # high priority
             config={
                 "product_name": request.product_name,
                 "target_audience": request.target_audience,
-                "key_points": request.key_points,
-                "duration": request.duration,
-                "style_requirements": request.style_requirements
+                "video_duration": request.video_duration,
+                "style": request.style,
+                "key_points": request.key_points
             }
         )
         
@@ -109,19 +102,6 @@ async def generate_video_script_task(
             "started_at": int(time.time()),
             "updated_at": int(time.time())
         })
-        
-        # 通过WebSocket通知任务开始
-        emitter = get_event_emitter()
-        if emitter:
-            await emitter.emit(
-                "hsai_task_started",
-                {
-                    "task_id": task.id,
-                    "task_type": "video_script_generation",
-                    "user_id": user.id
-                },
-                to=user.id
-            )
         
         # 异步执行AI服务（简化版本：模拟AI生成）
         asyncio.create_task(_execute_video_script_generation(task.id, request, user.id))
@@ -176,19 +156,6 @@ async def analyze_product_task(
             "started_at": int(time.time()),
             "updated_at": int(time.time())
         })
-        
-        # 通知任务开始
-        emitter = get_event_emitter()
-        if emitter:
-            await emitter.emit(
-                "hsai_task_started",
-                {
-                    "task_id": task.id,
-                    "task_type": "product_analysis",
-                    "user_id": user.id
-                },
-                to=user.id
-            )
         
         # 异步执行分析
         asyncio.create_task(_execute_product_analysis(task.id, request, user.id))
@@ -245,19 +212,6 @@ async def generate_content_ideas_task(
             "updated_at": int(time.time())
         })
         
-        # 通知任务开始
-        emitter = get_event_emitter()
-        if emitter:
-            await emitter.emit(
-                "hsai_task_started",
-                {
-                    "task_id": task.id,
-                    "task_type": "content_ideas_generation",
-                    "user_id": user.id
-                },
-                to=user.id
-            )
-        
         # 异步执行创意生成
         asyncio.create_task(_execute_content_ideas_generation(task.id, request, user.id))
         
@@ -311,7 +265,7 @@ async def optimize_material_task(
             "updated_at": int(time.time())
         })
         
-        # 异步执行优化
+        # 异步执行素材优化
         asyncio.create_task(_execute_material_optimization(task.id, request, user.id))
         
         return AITaskResponse(
@@ -330,26 +284,27 @@ async def optimize_material_task(
         )
 
 @router.post("/chat", response_model=AITaskResponse, summary="HSAI智能对话（任务集成）")
-async def hsai_chat_task(
+async def ai_chat_task(
     request: ChatRequest,
     user=Depends(get_verified_user)
 ):
     """
     HSAI智能对话（集成任务系统）
     
-    智能理解用户意图，提供专业建议或执行相关任务。
+    基于用户输入提供智能响应和建议。
+    自动创建任务并跟踪执行状态。
     """
     try:
         # 创建任务记录
         task_form = HSAITaskForm(
-            title=f"AI对话: {request.message[:50]}...",
+            title=f"AI对话: {request.message[:30]}...",
             task_type="ai_chat",
-            description="智能对话和意图理解",
-            priority=3,  # high priority
+            description="智能对话交互",
+            priority=2,  # medium priority
             config={
                 "message": request.message,
-                "context": request.context or {},
-                "task_type": request.task_type
+                "context": request.context,
+                "chat_history": request.chat_history
             }
         )
         
@@ -364,14 +319,14 @@ async def hsai_chat_task(
             "updated_at": int(time.time())
         })
         
-        # 异步执行对话处理
+        # 异步执行AI对话
         asyncio.create_task(_execute_ai_chat(task.id, request, user.id))
         
         return AITaskResponse(
             success=True,
             task_id=task.id,
             status="running",
-            message="AI对话处理中",
+            message="AI对话任务已启动",
             data={"estimated_duration": 10}
         )
         
@@ -468,30 +423,42 @@ async def _execute_video_script_generation(task_id: str, request: VideoScriptReq
         # 模拟AI处理时间
         await asyncio.sleep(30)
         
-        # 模拟生成结果
+        # 生成模拟结果
         result = {
-            "script": f"""
-开场（0-10秒）：
-大家好！今天为您介绍{request.product_name}，专为{request.target_audience}设计的高端解决方案。
-
-主体（10-{request.duration-10}秒）：
-{request.product_name}具有以下突出优势：
-""" + "\n".join([f"• {point}" for point in request.key_points]) + f"""
-
-结尾（{request.duration-10}-{request.duration}秒）：
-选择{request.product_name}，选择专业与品质。立即联系我们获取详细方案！
-            """.strip(),
+            "title": f"{request.product_name}产品介绍视频脚本",
+            "duration": request.video_duration,
             "scenes": [
-                {"order": 1, "content": "产品外观展示", "duration": 10},
-                {"order": 2, "content": "功能特点演示", "duration": request.duration - 20},
-                {"order": 3, "content": "联系方式展示", "duration": 10}
+                {
+                    "scene_number": 1,
+                    "duration": 5,
+                    "content": "开场介绍产品核心价值",
+                    "visuals": "产品特写镜头",
+                    "voiceover": f"欢迎了解{request.product_name}，一款专为解决行业痛点而设计的创新产品。"
+                },
+                {
+                    "scene_number": 2,
+                    "duration": 10,
+                    "content": "产品核心功能展示",
+                    "visuals": "功能演示动画",
+                    "voiceover": "我们的产品具备三大核心优势：高效、稳定、智能。"
+                },
+                {
+                    "scene_number": 3,
+                    "duration": 8,
+                    "content": "客户案例分享",
+                    "visuals": "客户使用场景",
+                    "voiceover": "众多行业领先企业已选择我们的产品，显著提升了工作效率。"
+                },
+                {
+                    "scene_number": 4,
+                    "duration": 7,
+                    "content": "行动号召",
+                    "visuals": "联系方式展示",
+                    "voiceover": "立即联系我们，开启您的高效之旅！"
+                }
             ],
-            "duration_estimate": request.duration,
-            "suggestions": [
-                "建议添加客户案例",
-                "可以增加产品细节特写",
-                "结尾可以添加优惠信息"
-            ]
+            "background_music": "upbeat_corporate",
+            "call_to_action": "访问官网了解更多"
         }
         
         # 更新任务为完成状态
@@ -503,19 +470,6 @@ async def _execute_video_script_generation(task_id: str, request: VideoScriptReq
             "updated_at": int(time.time())
         })
         
-        # 通知任务完成
-        emitter = get_event_emitter()
-        if emitter:
-            await emitter.emit(
-                "hsai_task_completed",
-                {
-                    "task_id": task_id,
-                    "result": result,
-                    "user_id": user_id
-                },
-                to=user_id
-            )
-        
     except Exception as e:
         # 更新任务为失败状态
         HSAITasks.update_task_by_id(task_id, {
@@ -523,19 +477,6 @@ async def _execute_video_script_generation(task_id: str, request: VideoScriptReq
             "error_message": str(e),
             "updated_at": int(time.time())
         })
-        
-        # 通知任务失败
-        emitter = get_event_emitter()
-        if emitter:
-            await emitter.emit(
-                "hsai_task_failed",
-                {
-                    "task_id": task_id,
-                    "error": str(e),
-                    "user_id": user_id
-                },
-                to=user_id
-            )
 
 async def _execute_product_analysis(task_id: str, request: ProductAnalysisRequest, user_id: str):
     """异步执行产品分析"""
@@ -582,14 +523,6 @@ async def _execute_product_analysis(task_id: str, request: ProductAnalysisReques
             "updated_at": int(time.time())
         })
         
-        emitter = get_event_emitter()
-        if emitter:
-            await emitter.emit(
-                "hsai_task_completed",
-                {"task_id": task_id, "result": result, "user_id": user_id},
-                to=user_id
-            )
-        
     except Exception as e:
         HSAITasks.update_task_by_id(task_id, {
             "status": "failed",
@@ -624,14 +557,6 @@ async def _execute_content_ideas_generation(task_id: str, request: ContentIdeasR
             "progress": 100,
             "updated_at": int(time.time())
         })
-        
-        emitter = get_event_emitter()
-        if emitter:
-            await emitter.emit(
-                "hsai_task_completed",
-                {"task_id": task_id, "result": result, "user_id": user_id},
-                to=user_id
-            )
         
     except Exception as e:
         HSAITasks.update_task_by_id(task_id, {
@@ -673,14 +598,6 @@ async def _execute_material_optimization(task_id: str, request: MaterialOptimiza
             "updated_at": int(time.time())
         })
         
-        emitter = get_event_emitter()
-        if emitter:
-            await emitter.emit(
-                "hsai_task_completed",
-                {"task_id": task_id, "result": result, "user_id": user_id},
-                to=user_id
-            )
-        
     except Exception as e:
         HSAITasks.update_task_by_id(task_id, {
             "status": "failed",
@@ -698,17 +615,20 @@ async def _execute_ai_chat(task_id: str, request: ChatRequest, user_id: str):
             "message": f"我理解您的需求：{request.message}。基于您的描述，我建议以下方案...",
             "suggestions": [
                 {
-                    "action": "create_video_script",
-                    "title": "创建视频脚本",
-                    "description": "基于您的需求生成专业视频脚本"
+                    "type": "solution",
+                    "content": "针对您的问题，建议采用分步骤解决策略"
                 },
                 {
-                    "action": "analyze_market",
-                    "title": "市场分析",
-                    "description": "深入分析产品市场定位"
+                    "type": "resource",
+                    "content": "可参考相关行业最佳实践文档"
+                },
+                {
+                    "type": "contact",
+                    "content": "如需进一步协助，可联系技术支持团队"
                 }
             ],
-            "required_fields": []
+            "related_topics": ["问题诊断", "解决方案", "实施步骤"],
+            "confidence_score": 0.85
         }
         
         HSAITasks.update_task_by_id(task_id, {
@@ -718,14 +638,6 @@ async def _execute_ai_chat(task_id: str, request: ChatRequest, user_id: str):
             "progress": 100,
             "updated_at": int(time.time())
         })
-        
-        emitter = get_event_emitter()
-        if emitter:
-            await emitter.emit(
-                "hsai_task_completed",
-                {"task_id": task_id, "result": result, "user_id": user_id},
-                to=user_id
-            )
         
     except Exception as e:
         HSAITasks.update_task_by_id(task_id, {

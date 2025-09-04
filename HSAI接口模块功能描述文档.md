@@ -707,7 +707,7 @@
 **技术特点**: 房间管理、事件分发、连接管理
 
 ### 6.1 WebSocket连接管理
-```python
+```
 # 连接建立
 ws://localhost:8080/hsai/ws/{user_id}
 
@@ -720,22 +720,12 @@ ws://localhost:8080/hsai/ws/{user_id}
 # 事件订阅
 {
   "type": "subscribe",
-  "events": ["task_update", "chat_message", "system_notification"]
+  "events": ["chat_message", "system_notification"]
 }
 ```
 
 ### 6.2 事件类型定义
-```json
-// 任务状态更新
-{
-  "type": "task_update",
-  "data": {
-    "task_id": "task_123",
-    "status": "completed",
-    "progress": 100
-  }
-}
-
+``json
 // 聊天消息
 {
   "type": "chat_message",
