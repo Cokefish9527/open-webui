@@ -85,6 +85,8 @@ from open_webui.routers import (
     hsai_dashboard,
     hsai_chat,
     hsai_workflows,
+    # 添加hsai_websocket路由
+    hsai_websocket,
 )
 
 from open_webui.routers.retrieval import (
@@ -1211,6 +1213,8 @@ app.include_router(hsai_ai.router, prefix="/api/v1/hsai/ai", tags=["hsai"])
 app.include_router(hsai_dashboard.router, prefix="/api/v1", tags=["hsai"])
 app.include_router(hsai_chat.router, prefix="/api/v1", tags=["hsai"])
 app.include_router(hsai_workflows.router, prefix="/api/v1", tags=["hsai"])
+# 添加hsai_websocket路由
+app.include_router(hsai_websocket.router, prefix="/ws", tags=["hsai"])
 
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)

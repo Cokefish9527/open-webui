@@ -10,13 +10,15 @@ from open_webui.utils.workflow_selector import workflow_selector, SelectionConte
 from open_webui.utils.n8n_client import n8n_client, ExecutionRequest
 from open_webui.utils.message_processor import message_processor
 
+# 修改导入语句
+from open_webui.env import WEBUI_SECRET_KEY as JWT_SECRET_KEY
+
 import json
 import logging
 import jwt
 import time
 import asyncio
 from typing import Dict, List, Optional
-from open_webui.config import JWT_SECRET_KEY
 
 log = logging.getLogger(__name__)
 router = APIRouter()

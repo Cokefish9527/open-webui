@@ -162,8 +162,8 @@ class HSAIChatHandler:
             )
             
             # 4. 使用专门的响应处理器
-            processed_response = N8NResponseProcessor.process_response(
-                workflow_response, workflow_type, execution.start_time
+            processed_response = await N8NResponseProcessor.process_response(
+                workflow_response, workflow_type, execution.start_time, execution_id
             )
             
             # 5. 格式化并发送给客户端
@@ -178,11 +178,11 @@ class HSAIChatHandler:
             
             # 记录成功执行
             response_size = len(json.dumps(workflow_response, ensure_ascii=False))
-            n8n_monitor.complete_execution(execution_id, True, response_size=response_size)
+            n8n_monitor.record_execution(workflow_type.value, True, response_size)
             
         except Exception as e:
             log.error(f"Error in workflow processing: {e}")
-            n8n_monitor.complete_execution(execution_id, False, str(e))
+            n8n_monitor.record_execution(workflow_type.value, False, 0, str(e))
             await self._send_error(user_id, f"工作流处理失败: {str(e)}")
     
     async def _handle_workflow_trigger(self, user_id: str, message: ChatMessage):
@@ -206,7 +206,7 @@ class HSAIChatHandler:
                 }
             )
             
-            processed_response = N8NResponseProcessor.process_response(
+            processed_response = await N8NResponseProcessor.process_response(
                 workflow_response, message.workflow_type, execution_start_time
             )
             

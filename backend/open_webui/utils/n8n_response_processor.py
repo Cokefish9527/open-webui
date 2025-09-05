@@ -40,10 +40,11 @@ class N8NResponseProcessor:
             "viral_learning": self._process_viral_learning_response
         }
     
+    @staticmethod
     async def process_response(
-        self, 
         raw_response: Dict[str, Any], 
         workflow_type: str,
+        execution_start_time: float,
         execution_id: Optional[str] = None
     ) -> ProcessedResponse:
         """
@@ -52,17 +53,21 @@ class N8NResponseProcessor:
         Args:
             raw_response: n8n返回的原始响应
             workflow_type: 工作流类型
+            execution_start_time: 执行开始时间
             execution_id: 执行ID
             
         Returns:
             ProcessedResponse: 处理后的结构化响应
         """
         try:
+            # 创建处理器实例
+            processor = N8NResponseProcessor()
+            
             # 获取对应的处理器
-            processor = self.processors.get(workflow_type, self._process_default_response)
+            handler = processor.processors.get(workflow_type, processor._process_default_response)
             
             # 处理响应
-            processed = await processor(raw_response)
+            processed = await handler(raw_response)
             processed.workflow_type = workflow_type
             processed.execution_id = execution_id
             
@@ -78,6 +83,45 @@ class N8NResponseProcessor:
                 execution_id=execution_id,
                 metadata={"error": str(e), "raw_response": raw_response}
             )
+    
+    @staticmethod
+    def format_for_client(processed_response: ProcessedResponse) -> Dict[str, Any]:
+        """
+        将处理后的响应格式化为客户端可用的格式
+        
+        Args:
+            processed_response: 处理后的响应
+            
+        Returns:
+            Dict: 客户端可用的响应格式
+        """
+        try:
+            # 根据对接文档规范格式化响应
+            response_data = {
+                "success": processed_response.status == ResponseStatus.SUCCESS,
+                "messageType": processed_response.workflow_type or "unknown",
+                "displayText": processed_response.message,
+                "data": processed_response.data,
+                "status": processed_response.status.value,
+                "timestamp": processed_response.timestamp.isoformat() if processed_response.timestamp else None
+            }
+            
+            # 如果有执行ID，添加到响应中
+            if processed_response.execution_id:
+                response_data["execution_id"] = processed_response.execution_id
+                
+            return response_data
+            
+        except Exception as e:
+            log.error(f"Error formatting response for client: {e}")
+            return {
+                "success": False,
+                "messageType": "error",
+                "displayText": "响应格式化失败",
+                "data": None,
+                "status": "error",
+                "error": str(e)
+            }
     
     async def _process_main_workflow_response(self, response: Dict[str, Any]) -> ProcessedResponse:
         """处理主工作流响应"""
