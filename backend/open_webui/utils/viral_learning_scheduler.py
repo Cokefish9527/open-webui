@@ -39,8 +39,14 @@ class ViralLearningScheduler:
             log.warning("Viral learning scheduler is already running")
             return
             
-        if not self.config["enabled"]:
-            log.info("Viral learning scheduler is disabled")
+        # 检查配置是否启用调度器
+        if not self.config.get("enabled", False):
+            log.info("Viral learning scheduler is disabled (enabled=false or empty config)")
+            return
+            
+        # 验证必要的配置项
+        if self.config.get("interval_minutes", 0) <= 0:
+            log.warning("Viral learning scheduler disabled due to invalid interval_minutes")
             return
             
         self.is_running = True
@@ -63,25 +69,36 @@ class ViralLearningScheduler:
     
     async def _schedule_loop(self):
         """主调度循环"""
+        # 等待第一个调度周期，而不是立即执行
+        interval_seconds = self.config["interval_minutes"] * 60
+        log.debug(f"Waiting {interval_seconds}s for first execution cycle")
+        await asyncio.sleep(interval_seconds)
+        
         while self.is_running:
             try:
                 # 检查是否在工作时间内
                 if not self._is_working_hours():
+                    log.debug("Outside working hours, waiting 60s")
                     await asyncio.sleep(60)  # 非工作时间，每分钟检查一次
                     continue
                 
                 # 检查每日执行次数限制
                 if not self._check_daily_limit():
+                    log.debug("Daily limit reached, waiting 60s")
                     await asyncio.sleep(60)  # 达到每日限制，等待到第二天
                     continue
                 
                 # 执行工作流
+                log.info("Executing scheduled viral learning workflow")
                 await self._execute_viral_learning_workflow()
                 
                 # 等待下次执行
-                await asyncio.sleep(self.config["interval_minutes"] * 60)
+                interval_seconds = self.config["interval_minutes"] * 60
+                log.debug(f"Waiting {interval_seconds}s for next execution cycle")
+                await asyncio.sleep(interval_seconds)
                 
             except asyncio.CancelledError:
+                log.info("Viral learning scheduler loop cancelled")
                 break
             except Exception as e:
                 log.error(f"Error in viral learning scheduler loop: {e}")
@@ -91,7 +108,9 @@ class ViralLearningScheduler:
         """检查是否在工作时间内"""
         now = datetime.now()
         current_hour = now.hour
-        return self.config["start_hour"] <= current_hour < self.config["end_hour"]
+        start_hour = self.config.get("start_hour", 8)
+        end_hour = self.config.get("end_hour", 22)
+        return start_hour <= current_hour < end_hour
     
     def _check_daily_limit(self) -> bool:
         """检查每日执行次数限制"""
@@ -102,7 +121,8 @@ class ViralLearningScheduler:
             self.daily_execution_count = 0
             self.last_execution_date = today
         
-        return self.daily_execution_count < self.config["max_daily_calls"]
+        max_daily_calls = self.config.get("max_daily_calls", 48)
+        return self.daily_execution_count < max_daily_calls
     
     async def _execute_viral_learning_workflow(self):
         """执行爆款学习工作流"""
@@ -141,9 +161,11 @@ class ViralLearningScheduler:
             log.error(f"Failed to execute viral learning workflow (attempt {self.failed_attempts}): {e}")
             
             # 如果失败次数超过配置的重试次数，等待更长时间
-            if self.failed_attempts >= self.config["retry_attempts"]:
-                log.warning(f"Max retry attempts reached, waiting {self.config['retry_delay_minutes']} minutes")
-                await asyncio.sleep(self.config["retry_delay_minutes"] * 60)
+            retry_attempts = self.config.get("retry_attempts", 3)
+            if self.failed_attempts >= retry_attempts:
+                retry_delay_minutes = self.config.get("retry_delay_minutes", 5)
+                log.warning(f"Max retry attempts reached, waiting {retry_delay_minutes} minutes")
+                await asyncio.sleep(retry_delay_minutes * 60)
                 self.failed_attempts = 0
     
     async def _call_n8n_workflow(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -178,7 +200,7 @@ class ViralLearningScheduler:
         """获取调度器状态"""
         return {
             "is_running": self.is_running,
-            "enabled": self.config["enabled"],
+            "enabled": self.config.get("enabled", False),
             "execution_count": self.execution_count,
             "daily_execution_count": self.daily_execution_count,
             "last_execution_time": self.last_execution_time,
@@ -190,26 +212,29 @@ class ViralLearningScheduler:
     
     def _estimate_next_execution(self) -> Optional[str]:
         """估算下次执行时间"""
-        if not self.is_running or not self.config["enabled"]:
+        if not self.is_running or not self.config.get("enabled", False):
             return None
             
         if not self._is_working_hours():
             # 如果不在工作时间，返回明天开始时间
             tomorrow = datetime.now().date() + timedelta(days=1)
-            next_start = datetime.combine(tomorrow, datetime.min.time().replace(hour=self.config["start_hour"]))
+            start_hour = self.config.get("start_hour", 8)
+            next_start = datetime.combine(tomorrow, datetime.min.time().replace(hour=start_hour))
             return next_start.isoformat()
         
         if not self._check_daily_limit():
             # 如果达到每日限制，返回明天开始时间
             tomorrow = datetime.now().date() + timedelta(days=1)
-            next_start = datetime.combine(tomorrow, datetime.min.time().replace(hour=self.config["start_hour"]))
+            start_hour = self.config.get("start_hour", 8)
+            next_start = datetime.combine(tomorrow, datetime.min.time().replace(hour=start_hour))
             return next_start.isoformat()
         
         # 正常情况下的下次执行时间
+        interval_minutes = self.config.get("interval_minutes", 30)
         if self.last_execution_time:
-            next_time = datetime.fromtimestamp(self.last_execution_time) + timedelta(minutes=self.config["interval_minutes"])
+            next_time = datetime.fromtimestamp(self.last_execution_time) + timedelta(minutes=interval_minutes)
         else:
-            next_time = datetime.now() + timedelta(minutes=self.config["interval_minutes"])
+            next_time = datetime.now() + timedelta(minutes=interval_minutes)
         
         return next_time.isoformat()
 

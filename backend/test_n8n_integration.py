@@ -91,6 +91,25 @@ class N8NIntegrationTester:
         response = await self.receive_message()
         return response
     
+    async def test_viral_learning_workflow(self):
+        """测试爆款学习工作流 - 专门的测试方法"""
+        log.info("Testing viral learning workflow via direct trigger...")
+        message = {
+            "type": "workflow_trigger",
+            "content": "请分析这个爆款内容的特点",
+            "user_id": "test_user",
+            "session_id": "test_session_viral",
+            "workflow_type": "viral_learning",
+            "metadata": {
+                "test": True,
+                "trigger_type": "manual_test"
+            }
+        }
+        
+        await self.send_message(message)
+        response = await self.receive_message()
+        return response
+    
     async def run_tests(self):
         """运行测试套件"""
         if not await self.connect():
@@ -103,14 +122,11 @@ class N8NIntegrationTester:
             if response:
                 log.info(f"Chat response: {response.get('success', False)}")
             
-            # 测试2: 爆款学习工作流
-            log.info("Testing viral learning workflow...")
-            response = await self.test_workflow_trigger(
-                "viral_learning", 
-                "请分析这个爆款内容的特点"
-            )
+            # 测试2: 爆款学习工作流（通过正常对话流程）
+            log.info("Testing viral learning workflow via normal conversation...")
+            response = await self.test_chat_message("请分析最近的爆款内容趋势")
             if response:
-                log.info(f"Viral learning response: {response.get('success', False)}")
+                log.info(f"Viral learning via chat response: {response.get('success', False)}")
             
             # 测试3: 公司信息收集工作流
             log.info("Testing company info workflow...")
