@@ -149,6 +149,9 @@ class N8NClient:
         """执行工作流"""
         execution_id = str(uuid.uuid4())
         
+        # 添加日志打印
+        log.info(f"Starting workflow execution - ID: {execution_id}, Workflow: {workflow.name}, User: {request.user_id}")
+        
         # 创建执行结果对象
         result = ExecutionResult(
             execution_id=execution_id,
@@ -172,6 +175,8 @@ class N8NClient:
                 
                 # 准备请求数据
                 payload = request.to_webhook_payload()
+                # 添加日志打印
+                log.info(f"Prepared webhook payload for execution {execution_id}: {payload}")
                 
                 # 执行HTTP请求（带重试）
                 response_data = await self._execute_with_retry(
@@ -180,6 +185,9 @@ class N8NClient:
                     workflow.timeout or request.timeout,
                     workflow.retry_count or self.max_retries
                 )
+                
+                # 添加日志打印
+                log.info(f"Received response for execution {execution_id}: {response_data}")
                 
                 # 标记完成
                 result.mark_completed(response_data)
@@ -230,15 +238,22 @@ class N8NClient:
                     log.info(f"Retrying request in {wait_time}s (attempt {attempt + 1})")
                     await asyncio.sleep(wait_time)
                     
+                # 添加日志打印
+                log.info(f"Making HTTP POST request to {url} (attempt {attempt + 1})")
+                
                 async with self.session.post(
                     url,
                     json=payload,
                     timeout=aiohttp.ClientTimeout(total=timeout)
                 ) as response:
                     
+                    # 添加日志打印
+                    log.info(f"Received HTTP response - Status: {response.status}, URL: {url}")
+                    
                     # 检查HTTP状态码
                     if response.status >= 400:
                         error_text = await response.text()
+                        log.error(f"HTTP error {response.status} for URL {url}: {error_text}")
                         raise aiohttp.ClientResponseError(
                             request_info=response.request_info,
                             history=response.history,
@@ -249,9 +264,14 @@ class N8NClient:
                     # 解析响应
                     content_type = response.headers.get('content-type', '')
                     if 'application/json' in content_type:
-                        return await response.json()
+                        json_response = await response.json()
+                        # 添加日志打印
+                        log.info(f"Returning JSON response: {json_response}")
+                        return json_response
                     else:
                         text_response = await response.text()
+                        # 添加日志打印
+                        log.info(f"Returning text response: {text_response}")
                         return {"raw_response": text_response}
                         
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:

@@ -90,8 +90,12 @@ async def hsai_websocket_endpoint(
         5. OpenWebUI处理响应并通过WebSocket返回客户端
     """
     
+    # 添加日志打印
+    log.info(f"WebSocket connection request for user: {user_id}")
+    
     # 验证用户身份
     if not token:
+        log.warning(f"Missing authentication token for user: {user_id}")
         await websocket.close(code=4001, reason="Missing authentication token")
         return
     
@@ -99,6 +103,7 @@ async def hsai_websocket_endpoint(
         # 验证token并获取用户信息
         user = await get_user_from_token(token)
         if not user or user.id != user_id:
+            log.warning(f"Invalid authentication for user: {user_id}")
             await websocket.close(code=4003, reason="Invalid authentication")
             return
             
@@ -121,6 +126,9 @@ async def hsai_websocket_endpoint(
             # 接收客户端消息
             try:
                 data = await websocket.receive_text()
+                # 添加日志打印
+                log.info(f"Raw message received from user {user_id}: {data}")
+                
                 message_data = json.loads(data)
                 
                 log.debug(f"Received message from user {user_id}: {message_data.get('type', 'unknown')}")
@@ -130,19 +138,25 @@ async def hsai_websocket_endpoint(
                 
             except json.JSONDecodeError as e:
                 log.error(f"Invalid JSON from user {user_id}: {e}")
-                await websocket.send_text(json.dumps({
+                error_response = {
                     "type": "error",
                     "content": "Invalid JSON format",
                     "timestamp": time.time()
-                }, ensure_ascii=False))
+                }
+                # 添加日志打印
+                log.info(f"Sending error response to user {user_id}: {error_response}")
+                await websocket.send_text(json.dumps(error_response, ensure_ascii=False))
                 
             except Exception as e:
                 log.error(f"Error processing message from user {user_id}: {e}")
-                await websocket.send_text(json.dumps({
+                error_response = {
                     "type": "error",
                     "content": f"Message processing failed: {str(e)}",
                     "timestamp": time.time()
-                }, ensure_ascii=False))
+                }
+                # 添加日志打印
+                log.info(f"Sending error response to user {user_id}: {error_response}")
+                await websocket.send_text(json.dumps(error_response, ensure_ascii=False))
                 
     except WebSocketDisconnect:
         log.info(f"WebSocket disconnected for user: {user_id}")

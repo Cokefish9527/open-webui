@@ -91,7 +91,7 @@ class HSAIChatHandler:
         log.info(f"User {user_id} connected to HSAI chat handler")
         
         # 发送连接成功消息
-        await self._send_to_user(user_id, {
+        status_message = {
             "type": MessageType.STATUS,
             "content": "连接成功",
             "timestamp": time.time(),
@@ -103,7 +103,11 @@ class HSAIChatHandler:
                 }
                 for wf_type, config in self.workflow_configs.items()
             ]
-        })
+        }
+        
+        # 添加日志打印
+        log.info(f"Sending status message to user {user_id}: {status_message}")
+        await self._send_to_user(user_id, status_message)
     
     async def disconnect(self, user_id: str):
         """断开WebSocket连接"""
@@ -119,6 +123,9 @@ class HSAIChatHandler:
     async def handle_message(self, user_id: str, message_data: Dict[str, Any]):
         """处理客户端消息 - 核心n8n集成逻辑"""
         try:
+            # 添加日志打印
+            log.info(f"Received message from user {user_id}: {message_data}")
+            
             # 解析消息
             message = ChatMessage(**message_data)
             log.debug(f"Processing message from user {user_id}: {message.type}")
@@ -136,16 +143,22 @@ class HSAIChatHandler:
     
     async def _handle_chat_message(self, user_id: str, message: ChatMessage):
         """处理聊天消息 - 基于入口类型的工作流路由"""
+        # 添加日志打印
+        log.info(f"Handling chat message from user {user_id}: {message.content}")
+        
         # 1. 根据入口类型选择工作流
         workflow_type = self._select_workflow_by_entry(message)
+        log.info(f"Selected workflow for user {user_id}: {workflow_type.value}")
         
         # 2. 获取或创建会话
         session_id = message.session_id or self._get_or_create_session(user_id)
         self.session_workflows[session_id] = workflow_type
+        log.info(f"Session {session_id} assigned to user {user_id} with workflow {workflow_type.value}")
         
         # 3. 调用n8n工作流（带监控）
         execution_id = str(uuid.uuid4())
         execution = n8n_monitor.start_execution(execution_id, workflow_type, user_id, session_id)
+        log.info(f"Starting workflow execution {execution_id} for user {user_id}")
         
         try:
             workflow_response = await self._call_n8n_workflow_with_retry(
@@ -161,6 +174,9 @@ class HSAIChatHandler:
                 execution_id
             )
             
+            # 添加日志打印
+            log.info(f"Received workflow response for user {user_id}: {workflow_response}")
+            
             # 4. 使用专门的响应处理器
             processed_response = await N8NResponseProcessor.process_response(
                 workflow_response, workflow_type, execution.start_time.timestamp(), execution_id
@@ -174,6 +190,8 @@ class HSAIChatHandler:
                 "execution_id": execution_id
             })
             
+            # 添加日志打印
+            log.info(f"Sending client response to user {user_id}: {client_response}")
             await self._send_to_user(user_id, client_response)
             
             # 记录成功执行
@@ -187,6 +205,9 @@ class HSAIChatHandler:
     
     async def _handle_workflow_trigger(self, user_id: str, message: ChatMessage):
         """处理工作流触发消息"""
+        # 添加日志打印
+        log.info(f"Handling workflow trigger from user {user_id}: {message.workflow_type}")
+        
         if not message.workflow_type:
             await self._send_error(user_id, "Missing workflow_type for workflow trigger")
             return
@@ -206,6 +227,9 @@ class HSAIChatHandler:
                 }
             )
             
+            # 添加日志打印
+            log.info(f"Received workflow response for user {user_id}: {workflow_response}")
+            
             processed_response = await N8NResponseProcessor.process_response(
                 workflow_response, message.workflow_type, execution_start_time
             )
@@ -216,6 +240,8 @@ class HSAIChatHandler:
                 "user_id": user_id
             })
             
+            # 添加日志打印
+            log.info(f"Sending client response to user {user_id}: {client_response}")
             await self._send_to_user(user_id, client_response)
             
         except Exception as e:
@@ -339,6 +365,8 @@ class HSAIChatHandler:
         if user_id in self.active_connections:
             try:
                 websocket = self.active_connections[user_id]
+                # 添加日志打印
+                log.info(f"Sending message to user {user_id}: {message}")
                 await websocket.send_text(json.dumps(message, ensure_ascii=False))
             except Exception as e:
                 log.error(f"Error sending message to user {user_id}: {e}")

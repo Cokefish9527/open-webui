@@ -60,6 +60,10 @@ class N8NResponseProcessor:
             ProcessedResponse: 处理后的结构化响应
         """
         try:
+            # 添加日志打印
+            log.info(f"Processing response for workflow {workflow_type} (execution: {execution_id})")
+            log.info(f"Raw response data: {raw_response}")
+            
             # 创建处理器实例
             processor = N8NResponseProcessor()
             
@@ -71,18 +75,24 @@ class N8NResponseProcessor:
             processed.workflow_type = workflow_type
             processed.execution_id = execution_id
             
+            # 添加日志打印
+            log.info(f"Processed response: status={processed.status}, message={processed.message}")
+            
             log.info(f"Processed {workflow_type} workflow response: {processed.status}")
             return processed
             
         except Exception as e:
             log.error(f"Error processing {workflow_type} response: {e}")
-            return ProcessedResponse(
+            error_response = ProcessedResponse(
                 status=ResponseStatus.ERROR,
                 message=f"Response processing failed: {str(e)}",
                 workflow_type=workflow_type,
                 execution_id=execution_id,
                 metadata={"error": str(e), "raw_response": raw_response}
             )
+            # 添加日志打印
+            log.info(f"Returning error response: {error_response}")
+            return error_response
     
     @staticmethod
     def format_for_client(processed_response: ProcessedResponse) -> Dict[str, Any]:
@@ -96,6 +106,9 @@ class N8NResponseProcessor:
             Dict: 客户端可用的响应格式
         """
         try:
+            # 添加日志打印
+            log.info(f"Formatting response for client: {processed_response}")
+            
             # 根据对接文档规范格式化响应
             response_data = {
                 "success": processed_response.status == ResponseStatus.SUCCESS,
@@ -110,11 +123,13 @@ class N8NResponseProcessor:
             if processed_response.execution_id:
                 response_data["execution_id"] = processed_response.execution_id
                 
+            # 添加日志打印
+            log.info(f"Formatted client response: {response_data}")
             return response_data
             
         except Exception as e:
             log.error(f"Error formatting response for client: {e}")
-            return {
+            error_response = {
                 "success": False,
                 "messageType": "error",
                 "displayText": "响应格式化失败",
@@ -122,6 +137,9 @@ class N8NResponseProcessor:
                 "status": "error",
                 "error": str(e)
             }
+            # 添加日志打印
+            log.info(f"Returning error response: {error_response}")
+            return error_response
     
     async def _process_main_workflow_response(self, response: Dict[str, Any]) -> ProcessedResponse:
         """处理主工作流响应"""
