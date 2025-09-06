@@ -65,66 +65,6 @@ async def get_user_from_token(token: str):
         log.error(f"Token validation failed: {e}")
     return None
 
-# 连接管理器
-class ConnectionManager:
-    """WebSocket连接管理器"""
-    
-    def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
-        self.user_sessions: Dict[str, List[str]] = {}  # user_id -> [session_ids]
-        
-    async def connect(self, websocket: WebSocket, user_id: str, session_id: str = None):
-        """建立连接"""
-        await websocket.accept()
-        connection_key = f"{user_id}_{session_id}" if session_id else user_id
-        self.active_connections[connection_key] = websocket
-        
-        if user_id not in self.user_sessions:
-            self.user_sessions[user_id] = []
-        if session_id and session_id not in self.user_sessions[user_id]:
-            self.user_sessions[user_id].append(session_id)
-            
-        log.info(f"WebSocket connected: {connection_key}")
-        
-    def disconnect(self, user_id: str, session_id: str = None):
-        """断开连接"""
-        connection_key = f"{user_id}_{session_id}" if session_id else user_id
-        if connection_key in self.active_connections:
-            del self.active_connections[connection_key]
-            
-        if session_id and user_id in self.user_sessions:
-            if session_id in self.user_sessions[user_id]:
-                self.user_sessions[user_id].remove(session_id)
-                
-        log.info(f"WebSocket disconnected: {connection_key}")
-        
-    async def send_personal_message(self, message: dict, user_id: str, session_id: str = None):
-        """发送个人消息"""
-        connection_key = f"{user_id}_{session_id}" if session_id else user_id
-        websocket = self.active_connections.get(connection_key)
-        
-        if websocket:
-            try:
-                await websocket.send_text(json.dumps(message, ensure_ascii=False))
-                return True
-            except Exception as e:
-                log.error(f"Error sending message to {connection_key}: {e}")
-                self.disconnect(user_id, session_id)
-                return False
-        return False
-        
-    async def broadcast_to_user(self, message: dict, user_id: str):
-        """向用户的所有会话广播消息"""
-        sent_count = 0
-        if user_id in self.user_sessions:
-            for session_id in self.user_sessions[user_id]:
-                if await self.send_personal_message(message, user_id, session_id):
-                    sent_count += 1
-        return sent_count
-
-# 全局连接管理器
-connection_manager = ConnectionManager()
-
 @router.websocket("/hsai/ws/{user_id}")
 async def hsai_websocket_endpoint(
     websocket: WebSocket, 
@@ -171,8 +111,12 @@ async def hsai_websocket_endpoint(
     
     # 建立WebSocket连接
     await chat_handler.connect(websocket, user_id)
+    log.info(f"WebSocket connection established for user: {user_id}")
     
     try:
+        # 发送连接成功消息
+        pass  # 消息已经在connect方法中发送
+        
         while True:
             # 接收客户端消息
             try:
@@ -186,11 +130,19 @@ async def hsai_websocket_endpoint(
                 
             except json.JSONDecodeError as e:
                 log.error(f"Invalid JSON from user {user_id}: {e}")
-                await chat_handler._send_error(user_id, "Invalid JSON format")
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "content": "Invalid JSON format",
+                    "timestamp": time.time()
+                }, ensure_ascii=False))
                 
             except Exception as e:
                 log.error(f"Error processing message from user {user_id}: {e}")
-                await chat_handler._send_error(user_id, f"Message processing failed: {str(e)}")
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "content": f"Message processing failed: {str(e)}",
+                    "timestamp": time.time()
+                }, ensure_ascii=False))
                 
     except WebSocketDisconnect:
         log.info(f"WebSocket disconnected for user: {user_id}")

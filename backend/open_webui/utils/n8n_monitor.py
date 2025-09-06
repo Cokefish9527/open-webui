@@ -26,6 +26,16 @@ class HealthStatus(str, Enum):
     UNKNOWN = "unknown"
 
 @dataclass
+class ExecutionInfo:
+    """执行信息"""
+    execution_id: str
+    workflow_type: str
+    user_id: str
+    session_id: str
+    start_time: datetime
+    retry_count: int = 0
+
+@dataclass
 class WorkflowMetrics:
     """工作流指标"""
     total_executions: int = 0
@@ -58,6 +68,8 @@ class N8NMonitor:
         self.health_check_interval = 60  # 秒
         self.monitoring_task: Optional[asyncio.Task] = None
         self.is_monitoring = False
+        self.active_executions: Dict[str, ExecutionInfo] = {}
+        self.retry_limits: Dict[str, int] = {}
         
     async def start_monitoring(self):
         """启动监控"""
@@ -125,6 +137,19 @@ class N8NMonitor:
                         
         except Exception as e:
             log.error(f"Error checking workflow {workflow_type} health: {e}")
+    
+    def start_execution(self, execution_id: str, workflow_type: N8NWorkflowType, user_id: str, session_id: str) -> ExecutionInfo:
+        """开始执行并记录执行信息"""
+        execution_info = ExecutionInfo(
+            execution_id=execution_id,
+            workflow_type=workflow_type.value,
+            user_id=user_id,
+            session_id=session_id,
+            start_time=datetime.now()
+        )
+        self.active_executions[execution_id] = execution_info
+        log.debug(f"Started execution {execution_id} for workflow {workflow_type.value}")
+        return execution_info
     
     def record_execution(
         self, 
@@ -254,6 +279,41 @@ class N8NMonitor:
             "active_workflows": len([m for m in self.metrics.values() if m.total_executions > 0]),
             "uptime_seconds": (datetime.now() - self.start_time).total_seconds()
         }
+    
+    def should_retry(self, execution_id: str, error_message: str) -> bool:
+        """检查是否应该重试执行"""
+        execution_info = self.active_executions.get(execution_id)
+        if not execution_info:
+            return False
+            
+        # 获取重试限制（默认3次）
+        retry_limit = self.retry_limits.get(execution_info.workflow_type, 3)
+        
+        # 检查重试次数是否超过限制
+        if execution_info.retry_count >= retry_limit:
+            return False
+            
+        # 某些错误可能不值得重试
+        non_retryable_errors = [
+            "404",  # Not found
+            "401",  # Unauthorized
+            "403",  # Forbidden
+        ]
+        
+        for error in non_retryable_errors:
+            if error in error_message:
+                return False
+                
+        return True
+    
+    async def retry_execution(self, execution_id: str):
+        """重试执行"""
+        execution_info = self.active_executions.get(execution_id)
+        if execution_info:
+            execution_info.retry_count += 1
+            log.info(f"Retrying execution {execution_id}, attempt {execution_info.retry_count}")
+            # 等待一段时间再重试
+            await asyncio.sleep(min(2 ** execution_info.retry_count, 30))  # 指数退避，最大30秒
 
 # 全局监控器实例
 n8n_monitor = N8NMonitor()

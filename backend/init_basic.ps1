@@ -5,7 +5,22 @@ Write-Host "=== Open-WebUI 基础初始化脚本 ===" -ForegroundColor Green
 
 # 检查 Python 版本
 Write-Host "检查 Python 版本..." -ForegroundColor Yellow
-python --version
+# 优先使用 Python 3.11
+$pythonExe = "python"
+$python311Paths = @(
+    "C:\Users\bmkz\AppData\Local\Programs\Python\Python311\python.exe",
+    "C:\Program Files\Python311\python.exe",
+    "C:\Python311\python.exe"
+)
+
+foreach ($path in $python311Paths) {
+    if (Test-Path $path) {
+        $pythonExe = $path
+        break
+    }
+}
+
+& $pythonExe --version
 if ($LASTEXITCODE -ne 0) {
     Write-Host "错误: 未找到 Python。请先安装 Python 3.11。" -ForegroundColor Red
     exit 1
@@ -13,7 +28,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # 创建虚拟环境
 Write-Host "创建虚拟环境..." -ForegroundColor Yellow
-python -m venv venv
+& $pythonExe -m venv venv
 if ($LASTEXITCODE -ne 0) {
     Write-Host "错误: 虚拟环境创建失败。" -ForegroundColor Red
     exit 1
@@ -46,6 +61,8 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "错误: 依赖安装失败。" -ForegroundColor Red
     exit 1
 }
+Set-Location ..
+
 Write-Host "依赖安装成功!" -ForegroundColor Green
 
 Write-Host "=== 基础初始化完成 ===" -ForegroundColor Green

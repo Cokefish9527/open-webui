@@ -53,25 +53,19 @@ class N8NWorkflowManager:
         self.workflow_mappings = {
             "主工作流.json": {
                 "type": WorkflowType.MAIN,
-                "webhook_url": "http://localhost:5678/webhook/n8n_chat",
+                "webhook_url": "https://webhook-n8n.hsai.cc/webhook/n8n_chat",
                 "keywords": ["视频", "创作", "文案", "脚本", "发布", "tiktok", "抖音"],
                 "description": "B2B智能视频创作主工作流，处理从关键词到视频发布的完整流程"
             },
-            "公司信息收集及作战地图梳理.json": {
+            "公司信息收集.json": {
                 "type": WorkflowType.COMPANY_INFO,
-                "webhook_url": "http://localhost:5678/webhook/company_info",
+                "webhook_url": "https://webhook-n8n.hsai.cc/webhook/business_information_get",
                 "keywords": ["公司", "企业", "信息", "作战", "地图", "竞品", "分析", "调研"],
                 "description": "公司信息收集和竞品分析工作流"
             },
-            "被动触发爆款学习.json": {
-                "type": WorkflowType.VIRAL_LEARNING,
-                "webhook_url": "http://localhost:5678/webhook/viral_learning",
-                "keywords": ["爆款", "学习", "热门", "趋势", "分析"],
-                "description": "被动触发的爆款内容学习和分析工作流"
-            },
-            "异步视频爬取关键词分析.json": {
+            "视频分析.json": {
                 "type": WorkflowType.VIDEO_ANALYSIS,
-                "webhook_url": "http://localhost:5678/webhook/video_analysis",
+                "webhook_url": "https://webhook-n8n.hsai.cc/webhook/video_analysis",
                 "keywords": ["视频", "爬取", "关键词", "分析", "数据"],
                 "description": "异步视频内容爬取和关键词分析工作流"
             }

@@ -15,11 +15,11 @@ class N8NWorkflowType(str, Enum):
     VIRAL_LEARNING = "viral_learning"  # 被动触发爆款学习.json（定时调用）
 
 # n8n工作流webhook映射 - 基于实际的n8n工作流
-# 更新为新的工作流地址
+# 更新为线上工作流地址
 N8N_WORKFLOW_WEBHOOKS = {
     N8NWorkflowType.MAIN: os.getenv("N8N_MAIN_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/n8n_chat"),
     N8NWorkflowType.COMPANY_INFO: os.getenv("N8N_COMPANY_INFO_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/business_information_get"),
-    N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://n8n.hsai.cc/webhook-test/viral-learning")
+    N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/viral-learning")
 }
 
 # 对话入口类型配置 - 根据入口选择工作流

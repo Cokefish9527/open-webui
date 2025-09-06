@@ -155,7 +155,7 @@ class HSAIChatHandler:
                     "session_id": session_id,
                     "content": message.content,
                     "metadata": message.metadata,
-                    "timestamp": execution.start_time,
+                    "timestamp": execution.start_time.timestamp(),  # 转换为时间戳
                     "execution_id": execution_id
                 },
                 execution_id
@@ -163,7 +163,7 @@ class HSAIChatHandler:
             
             # 4. 使用专门的响应处理器
             processed_response = await N8NResponseProcessor.process_response(
-                workflow_response, workflow_type, execution.start_time, execution_id
+                workflow_response, workflow_type, execution.start_time.timestamp(), execution_id
             )
             
             # 5. 格式化并发送给客户端
