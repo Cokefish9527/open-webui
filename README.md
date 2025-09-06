@@ -5,6 +5,39 @@
 官方文档: [Open WebUI Documentation](https://docs.openwebui.com/).  
 官方更新日志: [CHANGELOG.md](./CHANGELOG.md)
 
+## 虚拟环境配置
+
+本项目使用 Python 3.11 虚拟环境进行依赖管理。虚拟环境位于项目根目录下的 `venv` 文件夹中。
+
+### 创建虚拟环境
+
+```bash
+# 使用 Python 3.11 创建虚拟环境
+python -m venv venv
+```
+
+### 激活虚拟环境
+
+Windows:
+```bash
+# CMD
+venv\Scripts\activate.bat
+
+# PowerShell
+venv\Scripts\Activate.ps1
+```
+
+### 安装依赖
+
+```bash
+# 升级 pip
+python -m pip install --upgrade pip
+
+# 安装项目依赖
+cd backend
+pip install -r requirements.txt
+```
+
 ## 部署方式
 
 部署后，不能直接回退到官方镜像；如需使用官方镜像，请参考此篇 [Wiki](https://github.com/U8F69/open-webui/wiki/%E9%87%8D%E6%96%B0%E4%BD%BF%E7%94%A8%E5%AE%98%E6%96%B9%E9%95%9C%E5%83%8F) 处理

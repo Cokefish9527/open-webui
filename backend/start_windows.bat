@@ -1,4 +1,3 @@
-:: This method is not recommended, and we recommend you use the `start.sh` file with WSL instead.
 @echo off
 
 :: Set Hugging Face endpoint to a mirror for faster downloads
@@ -7,11 +6,15 @@ SET HF_ENDPOINT=https://hf-mirror.com
 :: Set environment variable to disable symlinks for Hugging Face cache
 SET HF_HUB_DISABLE_SYMLINKS_WARNING=1
 
-:: Check for venv and activate if it exists
-IF EXIST ".\\venv\\Scripts\\activate.bat" (
-    echo "Activating virtual environment..."
-    CALL ".\\venv\\Scripts\\activate.bat"
-)
+:: Clear potentially problematic environment variables
+set BT_PYTHON=
+
+:: Set the Python 3.11 path explicitly
+set PYTHON_HOME=C:\Users\bmkz\AppData\Local\Programs\Python\Python311
+set VIRTUAL_ENV=D:\Work\hsch\open-webui\venv
+
+:: Set PATH to use Python 3.11 and virtual environment
+set PATH=%PYTHON_HOME%;%PYTHON_HOME%\Scripts;%VIRTUAL_ENV%\Scripts;%PATH%
 
 SETLOCAL ENABLEDELAYEDEXPANSION
 
@@ -23,11 +26,11 @@ cd /d "%SCRIPT_DIR%" || exit /b
 IF /I "%WEB_LOADER_ENGINE%" == "playwright" (
     IF "%PLAYWRIGHT_WS_URL%" == "" (
         echo Installing Playwright browsers...
-        playwright install chromium
-        playwright install-deps chromium
+        "%PYTHON_HOME%\Scripts\playwright.exe" install chromium
+        "%PYTHON_HOME%\Scripts\playwright.exe" install-deps chromium
     )
 
-    python -c "import nltk; nltk.download('punkt_tab')"
+    "%VIRTUAL_ENV%\Scripts\python.exe" -c "import nltk; nltk.download('punkt_tab')"
 )
 
 SET "KEY_FILE=.webui_secret_key"
@@ -56,8 +59,9 @@ IF "%WEBUI_SECRET_KEY%%WEBUI_JWT_SECRET_KEY%" == " " (
     SET /p WEBUI_SECRET_KEY=<%KEY_FILE%
 )
 
-:: Execute uvicorn
+:: Execute uvicorn with explicit Python path
 SET "WEBUI_SECRET_KEY=%WEBUI_SECRET_KEY%"
 IF "%UVICORN_WORKERS%"=="" SET UVICORN_WORKERS=1
-python -m uvicorn open_webui.main:app --host "%HOST%" --port "%PORT%" --forwarded-allow-ips '*' --workers %UVICORN_WORKERS% --ws auto
-:: For ssl user uvicorn open_webui.main:app --host "%HOST%" --port "%PORT%" --forwarded-allow-ips '*' --ssl-keyfile "key.pem" --ssl-certfile "cert.pem" --ws auto
+
+:: Use the virtual environment's Python executable directly
+"%VIRTUAL_ENV%\Scripts\python.exe" -m uvicorn open_webui.main:app --host "%HOST%" --port "%PORT%" --forwarded-allow-ips '*' --workers %UVICORN_WORKERS% --ws auto
