@@ -29,7 +29,6 @@ from open_webui.env import (
     SRC_LOG_LEVELS,
 )
 
-
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["SOCKET"])
@@ -144,6 +143,85 @@ app = socketio.ASGIApp(
     sio,
     socketio_path="/ws/socket.io",
 )
+
+def get_event_emitter(request_info, update_db=True):
+    async def __event_emitter__(event_data):
+        user_id = request_info["user_id"]
+
+        session_ids = list(
+            set(
+                USER_POOL.get(user_id, [])
+                + (
+                    [request_info.get("session_id")]
+                    if request_info.get("session_id")
+                    else []
+                )
+            )
+        )
+
+        emit_tasks = [
+            sio.emit(
+                "chat-events",
+                {
+                    "chat_id": request_info.get("chat_id", None),
+                    "message_id": request_info.get("message_id", None),
+                    "data": event_data,
+                },
+                to=session_id,
+            )
+            for session_id in session_ids
+        ]
+
+        await asyncio.gather(*emit_tasks)
+
+        if update_db:
+            if "type" in event_data and event_data["type"] == "status":
+                Chats.add_message_status_to_chat_by_id_and_message_id(
+                    request_info["chat_id"],
+                    request_info["message_id"],
+                    event_data.get("data", {}),
+                )
+
+            if "type" in event_data and event_data["type"] == "message":
+                message = Chats.get_message_by_id_and_message_id(
+                    request_info["chat_id"],
+                    request_info["message_id"],
+                )
+
+                if message:
+                    content = message.get("content", "")
+                    content += event_data.get("data", {}).get("content", "")
+
+                    Chats.upsert_message_to_chat_by_id_and_message_id(
+                        request_info["chat_id"],
+                        request_info["message_id"],
+                        {
+                            "content": content,
+                        },
+                    )
+
+            if "type" in event_data and event_data["type"] == "replace":
+                content = event_data.get("data", {}).get("content", "")
+
+                Chats.upsert_message_to_chat_by_id_and_message_id(
+                    request_info["chat_id"],
+                    request_info["message_id"],
+                    {
+                        "content": content,
+                    },
+                )
+
+    return __event_emitter__
+
+
+# 导入HSAI事件注册函数
+from open_webui.socket.hsai_events import register_hsai_events
+
+# 注册HSAI事件
+# 创建一个模拟的请求信息来获取事件发射器
+request_info = {"user_id": "system"}
+emitter = get_event_emitter(request_info, update_db=False)
+register_hsai_events(sio, emitter)
 
 
 def get_models_in_use():
@@ -312,76 +390,6 @@ async def disconnect(sid):
     else:
         pass
         # print(f"Unknown session ID {sid} disconnected")
-
-
-def get_event_emitter(request_info, update_db=True):
-    async def __event_emitter__(event_data):
-        user_id = request_info["user_id"]
-
-        session_ids = list(
-            set(
-                USER_POOL.get(user_id, [])
-                + (
-                    [request_info.get("session_id")]
-                    if request_info.get("session_id")
-                    else []
-                )
-            )
-        )
-
-        emit_tasks = [
-            sio.emit(
-                "chat-events",
-                {
-                    "chat_id": request_info.get("chat_id", None),
-                    "message_id": request_info.get("message_id", None),
-                    "data": event_data,
-                },
-                to=session_id,
-            )
-            for session_id in session_ids
-        ]
-
-        await asyncio.gather(*emit_tasks)
-
-        if update_db:
-            if "type" in event_data and event_data["type"] == "status":
-                Chats.add_message_status_to_chat_by_id_and_message_id(
-                    request_info["chat_id"],
-                    request_info["message_id"],
-                    event_data.get("data", {}),
-                )
-
-            if "type" in event_data and event_data["type"] == "message":
-                message = Chats.get_message_by_id_and_message_id(
-                    request_info["chat_id"],
-                    request_info["message_id"],
-                )
-
-                if message:
-                    content = message.get("content", "")
-                    content += event_data.get("data", {}).get("content", "")
-
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
-                        request_info["chat_id"],
-                        request_info["message_id"],
-                        {
-                            "content": content,
-                        },
-                    )
-
-            if "type" in event_data and event_data["type"] == "replace":
-                content = event_data.get("data", {}).get("content", "")
-
-                Chats.upsert_message_to_chat_by_id_and_message_id(
-                    request_info["chat_id"],
-                    request_info["message_id"],
-                    {
-                        "content": content,
-                    },
-                )
-
-    return __event_emitter__
 
 
 def get_event_call(request_info):

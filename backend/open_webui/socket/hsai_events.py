@@ -2,116 +2,83 @@
 HSAI WebSocket事件处理器
 """
 import logging
+import asyncio
 from typing import Dict, Any
-from open_webui.socket.main import get_event_emitter
 
 log = logging.getLogger(__name__)
 
-def register_hsai_events():
+def register_hsai_events(sio, emitter):
     """注册HSAI相关的WebSocket事件处理器"""
-    emitter = get_event_emitter()
     if not emitter:
         log.warning("WebSocket emitter not available for HSAI events registration")
         return
     
-    @emitter.on("hsai_dashboard_subscribe")
-    async def handle_dashboard_subscribe(sid, data):
-        """处理工作台订阅事件"""
+    # 注意：emitter 是一个函数，不是具有 .on() 方法的对象
+    # 所以我们不能为 emitter 注册事件处理器
+    # 我们只注册 sio 事件处理器
+    
+    # 添加处理客户端发送消息的事件处理器
+    @sio.on("send_message")
+    async def handle_send_message(sid, data):
+        """处理客户端发送的消息"""
         try:
-            user_id = data.get("user_id")
+            log.info(f"Received message from client sid {sid}: {data}")
+            
+            # 获取用户ID
+            user_id = None
+            from open_webui.socket.main import SESSION_POOL
+            if sid in SESSION_POOL:
+                user = SESSION_POOL[sid]
+                user_id = user.get("id")
+            
+            # 如果没有用户ID，尝试从数据中获取
+            if not user_id and isinstance(data, dict):
+                user_id = data.get("user_id")
             
             if user_id:
-                # 将用户加入工作台房间
-                await emitter.enter_room(sid, f"dashboard_{user_id}")
-                log.info(f"User {user_id} subscribed to dashboard updates")
+                # 处理消息 - 这里可以添加具体的业务逻辑
+                log.info(f"Processing message from user {user_id}: {data}")
                 
-                # 发送订阅确认
-                await emitter.emit("hsai_dashboard_subscribed", {
-                    "status": "subscribed"
-                }, to=sid)
-            
-        except Exception as e:
-            log.error(f"Error handling dashboard subscribe: {e}")
-    
-    @emitter.on("hsai_chat_join")
-    async def handle_chat_join(sid, data):
-        """处理加入聊天房间事件"""
-        try:
-            chat_id = data.get("chat_id")
-            user_id = data.get("user_id")
-            
-            if chat_id and user_id:
-                # 将用户加入聊天房间
-                await emitter.enter_room(sid, f"chat_{chat_id}")
-                log.info(f"User {user_id} joined chat {chat_id}")
+                # 将消息转发给HSAI聊天处理器进行n8n工作流处理
+                from open_webui.socket.hsai_chat_handler import chat_handler
                 
-                # 通知其他用户
-                await emitter.emit("hsai_user_joined", {
+                # 构造符合ChatMessage格式的消息
+                message_data = {
+                    "type": "chat",
+                    "content": data.get("content", ""),
                     "user_id": user_id,
-                    "chat_id": chat_id
-                }, room=f"chat_{chat_id}", skip_sid=sid)
-            
-        except Exception as e:
-            log.error(f"Error handling chat join: {e}")
-    
-    @emitter.on("hsai_chat_leave")
-    async def handle_chat_leave(sid, data):
-        """处理离开聊天房间事件"""
-        try:
-            chat_id = data.get("chat_id")
-            user_id = data.get("user_id")
-            
-            if chat_id and user_id:
-                # 将用户从聊天房间移除
-                await emitter.leave_room(sid, f"chat_{chat_id}")
-                log.info(f"User {user_id} left chat {chat_id}")
+                    "session_id": data.get("session_id"),
+                    "workflow_type": data.get("workflow_type"),
+                    "entry_type": data.get("entry_type"),
+                    "metadata": data.get("metadata", {})
+                }
                 
-                # 通知其他用户
-                await emitter.emit("hsai_user_left", {
+                # 异步处理消息
+                asyncio.create_task(chat_handler.handle_message(user_id, message_data))
+                
+                # 发送确认消息给客户端
+                await sio.emit("chat-events", {
+                    "type": "message_received",
+                    "content": "Message received and processing started",
+                    "original_data": data,
                     "user_id": user_id,
-                    "chat_id": chat_id
-                }, room=f"chat_{chat_id}")
-            
-        except Exception as e:
-            log.error(f"Error handling chat leave: {e}")
-    
-    @emitter.on("hsai_workflow_subscribe")
-    async def handle_workflow_subscribe(sid, data):
-        """处理工作流订阅事件"""
-        try:
-            workflow_id = data.get("workflow_id")
-            execution_id = data.get("execution_id")
-            user_id = data.get("user_id")
-            
-            if workflow_id and user_id:
-                # 将用户加入工作流房间
-                room_name = f"workflow_{workflow_id}"
-                if execution_id:
-                    room_name = f"workflow_{workflow_id}_{execution_id}"
-                
-                await emitter.enter_room(sid, room_name)
-                log.info(f"User {user_id} subscribed to workflow {workflow_id}")
-                
-                # 发送订阅确认
-                await emitter.emit("hsai_workflow_subscribed", {
-                    "workflow_id": workflow_id,
-                    "execution_id": execution_id,
-                    "status": "subscribed"
+                    "timestamp": __import__('time').time()
                 }, to=sid)
-            
+            else:
+                log.warning(f"Unable to identify user for message from sid {sid}")
+                await sio.emit("error", {
+                    "type": "authentication_error",
+                    "content": "User not identified",
+                    "timestamp": __import__('time').time()
+                }, to=sid)
+                
         except Exception as e:
-            log.error(f"Error handling workflow subscribe: {e}")
-    
-    @emitter.on("disconnect")
-    async def handle_disconnect(sid):
-        """处理用户断开连接"""
-        try:
-            log.info(f"User disconnected: {sid}")
-            # 清理用户的所有房间订阅
-            # 这里可以添加更多的清理逻辑
-            
-        except Exception as e:
-            log.error(f"Error handling disconnect: {e}")
+            log.error(f"Error handling send_message event: {e}")
+            await sio.emit("error", {
+                "type": "processing_error",
+                "content": f"Error processing message: {str(e)}",
+                "timestamp": __import__('time').time()
+            }, to=sid)
     
     log.info("HSAI WebSocket events registered successfully")
 

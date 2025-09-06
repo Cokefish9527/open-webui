@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenWebUI Socket.IO 测试页面</title>
+    <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            font-family: monospace;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .message-received {
+            border-left-color: #28a745;
+        }
+        .message-sent {
+            border-left-color: #ffc107;
+        }
+        .message-error {
+            border-left-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OpenWebUI Socket.IO 测试页面</h1>
+        
+        <div class="form-group">
+            <label for="userId">用户ID:</label>
+            <input type="text" id="userId" placeholder="请输入用户ID" value="user_123">
+        </div>
+        
+        <div class="form-group">
+            <label for="token">JWT令牌:</label>
+            <input type="text" id="token" placeholder="请输入JWT令牌">
+        </div>
+        
+        <div class="form-group">
+            <label for="serverUrl">服务器地址:</label>
+            <input type="text" id="serverUrl" placeholder="请输入服务器地址" value="http://localhost:8080">
+        </div>
+        
+        <button id="connectBtn">连接Socket.IO</button>
+        <button id="disconnectBtn" disabled>断开连接</button>
+        
+        <div id="connectionStatus" class="status disconnected">
+            未连接
+        </div>
+        
+        <div class="form-group">
+            <label for="messageInput">发送消息:</label>
+            <textarea id="messageInput" placeholder='请输入要发送的消息，例如：
+{
+  "type": "chat",
+  "content": "你好",
+  "user_id": "user_123"
+}'></textarea>
+        </div>
+        
+        <button id="sendBtn" disabled>发送消息</button>
+        
+        <div class="form-group">
+            <label for="messagesOutput">接收到的消息:</label>
+            <div id="messagesOutput" style="min-height: 200px; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f8f9fa;">
+                <div class="message">等待消息...</div>
+            </div>
+        </div>
+        
+        <button id="clearBtn">清空消息</button>
+    </div>
+
+    <script>
+        class SocketIOClient {
+            constructor() {
+                this.socket = null;
+                this.isConnected = false;
+                
+                // 获取DOM元素
+                this.userIdInput = document.getElementById('userId');
+                this.tokenInput = document.getElementById('token');
+                this.serverUrlInput = document.getElementById('serverUrl');
+                this.connectBtn = document.getElementById('connectBtn');
+                this.disconnectBtn = document.getElementById('disconnectBtn');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.messageInput = document.getElementById('messageInput');
+                this.messagesOutput = document.getElementById('messagesOutput');
+                this.connectionStatus = document.getElementById('connectionStatus');
+                this.clearBtn = document.getElementById('clearBtn');
+                
+                // 绑定事件
+                this.bindEvents();
+            }
+            
+            bindEvents() {
+                this.connectBtn.addEventListener('click', () => this.connect());
+                this.disconnectBtn.addEventListener('click', () => this.disconnect());
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.clearBtn.addEventListener('click', () => this.clearMessages());
+            }
+            
+            connect() {
+                const userId = this.userIdInput.value.trim();
+                const token = this.tokenInput.value.trim();
+                const serverUrl = this.serverUrlInput.value.trim();
+                
+                if (!userId || !token || !serverUrl) {
+                    this.showMessage('请填写所有必填字段', 'error');
+                    return;
+                }
+                
+                try {
+                    // 创建Socket.IO连接
+                    this.socket = io(serverUrl, {
+                        path: '/ws/socket.io',
+                        auth: {
+                            token: token
+                        },
+                        query: {
+                            user_id: userId
+                        },
+                        transports: ['websocket', 'polling']
+                    });
+                    
+                    // 连接事件
+                    this.socket.on('connect', () => {
+                        this.isConnected = true;
+                        this.updateConnectionStatus('已连接', true);
+                        this.showMessage(`Socket.IO连接已建立，Socket ID: ${this.socket.id}`, 'info');
+                        console.log('Socket.IO connected, socket id:', this.socket.id);
+                    });
+                    
+                    // 断开连接事件
+                    this.socket.on('disconnect', (reason) => {
+                        this.isConnected = false;
+                        this.updateConnectionStatus(`已断开连接 (${reason})`, false);
+                        this.showMessage(`Socket.IO连接已断开，原因: ${reason}`, 'info');
+                        console.log('Socket.IO disconnected, reason:', reason);
+                    });
+                    
+                    // 连接错误事件
+                    this.socket.on('connect_error', (error) => {
+                        this.isConnected = false;
+                        this.updateConnectionStatus(`连接错误: ${error.message}`, false);
+                        this.showMessage(`Socket.IO连接错误: ${error.message}`, 'error');
+                        console.error('Socket.IO connection error:', error);
+                    });
+                    
+                    // 监听chat-events事件
+                    this.socket.on('chat-events', (data) => {
+                        this.displayReceivedMessage('chat-events', data);
+                        console.log('Received chat-events:', data);
+                    });
+                    
+                    // 监听其他可能的事件
+                    this.socket.on('status', (data) => {
+                        this.displayReceivedMessage('status', data);
+                        console.log('Received status:', data);
+                    });
+                    
+                    this.socket.on('error', (data) => {
+                        this.displayReceivedMessage('error', data);
+                        console.log('Received error:', data);
+                    });
+                    
+                    // 监听所有事件（用于调试）
+                    this.socket.onAny((eventName, ...args) => {
+                        console.log(`收到事件: ${eventName}`, args);
+                        this.showMessage(`收到事件: ${eventName}`, 'info');
+                    });
+                    
+                } catch (error) {
+                    this.showMessage(`连接失败: ${error.message}`, 'error');
+                    console.error('Connection failed:', error);
+                }
+            }
+            
+            disconnect() {
+                if (this.socket) {
+                    this.socket.disconnect();
+                    this.socket = null;
+                }
+                this.isConnected = false;
+                this.updateConnectionStatus('已断开连接', false);
+            }
+            
+            sendMessage() {
+                if (!this.isConnected || !this.socket) {
+                    this.showMessage('未连接到服务器', 'error');
+                    return;
+                }
+                
+                const messageText = this.messageInput.value.trim();
+                if (!messageText) {
+                    this.showMessage('请输入要发送的消息', 'error');
+                    return;
+                }
+                
+                try {
+                    const message = JSON.parse(messageText);
+                    // 确保消息包含用户ID
+                    if (!message.user_id) {
+                        message.user_id = this.userIdInput.value.trim();
+                    }
+                    // 发送消息到服务器
+                    console.log('Sending message:', message);
+                    this.socket.emit('send_message', message);
+                    this.displaySentMessage(message);
+                    this.showMessage('消息已发送', 'info');
+                } catch (error) {
+                    this.showMessage(`发送失败: ${error.message}`, 'error');
+                    console.error('Send message failed:', error);
+                }
+            }
+            
+            displaySentMessage(message) {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message message-sent';
+                messageElement.innerHTML = `
+                    <strong>发送的消息:</strong><br>
+                    <pre>${JSON.stringify(message, null, 2)}</pre>
+                    <small>${new Date().toLocaleString()}</small>
+                `;
+                this.messagesOutput.appendChild(messageElement);
+                this.messagesOutput.scrollTop = this.messagesOutput.scrollHeight;
+            }
+            
+            displayReceivedMessage(eventType, data) {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message message-received';
+                messageElement.innerHTML = `
+                    <strong>收到 ${eventType} 事件:</strong><br>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <small>${new Date().toLocaleString()}</small>
+                `;
+                this.messagesOutput.appendChild(messageElement);
+                this.messagesOutput.scrollTop = this.messagesOutput.scrollHeight;
+            }
+            
+            showMessage(message, type) {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message message-${type}`;
+                messageElement.innerHTML = `
+                    <strong>${type === 'error' ? '错误' : type === 'info' ? '信息' : '消息'}:</strong> ${message}
+                    <small>${new Date().toLocaleString()}</small>
+                `;
+                this.messagesOutput.appendChild(messageElement);
+                this.messagesOutput.scrollTop = this.messagesOutput.scrollHeight;
+            }
+            
+            updateConnectionStatus(message, connected) {
+                this.connectionStatus.textContent = message;
+                this.connectionStatus.className = `status ${connected ? 'connected' : 'disconnected'}`;
+                this.connectBtn.disabled = connected;
+                this.disconnectBtn.disabled = !connected;
+                this.sendBtn.disabled = !connected;
+            }
+            
+            clearMessages() {
+                this.messagesOutput.innerHTML = '<div class="message">消息记录已清空</div>';
+            }
+        }
+        
+        // 页面加载完成后初始化客户端
+        document.addEventListener('DOMContentLoaded', () => {
+            const client = new SocketIOClient();
+            window.socketClient = client; // 便于调试
+        });
+    </script>
+</body>
+</html>
