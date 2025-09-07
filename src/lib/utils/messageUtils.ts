@@ -1,8 +1,7 @@
 // 消息工具函数，用于创建不同类型的消息
 
 import { v4 as uuidv4 } from 'uuid';
-import { type TaskMessage, type UserMessage, type AssistantMessage, type SystemMessage } from '$lib/types/message';
-import { type Task, type TaskStep } from '$lib/types/task';
+import { type HSAITaskMessage, type UserMessage, type AssistantMessage, type SystemMessage, type HSAITask, type HSAITaskStep } from '$lib/types/message';
 
 // 创建用户消息
 export function createUserMessage(chatId: string, content: string, userId: string, files?: any[]): UserMessage {
@@ -48,20 +47,20 @@ export function createSystemMessage(chatId: string, content: string, parentId?: 
 	};
 }
 
-// 创建任务消息
-export function createTaskMessage(
+// 创建HSAI任务消息
+export function createHSAITaskMessage(
 	chatId: string, 
-	task: Task, 
-	step: TaskStep | null,
-	messageType: TaskMessage['messageType'],
+	task: HSAITask, 
+	step: HSAITaskStep | null,
+	messageType: HSAITaskMessage['messageType'],
 	displaySide: 'left' | 'right',
 	cardType?: string,
 	cardData?: any,
 	content?: string
-): TaskMessage {
+): HSAITaskMessage {
 	// 根据任务类型和步骤生成默认内容
 	if (!content) {
-		content = generateTaskMessageContent(task, step, messageType);
+		content = generateHSAITaskMessageContent(task, step, messageType);
 	}
 	
 	return {
@@ -85,7 +84,7 @@ export function createTaskMessage(
 }
 
 // 根据任务和步骤生成消息内容
-function generateTaskMessageContent(task: Task, step: TaskStep | null, messageType: string): string {
+function generateHSAITaskMessageContent(task: HSAITask, step: HSAITaskStep | null, messageType: string): string {
 	switch (messageType) {
 		case 'task_info':
 			return `已创建${task.title}，任务ID: ${task.id.substring(0, 8)}`;
@@ -97,15 +96,15 @@ function generateTaskMessageContent(task: Task, step: TaskStep | null, messageTy
 		case 'task_result':
 			return `任务已完成: ${task.title}`;
 		case 'task_error':
-			return `任务执行出错: ${task.error || '未知错误'}`;
+			return `任务执行出错: ${task.error_message || '未知错误'}`;
 		default:
 			return '任务状态更新';
 	}
 }
 
 // 创建素材检查卡片消息
-export function createMaterialCheckMessage(chatId: string, task: Task, step: TaskStep, cardData: any): TaskMessage {
-	return createTaskMessage(
+export function createMaterialCheckMessage(chatId: string, task: HSAITask, step: HSAITaskStep, cardData: any): HSAITaskMessage {
+	return createHSAITaskMessage(
 		chatId,
 		task,
 		step,
@@ -118,8 +117,8 @@ export function createMaterialCheckMessage(chatId: string, task: Task, step: Tas
 }
 
 // 创建账号检查卡片消息
-export function createAccountCheckMessage(chatId: string, task: Task, step: TaskStep, cardData: any): TaskMessage {
-	return createTaskMessage(
+export function createAccountCheckMessage(chatId: string, task: HSAITask, step: HSAITaskStep, cardData: any): HSAITaskMessage {
+	return createHSAITaskMessage(
 		chatId,
 		task,
 		step,
@@ -132,8 +131,8 @@ export function createAccountCheckMessage(chatId: string, task: Task, step: Task
 }
 
 // 创建预览卡片消息
-export function createPreviewMessage(chatId: string, task: Task, step: TaskStep, cardData: any): TaskMessage {
-	return createTaskMessage(
+export function createPreviewMessage(chatId: string, task: HSAITask, step: HSAITaskStep, cardData: any): HSAITaskMessage {
+	return createHSAITaskMessage(
 		chatId,
 		task,
 		step,
@@ -146,8 +145,8 @@ export function createPreviewMessage(chatId: string, task: Task, step: TaskStep,
 }
 
 // 创建确认卡片消息
-export function createConfirmationMessage(chatId: string, task: Task, step: TaskStep, cardData: any): TaskMessage {
-	return createTaskMessage(
+export function createConfirmationMessage(chatId: string, task: HSAITask, step: HSAITaskStep, cardData: any): HSAITaskMessage {
+	return createHSAITaskMessage(
 		chatId,
 		task,
 		step,
@@ -160,8 +159,8 @@ export function createConfirmationMessage(chatId: string, task: Task, step: Task
 }
 
 // 创建反馈卡片消息
-export function createFeedbackMessage(chatId: string, task: Task, step: TaskStep, cardData: any): TaskMessage {
-	return createTaskMessage(
+export function createFeedbackMessage(chatId: string, task: HSAITask, step: HSAITaskStep, cardData: any): HSAITaskMessage {
+	return createHSAITaskMessage(
 		chatId,
 		task,
 		step,

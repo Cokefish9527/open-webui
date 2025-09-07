@@ -5,13 +5,13 @@
 	
 	const i18n = getContext<Writable<i18nType>>('i18n');
 	
-	import { type TaskMessage, type Task, type TaskStep } from '$lib/types';
+	import { type HSAITaskMessage, type HSAITask, type HSAITaskStep } from '$lib/types/message';
 	import ProgressBar from '$lib/components/common/ProgressBar.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	
-	export let message: TaskMessage;
-	export let task: Task | undefined;
-	export let taskStep: TaskStep | undefined;
+	export let message: HSAITaskMessage;
+	export let task: HSAITask | undefined;
+	export let taskStep: HSAITaskStep | undefined;
 	export let cardData: any;
 	export let isLastMessage: boolean = false;
 	export let readOnly: boolean = false;

@@ -7,7 +7,7 @@
 	
 	import { config, models, settings } from '$lib/stores';
 	import { formatDate } from '$lib/utils';
-	import { type TaskMessage, type Task } from '$lib/types';
+	import { type HSAITaskMessage, type HSAITask } from '$lib/types/message';
 	
 	import Name from './Name.svelte';
 	import ProfileImage from './ProfileImage.svelte';
@@ -23,7 +23,7 @@
 	import ConfirmationCard from './cards/ConfirmationCard.svelte';
 	import FeedbackCard from './cards/FeedbackCard.svelte';
 	
-	export let message: TaskMessage;
+	export let message: HSAITaskMessage;
 	export let isLastMessage: boolean = false;
 	export let readOnly: boolean = false;
 	
