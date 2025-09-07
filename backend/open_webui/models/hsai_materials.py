@@ -141,6 +141,24 @@ class HSAIMaterialCategory(Base):
     updated_at = Column(BigInteger)
 
 
+class HSAIFileOperationLog(Base):
+    """HSAI文件操作日志表"""
+    __tablename__ = "hsai_file_operation_logs"
+    
+    id = Column(String, primary_key=True)
+    material_id = Column(String, ForeignKey("hsai_materials.id"), nullable=False)  # 素材ID
+    operation_type = Column(String, nullable=False)  # 操作类型（upload/delete/restore/move/modify）
+    source_path = Column(String, nullable=False)     # 源文件路径
+    target_path = Column(String, nullable=True)      # 目标文件路径
+    operator_id = Column(String, nullable=False)     # 操作人ID
+    operation_time = Column(BigInteger, nullable=False)  # 操作时间
+    details = Column(JSON, nullable=True)            # 操作详情
+    enterprise_id = Column(String, nullable=True)    # 企业ID（用于企业级过滤）
+    
+    created_at = Column(BigInteger)
+    updated_at = Column(BigInteger)
+
+
 ####################
 # Pydantic Models
 ####################
@@ -223,6 +241,23 @@ class HSAIMaterialCategoryModel(BaseModel):
     updated_at: int
 
 
+class HSAIFileOperationLogModel(BaseModel):
+    """文件操作日志模型"""
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: str
+    material_id: str
+    operation_type: str
+    source_path: str
+    target_path: Optional[str] = None
+    operator_id: str
+    operation_time: int
+    details: Optional[dict] = None
+    enterprise_id: Optional[str] = None
+    created_at: int
+    updated_at: int
+
+
 ####################
 # Forms
 ####################
@@ -275,6 +310,18 @@ class HSAIMaterialCategoryForm(BaseModel):
     category_type: str
     description: Optional[str] = None
     is_active: bool = True
+
+
+class HSAIFileOperationLogForm(BaseModel):
+    """文件操作日志表单模型"""
+    material_id: str
+    operation_type: str
+    source_path: str
+    target_path: Optional[str] = None
+    operator_id: str
+    operation_time: int
+    details: Optional[dict] = None
+    enterprise_id: Optional[str] = None
 
 
 ####################
@@ -345,6 +392,21 @@ class HSAIMaterialCategoryResponse(BaseModel):
     category_type: str = Field(description="分类类型：scene, technique, property")
     description: Optional[str] = Field(default=None, description="分类描述")
     is_active: bool = Field(default=True, description="是否启用")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
+
+
+class HSAIFileOperationLogResponse(BaseModel):
+    """文件操作日志响应模型"""
+    id: str = Field(description="日志唯一标识符")
+    material_id: str = Field(description="素材唯一标识符")
+    operation_type: str = Field(description="操作类型（upload/delete/restore/move/modify）")
+    source_path: str = Field(description="源文件路径")
+    target_path: Optional[str] = Field(default=None, description="目标文件路径")
+    operator_id: str = Field(description="操作人ID")
+    operation_time: int = Field(description="操作时间")
+    details: Optional[dict] = Field(default=None, description="操作详情")
+    enterprise_id: Optional[str] = Field(default=None, description="企业ID")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -546,7 +608,7 @@ class HSAIMaterialsTable:
                 return False
 
     def search_materials(
-        self, user_id: str, query: str, material_type: Optional[str] = None
+        self, user_id: str, query: str, material_type: Optional[str] = None, limit: int = 20, offset: int = 0
     ) -> List[HSAIMaterialModel]:
         """搜索素材"""
         with get_db() as db:
@@ -562,11 +624,79 @@ class HSAIMaterialsTable:
                     HSAIMaterial.description.ilike(f"%{query}%")
                 )
                 
-                materials = search_query.order_by(HSAIMaterial.updated_at.desc()).all()
+                materials = search_query.order_by(HSAIMaterial.updated_at.desc()).limit(limit).offset(offset).all()
                 return [HSAIMaterialModel.model_validate(material) for material in materials]
             except Exception as e:
                 log.exception(f"Error searching materials: {e}")
                 return []
+
+    def count_search_materials(
+        self, user_id: str, query: str, material_type: Optional[str] = None
+    ) -> int:
+        """获取搜索结果总数"""
+        with get_db() as db:
+            try:
+                search_query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
+                
+                if material_type:
+                    search_query = search_query.filter_by(material_type=material_type)
+                
+                # 搜索名称和描述
+                search_query = search_query.filter(
+                    HSAIMaterial.name.ilike(f"%{query}%") |
+                    HSAIMaterial.description.ilike(f"%{query}%")
+                )
+                
+                return search_query.count()
+            except Exception as e:
+                log.exception(f"Error counting search materials: {e}")
+                return 0
+
+    def get_deleted_materials_by_user_id(
+        self, user_id: str, limit: int = 20, offset: int = 0
+    ) -> List[HSAIMaterialModel]:
+        """获取用户已删除的素材列表"""
+        with get_db() as db:
+            try:
+                materials = db.query(HSAIMaterial).filter_by(user_id=user_id, is_deleted=True).order_by(HSAIMaterial.deleted_at.desc()).limit(limit).offset(offset).all()
+                return [HSAIMaterialModel.model_validate(material) for material in materials]
+            except Exception as e:
+                log.exception(f"Error getting deleted materials: {e}")
+                return []
+
+    def count_deleted_materials_by_user_id(self, user_id: str) -> int:
+        """获取用户已删除的素材总数"""
+        with get_db() as db:
+            try:
+                return db.query(HSAIMaterial).filter_by(user_id=user_id, is_deleted=True).count()
+            except Exception as e:
+                log.exception(f"Error counting deleted materials: {e}")
+                return 0
+
+    def get_deleted_materials_by_enterprise(
+        self, enterprise_id: str, limit: int = 20, offset: int = 0
+    ) -> List[HSAIMaterialModel]:
+        """获取企业已删除的素材列表"""
+        with get_db() as db:
+            try:
+                # 注意：这里假设enterprise_id存储在user_id字段中
+                # 在实际实现中，可能需要根据具体的数据结构进行调整
+                materials = db.query(HSAIMaterial).filter_by(user_id=enterprise_id, is_deleted=True).order_by(HSAIMaterial.deleted_at.desc()).limit(limit).offset(offset).all()
+                return [HSAIMaterialModel.model_validate(material) for material in materials]
+            except Exception as e:
+                log.exception(f"Error getting deleted materials by enterprise: {e}")
+                return []
+
+    def count_deleted_materials_by_enterprise(self, enterprise_id: str) -> int:
+        """获取企业已删除的素材总数"""
+        with get_db() as db:
+            try:
+                # 注意：这里假设enterprise_id存储在user_id字段中
+                # 在实际实现中，可能需要根据具体的数据结构进行调整
+                return db.query(HSAIMaterial).filter_by(user_id=enterprise_id, is_deleted=True).count()
+            except Exception as e:
+                log.exception(f"Error counting deleted materials by enterprise: {e}")
+                return 0
 
     def delete_material_by_id(self, material_id: str) -> bool:
         """软删除素材"""
@@ -682,7 +812,109 @@ class HSAIMaterialCategoriesTable:
                 return False
 
 
+class HSAIFileOperationLogsTable:
+    def insert_new_log(
+        self, form_data: HSAIFileOperationLogForm
+    ) -> Optional[HSAIFileOperationLogModel]:
+        with get_db() as db:
+            id = str(uuid.uuid4())
+            log_entry = HSAIFileOperationLogModel(
+                **{
+                    "id": id,
+                    **form_data.model_dump(),
+                    "created_at": int(time.time()),
+                    "updated_at": int(time.time()),
+                }
+            )
+            
+            try:
+                result = HSAIFileOperationLog(**log_entry.model_dump())
+                db.add(result)
+                db.commit()
+                db.refresh(result)
+                return HSAIFileOperationLogModel.model_validate(result) if result else None
+            except Exception as e:
+                log.exception(f"Error creating file operation log: {e}")
+                return None
+
+    def get_logs(
+        self, 
+        material_id: Optional[str] = None,
+        enterprise_id: Optional[str] = None,
+        operation_type: Optional[str] = None,
+        operator_id: Optional[str] = None,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+        limit: int = 20, 
+        offset: int = 0
+    ) -> List[HSAIFileOperationLogModel]:
+        """获取文件操作日志列表"""
+        with get_db() as db:
+            try:
+                query = db.query(HSAIFileOperationLog)
+                
+                if material_id:
+                    query = query.filter_by(material_id=material_id)
+                if enterprise_id:
+                    query = query.filter_by(enterprise_id=enterprise_id)
+                if operation_type:
+                    query = query.filter_by(operation_type=operation_type)
+                if operator_id:
+                    query = query.filter_by(operator_id=operator_id)
+                if start_time:
+                    query = query.filter(HSAIFileOperationLog.operation_time >= start_time)
+                if end_time:
+                    query = query.filter(HSAIFileOperationLog.operation_time <= end_time)
+                
+                logs = query.order_by(HSAIFileOperationLog.operation_time.desc()).limit(limit).offset(offset).all()
+                return [HSAIFileOperationLogModel.model_validate(log) for log in logs]
+            except Exception as e:
+                log.exception(f"Error getting file operation logs: {e}")
+                return []
+
+    def get_logs_count(
+        self,
+        material_id: Optional[str] = None,
+        enterprise_id: Optional[str] = None,
+        operation_type: Optional[str] = None,
+        operator_id: Optional[str] = None,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None
+    ) -> int:
+        """获取文件操作日志总数"""
+        with get_db() as db:
+            try:
+                query = db.query(HSAIFileOperationLog)
+                
+                if material_id:
+                    query = query.filter_by(material_id=material_id)
+                if enterprise_id:
+                    query = query.filter_by(enterprise_id=enterprise_id)
+                if operation_type:
+                    query = query.filter_by(operation_type=operation_type)
+                if operator_id:
+                    query = query.filter_by(operator_id=operator_id)
+                if start_time:
+                    query = query.filter(HSAIFileOperationLog.operation_time >= start_time)
+                if end_time:
+                    query = query.filter(HSAIFileOperationLog.operation_time <= end_time)
+                
+                return query.count()
+            except Exception as e:
+                log.exception(f"Error counting file operation logs: {e}")
+                return 0
+
+    def get_log_by_id(self, log_id: str) -> Optional[HSAIFileOperationLogModel]:
+        """根据ID获取文件操作日志"""
+        with get_db() as db:
+            try:
+                log_entry = db.get(HSAIFileOperationLog, log_id)
+                return HSAIFileOperationLogModel.model_validate(log_entry) if log_entry else None
+            except Exception:
+                return None
+
 # 全局实例
 HSAIMaterialFolders = HSAIMaterialFoldersTable()
 HSAIMaterials = HSAIMaterialsTable()
 HSAIMaterialCategories = HSAIMaterialCategoriesTable()
+HSAIFileOperationLogs = HSAIFileOperationLogsTable()

@@ -34,7 +34,11 @@ from open_webui.models.hsai_materials import (
     # 添加分页相关的导入
     PaginationData,
     PaginatedHSAIMaterialResponse,
-    PaginatedHSAIMaterialCategoryResponse
+    PaginatedHSAIMaterialCategoryResponse,
+    # 添加文件操作日志相关的导入
+    HSAIFileOperationLogForm,
+    HSAIFileOperationLogResponse,
+    HSAIFileOperationLogs
 )
 
 from open_webui.utils.auth import get_verified_user
@@ -981,25 +985,33 @@ async def delete_material(
 # 素材搜索
 ############################
 
-@router.get("/search", response_model=List[HSAIMaterialResponse], summary="搜索素材")
+@router.get("/search", response_model=PaginatedHSAIMaterialResponse, summary="搜索素材")
 async def search_materials(
     query: str = Query(..., description="搜索关键词"),
     material_type: Optional[str] = Query(None, description="素材类型过滤"),
-    limit: int = Query(20, description="返回数量限制"),
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引，从1开始", ge=1),
     user=Depends(get_verified_user)
 ):
     """
-    根据关键词搜索素材。
+    根据关键词搜索素材（分页）。
     
     支持按名称、描述、标签等字段进行模糊搜索。
     """
     try:
+        # 计算offset
+        offset = (pi - 1) * ps
+        
         materials = HSAIMaterials.search_materials(
             user.id, 
             query=query, 
             material_type=material_type,
-            limit=limit
+            limit=ps,
+            offset=offset
         )
+        
+        # 获取总数
+        # 注意：当前search_materials方法不支持获取总数，需要修改数据库方法
         
         responses = []
         for material in materials:
@@ -1015,7 +1027,27 @@ async def search_materials(
             )
             responses.append(response)
         
-        return responses
+        # 获取总数
+        total = HSAIMaterials.count_search_materials(
+            user.id,
+            query=query,
+            material_type=material_type
+        )
+        
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
+        
+        pagination = PaginationData(
+            total=total,
+            page=pi,
+            size=ps,
+            total_pages=total_pages
+        )
+        
+        return PaginatedHSAIMaterialResponse(
+            data=responses,
+            pagination=pagination
+        )
         
     except Exception as e:
         log.exception(f"Error searching materials: {e}")
@@ -1458,6 +1490,12 @@ class FileOperationLogResponse(BaseModel):
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
+
+class PaginatedHSAIFileOperationLogResponse(BaseModel):
+    """分页的文件操作日志响应模型"""
+    data: List[FileOperationLogResponse]
+    pagination: PaginationData
+
 # 添加文件操作日志的辅助函数
 async def _log_file_operation(
     material_id: str,
@@ -1686,11 +1724,11 @@ async def permanent_delete_material(
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
-@router.get("/recovery/list", response_model=List[HSAIMaterialResponse], summary="获取回收站文件列表")
+@router.get("/recovery/list", response_model=PaginatedHSAIMaterialResponse, summary="获取回收站文件列表")
 async def get_recovery_materials(
     enterprise_id: str,
-    page: int = Query(1, description="页码，默认1"),
-    size: int = Query(20, description="每页数量，默认20"),
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引，从1开始", ge=1),
     sort_by: str = Query("delete_time", description="排序字段（delete_time/name/size）"),
     order: str = Query("desc", description="排序方式（asc/desc）"),
     user=Depends(get_verified_user)
@@ -1700,26 +1738,38 @@ async def get_recovery_materials(
     
     Args:
         enterprise_id (str): 企业ID
-        page (int): 页码，默认1
-        size (int): 每页数量，默认20
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
         sort_by (str): 排序字段（delete_time/name/size），默认delete_time
         order (str): 排序方式（asc/desc），默认desc
         user: 已认证的用户对象
         
     Returns:
-        List[HSAIMaterialResponse]: 回收站文件列表
+        PaginatedHSAIMaterialResponse: 分页的回收站文件列表
+        - data: 回收站文件列表
+        - pagination: 分页信息
+          - total: 总记录数
+          - page: 当前页码
+          - size: 每页大小
+          - total_pages: 总页数
     """
     try:
-        # TODO: 实际实现中需要根据企业ID过滤
-        # 这里简化实现，仅获取当前用户已删除的素材
-        materials = HSAIMaterials.get_materials_by_user_id(user.id)
-        deleted_materials = [m for m in materials if m.is_deleted]
+        # 计算offset
+        offset = (pi - 1) * ps
         
-        # 应用分页和排序
-        # 这里简化实现，实际应该在数据库查询时处理
+        # 获取企业已删除的素材
+        materials = HSAIMaterials.get_deleted_materials_by_enterprise(
+            enterprise_id, 
+            limit=ps, 
+            offset=offset
+        )
         
+        # 获取总数
+        total = HSAIMaterials.count_deleted_materials_by_enterprise(enterprise_id)
+        
+        # 转换为响应模型
         responses = []
-        for material in deleted_materials:
+        for material in materials:
             response = HSAIMaterialResponse(
                 **material.model_dump(),
                 upload_url=material.file_path,
@@ -1728,7 +1778,20 @@ async def get_recovery_materials(
             )
             responses.append(response)
         
-        return responses
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
+        
+        pagination = PaginationData(
+            total=total,
+            page=pi,
+            size=ps,
+            total_pages=total_pages
+        )
+        
+        return PaginatedHSAIMaterialResponse(
+            data=responses,
+            pagination=pagination
+        )
         
     except Exception as e:
         log.exception(f"Error getting recovery materials: {e}")
@@ -1832,46 +1895,37 @@ async def batch_operation_recovery_materials(
 # 文件操作日志接口
 ############################
 
-@router.post("/logs", response_model=FileOperationLogResponse, summary="记录文件操作日志")
+@router.post("/logs", response_model=HSAIFileOperationLogResponse, summary="记录文件操作日志")
 async def log_file_operation(
     form_data: FileOperationLogForm,
     user=Depends(get_verified_user)
 ):
     """
-    记录文件操作日志，由系统自动调用
+    记录文件操作日志
     
     Args:
         form_data (FileOperationLogForm): 日志表单数据
         user: 已认证的用户对象
         
     Returns:
-        FileOperationLogResponse: 创建的日志信息
+        HSAIFileOperationLogResponse: 创建的日志信息
     """
     try:
-        # 实际实现中应该将日志保存到数据库
-        # 这里简化实现，只记录到日志中并返回模拟数据
+        # 转换表单数据为数据库模型
+        hsai_form_data = HSAIFileOperationLogForm(**form_data.model_dump())
         
-        log.info(f"File operation logged: material_id={form_data.material_id}, operation_type={form_data.operation_type}, "
-                 f"source_path={form_data.source_path}, target_path={form_data.target_path}, "
-                 f"operator_id={form_data.operator_id}, details={form_data.details}")
+        # 创建日志记录
+        log_entry = HSAIFileOperationLogs.insert_new_log(hsai_form_data)
+        if not log_entry:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create log entry"
+            )
         
-        # 模拟创建的日志记录
-        log_id = str(uuid.uuid4())
-        current_time = int(time.time())
+        return HSAIFileOperationLogResponse(**log_entry.model_dump())
         
-        return FileOperationLogResponse(
-            id=log_id,
-            material_id=form_data.material_id,
-            operation_type=form_data.operation_type,
-            source_path=form_data.source_path,
-            target_path=form_data.target_path,
-            operator_id=form_data.operator_id,
-            operation_time=form_data.operation_time,
-            details=form_data.details,
-            created_at=current_time,
-            updated_at=current_time
-        )
-        
+    except HTTPException:
+        raise
     except Exception as e:
         log.exception(f"Error logging file operation: {e}")
         raise HTTPException(
@@ -1879,7 +1933,7 @@ async def log_file_operation(
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
-@router.get("/logs", response_model=List[FileOperationLogResponse], summary="查询文件操作日志")
+@router.get("/logs", response_model=PaginatedHSAIFileOperationLogResponse, summary="查询文件操作日志")
 async def get_file_operation_logs(
     material_id: Optional[str] = Query(None, description="素材唯一标识符"),
     enterprise_id: Optional[str] = Query(None, description="企业ID"),
@@ -1887,12 +1941,12 @@ async def get_file_operation_logs(
     operator_id: Optional[str] = Query(None, description="操作人ID"),
     start_time: Optional[int] = Query(None, description="查询起始时间"),
     end_time: Optional[int] = Query(None, description="查询结束时间"),
-    page: int = Query(1, description="页码，默认1"),
-    size: int = Query(20, description="每页数量，默认20"),
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引，从1开始", ge=1),
     user=Depends(get_verified_user)
 ):
     """
-    查询文件操作日志
+    查询文件操作日志（分页）
     
     Args:
         material_id (str, optional): 素材唯一标识符
@@ -1901,17 +1955,62 @@ async def get_file_operation_logs(
         operator_id (str, optional): 操作人ID
         start_time (int, optional): 查询起始时间
         end_time (int, optional): 查询结束时间
-        page (int): 页码，默认1
-        size (int): 每页数量，默认20
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
         user: 已认证的用户对象
         
     Returns:
-        List[FileOperationLogResponse]: 文件操作日志列表
+        PaginatedHSAIFileOperationLogResponse: 分页的文件操作日志列表
+        - data: 日志列表
+        - pagination: 分页信息
+          - total: 总记录数
+          - page: 当前页码
+          - size: 每页大小
+          - total_pages: 总页数
     """
     try:
-        # 实际实现中应该从数据库查询日志
-        # 这里返回空列表作为示例
-        return []
+        # 计算offset
+        offset = (pi - 1) * ps
+        
+        # 获取日志列表
+        logs = HSAIFileOperationLogs.get_logs(
+            material_id=material_id,
+            enterprise_id=enterprise_id,
+            operation_type=operation_type,
+            operator_id=operator_id,
+            start_time=start_time,
+            end_time=end_time,
+            limit=ps,
+            offset=offset
+        )
+        
+        # 获取总数
+        total = HSAIFileOperationLogs.get_logs_count(
+            material_id=material_id,
+            enterprise_id=enterprise_id,
+            operation_type=operation_type,
+            operator_id=operator_id,
+            start_time=start_time,
+            end_time=end_time
+        )
+        
+        # 转换为响应模型
+        responses = [HSAIFileOperationLogResponse(**log.model_dump()) for log in logs]
+        
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
+        
+        pagination = PaginationData(
+            total=total,
+            page=pi,
+            size=ps,
+            total_pages=total_pages
+        )
+        
+        return PaginatedHSAIFileOperationLogResponse(
+            data=responses,
+            pagination=pagination
+        )
         
     except Exception as e:
         log.exception(f"Error getting file operation logs: {e}")
@@ -1920,29 +2019,62 @@ async def get_file_operation_logs(
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
-@router.get("/{material_id}/history", response_model=List[FileOperationLogResponse], summary="获取文件操作历史")
+@router.get("/{material_id}/history", response_model=PaginatedHSAIFileOperationLogResponse, summary="获取文件操作历史")
 async def get_material_history(
     material_id: str,
-    page: int = Query(1, description="页码，默认1"),
-    size: int = Query(20, description="每页数量，默认20"),
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引，从1开始", ge=1),
     user=Depends(get_verified_user)
 ):
     """
-    获取指定文件的所有操作历史记录
+    获取指定文件的所有操作历史记录（分页）
     
     Args:
         material_id (str): 素材唯一标识符
-        page (int): 页码，默认1
-        size (int): 每页数量，默认20
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
         user: 已认证的用户对象
         
     Returns:
-        List[FileOperationLogResponse]: 文件操作历史记录列表
+        PaginatedHSAIFileOperationLogResponse: 分页的文件操作历史记录列表
+        - data: 历史记录列表
+        - pagination: 分页信息
+          - total: 总记录数
+          - page: 当前页码
+          - size: 每页大小
+          - total_pages: 总页数
     """
     try:
-        # 实际实现中应该从数据库查询指定素材的操作历史
-        # 这里返回空列表作为示例
-        return []
+        # 计算offset
+        offset = (pi - 1) * ps
+        
+        # 获取指定素材的日志列表
+        logs = HSAIFileOperationLogs.get_logs(
+            material_id=material_id,
+            limit=ps,
+            offset=offset
+        )
+        
+        # 获取总数
+        total = HSAIFileOperationLogs.get_logs_count(material_id=material_id)
+        
+        # 转换为响应模型
+        responses = [HSAIFileOperationLogResponse(**log.model_dump()) for log in logs]
+        
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
+        
+        pagination = PaginationData(
+            total=total,
+            page=pi,
+            size=ps,
+            total_pages=total_pages
+        )
+        
+        return PaginatedHSAIFileOperationLogResponse(
+            data=responses,
+            pagination=pagination
+        )
         
     except Exception as e:
         log.exception(f"Error getting material history: {e}")
