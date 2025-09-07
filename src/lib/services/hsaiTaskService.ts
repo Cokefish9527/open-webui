@@ -50,6 +50,8 @@ class HSAITaskService {
 		description?: string;
 		task_type: string;
 		chat_id?: string;
+		collaborators?: Array<{ user_id: string; role: string }>;
+		shared_sessions?: string[];
 		config?: Record<string, any>;
 		inputs?: Record<string, any>;
 		priority?: number;
@@ -106,6 +108,8 @@ class HSAITaskService {
 			description?: string;
 			status?: string;
 			assignee_id?: string;
+			collaborators?: Array<{ user_id: string; role: string }>;
+			shared_sessions?: string[];
 			config?: Record<string, any>;
 			inputs?: Record<string, any>;
 			outputs?: Record<string, any>;
@@ -222,6 +226,57 @@ class HSAITaskService {
 		} catch (error) {
 			console.error('Error fetching task stats:', error);
 			throw error;
+		}
+	}
+
+	// 添加任务协作者
+	async addTaskCollaborator(taskId: string, userId: string, role: string = 'collaborator'): Promise<boolean> {
+		try {
+			const task = await this.getTask(taskId);
+			const collaborators = task.collaborators || [];
+			
+			// 检查用户是否已经是协作者
+			const existingCollaborator = collaborators.find(c => c.user_id === userId);
+			if (existingCollaborator) {
+				return true; // 用户已经是协作者
+			}
+			
+			// 添加新协作者
+			collaborators.push({
+				user_id: userId,
+				role: role,
+				joined_at: Math.floor(Date.now() / 1000)
+			});
+			
+			// 更新任务
+			const updatedTask = await this.updateTask(taskId, { collaborators });
+			return !!updatedTask;
+		} catch (error) {
+			console.error('Error adding task collaborator:', error);
+			return false;
+		}
+	}
+
+	// 共享任务到会话
+	async shareTaskToSession(taskId: string, sessionId: string): Promise<boolean> {
+		try {
+			const task = await this.getTask(taskId);
+			const sharedSessions = task.shared_sessions || [];
+			
+			// 检查会话是否已经被共享
+			if (sharedSessions.includes(sessionId)) {
+				return true; // 会话已经被共享
+			}
+			
+			// 添加新共享会话
+			sharedSessions.push(sessionId);
+			
+			// 更新任务
+			const updatedTask = await this.updateTask(taskId, { shared_sessions: sharedSessions });
+			return !!updatedTask;
+		} catch (error) {
+			console.error('Error sharing task to session:', error);
+			return false;
 		}
 	}
 }

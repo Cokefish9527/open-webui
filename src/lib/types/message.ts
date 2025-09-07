@@ -66,6 +66,8 @@ export interface HSAITask {
 	user_id: string;
 	assignee_id?: string;
 	chat_id?: string;
+	collaborators?: Array<{ user_id: string; role: string; joined_at: number }>;
+	shared_sessions?: string[];
 	config?: Record<string, any>;
 	inputs?: Record<string, any>;
 	outputs?: Record<string, any>;

@@ -15,6 +15,12 @@
 	export let cardData: any;
 	export let isLastMessage: boolean = false;
 	export let readOnly: boolean = false;
+	
+	// 获取协作者列表
+	$: collaborators = task?.collaborators || [];
+	
+	// 检查当前用户是否是协作者
+	$: isCollaborator = collaborators.some(c => c.user_id === $config?.userId);
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-3">
@@ -36,6 +42,15 @@
 			{#if task.description}
 				<div class="text-sm text-gray-600 dark:text-gray-400 mb-2">
 					{task.description}
+				</div>
+			{/if}
+			<!-- 显示协作者信息 -->
+			{#if collaborators.length > 0}
+				<div class="text-xs text-blue-500 dark:text-blue-400 mt-1">
+					协作者: {collaborators.length}人
+					{#if isCollaborator}
+						<span class="ml-1 px-1 bg-blue-200 dark:bg-blue-700 rounded">您已加入</span>
+					{/if}
 				</div>
 			{/if}
 		</div>

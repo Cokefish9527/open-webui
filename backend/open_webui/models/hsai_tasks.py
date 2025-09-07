@@ -1,7 +1,7 @@
 import logging
 import time
 import uuid
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from enum import Enum
 
 from open_webui.internal.db import Base, JSONField, get_db
@@ -62,6 +62,10 @@ class HSAITask(Base):
     user_id = Column(String, nullable=False)
     assignee_id = Column(String, nullable=True)  # 指派人ID
     chat_id = Column(String, nullable=True)  # 关联的聊天会话ID
+    
+    # 任务协作相关
+    collaborators = Column(JSON, nullable=True)  # 协作者列表 [{"user_id": "...", "role": "...", "joined_at": ...}]
+    shared_sessions = Column(JSON, nullable=True)  # 共享的会话ID列表 ["session_id1", "session_id2"]
     
     # 任务配置和参数
     config = Column(JSON, nullable=True)  # 任务配置参数
@@ -204,6 +208,8 @@ class HSAITaskModel(BaseModel):
     user_id: str
     assignee_id: Optional[str] = None  # 指派人ID
     chat_id: Optional[str] = None
+    collaborators: Optional[List[Dict[str, Any]]] = None  # 协作者列表
+    shared_sessions: Optional[List[str]] = None  # 共享的会话ID列表
     config: Optional[dict] = None
     inputs: Optional[dict] = None
     outputs: Optional[dict] = None
@@ -273,6 +279,8 @@ class HSAITaskForm(BaseModel):
     task_type: str
     assignee_id: Optional[str] = None
     chat_id: Optional[str] = None
+    collaborators: Optional[List[Dict[str, Any]]] = None  # 协作者列表
+    shared_sessions: Optional[List[str]] = None  # 共享的会话ID列表
     config: Optional[dict] = None
     inputs: Optional[dict] = None
     workflow_id: Optional[str] = None
@@ -311,6 +319,8 @@ class HSAITaskUpdateForm(BaseModel):
     description: Optional[str] = None
     status: Optional[str] = None
     assignee_id: Optional[str] = None  # 指派人ID
+    collaborators: Optional[List[Dict[str, Any]]] = None  # 协作者列表
+    shared_sessions: Optional[List[str]] = None  # 共享的会话ID列表
     config: Optional[dict] = None
     inputs: Optional[dict] = None
     outputs: Optional[dict] = None

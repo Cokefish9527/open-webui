@@ -54,6 +54,7 @@ class ChatMessage(BaseModel):
     session_id: Optional[str] = None
     workflow_type: Optional[WorkflowType] = None
     entry_type: Optional[str] = None  # 对话入口类型
+    task_id: Optional[str] = None  # 关联的任务ID
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 class WorkflowResponse(BaseModel):
@@ -155,7 +156,15 @@ class HSAIChatHandler:
         self.session_workflows[session_id] = workflow_type
         log.info(f"Session {session_id} assigned to user {user_id} with workflow {workflow_type.value}")
         
-        # 3. 调用n8n工作流（带监控）
+        # 3. 如果消息指定了任务ID，检查用户是否有权限访问该任务
+        task_id = message.task_id
+        if task_id:
+            # 验证用户是否有权限访问该任务
+            if not self._verify_task_access(user_id, task_id, session_id):
+                await self._send_error(user_id, f"您没有权限访问任务 {task_id}")
+                return
+        
+        # 4. 调用n8n工作流（带监控）
         execution_id = str(uuid.uuid4())
         execution = n8n_monitor.start_execution(execution_id, workflow_type, user_id, session_id)
         log.info(f"Starting workflow execution {execution_id} for user {user_id}")
@@ -166,6 +175,7 @@ class HSAIChatHandler:
                 {
                     "user_id": user_id,
                     "session_id": session_id,
+                    "task_id": task_id,  # 传递任务ID
                     "content": message.content,
                     "metadata": message.metadata,
                     "timestamp": execution.start_time.timestamp(),  # 转换为时间戳
@@ -177,17 +187,18 @@ class HSAIChatHandler:
             # 添加日志打印
             log.info(f"Received workflow response for user {user_id}: {workflow_response}")
             
-            # 4. 使用专门的响应处理器
+            # 5. 使用专门的响应处理器
             processed_response = await N8NResponseProcessor.process_response(
                 workflow_response, workflow_type, execution.start_time.timestamp(), execution_id
             )
             
-            # 5. 格式化并发送给客户端
+            # 6. 格式化并发送给客户端
             client_response = N8NResponseProcessor.format_for_client(processed_response)
             client_response.update({
                 "session_id": session_id,
                 "user_id": user_id,
-                "execution_id": execution_id
+                "execution_id": execution_id,
+                "task_id": task_id  # 返回任务ID
             })
             
             # 添加日志打印
@@ -396,6 +407,93 @@ class HSAIChatHandler:
         users = self.get_session_users(session_id)
         for user_id in users:
             await self._send_to_user(user_id, message)
+    
+    def _verify_task_access(self, user_id: str, task_id: str, session_id: str) -> bool:
+        """
+        验证用户是否有权限访问指定任务
+        """
+        try:
+            # 从数据库获取任务信息
+            from open_webui.models.hsai_tasks import HSAITasks
+            
+            task = HSAITasks.get_task_by_id(task_id)
+            if not task:
+                return False
+            
+            # 检查用户是否是任务所有者
+            if task.user_id == user_id:
+                return True
+            
+            # 检查用户是否是协作者
+            if task.collaborators:
+                for collaborator in task.collaborators:
+                    if collaborator.get("user_id") == user_id:
+                        return True
+            
+            # 检查会话是否被共享
+            if task.shared_sessions and session_id in task.shared_sessions:
+                return True
+            
+            return False
+        except Exception as e:
+            log.error(f"Error verifying task access: {e}")
+            return False
+    
+    def add_task_collaborator(self, task_id: str, user_id: str, role: str = "collaborator") -> bool:
+        """
+        添加任务协作者
+        """
+        try:
+            from open_webui.models.hsai_tasks import HSAITasks, HSAITaskUpdateForm
+            
+            task = HSAITasks.get_task_by_id(task_id)
+            if not task:
+                return False
+            
+            # 创建协作者信息
+            collaborator = {
+                "user_id": user_id,
+                "role": role,
+                "joined_at": int(time.time())
+            }
+            
+            # 更新协作者列表
+            collaborators = task.collaborators or []
+            collaborators.append(collaborator)
+            
+            # 更新任务
+            update_form = HSAITaskUpdateForm(collaborators=collaborators)
+            updated_task = HSAITasks.update_task_by_id(task_id, update_form)
+            
+            return updated_task is not None
+        except Exception as e:
+            log.error(f"Error adding task collaborator: {e}")
+            return False
+    
+    def share_task_session(self, task_id: str, session_id: str) -> bool:
+        """
+        共享任务到会话
+        """
+        try:
+            from open_webui.models.hsai_tasks import HSAITasks, HSAITaskUpdateForm
+            
+            task = HSAITasks.get_task_by_id(task_id)
+            if not task:
+                return False
+            
+            # 更新共享会话列表
+            shared_sessions = task.shared_sessions or []
+            if session_id not in shared_sessions:
+                shared_sessions.append(session_id)
+            
+            # 更新任务
+            update_form = HSAITaskUpdateForm(shared_sessions=shared_sessions)
+            updated_task = HSAITasks.update_task_by_id(task_id, update_form)
+            
+            return updated_task is not None
+        except Exception as e:
+            log.error(f"Error sharing task session: {e}")
+            return False
 
 # 全局chat_handler实例
 chat_handler = HSAIChatHandler()

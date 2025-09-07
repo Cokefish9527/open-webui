@@ -171,3 +171,37 @@ export function createFeedbackMessage(chatId: string, task: HSAITask, step: HSAI
 		`任务已完成，成功率${cardData.successRate}%`
 	);
 }
+
+// 创建协作卡片消息
+export function createCollaborationMessage(chatId: string, task: HSAITask): HSAITaskMessage {
+	return createHSAITaskMessage(
+		chatId,
+		task,
+		null,
+		'task_info',
+		'right',
+		'collaboration',
+		undefined,
+		`任务协作信息已更新`
+	);
+}
+
+// 检查用户是否有任务访问权限
+export function hasTaskAccess(task: HSAITask, userId: string, sessionId: string): boolean {
+	// 检查用户是否是任务所有者
+	if (task.user_id === userId) {
+		return true;
+	}
+	
+	// 检查用户是否是协作者
+	if (task.collaborators && task.collaborators.some(c => c.user_id === userId)) {
+		return true;
+	}
+	
+	// 检查会话是否被共享
+	if (task.shared_sessions && task.shared_sessions.includes(sessionId)) {
+		return true;
+	}
+	
+	return false;
+}

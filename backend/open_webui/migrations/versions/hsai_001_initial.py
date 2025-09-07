@@ -116,6 +116,8 @@ def upgrade():
         sa.Column('status', sa.String(), nullable=False, default='pending'),
         sa.Column('user_id', sa.String(), nullable=False),
         sa.Column('chat_id', sa.String(), nullable=True),
+        sa.Column('collaborators', sa.JSON(), nullable=True),  # 协作者列表
+        sa.Column('shared_sessions', sa.JSON(), nullable=True),  # 共享的会话ID列表
         sa.Column('config', sa.JSON(), nullable=True),
         sa.Column('inputs', sa.JSON(), nullable=True),
         sa.Column('outputs', sa.JSON(), nullable=True),

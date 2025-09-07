@@ -22,6 +22,7 @@
 	import PreviewCard from './cards/PreviewCard.svelte';
 	import ConfirmationCard from './cards/ConfirmationCard.svelte';
 	import FeedbackCard from './cards/FeedbackCard.svelte';
+	import TaskCollaborationCard from './cards/TaskCollaborationCard.svelte';
 	
 	export let message: HSAITaskMessage;
 	export let isLastMessage: boolean = false;
@@ -49,10 +50,18 @@
 				return ConfirmationCard;
 			case 'feedback':
 				return FeedbackCard;
+			case 'collaboration':
+				return TaskCollaborationCard;
 			default:
 				return null;
 		}
 	}
+	
+	// 获取协作者列表
+	$: collaborators = message.task?.collaborators || [];
+	
+	// 检查当前用户是否是协作者
+	$: isCollaborator = collaborators.some(c => c.user_id === $config?.userId);
 </script>
 
 <div
@@ -102,6 +111,15 @@
 						{#if message.taskStep}
 							<div class="text-sm text-blue-600 dark:text-blue-400 mt-1">
 								步骤: {message.taskStep.name}
+							</div>
+						{/if}
+						<!-- 显示协作者信息 -->
+						{#if collaborators.length > 0}
+							<div class="text-xs text-blue-500 dark:text-blue-400 mt-1">
+								协作者: {collaborators.length}人
+								{#if isCollaborator}
+									<span class="ml-1 px-1 bg-blue-200 dark:bg-blue-700 rounded">您已加入</span>
+								{/if}
 							</div>
 						{/if}
 					</div>

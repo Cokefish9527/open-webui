@@ -12,6 +12,9 @@ export const taskSteps: Writable<HSAITaskStep[]> = writable([]);
 // 任务列表
 export const taskList: Writable<HSAITask[]> = writable([]);
 
+// 共享会话列表
+export const sharedSessions: Writable<string[]> = writable([]);
+
 // 更新活动任务
 export function setActiveTask(task: HSAITask | null): void {
 	activeTask.set(task);
@@ -47,4 +50,24 @@ export function updateTaskInList(updatedTask: HSAITask): void {
 // 从任务列表中移除任务
 export function removeTaskFromList(taskId: string): void {
 	taskList.update(tasks => tasks.filter(task => task.id !== taskId));
+}
+
+// 设置共享会话列表
+export function setSharedSessions(sessions: string[]): void {
+	sharedSessions.set(sessions);
+}
+
+// 添加共享会话
+export function addSharedSession(sessionId: string): void {
+	sharedSessions.update(sessions => {
+		if (!sessions.includes(sessionId)) {
+			return [...sessions, sessionId];
+		}
+		return sessions;
+	});
+}
+
+// 移除共享会话
+export function removeSharedSession(sessionId: string): void {
+	sharedSessions.update(sessions => sessions.filter(id => id !== sessionId));
 }
