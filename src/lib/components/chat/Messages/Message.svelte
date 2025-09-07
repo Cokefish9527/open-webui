@@ -11,6 +11,7 @@
 	import MultiResponseMessages from './MultiResponseMessages.svelte';
 	import ResponseMessage from './ResponseMessage.svelte';
 	import UserMessage from './UserMessage.svelte';
+	import TaskMessage from './TaskMessage.svelte'; // 新增任务消息组件
 
 	export let chatId;
 	export let idx = 0;
@@ -63,48 +64,60 @@
 				{deleteMessage}
 				{readOnly}
 			/>
-		{:else if (history.messages[history.messages[messageId].parentId]?.models?.length ?? 1) === 1}
-			<ResponseMessage
-				{chatId}
-				{history}
-				{messageId}
-				isLastMessage={messageId === history.currentId}
-				siblings={history.messages[history.messages[messageId].parentId]?.childrenIds ?? []}
-				{gotoMessage}
-				{showPreviousMessage}
-				{showNextMessage}
-				{updateChat}
-				{editMessage}
-				{saveMessage}
-				{rateMessage}
-				{actionMessage}
-				{submitMessage}
-				{deleteMessage}
-				{continueResponse}
-				{regenerateResponse}
-				{addMessages}
-				{readOnly}
-			/>
+		{:else if history.messages[messageId].role === 'assistant'}
+			{#if history.messages[messageId].messageType === 'task_info' || history.messages[messageId].messageType === 'task_progress' || history.messages[messageId].messageType === 'task_result' || history.messages[messageId].messageType === 'task_error'}
+				<!-- 任务消息 -->
+				<TaskMessage
+					message={history.messages[messageId]}
+					isLastMessage={messageId === history.currentId}
+					{readOnly}
+				/>
+			{:else if (history.messages[history.messages[messageId].parentId]?.models?.length ?? 1) === 1}
+				<!-- 普通AI回复消息 -->
+				<ResponseMessage
+					{chatId}
+					{history}
+					{messageId}
+					isLastMessage={messageId === history.currentId}
+					siblings={history.messages[history.messages[messageId].parentId]?.childrenIds ?? []}
+					{gotoMessage}
+					{showPreviousMessage}
+					{showNextMessage}
+					{updateChat}
+					{editMessage}
+					{saveMessage}
+					{rateMessage}
+					{actionMessage}
+					{submitMessage}
+					{deleteMessage}
+					{continueResponse}
+					{regenerateResponse}
+					{addMessages}
+					{readOnly}
+				/>
+			{:else}
+				<MultiResponseMessages
+					bind:history
+					{chatId}
+					{messageId}
+					isLastMessage={messageId === history?.currentId}
+					{updateChat}
+					{editMessage}
+					{saveMessage}
+					{rateMessage}
+					{actionMessage}
+					{submitMessage}
+					{deleteMessage}
+					{continueResponse}
+					{regenerateResponse}
+					{mergeResponses}
+					{triggerScroll}
+					{addMessages}
+					{readOnly}
+				/>
+			{/if}
 		{:else}
-			<MultiResponseMessages
-				bind:history
-				{chatId}
-				{messageId}
-				isLastMessage={messageId === history?.currentId}
-				{updateChat}
-				{editMessage}
-				{saveMessage}
-				{rateMessage}
-				{actionMessage}
-				{submitMessage}
-				{deleteMessage}
-				{continueResponse}
-				{regenerateResponse}
-				{mergeResponses}
-				{triggerScroll}
-				{addMessages}
-				{readOnly}
-			/>
+			<!-- 其他类型消息可以在这里处理 -->
 		{/if}
 	{/if}
 </div>

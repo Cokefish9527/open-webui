@@ -1523,18 +1523,19 @@
 		await sendPrompt(history, userPrompt, userMessageId, { newChat: true });
 	};
 
-	const sendPrompt = async (
-		_history,
-		prompt: string,
-		parentId: string,
-		{ modelId = null, modelIdx = null, newChat = false } = {}
-	) => {
+	const sendPrompt = async (history, prompt, messageId = null) => {
+		// 检查是否是任务相关的命令
+		if (prompt.startsWith('/create_task')) {
+			await createVideoSynthesisTask(prompt);
+			return;
+		}
+
 		if (autoScroll) {
 			scrollToBottom();
 		}
 
 		let _chatId = JSON.parse(JSON.stringify($chatId));
-		_history = JSON.parse(JSON.stringify(_history));
+		history = JSON.parse(JSON.stringify(history));
 
 		const responseMessageIds: Record<PropertyKey, string> = {};
 		// If modelId is provided, use it, else use selected model
@@ -1551,6 +1552,130 @@
 			if (model) {
 				let responseMessageId = uuidv4();
 				let responseMessage = {
+					id: responseMessageId,
+					parentId: messageId,
+					childrenIds: [],
+					role: 'assistant',
+					content: '',
+					done: false,
+					model: modelId,
+					modelName: model.name ?? model.id,
+					modelIdx: _modelIdx,
+					timestamp: Math.floor(Date.now() / 1000)
+				};
+
+				history.messages[responseMessageId] = responseMessage;
+				responseMessageIds[modelId] = responseMessageId;
+
+				if (messageId) {
+					history.messages[messageId].childrenIds.push(responseMessageId);
+				}
+
+				history.currentId = responseMessageId;
+
+				await tick();
+				await saveChatHandler(_chatId, history);
+			}
+		}
+
+		// Send prompt to each selected model
+		for (const [modelId, responseMessageId] of Object.entries(responseMessageIds)) {
+			const model = $models.filter((m) => m.id === modelId).at(0);
+
+			if (model) {
+				if (model?.info?.meta?.type === 'ollama') {
+					generateChatCompletion(
+						localStorage.token,
+						modelId,
+						_chatId,
+						responseMessageId,
+						prompt,
+						history,
+						{
+							files: chatFiles,
+							webSearchEnabled,
+							imageGenerationEnabled,
+							codeInterpreterEnabled,
+							selectedToolIds,
+							selectedFilterIds,
+							params
+						}
+					);
+				} else if (model?.info?.meta?.type === 'openai') {
+					generateOpenAIChatCompletion(
+						localStorage.token,
+						modelId,
+						_chatId,
+						responseMessageId,
+						prompt,
+						history,
+						{
+							files: chatFiles,
+							webSearchEnabled,
+							imageGenerationEnabled,
+							codeInterpreterEnabled,
+							selectedToolIds,
+							selectedFilterIds,
+							params
+						}
+					);
+				}
+			}
+		}
+	};
+
+	// 导入任务服务和消息工具
+	import { taskService } from '$lib/services/taskService';
+	import { videoSynthesisService } from '$lib/services/videoSynthesisService';
+	import {
+		createTaskMessage,
+		createMaterialCheckMessage,
+		createAccountCheckMessage,
+		createPreviewMessage,
+		createConfirmationMessage,
+		createFeedbackMessage
+	} from '$lib/utils/messageUtils';
+
+	// 创建视频合成任务
+	const createVideoSynthesisTask = async (prompt: string) => {
+		try {
+			// 创建任务
+			const task = await videoSynthesisService.createVideoSynthesisTask($user.id, {
+				prompt
+			});
+
+			// 创建任务消息
+			const taskMessage = createTaskMessage(
+				$chatId,
+				task,
+				null,
+				'task_info',
+				'left',
+				undefined,
+				undefined,
+				`已为您创建视频合成任务: ${task.title}\n任务ID: ${task.id.substring(0, 8)}\n正在开始执行...`
+			);
+
+			// 添加消息到历史记录
+			history.messages[taskMessage.id] = taskMessage;
+			history.currentId = taskMessage.id;
+
+			await tick();
+			await saveChatHandler($chatId, history);
+			scrollToBottom();
+
+			// 开始执行任务
+			await videoSynthesisService.startTaskExecution(task.id);
+		} catch (error) {
+			console.error('创建任务失败:', error);
+			toast.error('创建任务失败: ' + error.message);
+		}
+	};
+
+	// 监听任务更新（在实际应用中，这可能通过WebSocket或轮询实现）
+	// 这里我们简化处理，直接在服务中调用相应的函数来创建消息
+</script>
+
 					parentId: parentId,
 					id: responseMessageId,
 					childrenIds: [],
