@@ -9,7 +9,7 @@ from typing import BinaryIO, Tuple, Dict
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
-from open_webui.config import (
+from open_webui.config.oss import (
     S3_ACCESS_KEY_ID,
     S3_BUCKET_NAME,
     S3_ENDPOINT_URL,

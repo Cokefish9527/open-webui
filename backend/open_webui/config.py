@@ -14,6 +14,9 @@ import requests
 from pydantic import BaseModel
 from sqlalchemy import JSON, Column, DateTime, Integer, func
 
+# 导入OSS配置
+from open_webui.config.oss import *
+
 from open_webui.env import (
     DATA_DIR,
     DATABASE_URL,
