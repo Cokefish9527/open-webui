@@ -22,7 +22,7 @@ def register_hsai_events(sio, emitter):
     async def handle_send_message(sid, data):
         """处理客户端发送的消息"""
         try:
-            log.info(f"Received message from client sid {sid}: {data}")
+            log.info(f"[HSAI事件处理器] 接收到客户端sid {sid} 发送的消息: {data}")
             
             # 获取用户ID
             user_id = None
@@ -36,8 +36,7 @@ def register_hsai_events(sio, emitter):
                 user_id = data.get("user_id")
             
             if user_id:
-                # 处理消息 - 这里可以添加具体的业务逻辑
-                log.info(f"Processing message from user {user_id}: {data}")
+                log.info(f"[HSAI事件处理器] 识别到用户 {user_id} 的消息，准备转发给HSAI聊天处理器")
                 
                 # 将消息转发给HSAI聊天处理器进行n8n工作流处理
                 from open_webui.socket.hsai_chat_handler import chat_handler
@@ -53,34 +52,34 @@ def register_hsai_events(sio, emitter):
                     "metadata": data.get("metadata", {})
                 }
                 
+                log.info(f"[HSAI事件处理器] 构造的消息数据: {message_data}")
+                
                 # 异步处理消息
+                log.info(f"[HSAI事件处理器] 启动异步任务处理用户 {user_id} 的消息")
                 asyncio.create_task(chat_handler.handle_message(user_id, message_data))
                 
-                # 发送确认消息给客户端
-                await sio.emit("chat-events", {
-                    "type": "message_received",
-                    "content": "Message received and processing started",
-                    "original_data": data,
-                    "user_id": user_id,
-                    "timestamp": __import__('time').time()
-                }, to=sid)
+                # 不再发送确认消息给客户端，让工作流处理完成后直接返回结果
             else:
-                log.warning(f"Unable to identify user for message from sid {sid}")
-                await sio.emit("error", {
+                log.warning(f"[HSAI事件处理器] 无法识别sid {sid} 的用户身份")
+                error_data = {
                     "type": "authentication_error",
-                    "content": "User not identified",
+                    "content": "用户身份验证失败",
                     "timestamp": __import__('time').time()
-                }, to=sid)
+                }
+                log.warning(f"[HSAI事件处理器] 发送身份验证错误消息给客户端sid {sid}: {error_data}")
+                await sio.emit("error", error_data, to=sid)
                 
         except Exception as e:
-            log.error(f"Error handling send_message event: {e}")
-            await sio.emit("error", {
+            log.error(f"[HSAI事件处理器] 处理消息时发生错误: {e}", exc_info=True)
+            error_data = {
                 "type": "processing_error",
-                "content": f"Error processing message: {str(e)}",
+                "content": f"消息处理失败: {str(e)}",
                 "timestamp": __import__('time').time()
-            }, to=sid)
+            }
+            log.error(f"[HSAI事件处理器] 发送处理错误消息给客户端sid {sid}: {error_data}")
+            await sio.emit("error", error_data, to=sid)
     
-    log.info("HSAI WebSocket events registered successfully")
+    log.info("HSAI WebSocket事件处理器注册成功")
 
 # WebSocket事件类型定义
 HSAI_WEBSOCKET_EVENTS = {

@@ -60,38 +60,36 @@ class N8NResponseProcessor:
             ProcessedResponse: 处理后的结构化响应
         """
         try:
-            # 添加日志打印
-            log.info(f"Processing response for workflow {workflow_type} (execution: {execution_id})")
-            log.info(f"Raw response data: {raw_response}")
+            log.info(f"[响应处理] 开始处理工作流 {workflow_type} 的响应 (执行ID: {execution_id})")
+            log.info(f"[响应处理] 原始响应数据: {raw_response}")
             
             # 创建处理器实例
             processor = N8NResponseProcessor()
             
             # 获取对应的处理器
             handler = processor.processors.get(workflow_type, processor._process_default_response)
+            log.info(f"[响应处理] 使用处理器: {handler.__name__}")
             
             # 处理响应
             processed = await handler(raw_response)
             processed.workflow_type = workflow_type
             processed.execution_id = execution_id
             
-            # 添加日志打印
-            log.info(f"Processed response: status={processed.status}, message={processed.message}")
-            
-            log.info(f"Processed {workflow_type} workflow response: {processed.status}")
+            log.info(f"[响应处理] 响应处理完成: status={processed.status}, message={processed.message}")
+            log.info(f"[响应处理] 工作流 {workflow_type} 响应处理完成: {processed.status}")
             return processed
             
         except Exception as e:
-            log.error(f"Error processing {workflow_type} response: {e}")
+            error_msg = f"处理工作流 {workflow_type} 响应时发生错误: {e}"
+            log.error(f"[响应处理] {error_msg}", exc_info=True)
             error_response = ProcessedResponse(
                 status=ResponseStatus.ERROR,
-                message=f"Response processing failed: {str(e)}",
+                message=f"响应处理失败: {str(e)}",
                 workflow_type=workflow_type,
                 execution_id=execution_id,
                 metadata={"error": str(e), "raw_response": raw_response}
             )
-            # 添加日志打印
-            log.info(f"Returning error response: {error_response}")
+            log.info(f"[响应处理] 返回错误响应: {error_response}")
             return error_response
     
     @staticmethod
@@ -106,8 +104,7 @@ class N8NResponseProcessor:
             Dict: 客户端可用的响应格式
         """
         try:
-            # 添加日志打印
-            log.info(f"Formatting response for client: {processed_response}")
+            log.info(f"[客户端格式化] 开始格式化客户端响应: {processed_response}")
             
             # 根据对接文档规范格式化响应
             response_data = {
@@ -123,12 +120,12 @@ class N8NResponseProcessor:
             if processed_response.execution_id:
                 response_data["execution_id"] = processed_response.execution_id
                 
-            # 添加日志打印
-            log.info(f"Formatted client response: {response_data}")
+            log.info(f"[客户端格式化] 客户端响应格式化完成: {response_data}")
             return response_data
             
         except Exception as e:
-            log.error(f"Error formatting response for client: {e}")
+            error_msg = f"格式化客户端响应时发生错误: {e}"
+            log.error(f"[客户端格式化] {error_msg}", exc_info=True)
             error_response = {
                 "success": False,
                 "messageType": "error",
@@ -137,16 +134,17 @@ class N8NResponseProcessor:
                 "status": "error",
                 "error": str(e)
             }
-            # 添加日志打印
-            log.info(f"Returning error response: {error_response}")
+            log.info(f"[客户端格式化] 返回错误响应: {error_response}")
             return error_response
     
     async def _process_main_workflow_response(self, response: Dict[str, Any]) -> ProcessedResponse:
         """处理主工作流响应"""
         try:
+            log.info(f"[主工作流处理] 开始处理主工作流响应: {response}")
             # 提取主要信息
             status = ResponseStatus.SUCCESS if response.get("success", True) else ResponseStatus.ERROR
-            message = response.get("message", "Main workflow completed")
+            # 优先使用displayText，其次是message，最后是output
+            message = response.get("displayText", response.get("message", response.get("output", "主工作流执行完成")))
             
             # 提取数据
             data = {
@@ -162,22 +160,26 @@ class N8NResponseProcessor:
                 "workflow_version": response.get("version")
             }
             
-            return ProcessedResponse(
+            processed = ProcessedResponse(
                 status=status,
                 message=message,
                 data=data,
                 metadata=metadata
             )
+            log.info(f"[主工作流处理] 主工作流响应处理完成: {processed}")
+            return processed
             
         except Exception as e:
-            log.error(f"Error processing main workflow response: {e}")
+            log.error(f"[主工作流处理] 处理主工作流响应时发生错误: {e}", exc_info=True)
             raise
     
     async def _process_company_info_response(self, response: Dict[str, Any]) -> ProcessedResponse:
         """处理公司信息收集工作流响应"""
         try:
+            log.info(f"[公司信息处理] 开始处理公司信息工作流响应: {response}")
             status = ResponseStatus.SUCCESS if response.get("success", True) else ResponseStatus.ERROR
-            message = response.get("message", "Company information collection completed")
+            # 优先使用displayText，其次是message，最后是output
+            message = response.get("displayText", response.get("message", response.get("output", "公司信息收集完成")))
             
             # 提取公司信息数据
             data = {
@@ -193,22 +195,26 @@ class N8NResponseProcessor:
                 "collection_time": response.get("collection_time")
             }
             
-            return ProcessedResponse(
+            processed = ProcessedResponse(
                 status=status,
                 message=message,
                 data=data,
                 metadata=metadata
             )
+            log.info(f"[公司信息处理] 公司信息响应处理完成: {processed}")
+            return processed
             
         except Exception as e:
-            log.error(f"Error processing company info response: {e}")
+            log.error(f"[公司信息处理] 处理公司信息响应时发生错误: {e}", exc_info=True)
             raise
     
     async def _process_viral_learning_response(self, response: Dict[str, Any]) -> ProcessedResponse:
         """处理爆款学习工作流响应"""
         try:
+            log.info(f"[爆款学习处理] 开始处理爆款学习工作流响应: {response}")
             status = ResponseStatus.SUCCESS if response.get("success", True) else ResponseStatus.ERROR
-            message = response.get("message", "Viral learning analysis completed")
+            # 优先使用displayText，其次是message，最后是output
+            message = response.get("displayText", response.get("message", response.get("output", "爆款学习分析完成")))
             
             # 提取学习数据
             data = {
@@ -224,32 +230,38 @@ class N8NResponseProcessor:
                 "learning_cycle": response.get("cycle_number")
             }
             
-            return ProcessedResponse(
+            processed = ProcessedResponse(
                 status=status,
                 message=message,
                 data=data,
                 metadata=metadata
             )
+            log.info(f"[爆款学习处理] 爆款学习响应处理完成: {processed}")
+            return processed
             
         except Exception as e:
-            log.error(f"Error processing viral learning response: {e}")
+            log.error(f"[爆款学习处理] 处理爆款学习响应时发生错误: {e}", exc_info=True)
             raise
     
     async def _process_default_response(self, response: Dict[str, Any]) -> ProcessedResponse:
         """处理默认响应"""
         try:
+            log.info(f"[默认处理] 开始处理默认响应: {response}")
             status = ResponseStatus.SUCCESS if response.get("success", True) else ResponseStatus.ERROR
-            message = response.get("message", "Workflow completed")
+            # 优先使用displayText，其次是message，最后是output
+            message = response.get("displayText", response.get("message", response.get("output", "工作流执行完成")))
             
-            return ProcessedResponse(
+            processed = ProcessedResponse(
                 status=status,
                 message=message,
                 data=response.get("data", {}),
                 metadata=response.get("metadata", {})
             )
+            log.info(f"[默认处理] 默认响应处理完成: {processed}")
+            return processed
             
         except Exception as e:
-            log.error(f"Error processing default response: {e}")
+            log.error(f"[默认处理] 处理默认响应时发生错误: {e}", exc_info=True)
             raise
 
 # 全局响应处理器实例

@@ -1319,6 +1319,16 @@ ADMIN_EMAIL = PersistentConfig(
 )
 
 ####################################
+# BUSINESS NAME
+####################################
+
+BUSINESS_NAME = PersistentConfig(
+    "BUSINESS_NAME",
+    "business.name",
+    os.environ.get("BUSINESS_NAME", "HSAI"),
+)
+
+####################################
 # TASKS
 ####################################
 
