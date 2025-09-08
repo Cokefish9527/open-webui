@@ -17,7 +17,7 @@ from open_webui.env import SRC_LOG_LEVELS
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-router = APIRouter(prefix="/hsai/dashboard", tags=["hsai_dashboard"])
+router = APIRouter(prefix="/hsai/dashboard", tags=["HSAI 仪表板"])
 
 ############################
 # 数据模型定义

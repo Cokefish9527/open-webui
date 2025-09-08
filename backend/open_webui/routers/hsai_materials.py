@@ -57,7 +57,7 @@ from open_webui.storage.provider import Storage
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-router = APIRouter(prefix="/hsai/materials", tags=["hsai_materials"])
+router = APIRouter(prefix="/hsai/materials", tags=["HSAI 素材管理"])
 
 # HSAI素材存储配置 - 使用OSS存储
 HSAI_MATERIALS_PREFIX = "hsai/materials"  # OSS存储前缀

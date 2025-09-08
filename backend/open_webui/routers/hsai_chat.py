@@ -16,7 +16,7 @@ from open_webui.socket.main import get_event_emitter
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-router = APIRouter(prefix="/hsai/chat", tags=["hsai_chat"])
+router = APIRouter(prefix="/hsai/chat", tags=["HSAI 对话管理"])
 
 ############################
 # 数据模型定义

@@ -21,7 +21,7 @@ import asyncio
 from typing import Dict, List, Optional
 
 log = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(tags=["HSAI WebSocket"])
 
 @router.on_event("startup")
 async def startup_event():

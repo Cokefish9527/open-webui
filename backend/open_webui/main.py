@@ -1207,12 +1207,12 @@ app.include_router(
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
 # HSAI Extension Routes
-app.include_router(hsai_materials.router, prefix="/api/v1", tags=["hsai"])
-app.include_router(hsai_tasks.router, prefix="/api/v1", tags=["hsai"])
-app.include_router(hsai_ai.router, prefix="/api/v1/hsai/ai", tags=["hsai"])
-app.include_router(hsai_dashboard.router, prefix="/api/v1", tags=["hsai"])
-app.include_router(hsai_chat.router, prefix="/api/v1", tags=["hsai"])
-app.include_router(hsai_workflows.router, prefix="/api/v1", tags=["hsai"])
+app.include_router(hsai_materials.router, prefix="/api/v1")
+app.include_router(hsai_tasks.router, prefix="/api/v1")
+app.include_router(hsai_ai.router, prefix="/api/v1")
+app.include_router(hsai_dashboard.router, prefix="/api/v1")
+app.include_router(hsai_chat.router, prefix="/api/v1")
+app.include_router(hsai_workflows.router, prefix="/api/v1")
 
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)

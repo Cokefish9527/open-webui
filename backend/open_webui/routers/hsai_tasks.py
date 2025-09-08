@@ -35,7 +35,7 @@ from open_webui.socket.main import get_event_emitter
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-router = APIRouter(prefix="/hsai/tasks", tags=["hsai_tasks"])
+router = APIRouter(prefix="/hsai/tasks", tags=["HSAI 任务管理"])
 
 ############################
 # 任务统计
