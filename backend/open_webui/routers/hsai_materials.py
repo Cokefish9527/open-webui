@@ -1650,14 +1650,42 @@ async def restore_material(
                 detail="Material is not in recovery"
             )
         
-        # 更新素材信息
-        update_data = {
-            "is_deleted": False,
-            "file_path": material.original_directory,  # 还原到原始目录
-            "original_directory": None,
-            "deleted_at": None,
-            "deleted_by": None
-        }
+        if request.operation == "restore":
+            if not request.target_directory:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Target directory is required for restore operation"
+                )
+            
+            # 获取素材信息以获取原始目录
+            material = HSAIMaterials.get_material_by_id(material_id)
+            if not material or material.user_id != user.id:
+                continue
+            
+            if not material.is_deleted:
+                continue
+            
+            # 还原操作 - 使用原始目录进行还原
+            update_data = {
+                "is_deleted": False,
+                "file_path": material.original_directory,  # 从原始目录还原
+                "original_directory": None,
+                "deleted_at": None,
+                "deleted_by": None
+            }
+            
+            result = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
+            if result:
+                success_count += 1
+                
+                # 记录操作日志
+                await _log_file_operation(
+                    material_id=material_id,
+                    operation_type="restore",
+                    source_path=f"recovery/{material_id}",
+                    target_path=material.original_directory,  # 使用原始目录作为目标路径
+                    operator_id=user.id  # 使用当前登录用户ID
+                )
         
         updated_material = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
         if not updated_material:
