@@ -10,7 +10,7 @@ from open_webui.env import SRC_LOG_LEVELS
 from open_webui.models.files import FileMetadataResponse
 
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Column, String, Text, JSON, func
 
 
@@ -24,6 +24,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 class Group(Base):
     __tablename__ = "group"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Text, unique=True, primary_key=True)
     user_id = Column(Text)
@@ -42,21 +43,18 @@ class Group(Base):
 
 
 class GroupModel(BaseModel):
+    """用户组模型"""
     model_config = ConfigDict(from_attributes=True)
-    id: str
-    user_id: str
-
-    name: str
-    description: str
-
-    data: Optional[dict] = None
-    meta: Optional[dict] = None
-
-    permissions: Optional[dict] = None
-    user_ids: List[str] = []
-
-    created_at: int  # timestamp in epoch
-    updated_at: int  # timestamp in epoch
+    id: str = Field(description="组唯一标识符")
+    user_id: str = Field(description="用户ID")
+    name: str = Field(description="组名称")
+    description: str = Field(description="组描述")
+    data: Optional[dict] = Field(default=None, description="数据")
+    meta: Optional[dict] = Field(default=None, description="元数据")
+    permissions: Optional[dict] = Field(default=None, description="权限设置")
+    user_ids: List[str] = Field(default=[], description="用户ID列表")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 ####################
@@ -65,26 +63,29 @@ class GroupModel(BaseModel):
 
 
 class GroupResponse(BaseModel):
-    id: str
-    user_id: str
-    name: str
-    description: str
-    permissions: Optional[dict] = None
-    data: Optional[dict] = None
-    meta: Optional[dict] = None
-    user_ids: List[str] = []
-    created_at: int  # timestamp in epoch
-    updated_at: int  # timestamp in epoch
+    """用户组响应模型"""
+    id: str = Field(description="组唯一标识符")
+    user_id: str = Field(description="用户ID")
+    name: str = Field(description="组名称")
+    description: str = Field(description="组描述")
+    permissions: Optional[dict] = Field(default=None, description="权限设置")
+    data: Optional[dict] = Field(default=None, description="数据")
+    meta: Optional[dict] = Field(default=None, description="元数据")
+    user_ids: List[str] = Field(default=[], description="用户ID列表")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class GroupForm(BaseModel):
-    name: str
-    description: str
-    permissions: Optional[dict] = None
+    """用户组表单模型"""
+    name: str = Field(description="组名称")
+    description: str = Field(description="组描述")
+    permissions: Optional[dict] = Field(default=None, description="权限设置")
 
 
 class GroupUpdateForm(GroupForm):
-    user_ids: Optional[List[str]] = None
+    """用户组更新表单模型"""
+    user_ids: Optional[List[str]] = Field(default=None, description="用户ID列表")
 
 
 class GroupTable:

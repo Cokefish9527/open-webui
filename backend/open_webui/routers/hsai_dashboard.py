@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from open_webui.models.hsai_tasks import HSAITasks
 from open_webui.models.hsai_materials import HSAIMaterials
@@ -25,41 +25,44 @@ router = APIRouter(prefix="/hsai/dashboard", tags=["HSAI 仪表板"])
 
 class DashboardOverviewResponse(BaseModel):
     """工作台概览响应模型"""
-    total_tasks: int
-    active_tasks: int
-    completed_tasks: int
-    failed_tasks: int
-    total_materials: int
-    total_chats: int
-    storage_used: int  # MB
-    storage_limit: int  # MB
+    total_tasks: int = Field(description="总任务数")
+    active_tasks: int = Field(description="活跃任务数")
+    completed_tasks: int = Field(description="已完成任务数")
+    failed_tasks: int = Field(description="失败任务数")
+    total_materials: int = Field(description="总素材数")
+    total_chats: int = Field(description="总对话数")
+    storage_used: int = Field(description="已使用存储空间(MB)")
+    storage_limit: int = Field(description="存储空间限制(MB)")
+
 
 class KPIMetrics(BaseModel):
     """KPI指标模型"""
-    task_completion_rate: float  # 任务完成率
-    avg_task_duration: float  # 平均任务时长(小时)
-    daily_active_rate: float  # 日活跃率
-    material_usage_rate: float  # 素材使用率
-    ai_interaction_count: int  # AI交互次数
-    productivity_score: float  # 生产力评分
+    task_completion_rate: float = Field(description="任务完成率(%)")
+    avg_task_duration: float = Field(description="平均任务时长(小时)")
+    daily_active_rate: float = Field(description="日活跃率(%)")
+    material_usage_rate: float = Field(description="素材使用率(%)")
+    ai_interaction_count: int = Field(description="AI交互次数")
+    productivity_score: float = Field(description="生产力评分(0-100)")
+
 
 class RecentActivity(BaseModel):
     """最近活动模型"""
-    id: str
-    type: str  # task, material, chat, system
-    title: str
-    description: str
-    timestamp: int
-    status: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    id: str = Field(description="活动唯一标识符")
+    type: str = Field(description="活动类型 (task, material, chat, system)")
+    title: str = Field(description="活动标题")
+    description: str = Field(description="活动描述")
+    timestamp: int = Field(description="活动时间戳")
+    status: Optional[str] = Field(default=None, description="活动状态")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="额外元数据")
+
 
 class DashboardStatsResponse(BaseModel):
     """工作台统计响应模型"""
-    overview: DashboardOverviewResponse
-    kpi: KPIMetrics
-    recent_activities: List[RecentActivity]
-    task_trend: List[Dict[str, Any]]  # 任务趋势数据
-    material_trend: List[Dict[str, Any]]  # 素材趋势数据
+    overview: DashboardOverviewResponse = Field(description="工作台概览数据")
+    kpi: KPIMetrics = Field(description="KPI指标数据")
+    recent_activities: List[RecentActivity] = Field(description="最近活动列表")
+    task_trend: List[Dict[str, Any]] = Field(description="任务趋势数据")
+    material_trend: List[Dict[str, Any]] = Field(description="素材趋势数据")
 
 ############################
 # 工作台概览接口

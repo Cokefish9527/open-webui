@@ -8,7 +8,7 @@ from open_webui.internal.db import Base, get_db
 from open_webui.models.tags import TagModel, Tag, Tags
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Boolean, Column, String, Text, JSON
 from sqlalchemy import or_, func, select, and_, text
 from sqlalchemy.sql import exists
@@ -23,6 +23,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 class Chat(Base):
     __tablename__ = "chat"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(String, primary_key=True)
     user_id = Column(String)
@@ -41,22 +42,20 @@ class Chat(Base):
 
 
 class ChatModel(BaseModel):
+    """聊天模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    user_id: str
-    title: str
-    chat: dict
-
-    created_at: int  # timestamp in epoch
-    updated_at: int  # timestamp in epoch
-
-    share_id: Optional[str] = None
-    archived: bool = False
-    pinned: Optional[bool] = False
-
-    meta: dict = {}
-    folder_id: Optional[str] = None
+    id: str = Field(description="会话唯一标识符")
+    user_id: str = Field(description="用户ID")
+    title: str = Field(description="会话标题")
+    chat: dict = Field(description="聊天内容")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
+    share_id: Optional[str] = Field(default=None, description="分享ID")
+    archived: bool = Field(default=False, description="是否已归档")
+    pinned: Optional[bool] = Field(default=False, description="是否置顶")
+    meta: dict = Field(default={}, description="元数据")
+    folder_id: Optional[str] = Field(default=None, description="文件夹ID")
 
 
 ####################
@@ -84,24 +83,26 @@ class ChatTitleForm(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    id: str
-    user_id: str
-    title: str
-    chat: dict
-    updated_at: int  # timestamp in epoch
-    created_at: int  # timestamp in epoch
-    share_id: Optional[str] = None  # id of the chat to be shared
-    archived: bool
-    pinned: Optional[bool] = False
-    meta: dict = {}
-    folder_id: Optional[str] = None
+    """聊天会话响应模型"""
+    id: str = Field(description="会话唯一标识符")
+    user_id: str = Field(description="用户ID")
+    title: str = Field(description="会话标题")
+    chat: dict = Field(description="聊天内容")
+    updated_at: int = Field(description="更新时间戳")
+    created_at: int = Field(description="创建时间戳")
+    share_id: Optional[str] = Field(default=None, description="分享ID")
+    archived: bool = Field(description="是否已归档")
+    pinned: Optional[bool] = Field(default=False, description="是否置顶")
+    meta: dict = Field(default={}, description="元数据")
+    folder_id: Optional[str] = Field(default=None, description="文件夹ID")
 
 
 class ChatTitleIdResponse(BaseModel):
-    id: str
-    title: str
-    updated_at: int
-    created_at: int
+    """聊天标题ID响应模型"""
+    id: str = Field(description="会话唯一标识符")
+    title: str = Field(description="会话标题")
+    updated_at: int = Field(description="更新时间戳")
+    created_at: int = Field(description="创建时间戳")
 
 
 class ChatTable:

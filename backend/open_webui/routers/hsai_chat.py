@@ -4,7 +4,7 @@ import uuid
 from typing import Optional, List, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from open_webui.models.chats import Chats, ChatForm
 from open_webui.models.hsai_tasks import HSAITasks
@@ -22,52 +22,55 @@ router = APIRouter(prefix="/hsai/chat", tags=["HSAI 对话管理"])
 # 数据模型定义
 ############################
 
+class ChatSessionForm(BaseModel):
+    """对话会话表单模型"""
+    title: Optional[str] = Field(default=None, description="会话标题")
+    model: Optional[str] = Field(default=None, description="使用的模型")
+    system_prompt: Optional[str] = Field(default=None, description="系统提示词")
+    tags: List[str] = Field(default=[], description="标签列表")
+    task_id: Optional[str] = Field(default=None, description="关联的任务ID")
+
+
 class ChatSessionResponse(BaseModel):
     """对话会话响应模型"""
-    id: str
-    title: str
-    model: Optional[str] = None
-    system_prompt: Optional[str] = None
-    message_count: int
-    last_message_at: int
-    created_at: int
-    updated_at: int
-    tags: List[str] = []
-    is_pinned: bool = False
-    task_id: Optional[str] = None  # 关联的任务ID
+    id: str = Field(description="会话唯一标识符")
+    title: str = Field(description="会话标题")
+    model: Optional[str] = Field(default=None, description="使用的模型")
+    system_prompt: Optional[str] = Field(default=None, description="系统提示词")
+    message_count: int = Field(description="消息数量")
+    last_message_at: int = Field(description="最后消息时间戳")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
+    tags: List[str] = Field(default=[], description="标签列表")
+    is_pinned: bool = Field(default=False, description="是否置顶")
+    task_id: Optional[str] = Field(default=None, description="关联的任务ID")
 
-class ChatSessionForm(BaseModel):
-    """对话会话创建表单"""
-    title: Optional[str] = None
-    model: Optional[str] = None
-    system_prompt: Optional[str] = None
-    tags: List[str] = []
-    task_id: Optional[str] = None
 
 class ChatMessageForm(BaseModel):
-    """聊天消息表单"""
-    content: str
-    role: str = "user"  # user, assistant, system
-    model: Optional[str] = None
-    stream: bool = False
+    """聊天消息表单模型"""
+    role: str = Field(description="消息角色 (user, assistant, system)")
+    content: str = Field(description="消息内容")
+    model: Optional[str] = Field(default=None, description="使用的模型")
+
 
 class ChatMessageResponse(BaseModel):
     """聊天消息响应模型"""
-    id: str
-    role: str
-    content: str
-    timestamp: int
-    model: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    id: str = Field(description="消息唯一标识符")
+    role: str = Field(description="消息角色 (user, assistant, system)")
+    content: str = Field(description="消息内容")
+    timestamp: int = Field(description="消息时间戳")
+    model: Optional[str] = Field(default=None, description="使用的模型")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="消息元数据")
+
 
 class ChatStatsResponse(BaseModel):
     """对话统计响应模型"""
-    total_sessions: int
-    active_sessions: int
-    total_messages: int
-    avg_messages_per_session: float
-    most_used_model: Optional[str] = None
-    total_tokens_used: int = 0
+    total_sessions: int = Field(description="总会话数")
+    active_sessions: int = Field(description="活跃会话数")
+    total_messages: int = Field(description="总消息数")
+    avg_messages_per_session: float = Field(description="平均每会话消息数")
+    most_used_model: Optional[str] = Field(default=None, description="最常使用的模型")
+    total_tokens_used: int = Field(default=0, description="总令牌使用数")
 
 
 ############################

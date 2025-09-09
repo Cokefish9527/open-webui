@@ -1433,49 +1433,55 @@ async def delete_material_category(
 # 添加新的Pydantic模型用于回收站操作
 class MoveToRecoveryRequest(BaseModel):
     """移入回收站请求模型"""
-    operator_id: str
-    reason: Optional[str] = None
+    operator_id: str = Field(description="操作人ID")
+    reason: Optional[str] = Field(default=None, description="操作原因")
+
 
 class RestoreRequest(BaseModel):
     """还原文件请求模型"""
-    target_directory: str
-    operator_id: str
+    target_directory: str = Field(description="目标目录")
+    operator_id: str = Field(description="操作人ID")
+
 
 class PermanentDeleteRequest(BaseModel):
     """永久删除请求模型"""
-    operator_id: str
-    reason: Optional[str] = None
+    operator_id: str = Field(description="操作人ID")
+    reason: Optional[str] = Field(default=None, description="删除原因")
+
 
 class BatchOperationRequest(BaseModel):
     """批量操作请求模型"""
-    operation: str  # "restore" 或 "delete"
-    material_ids: List[str]
-    target_directory: Optional[str] = None  # restore操作时必需
-    operator_id: str
+    operation: str = Field(description="操作类型 (restore 或 delete)")
+    material_ids: List[str] = Field(description="素材ID列表")
+    target_directory: Optional[str] = Field(default=None, description="目标目录（restore操作时必需）")
+    operator_id: str = Field(description="操作人ID")
+
 
 # 添加文件操作日志模型
 class FileOperationLogModel(BaseModel):
     """文件操作日志模型"""
-    id: str
-    material_id: str
-    operation_type: str
-    source_path: str
-    target_path: Optional[str] = None
-    operator_id: str
-    operation_time: int
-    details: Optional[dict] = None
-    created_at: int
-    updated_at: int
+    id: str = Field(description="日志唯一标识符")
+    material_id: str = Field(description="素材唯一标识符")
+    operation_type: str = Field(description="操作类型")
+    source_path: str = Field(description="源文件路径")
+    target_path: Optional[str] = Field(default=None, description="目标文件路径")
+    operator_id: str = Field(description="操作人ID")
+    operation_time: int = Field(description="操作时间")
+    details: Optional[dict] = Field(default=None, description="操作详情")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
+
 
 class FileOperationLogForm(BaseModel):
     """文件操作日志表单模型"""
-    material_id: str
-    operation_type: str
-    source_path: str
-    target_path: Optional[str] = None
-    operator_id: str
-    operation_time: int
-    details: Optional[dict] = None
+    material_id: str = Field(description="素材唯一标识符")
+    operation_type: str = Field(description="操作类型")
+    source_path: str = Field(description="源文件路径")
+    target_path: Optional[str] = Field(default=None, description="目标文件路径")
+    operator_id: str = Field(description="操作人ID")
+    operation_time: int = Field(description="操作时间")
+    details: Optional[dict] = Field(default=None, description="操作详情")
+
 
 class FileOperationLogResponse(BaseModel):
     """文件操作日志响应模型"""

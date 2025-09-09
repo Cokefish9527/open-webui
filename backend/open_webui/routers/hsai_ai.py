@@ -54,12 +54,12 @@ class ChatRequest(BaseModel):
 
 class AITaskResponse(BaseModel):
     """AI任务统一响应模型"""
-    success: bool
-    task_id: str
-    status: str  # pending, running, completed, failed
-    message: str
-    data: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    success: bool = Field(description="是否成功")
+    task_id: str = Field(description="任务ID")
+    status: str = Field(description="任务状态 (pending, running, completed, failed)")
+    message: str = Field(description="响应消息")
+    data: Optional[Dict[str, Any]] = Field(default=None, description="响应数据")
+    error: Optional[str] = Field(default=None, description="错误信息")
 
 ####################
 # 核心AI服务接口（集成任务系统）

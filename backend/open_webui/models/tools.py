@@ -5,7 +5,7 @@ from typing import Optional
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.models.users import Users, UserResponse
 from open_webui.env import SRC_LOG_LEVELS
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Column, String, Text, JSON
 
 from open_webui.utils.access_control import has_access
@@ -21,6 +21,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 class Tool(Base):
     __tablename__ = "tool"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(String, primary_key=True)
     user_id = Column(String)
@@ -52,21 +53,22 @@ class Tool(Base):
 
 
 class ToolMeta(BaseModel):
-    description: Optional[str] = None
-    manifest: Optional[dict] = {}
+    """工具元数据模型"""
+    description: Optional[str] = Field(default=None, description="工具描述")
+    manifest: Optional[dict] = Field(default=None, description="工具清单")
 
 
 class ToolModel(BaseModel):
-    id: str
-    user_id: str
-    name: str
-    content: str
-    specs: list[dict]
-    meta: ToolMeta
-    access_control: Optional[dict] = None
-
-    updated_at: int  # timestamp in epoch
-    created_at: int  # timestamp in epoch
+    """工具模型"""
+    id: str = Field(description="工具唯一标识符")
+    user_id: str = Field(description="用户ID")
+    name: str = Field(description="工具名称")
+    content: str = Field(description="工具内容")
+    specs: list[dict] = Field(description="工具规格")
+    meta: ToolMeta = Field(description="工具元数据")
+    access_control: Optional[dict] = Field(default=None, description="访问控制设置")
+    updated_at: int = Field(description="更新时间戳")
+    created_at: int = Field(description="创建时间戳")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -81,25 +83,28 @@ class ToolUserModel(ToolModel):
 
 
 class ToolResponse(BaseModel):
-    id: str
-    user_id: str
-    name: str
-    meta: ToolMeta
-    access_control: Optional[dict] = None
-    updated_at: int  # timestamp in epoch
-    created_at: int  # timestamp in epoch
+    """工具响应模型"""
+    id: str = Field(description="工具唯一标识符")
+    user_id: str = Field(description="用户ID")
+    name: str = Field(description="工具名称")
+    meta: ToolMeta = Field(description="工具元数据")
+    access_control: Optional[dict] = Field(default=None, description="访问控制设置")
+    updated_at: int = Field(description="更新时间戳")
+    created_at: int = Field(description="创建时间戳")
 
 
 class ToolUserResponse(ToolResponse):
-    user: Optional[UserResponse] = None
+    """工具用户响应模型"""
+    user: Optional[UserResponse] = Field(default=None, description="用户信息")
 
 
 class ToolForm(BaseModel):
-    id: str
-    name: str
-    content: str
-    meta: ToolMeta
-    access_control: Optional[dict] = None
+    """工具表单模型"""
+    id: str = Field(description="工具唯一标识符")
+    name: str = Field(description="工具名称")
+    content: str = Field(description="工具内容")
+    meta: ToolMeta = Field(description="工具元数据")
+    access_control: Optional[dict] = Field(default=None, description="访问控制设置")
 
 
 class ToolValves(BaseModel):

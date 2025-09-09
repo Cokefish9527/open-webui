@@ -8,7 +8,7 @@ from open_webui.internal.db import Base, get_db
 from open_webui.models.chats import Chats
 
 from open_webui.env import SRC_LOG_LEVELS
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Column, Text, JSON, Boolean
 
 log = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 class Feedback(Base):
     __tablename__ = "feedback"
+    __table_args__ = {'extend_existing': True}
     id = Column(Text, primary_key=True)
     user_id = Column(Text)
     version = Column(BigInteger, default=0)
@@ -34,15 +35,16 @@ class Feedback(Base):
 
 
 class FeedbackModel(BaseModel):
-    id: str
-    user_id: str
-    version: int
-    type: str
-    data: Optional[dict] = None
-    meta: Optional[dict] = None
-    snapshot: Optional[dict] = None
-    created_at: int
-    updated_at: int
+    """反馈模型"""
+    id: str = Field(description="反馈唯一标识符")
+    user_id: str = Field(description="用户ID")
+    version: int = Field(description="版本号")
+    type: str = Field(description="反馈类型")
+    data: Optional[dict] = Field(default=None, description="反馈数据")
+    meta: Optional[dict] = Field(default=None, description="元数据")
+    snapshot: Optional[dict] = Field(default=None, description="快照数据")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -53,43 +55,48 @@ class FeedbackModel(BaseModel):
 
 
 class FeedbackResponse(BaseModel):
-    id: str
-    user_id: str
-    version: int
-    type: str
-    data: Optional[dict] = None
-    meta: Optional[dict] = None
-    created_at: int
-    updated_at: int
+    """反馈响应模型"""
+    id: str = Field(description="反馈唯一标识符")
+    user_id: str = Field(description="用户ID")
+    version: int = Field(description="版本号")
+    type: str = Field(description="反馈类型")
+    data: Optional[dict] = Field(default=None, description="反馈数据")
+    meta: Optional[dict] = Field(default=None, description="元数据")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class RatingData(BaseModel):
-    rating: Optional[str | int] = None
-    model_id: Optional[str] = None
-    sibling_model_ids: Optional[list[str]] = None
-    reason: Optional[str] = None
-    comment: Optional[str] = None
+    """评分数据模型"""
+    rating: Optional[str | int] = Field(default=None, description="评分")
+    model_id: Optional[str] = Field(default=None, description="模型ID")
+    sibling_model_ids: Optional[list[str]] = Field(default=None, description="兄弟模型ID列表")
+    reason: Optional[str] = Field(default=None, description="评分原因")
+    comment: Optional[str] = Field(default=None, description="评论")
     model_config = ConfigDict(extra="allow", protected_namespaces=())
 
 
 class MetaData(BaseModel):
-    arena: Optional[bool] = None
-    chat_id: Optional[str] = None
-    message_id: Optional[str] = None
-    tags: Optional[list[str]] = None
+    """元数据模型"""
+    arena: Optional[bool] = Field(default=None, description="是否为竞技场模式")
+    chat_id: Optional[str] = Field(default=None, description="聊天ID")
+    message_id: Optional[str] = Field(default=None, description="消息ID")
+    tags: Optional[list[str]] = Field(default=None, description="标签列表")
     model_config = ConfigDict(extra="allow")
 
 
 class SnapshotData(BaseModel):
-    chat: Optional[dict] = None
+    """快照数据模型"""
+    chat: Optional[dict] = Field(default=None, description="聊天内容")
     model_config = ConfigDict(extra="allow")
 
 
 class FeedbackForm(BaseModel):
-    type: str
-    data: Optional[RatingData] = None
-    meta: Optional[dict] = None
-    snapshot: Optional[SnapshotData] = None
+    """反馈表单模型"""
+    type: str = Field(description="反馈类型")
+    data: Optional[RatingData] = Field(default=None, description="评分数据")
+    meta: Optional[dict] = Field(default=None, description="元数据")
+    snapshot: Optional[SnapshotData] = Field(default=None, description="快照数据")
     model_config = ConfigDict(extra="allow")
 
 

@@ -8,7 +8,7 @@ from open_webui.models.chats import Chats
 from open_webui.models.groups import Groups
 
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Column, String, Text
 from sqlalchemy import or_
 
@@ -20,6 +20,7 @@ from sqlalchemy import or_
 
 class User(Base):
     __tablename__ = "user"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(String, primary_key=True)
     name = Column(String)
@@ -45,21 +46,19 @@ class UserSettings(BaseModel):
 
 
 class UserModel(BaseModel):
-    id: str
-    name: str
-    email: str
-    role: str = "pending"
-    profile_image_url: str
-
-    last_active_at: int  # timestamp in epoch
-    updated_at: int  # timestamp in epoch
-    created_at: int  # timestamp in epoch
-
-    api_key: Optional[str] = None
-    settings: Optional[UserSettings] = None
-    info: Optional[dict] = None
-
-    oauth_sub: Optional[str] = None
+    """用户模型"""
+    id: str = Field(description="用户唯一标识符")
+    name: str = Field(description="用户名")
+    email: str = Field(description="用户邮箱")
+    role: str = Field(default="pending", description="用户角色")
+    profile_image_url: str = Field(description="用户头像URL")
+    last_active_at: int = Field(description="最后活跃时间戳")
+    updated_at: int = Field(description="更新时间戳")
+    created_at: int = Field(description="创建时间戳")
+    api_key: Optional[str] = Field(default=None, description="API密钥")
+    settings: Optional[UserSettings] = Field(default=None, description="用户设置")
+    info: Optional[dict] = Field(default=None, description="用户信息")
+    oauth_sub: Optional[str] = Field(default=None, description="OAuth子标识符")
 
     model_config = ConfigDict(from_attributes=True, extra="allow")
 
@@ -70,23 +69,26 @@ class UserModel(BaseModel):
 
 
 class UserListResponse(BaseModel):
-    users: List[UserModel]
-    total: int
+    """用户列表响应模型"""
+    users: List[UserModel] = Field(description="用户列表")
+    total: int = Field(description="用户总数")
 
 
 class UserResponse(BaseModel):
-    id: str
-    name: str
-    email: str
-    role: str
-    profile_image_url: str
+    """用户信息响应模型"""
+    id: str = Field(description="用户唯一标识符")
+    name: str = Field(description="用户名")
+    email: str = Field(description="用户邮箱")
+    role: str = Field(description="用户角色")
+    profile_image_url: str = Field(description="用户头像URL")
 
 
 class UserNameResponse(BaseModel):
-    id: str
-    name: str
-    role: str
-    profile_image_url: str
+    """用户名信息响应模型"""
+    id: str = Field(description="用户唯一标识符")
+    name: str = Field(description="用户名")
+    role: str = Field(description="用户角色")
+    profile_image_url: str = Field(description="用户头像URL")
 
 
 class UserRoleUpdateForm(BaseModel):

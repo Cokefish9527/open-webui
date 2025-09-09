@@ -165,97 +165,99 @@ class HSAIFileOperationLog(Base):
 
 
 class HSAIMaterialFolderModel(BaseModel):
+    """HSAI素材文件夹模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    name: str
-    description: Optional[str] = None
-    parent_id: Optional[str] = None
-    user_id: str
-    settings: Optional[dict] = None
-    sort_order: int = 0
-    created_at: int
-    updated_at: int
+    id: str = Field(description="文件夹唯一标识符")
+    name: str = Field(description="文件夹名称")
+    description: Optional[str] = Field(default=None, description="文件夹描述")
+    parent_id: Optional[str] = Field(default=None, description="父级文件夹ID")
+    user_id: str = Field(description="用户ID")
+    settings: Optional[dict] = Field(default=None, description="文件夹配置")
+    sort_order: int = Field(default=0, description="排序权重")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIMaterialModel(BaseModel):
+    """HSAI素材文件模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    name: str
-    description: Optional[str] = None
-    material_type: str
-    folder_id: Optional[str] = None
-    user_id: str
-    file_path: Optional[str] = None
-    file_size: Optional[int] = None
-    file_hash: Optional[str] = None
-    mime_type: Optional[str] = None
-    material_metadata: Optional[dict] = None
-    tags: Optional[List[str]] = None
-    ai_analysis: Optional[dict] = None
-    usage_count: int = 0
-    last_used_at: Optional[int] = None
-    status: str = "active"
-    access_control: Optional[dict] = None
-    # 新增字段
-    scene_code: Optional[str] = None
-    technique_code: Optional[str] = None
-    properties_code: Optional[str] = None
-    duration: Optional[int] = None
-    resolution: Optional[str] = None
-    oss_bucket: Optional[str] = None
-    oss_key: Optional[str] = None
-    # 回收站相关字段
-    is_deleted: bool = False
-    original_directory: Optional[str] = None
-    deleted_at: Optional[int] = None
-    deleted_by: Optional[str] = None
-    created_at: int
-    updated_at: int
+    id: str = Field(description="素材唯一标识符")
+    name: str = Field(description="素材名称")
+    description: Optional[str] = Field(default=None, description="素材描述")
+    material_type: str = Field(description="素材类型：video, image, audio, text, document")
+    folder_id: Optional[str] = Field(default=None, description="所属文件夹")
+    user_id: str = Field(description="用户ID")
+    file_path: Optional[str] = Field(default=None, description="文件路径")
+    file_size: Optional[int] = Field(default=None, description="文件大小(字节)")
+    file_hash: Optional[str] = Field(default=None, description="文件哈希值")
+    mime_type: Optional[str] = Field(default=None, description="MIME类型")
+    material_metadata: Optional[dict] = Field(default=None, description="素材元数据")
+    tags: Optional[List[str]] = Field(default=None, description="标签数组")
+    ai_analysis: Optional[dict] = Field(default=None, description="AI分析结果")
+    usage_count: int = Field(default=0, description="使用次数")
+    last_used_at: Optional[int] = Field(default=None, description="最后使用时间")
+    status: str = Field(default="active", description="状态管理")
+    access_control: Optional[dict] = Field(default=None, description="访问控制")
+    scene_code: Optional[str] = Field(default=None, description="场景代码")
+    technique_code: Optional[str] = Field(default=None, description="手法代码")
+    properties_code: Optional[str] = Field(default=None, description="属性代码")
+    duration: Optional[int] = Field(default=None, description="视频时长（秒）")
+    resolution: Optional[str] = Field(default=None, description="视频分辨率")
+    oss_bucket: Optional[str] = Field(default=None, description="OSS Bucket")
+    oss_key: Optional[str] = Field(default=None, description="OSS对象键")
+    is_deleted: bool = Field(default=False, description="删除标志位")
+    original_directory: Optional[str] = Field(default=None, description="原始目录")
+    deleted_at: Optional[int] = Field(default=None, description="删除时间")
+    deleted_by: Optional[str] = Field(default=None, description="删除人ID")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIMaterialTagModel(BaseModel):
+    """HSAI素材标签模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    name: str
-    color: Optional[str] = None
-    category: Optional[str] = None
-    user_id: str
-    usage_count: int = 0
-    created_at: int
-    updated_at: int
+    id: str = Field(description="标签唯一标识符")
+    name: str = Field(description="标签名称")
+    color: Optional[str] = Field(default=None, description="标签颜色")
+    category: Optional[str] = Field(default=None, description="标签分类")
+    user_id: str = Field(description="用户ID")
+    usage_count: int = Field(default=0, description="使用统计")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIMaterialCategoryModel(BaseModel):
+    """HSAI素材分类模型"""
     model_config = ConfigDict(from_attributes=True)
     
-    id: str
-    name: str
-    display_name: str
-    category_type: str
-    description: Optional[str] = None
-    is_active: bool = True
-    created_at: int
-    updated_at: int
+    id: str = Field(description="分类唯一标识符")
+    name: str = Field(description="分类名称（英文）")
+    display_name: str = Field(description="显示名称（中文）")
+    category_type: str = Field(description="分类类型：scene, technique, property")
+    description: Optional[str] = Field(default=None, description="描述")
+    is_active: bool = Field(default=True, description="是否启用")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIFileOperationLogModel(BaseModel):
-    """文件操作日志模型"""
+    """HSAI文件操作日志模型"""
     model_config = ConfigDict(from_attributes=True)
     
-    id: str
-    material_id: str
-    operation_type: str
-    source_path: str
-    target_path: Optional[str] = None
-    operator_id: str
-    operation_time: int
-    details: Optional[dict] = None
-    enterprise_id: Optional[str] = None
-    created_at: int
-    updated_at: int
+    id: str = Field(description="日志唯一标识符")
+    material_id: str = Field(description="素材ID")
+    operation_type: str = Field(description="操作类型（upload/delete/restore/move/modify）")
+    source_path: str = Field(description="源文件路径")
+    target_path: Optional[str] = Field(default=None, description="目标文件路径")
+    operator_id: str = Field(description="操作人ID")
+    operation_time: int = Field(description="操作时间")
+    details: Optional[dict] = Field(default=None, description="操作详情")
+    enterprise_id: Optional[str] = Field(default=None, description="企业ID")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 ####################
@@ -413,14 +415,14 @@ class HSAIFileOperationLogResponse(BaseModel):
 
 class PaginatedHSAIMaterialResponse(BaseModel):
     """分页的素材响应模型"""
-    data: List[HSAIMaterialResponse]
-    pagination: PaginationData
+    data: List[HSAIMaterialResponse] = Field(description="素材数据列表")
+    pagination: PaginationData = Field(description="分页信息")
 
 
 class PaginatedHSAIMaterialCategoryResponse(BaseModel):
     """分页的素材分类响应模型"""
-    data: List[HSAIMaterialCategoryResponse]
-    pagination: PaginationData
+    data: List[HSAIMaterialCategoryResponse] = Field(description="素材分类数据列表")
+    pagination: PaginationData = Field(description="分页信息")
 
 
 ####################

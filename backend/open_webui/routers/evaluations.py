@@ -1,6 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from open_webui.models.users import Users, UserModel
 from open_webui.models.feedbacks import (
@@ -57,18 +57,19 @@ async def update_config(
 
 
 class UserResponse(BaseModel):
-    id: str
-    name: str
-    email: str
-    role: str = "pending"
-
-    last_active_at: int  # timestamp in epoch
-    updated_at: int  # timestamp in epoch
-    created_at: int  # timestamp in epoch
+    """用户响应模型"""
+    id: str = Field(description="用户唯一标识符")
+    name: str = Field(description="用户名")
+    email: str = Field(description="用户邮箱")
+    role: str = Field(default="pending", description="用户角色")
+    last_active_at: int = Field(description="最后活跃时间戳")
+    updated_at: int = Field(description="更新时间戳")
+    created_at: int = Field(description="创建时间戳")
 
 
 class FeedbackUserResponse(FeedbackResponse):
-    user: Optional[UserResponse] = None
+    """反馈用户响应模型"""
+    user: Optional[UserResponse] = Field(default=None, description="用户信息")
 
 
 @router.get("/feedbacks/all", response_model=list[FeedbackUserResponse])

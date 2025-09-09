@@ -198,74 +198,77 @@ class HSAIWorkflowExecution(Base):
 
 
 class HSAITaskModel(BaseModel):
+    """HSAI任务模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    title: str
-    description: Optional[str] = None
-    task_type: str
-    status: str = HSAITaskStatus.PENDING
-    user_id: str
-    assignee_id: Optional[str] = None  # 指派人ID
-    chat_id: Optional[str] = None
-    collaborators: Optional[List[Dict[str, Any]]] = None  # 协作者列表
-    shared_sessions: Optional[List[str]] = None  # 共享的会话ID列表
-    config: Optional[dict] = None
-    inputs: Optional[dict] = None
-    outputs: Optional[dict] = None
-    workflow_id: Optional[str] = None
-    parent_task_id: Optional[str] = None
-    progress: int = 0
-    started_at: Optional[int] = None
-    completed_at: Optional[int] = None
-    error_message: Optional[str] = None
-    retry_count: int = 0
-    priority: int = 0
-    tags: Optional[List[str]] = None
-    created_at: int
-    updated_at: int
+    id: str = Field(description="任务唯一标识符")
+    title: str = Field(description="任务标题")
+    description: Optional[str] = Field(default=None, description="任务详细描述")
+    task_type: str = Field(description="任务类型")
+    status: str = Field(default=HSAITaskStatus.PENDING, description="任务状态")
+    user_id: str = Field(description="用户ID")
+    assignee_id: Optional[str] = Field(default=None, description="指派人ID")
+    chat_id: Optional[str] = Field(default=None, description="关联的聊天会话ID")
+    collaborators: Optional[List[Dict[str, Any]]] = Field(default=None, description="协作者列表")
+    shared_sessions: Optional[List[str]] = Field(default=None, description="共享的会话ID列表")
+    config: Optional[dict] = Field(default=None, description="任务配置参数")
+    inputs: Optional[dict] = Field(default=None, description="输入参数")
+    outputs: Optional[dict] = Field(default=None, description="输出结果")
+    workflow_id: Optional[str] = Field(default=None, description="工作流ID")
+    parent_task_id: Optional[str] = Field(default=None, description="父任务ID")
+    progress: int = Field(default=0, description="进度百分比(0-100)")
+    started_at: Optional[int] = Field(default=None, description="开始时间戳")
+    completed_at: Optional[int] = Field(default=None, description="完成时间戳")
+    error_message: Optional[str] = Field(default=None, description="错误信息")
+    retry_count: int = Field(default=0, description="重试次数")
+    priority: int = Field(default=0, description="优先级，数字越大越优先")
+    tags: Optional[List[str]] = Field(default=None, description="标签列表")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIWorkflowModel(BaseModel):
+    """HSAI工作流模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    name: str
-    description: Optional[str] = None
-    user_id: str
-    definition: dict
-    variables: Optional[dict] = None
-    status: str = "active"
-    version: str = "1.0"
-    execution_count: int = 0
-    last_executed_at: Optional[int] = None
-    category: Optional[str] = None
-    tags: Optional[List[str]] = None
-    created_at: int
-    updated_at: int
+    id: str = Field(description="工作流唯一标识符")
+    name: str = Field(description="工作流名称")
+    description: Optional[str] = Field(default=None, description="工作流描述")
+    user_id: str = Field(description="用户ID")
+    definition: dict = Field(description="工作流定义(节点、连接等)")
+    variables: Optional[dict] = Field(default=None, description="工作流变量")
+    status: str = Field(default="active", description="状态管理")
+    version: str = Field(default="1.0", description="版本号")
+    execution_count: int = Field(default=0, description="执行次数")
+    last_executed_at: Optional[int] = Field(default=None, description="最后执行时间戳")
+    category: Optional[str] = Field(default=None, description="分类")
+    tags: Optional[List[str]] = Field(default=None, description="标签列表")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAICardModel(BaseModel):
+    """HSAI卡片模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    title: str
-    description: Optional[str] = None
-    card_type: str
-    status: str = "active"
-    user_id: str
-    chat_id: Optional[str] = None
-    task_id: Optional[str] = None
-    content: Optional[dict] = None
-    config: Optional[dict] = None
-    actions: Optional[dict] = None
-    position: Optional[dict] = None
-    style: Optional[dict] = None
-    is_pinned: bool = False
-    is_collapsed: bool = False
-    sort_order: int = 0
-    created_at: int
-    updated_at: int
+    id: str = Field(description="卡片唯一标识符")
+    title: str = Field(description="卡片标题")
+    description: Optional[str] = Field(default=None, description="卡片描述")
+    card_type: str = Field(description="卡片类型")
+    status: str = Field(default="active", description="卡片状态")
+    user_id: str = Field(description="用户ID")
+    chat_id: Optional[str] = Field(default=None, description="关联的聊天会话")
+    task_id: Optional[str] = Field(default=None, description="关联的任务")
+    content: Optional[dict] = Field(default=None, description="卡片内容数据")
+    config: Optional[dict] = Field(default=None, description="卡片配置")
+    actions: Optional[dict] = Field(default=None, description="可执行的操作")
+    position: Optional[dict] = Field(default=None, description="卡片位置信息")
+    style: Optional[dict] = Field(default=None, description="卡片样式配置")
+    is_pinned: bool = Field(default=False, description="是否固定")
+    is_collapsed: bool = Field(default=False, description="是否折叠")
+    sort_order: int = Field(default=0, description="排序和显示")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 ####################
@@ -379,14 +382,14 @@ class PaginationData(BaseModel):
 
 class PaginatedHSAITaskResponse(BaseModel):
     """分页的任务响应模型"""
-    data: List[HSAITaskResponse]
-    pagination: PaginationData
+    data: List[HSAITaskResponse] = Field(description="任务数据列表")
+    pagination: PaginationData = Field(description="分页信息")
 
 
 class PaginatedHSAICardResponse(BaseModel):
     """分页的卡片响应模型"""
-    data: List[HSAICardResponse]
-    pagination: PaginationData
+    data: List[HSAICardResponse] = Field(description="卡片数据列表")
+    pagination: PaginationData = Field(description="分页信息")
 
 
 ####################

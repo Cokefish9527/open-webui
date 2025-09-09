@@ -5,7 +5,7 @@ from typing import Optional
 from open_webui.internal.db import Base, get_db
 from open_webui.models.users import UserModel, Users
 from open_webui.env import SRC_LOG_LEVELS
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import Boolean, Column, String, Text
 
 log = logging.getLogger(__name__)
@@ -18,6 +18,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 class Auth(Base):
     __tablename__ = "auth"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(String, primary_key=True)
     email = Column(String)

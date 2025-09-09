@@ -7,7 +7,7 @@ from typing import Optional, List
 from open_webui.internal.db import Base, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Boolean, Column, Text, String, JSON
 
 log = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 class Function(Base):
     __tablename__ = "function"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(String, primary_key=True)
     user_id = Column(String)
@@ -35,21 +36,23 @@ class Function(Base):
 
 
 class FunctionMeta(BaseModel):
-    description: Optional[str] = None
-    manifest: Optional[dict] = {}
+    """函数元数据模型"""
+    description: Optional[str] = Field(default=None, description="函数描述")
+    manifest: Optional[dict] = Field(default=None, description="函数清单")
 
 
 class FunctionModel(BaseModel):
-    id: str
-    user_id: str
-    name: str
-    type: str
-    content: str
-    meta: FunctionMeta
-    is_active: bool = False
-    is_global: bool = False
-    updated_at: int  # timestamp in epoch
-    created_at: int  # timestamp in epoch
+    """函数模型"""
+    id: str = Field(description="函数唯一标识符")
+    user_id: str = Field(description="用户ID")
+    name: str = Field(description="函数名称")
+    type: str = Field(description="函数类型")
+    content: str = Field(description="函数内容")
+    meta: FunctionMeta = Field(description="函数元数据")
+    is_active: bool = Field(default=False, description="是否激活")
+    is_global: bool = Field(default=False, description="是否全局可用")
+    updated_at: int = Field(description="更新时间戳")
+    created_at: int = Field(description="创建时间戳")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -60,26 +63,29 @@ class FunctionModel(BaseModel):
 
 
 class FunctionResponse(BaseModel):
-    id: str
-    user_id: str
-    type: str
-    name: str
-    meta: FunctionMeta
-    is_active: bool
-    is_global: bool
-    updated_at: int  # timestamp in epoch
-    created_at: int  # timestamp in epoch
+    """函数响应模型"""
+    id: str = Field(description="函数唯一标识符")
+    user_id: str = Field(description="用户ID")
+    type: str = Field(description="函数类型")
+    name: str = Field(description="函数名称")
+    meta: FunctionMeta = Field(description="函数元数据")
+    is_active: bool = Field(description="是否激活")
+    is_global: bool = Field(description="是否全局可用")
+    updated_at: int = Field(description="更新时间戳")
+    created_at: int = Field(description="创建时间戳")
 
 
 class FunctionForm(BaseModel):
-    id: str
-    name: str
-    content: str
-    meta: FunctionMeta
+    """函数表单模型"""
+    id: str = Field(description="函数唯一标识符")
+    name: str = Field(description="函数名称")
+    content: str = Field(description="函数内容")
+    meta: FunctionMeta = Field(description="函数元数据")
 
 
 class FunctionValves(BaseModel):
-    valves: Optional[dict] = None
+    """函数阀门模型"""
+    valves: Optional[dict] = Field(default=None, description="阀门配置")
 
 
 class FunctionsTable:

@@ -5,7 +5,7 @@ import json
 from typing import Optional, List, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from open_webui.models.hsai_tasks import HSAITasks
 from open_webui.utils.auth import get_verified_user
@@ -30,52 +30,56 @@ class WorkflowTriggerRequest(BaseModel):
     priority: str = "medium"  # low, medium, high
     callback_url: Optional[str] = None
 
+
 class WorkflowStatusResponse(BaseModel):
     """工作流状态响应模型"""
-    workflow_id: str
-    execution_id: str
-    status: str  # pending, running, completed, failed, cancelled
-    progress: int  # 0-100
-    current_step: Optional[str] = None
-    total_steps: int = 0
-    completed_steps: int = 0
-    start_time: Optional[int] = None
-    end_time: Optional[int] = None
-    error_message: Optional[str] = None
-    output_data: Optional[Dict[str, Any]] = None
+    workflow_id: str = Field(description="工作流ID")
+    execution_id: str = Field(description="执行ID")
+    status: str = Field(description="执行状态 (pending, running, completed, failed, cancelled)")
+    progress: int = Field(description="执行进度 (0-100)")
+    current_step: Optional[str] = Field(default=None, description="当前步骤")
+    total_steps: int = Field(default=0, description="总步骤数")
+    completed_steps: int = Field(default=0, description="已完成步骤数")
+    start_time: Optional[int] = Field(default=None, description="开始时间戳")
+    end_time: Optional[int] = Field(default=None, description="结束时间戳")
+    error_message: Optional[str] = Field(default=None, description="错误信息")
+    output_data: Optional[Dict[str, Any]] = Field(default=None, description="输出数据")
+
 
 class WorkflowWebhookData(BaseModel):
     """工作流Webhook数据模型"""
-    execution_id: str
-    workflow_id: str
-    status: str
-    event_type: str  # started, progress, completed, failed
-    timestamp: int
-    data: Optional[Dict[str, Any]] = None
+    execution_id: str = Field(description="执行ID")
+    workflow_id: str = Field(description="工作流ID")
+    status: str = Field(description="执行状态")
+    event_type: str = Field(description="事件类型 (started, progress, completed, failed)")
+    timestamp: int = Field(description="时间戳")
+    data: Optional[Dict[str, Any]] = Field(default=None, description="事件数据")
+
 
 class WorkflowTemplateResponse(BaseModel):
     """工作流模板响应模型"""
-    id: str
-    name: str
-    description: str
-    category: str  # content_creation, data_processing, automation
-    input_schema: Dict[str, Any]
-    output_schema: Dict[str, Any]
-    steps: List[Dict[str, Any]]
-    is_active: bool = True
-    created_at: int
-    updated_at: int
+    id: str = Field(description="模板ID")
+    name: str = Field(description="模板名称")
+    description: str = Field(description="模板描述")
+    category: str = Field(description="分类 (content_creation, data_processing, automation)")
+    input_schema: Dict[str, Any] = Field(description="输入模式")
+    output_schema: Dict[str, Any] = Field(description="输出模式")
+    steps: List[Dict[str, Any]] = Field(description="步骤列表")
+    is_active: bool = Field(default=True, description="是否激活")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
+
 
 class WorkflowExecutionLog(BaseModel):
     """工作流执行日志模型"""
-    execution_id: str
-    step_name: str
-    status: str
-    timestamp: int
-    duration: Optional[int] = None
-    input_data: Optional[Dict[str, Any]] = None
-    output_data: Optional[Dict[str, Any]] = None
-    error_message: Optional[str] = None
+    execution_id: str = Field(description="执行ID")
+    step_name: str = Field(description="步骤名称")
+    status: str = Field(description="步骤状态")
+    timestamp: int = Field(description="时间戳")
+    duration: Optional[int] = Field(default=None, description="执行时长(毫秒)")
+    input_data: Optional[Dict[str, Any]] = Field(default=None, description="输入数据")
+    output_data: Optional[Dict[str, Any]] = Field(default=None, description="输出数据")
+    error_message: Optional[str] = Field(default=None, description="错误信息")
 
 ############################
 # 工作流触发接口
