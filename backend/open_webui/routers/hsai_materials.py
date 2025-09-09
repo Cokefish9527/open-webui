@@ -1433,20 +1433,20 @@ async def delete_material_category(
 # 添加新的Pydantic模型用于回收站操作
 class MoveToRecoveryRequest(BaseModel):
     """移入回收站请求模型"""
-    operator_id: str = Field(description="操作人ID")
     reason: Optional[str] = Field(default=None, description="操作原因")
+    # 移除了 operator_id 字段，直接使用当前登录用户信息
 
 
 class RestoreRequest(BaseModel):
     """还原文件请求模型"""
     target_directory: str = Field(description="目标目录")
-    operator_id: str = Field(description="操作人ID")
+    # 移除了 operator_id 字段，直接使用当前登录用户信息
 
 
 class PermanentDeleteRequest(BaseModel):
     """永久删除请求模型"""
-    operator_id: str = Field(description="操作人ID")
     reason: Optional[str] = Field(default=None, description="删除原因")
+    # 移除了 operator_id 字段，直接使用当前登录用户信息
 
 
 class BatchOperationRequest(BaseModel):
@@ -1454,7 +1454,7 @@ class BatchOperationRequest(BaseModel):
     operation: str = Field(description="操作类型 (restore 或 delete)")
     material_ids: List[str] = Field(description="素材ID列表")
     target_directory: Optional[str] = Field(default=None, description="目标目录（restore操作时必需）")
-    operator_id: str = Field(description="操作人ID")
+    # 移除了 operator_id 字段，直接使用当前登录用户信息
 
 
 # 添加文件操作日志模型
@@ -1478,9 +1478,28 @@ class FileOperationLogForm(BaseModel):
     operation_type: str = Field(description="操作类型")
     source_path: str = Field(description="源文件路径")
     target_path: Optional[str] = Field(default=None, description="目标文件路径")
-    operator_id: str = Field(description="操作人ID")
     operation_time: int = Field(description="操作时间")
     details: Optional[dict] = Field(default=None, description="操作详情")
+    # 移除了 operator_id 字段，直接使用当前登录用户信息
+import time
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+
+# 已移除错误的导入语句
+# from app.api.dependencies import get_verified_user
+# from app.core.config import settings
+# from app.core.logger import log
+# from app.models.material import HSAIMaterialForm, HSAIMaterials
+# from app.schemas.material import HSAIMaterialResponse, MoveToRecoveryRequest
+# from app.schemas.pagination import PaginationData
+
+# 添加缺失的导入
+from open_webui.models.hsai_materials import HSAIMaterialForm, HSAIMaterials, HSAIFileOperationLogForm
+from open_webui.constants import ERROR_MESSAGES
+
+
+# 移除了重复的router定义
 
 
 class FileOperationLogResponse(BaseModel):
@@ -1562,7 +1581,7 @@ async def move_material_to_recovery(
             "is_deleted": True,
             "original_directory": material.file_path,
             "deleted_at": int(time.time()),
-            "deleted_by": request.operator_id
+            "deleted_by": user.id  # 使用当前登录用户ID
         }
         
         updated_material = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
@@ -1578,7 +1597,7 @@ async def move_material_to_recovery(
             operation_type="delete",
             source_path=material.file_path,
             target_path=f"recovery/{material_id}",
-            operator_id=request.operator_id,
+            operator_id=user.id,  # 使用当前登录用户ID
             details={"reason": request.reason} if request.reason else None
         )
         
@@ -1653,7 +1672,7 @@ async def restore_material(
             operation_type="restore",
             source_path=f"recovery/{material_id}",
             target_path=updated_material.file_path,
-            operator_id=request.operator_id
+            operator_id=user.id  # 使用当前登录用户ID
         )
         
         # 返回更新后的素材信息
@@ -1709,17 +1728,22 @@ async def permanent_delete_material(
         
         # 删除数据库记录
         result = HSAIMaterials.delete_material_by_id(material_id)
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete material record"
+            )
         
         # 记录操作日志
         await _log_file_operation(
             material_id=material_id,
             operation_type="permanent_delete",
             source_path=material.file_path,
-            operator_id=request.operator_id,
+            operator_id=user.id,  # 使用当前登录用户ID
             details={"reason": request.reason} if request.reason else None
         )
         
-        return result
+        return True
         
     except HTTPException:
         raise
@@ -1851,7 +1875,7 @@ async def batch_operation_recovery_materials(
                             operation_type="restore",
                             source_path=f"recovery/{material_id}",
                             target_path=request.target_directory,
-                            operator_id=request.operator_id
+                            operator_id=user.id  # 使用当前登录用户ID
                         )
                         
                 elif request.operation == "delete":
@@ -1873,7 +1897,7 @@ async def batch_operation_recovery_materials(
                                 material_id=material_id,
                                 operation_type="permanent_delete",
                                 source_path=material.file_path,
-                                operator_id=request.operator_id
+                                operator_id=user.id  # 使用当前登录用户ID
                             )
                 
                 else:
@@ -1917,8 +1941,10 @@ async def log_file_operation(
         HSAIFileOperationLogResponse: 创建的日志信息
     """
     try:
-        # 转换表单数据为数据库模型
-        hsai_form_data = HSAIFileOperationLogForm(**form_data.model_dump())
+        # 转换表单数据为数据库模型，并添加当前用户ID
+        form_data_dict = form_data.model_dump()
+        form_data_dict["operator_id"] = user.id  # 使用当前登录用户ID
+        hsai_form_data = HSAIFileOperationLogForm(**form_data_dict)
         
         # 创建日志记录
         log_entry = HSAIFileOperationLogs.insert_new_log(hsai_form_data)

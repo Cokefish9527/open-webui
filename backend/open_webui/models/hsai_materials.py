@@ -320,10 +320,10 @@ class HSAIFileOperationLogForm(BaseModel):
     operation_type: str
     source_path: str
     target_path: Optional[str] = None
-    operator_id: str
     operation_time: int
     details: Optional[dict] = None
     enterprise_id: Optional[str] = None
+    # 移除了 operator_id 字段，直接使用当前登录用户信息
 
 
 ####################
