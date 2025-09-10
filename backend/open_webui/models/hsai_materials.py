@@ -425,6 +425,12 @@ class PaginatedHSAIMaterialCategoryResponse(BaseModel):
     pagination: PaginationData = Field(description="分页信息")
 
 
+class PaginatedHSAIFileOperationLogResponse(BaseModel):
+    """分页的文件操作日志响应模型"""
+    data: List[HSAIFileOperationLogResponse] = Field(description="文件操作日志数据列表")
+    pagination: PaginationData = Field(description="分页信息")
+
+
 ####################
 # Database Tables
 ####################
@@ -522,10 +528,14 @@ class HSAIMaterialsTable:
             )
             
             try:
+                log.info(f"Creating material record for user {user_id}")
+                log.info(f"Material data: {material}")
+                log.info(f"Material data dict: {material.model_dump()}")
                 result = HSAIMaterial(**material.model_dump())
                 db.add(result)
                 db.commit()
                 db.refresh(result)
+                log.info(f"Material record created successfully with ID: {result.id}")
                 return HSAIMaterialModel.model_validate(result) if result else None
             except Exception as e:
                 log.exception(f"Error creating material: {e}")
