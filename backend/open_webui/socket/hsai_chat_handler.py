@@ -180,7 +180,7 @@ class HSAIChatHandler:
                 "message": message.content,           # 用户输入的对话文字
                 "session_id": session_id,             # 唯一会话标识
                 "user_id": user_id,                   # 当前登录用户的ID
-                "business_name": BUSINESS_NAME,       # 当前登录用户的公司名称（从配置文件获取）
+                "business_name": str(BUSINESS_NAME),       # 当前登录用户的公司名称（从配置文件获取）
                 "task_id": task_id,                   # 传递任务ID
                 "metadata": message.metadata,
                 "timestamp": execution.start_time.timestamp(),  # 转换为时间戳
@@ -248,7 +248,7 @@ class HSAIChatHandler:
                 "message": message.content,           # 用户输入的对话文字
                 "session_id": session_id,             # 唯一会话标识
                 "user_id": user_id,                   # 当前登录用户的ID
-                "business_name": BUSINESS_NAME,       # 当前登录用户的公司名称（从配置文件获取）
+                "business_name": str(BUSINESS_NAME),       # 当前登录用户的公司名称（从配置文件获取）
                 "metadata": message.metadata,
                 "timestamp": execution_start_time
             }
