@@ -516,29 +516,50 @@ class HSAIMaterialsTable:
         self, user_id: str, form_data: HSAIMaterialForm
     ) -> Optional[HSAIMaterialModel]:
         with get_db() as db:
-            id = str(uuid.uuid4())
-            material = HSAIMaterialModel(
-                **{
+            try:
+                id = str(uuid.uuid4())
+                material_data = {
                     "id": id,
                     "user_id": user_id,
                     **form_data.model_dump(),
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                 }
-            )
-            
-            try:
+                
+                # 确保所有必填字段都有值
+                if material_data.get("material_type") is None:
+                    log.error("Missing required field: material_type")
+                    log.error(f"Form data: {form_data}")
+                    return None
+                    
+                if material_data.get("name") is None:
+                    log.error("Missing required field: name")
+                    log.error(f"Form data: {form_data}")
+                    return None
+                
                 log.info(f"Creating material record for user {user_id}")
-                log.info(f"Material data: {material}")
-                log.info(f"Material data dict: {material.model_dump()}")
-                result = HSAIMaterial(**material.model_dump())
+                log.info(f"Material data: {material_data}")
+                
+                # 验证数据
+                try:
+                    validated_data = HSAIMaterial(**material_data)
+                    log.info("Data validation passed")
+                except Exception as e:
+                    log.error(f"Data validation failed: {e}")
+                    log.error(f"Material data that failed validation: {material_data}")
+                    return None
+                
+                result = HSAIMaterial(**material_data)
                 db.add(result)
                 db.commit()
                 db.refresh(result)
                 log.info(f"Material record created successfully with ID: {result.id}")
                 return HSAIMaterialModel.model_validate(result) if result else None
             except Exception as e:
+                db.rollback()
                 log.exception(f"Error creating material: {e}")
+                log.error(f"Material data that caused error: {material_data}")
+                log.error(f"Form data: {form_data}")
                 return None
 
     def get_materials_by_user_id(
