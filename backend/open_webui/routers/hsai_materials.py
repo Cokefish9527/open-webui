@@ -25,20 +25,9 @@ from open_webui.models.hsai_materials import (
     HSAIMaterialTagForm,
     HSAIMaterialFolderResponse,
     HSAIMaterialResponse,
-    # 添加分类相关的导入
-    HSAIMaterialCategory,
-    HSAIMaterialCategories,
-    HSAIMaterialCategoryForm,
-    HSAIMaterialCategoryModel,
-    HSAIMaterialCategoryResponse,
     # 添加分页相关的导入
     PaginationData,
-    PaginatedHSAIMaterialResponse,
-    PaginatedHSAIMaterialCategoryResponse,
-    # 添加文件操作日志相关的导入
-    HSAIFileOperationLogForm,
-    HSAIFileOperationLogResponse,
-    HSAIFileOperationLogs
+    PaginatedHSAIMaterialResponse
 )
 
 from open_webui.utils.auth import get_verified_user
@@ -48,11 +37,14 @@ from open_webui.env import SRC_LOG_LEVELS
 from open_webui.config import UPLOAD_DIR
 
 import aiofiles
-import os
 import hashlib
 import mimetypes
 import json
-from open_webui.storage.provider import Storage
+try:
+    from open_webui.storage.provider import Storage
+    HAS_OSS = True
+except ImportError:
+    HAS_OSS = False
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -61,6 +53,11 @@ router = APIRouter(prefix="/hsai/materials", tags=["HSAI 素材管理"])
 
 # HSAI素材存储配置 - 使用OSS存储
 HSAI_MATERIALS_PREFIX = "hsai/materials"  # OSS存储前缀
+
+# 确保上传目录存在
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+LOCAL_STORAGE_PATH = os.path.join(UPLOAD_DIR, "materials")
+os.makedirs(LOCAL_STORAGE_PATH, exist_ok=True)
 
 ############################
 # 辅助函数
@@ -84,7 +81,7 @@ def _determine_material_type(mime_type: str) -> str:
     else:
         return "document"
 
-async def _schedule_ai_analysis(material_id: str, oss_url: str, material_type: str, user_id: str):
+async def _schedule_ai_analysis(material_id: str, file_url: str, material_type: str, user_id: str):
     """异步调度AI分析任务"""
     # 这里可以集成AI分析服务
     # 例如：图片识别、视频内容分析、文档OCR等
@@ -295,6 +292,39 @@ def _process_zip_file(zip_file: UploadFile, user_id: str, base_scene_code: Optio
     
     return processed_files
 
+def _save_file_local(content: bytes, filename: str, user_id: str) -> tuple:
+    """
+    将文件保存到本地存储
+    
+    Args:
+        content: 文件内容
+        filename: 文件名
+        user_id: 用户ID
+        
+    Returns:
+        tuple: (文件访问URL, 文件存储路径)
+    """
+    # 生成唯一文件名
+    file_hash = hashlib.md5(content).hexdigest()
+    file_extension = Path(filename).suffix
+    unique_filename = f"{Path(filename).stem}_{file_hash}{file_extension}"
+    
+    # 创建用户特定的存储目录
+    user_storage_path = os.path.join(LOCAL_STORAGE_PATH, user_id)
+    os.makedirs(user_storage_path, exist_ok=True)
+    
+    # 完整文件路径
+    file_path = os.path.join(user_storage_path, unique_filename)
+    
+    # 保存文件
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # 生成访问URL
+    file_url = f"http://localhost:8080/uploads/materials/{user_id}/{unique_filename}"
+    
+    return file_url, file_path
+
 ############################
 # 文件夹管理
 ############################
@@ -365,10 +395,10 @@ async def create_material_folder(
         )
 
 ############################
-# 素材上传 - OSS集成版本
+# 素材上传 - 支持本地存储和OSS存储
 ############################
 
-@router.post("/upload", response_model=List[HSAIMaterialResponse], summary="上传素材到OSS")
+@router.post("/upload", response_model=List[HSAIMaterialResponse], summary="上传素材")
 async def upload_material(
     file: UploadFile = File(...),
     name: Optional[str] = Form(None),
@@ -383,11 +413,11 @@ async def upload_material(
     user=Depends(get_verified_user)
 ):
     """
-    上传素材文件到阿里云OSS。
+    上传素材文件，支持本地存储和OSS存储。
     
     支持多种文件格式的上传，包括图片、视频、音频、文档等。
     支持压缩包上传，系统会自动解析压缩包内的文件并按规则重命名。
-    文件将直接上传到阿里云OSS存储，上传后可选择进行AI自动分析。
+    文件将存储在本地或上传到阿里云OSS存储，上传后可选择进行AI自动分析。
     
     Args:
         file (UploadFile): 要上传的文件（支持单个文件或压缩包）
@@ -405,16 +435,20 @@ async def upload_material(
         List[HSAIMaterialResponse]: 上传成功的素材信息列表
         - id: 素材ID
         - name: 素材名称
-        - file_path: OSS存储路径
+        - file_path: 存储路径
         - file_size: 文件大小
         - mime_type: 文件MIME类型
         - material_type: 素材类型
-        - upload_url: OSS文件访问URL
+        - upload_url: 文件访问URL
         
     Raises:
         HTTPException: 400 - 文件格式不支持或文件过大
         HTTPException: 500 - 上传失败或服务器错误
     """
+    log.info(f"Upload material request received. User ID: {user.id}")
+    log.info(f"File name: {file.filename}")
+    log.info(f"Form data: name={name}, folder_id={folder_id}, scene_code={scene_code}, technique_code={technique_code}, properties_code={properties_code}")
+    
     try:
         # 验证文件
         if not file.filename:
@@ -427,12 +461,14 @@ async def upload_material(
         is_zip = file.filename.lower().endswith(('.zip'))
         
         if is_zip:
+            log.info("Processing ZIP file")
             # 处理压缩包
             processed_files = _process_zip_file(file, user.id, scene_code, technique_code, properties_code)
             responses = []
             
             # 逐个上传处理后的文件
             for file_info in processed_files:
+                log.info(f"Processing file from ZIP: {file_info['new_filename']}")
                 # 生成文件哈希
                 file_hash = hashlib.md5(file_info["content"]).hexdigest()
                 
@@ -440,43 +476,57 @@ async def upload_material(
                 mime_type = mimetypes.guess_type(file_info["new_filename"])[0]
                 material_type = _determine_material_type(mime_type)
                 
-                # 生成OSS存储路径
-                storage_filename = f"{Path(file_info['new_filename']).stem}_{file_hash}{Path(file_info['new_filename']).suffix}"
-                
-                # 上传文件到OSS
-                try:
-                    # 使用Storage provider上传到OSS
-                    from io import BytesIO
-                    file_like = BytesIO(file_info["content"])
-                    
-                    oss_url, oss_path = Storage.upload_file(
-                        file=file_like,
-                        filename=storage_filename,
-                        tags={
-                            "user_id": user.id,
-                            "material_type": material_type,
-                            "hsai_module": "materials",
-                            "original_filename": file_info["original_filename"]
-                        }
-                    )
-                    
-                    log.info(f"Material uploaded to OSS: {oss_path}")
-                    
-                except Exception as upload_error:
-                    log.error(f"OSS upload failed: {upload_error}")
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Failed to upload file to OSS: {str(upload_error)}"
-                    )
+                # 尝试上传到OSS，如果失败则保存到本地
+                storage_provider = "local"
+                file_url = ""
+                file_path = ""
+                if HAS_OSS:
+                    try:
+                        # 使用Storage provider上传到OSS
+                        from io import BytesIO
+                        file_like = BytesIO(file_info["content"])
+                        
+                        oss_url, oss_path = Storage.upload_file(
+                            file=file_like,
+                            filename=file_info["new_filename"],
+                            tags={
+                                "user_id": user.id,
+                                "material_type": material_type,
+                                "hsai_module": "materials",
+                                "original_filename": file_info["original_filename"]
+                            }
+                        )
+                        
+                        log.info(f"Material uploaded to OSS: {oss_path}")
+                        file_path = oss_path
+                        file_url = oss_url
+                        storage_provider = "oss"
+                        
+                    except Exception as upload_error:
+                        log.warning(f"OSS upload failed, using local storage: {upload_error}")
+                        # 使用本地存储
+                        file_url, file_path = _save_file_local(file_info["content"], file_info["new_filename"], user.id)
+                else:
+                    # 使用本地存储
+                    file_url, file_path = _save_file_local(file_info["content"], file_info["new_filename"], user.id)
                 
                 # 提取文件元数据
                 material_metadata = {
                     "original_filename": file_info["original_filename"],
                     "upload_time": int(time.time()),
-                    "oss_url": oss_url,
-                    "storage_provider": "oss"
+                    "file_url": file_url,
+                    "storage_provider": storage_provider
                 }
                 
+                # 如果file_url是bytes类型，则进行解码
+                if isinstance(material_metadata.get("file_url"), bytes):
+                    try:
+                        material_metadata["file_url"] = material_metadata["file_url"].decode('utf-8')
+                    except UnicodeDecodeError:
+                        # 如果UTF-8解码失败，则使用base64编码
+                        import base64
+                        material_metadata["file_url"] = base64.b64encode(material_metadata["file_url"]).decode('utf-8')
+
                 # 初始化视频元数据
                 duration = None
                 resolution = None
@@ -512,15 +562,29 @@ async def upload_material(
                 # 处理属性代码
                 properties_list = None
                 if file_info["properties_code"]:
-                    properties_list = [file_info["properties_code"]]
-                
+                    # 如果是字符串格式，则尝试解析为列表
+                    if isinstance(file_info["properties_code"], str):
+                        try:
+                            properties_list = json.loads(file_info["properties_code"])
+                            # 确保是列表格式
+                            if isinstance(properties_list, str):
+                                properties_list = [properties_list]
+                            elif not isinstance(properties_list, list):
+                                properties_list = [file_info["properties_code"]]
+                        except json.JSONDecodeError:
+                            properties_list = [file_info["properties_code"]]
+                    elif isinstance(file_info["properties_code"], list):
+                        properties_list = file_info["properties_code"]
+                    else:
+                        properties_list = [str(file_info["properties_code"])]
+
                 # 创建素材记录
                 material_data = HSAIMaterialForm(
                     name=Path(file_info["new_filename"]).stem,
                     description=description,
                     material_type=material_type,
                     folder_id=folder_id,
-                    file_path=oss_path,  # 存储OSS路径
+                    file_path=file_path,  # 存储文件路径
                     file_size=len(file_info["content"]),
                     file_hash=file_hash,
                     mime_type=mime_type,
@@ -534,37 +598,58 @@ async def upload_material(
                     material_metadata=material_metadata
                 )
                 
+                log.info(f"Creating material record with data: {material_data}")
+                log.info(f"Material data dict: {material_data.model_dump()}")
+                
                 material = HSAIMaterials.insert_new_material(user.id, material_data)
                 if not material:
-                    # 如果数据库记录创建失败，尝试删除OSS文件
-                    try:
-                        Storage.delete_file(oss_path)
-                    except:
-                        log.warning(f"Failed to cleanup OSS file after database error: {oss_path}")
+                    log.error("Failed to create material record in database")
+                    log.error(f"Material data that failed: {material_data}")
+                    log.error(f"Material data dict: {material_data.model_dump()}")
+                    # 如果是OSS存储且数据库记录创建失败，尝试删除OSS文件
+                    if storage_provider == "oss":
+                        try:
+                            Storage.delete_file(file_path)
+                        except:
+                            log.warning(f"Failed to cleanup OSS file after database error: {file_path}")
                     
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Failed to create material record"
                     )
                 
+                log.info(f"Successfully created material record with ID: {material.id}")
+                
                 # 如果启用自动分析，异步执行AI分析
                 if auto_analyze:
                     try:
-                        await _schedule_ai_analysis(material.id, oss_url, material_type, user.id)
+                        await _schedule_ai_analysis(material.id, file_url, material_type, user.id)
                     except Exception as ai_error:
                         log.warning(f"Failed to schedule AI analysis: {ai_error}")
                 
+                # 处理可能的字节类型数据
+                safe_file_url = file_url
+                if isinstance(safe_file_url, bytes):
+                    try:
+                        safe_file_url = safe_file_url.decode('utf-8')
+                    except UnicodeDecodeError:
+                        import base64
+                        safe_file_url = base64.b64encode(safe_file_url).decode('utf-8')
+                
+                # 创建响应对象时排除properties_code字段，使用处理后的值
                 response = HSAIMaterialResponse(
-                    **material.model_dump(),
-                    upload_url=oss_url,  # 返回OSS访问URL
+                    **{k: v for k, v in material.model_dump().items() if k != 'properties_code'},
+                    upload_url=safe_file_url,  # 返回文件访问URL
                     thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material_type in ["image", "video"] else None,
-                    download_url=oss_url  # 直接使用OSS URL进行下载
+                    download_url=safe_file_url,  # 直接使用文件URL进行下载
+                    properties_code=material.properties_code.split("_") if material.properties_code else None  # 将字符串转换为列表
                 )
                 
                 responses.append(response)
             
             return responses
         else:
+            log.info("Processing single file")
             # 处理单个文件（原有逻辑）
             # 检查文件大小（100MB限制）
             content = await file.read()
@@ -603,41 +688,56 @@ async def upload_material(
             base_name = name or Path(file.filename).stem
             filename_base = _generate_filename_with_codes(base_name, scene_code, technique_code, properties_list)
             
-            # 生成OSS存储路径
+            # 生成存储文件名
             file_extension = Path(file.filename).suffix
             storage_filename = f"{filename_base}_{file_hash}{file_extension}"
             
-            # 上传文件到OSS
-            try:
-                # 使用Storage provider上传到OSS
-                oss_url, oss_path = Storage.upload_file(
-                    file=file.file,
-                    filename=storage_filename,
-                    tags={
-                        "user_id": user.id,
-                        "material_type": material_type,
-                        "hsai_module": "materials",
-                        "original_filename": file.filename
-                    }
-                )
-                
-                log.info(f"Material uploaded to OSS: {oss_path}")
-                
-            except Exception as upload_error:
-                log.error(f"OSS upload failed: {upload_error}")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Failed to upload file to OSS: {str(upload_error)}"
-                )
+            # 尝试上传到OSS，如果失败则保存到本地
+            storage_provider = "local"
+            file_url = ""
+            file_path = ""
+            if HAS_OSS:
+                try:
+                    # 使用Storage provider上传到OSS
+                    file_url, file_path = Storage.upload_file(
+                        file=file.file,
+                        filename=storage_filename,
+                        tags={
+                            "user_id": user.id,
+                            "material_type": material_type,
+                            "hsai_module": "materials",
+                            "original_filename": file.filename
+                        }
+                    )
+                    
+                    log.info(f"Material uploaded to OSS: {file_path}")
+                    storage_provider = "oss"
+                    
+                except Exception as upload_error:
+                    log.warning(f"OSS upload failed, using local storage: {upload_error}")
+                    # 使用本地存储
+                    file_url, file_path = _save_file_local(content, storage_filename, user.id)
+            else:
+                # 使用本地存储
+                file_url, file_path = _save_file_local(content, storage_filename, user.id)
             
             # 提取文件元数据
             material_metadata = {
                 "original_filename": file.filename,
                 "upload_time": int(time.time()),
-                "oss_url": oss_url,
-                "storage_provider": "oss"
+                "file_url": file_url,
+                "storage_provider": storage_provider
             }
             
+            # 如果file_url是bytes类型，则进行解码
+            if isinstance(material_metadata.get("file_url"), bytes):
+                try:
+                    material_metadata["file_url"] = material_metadata["file_url"].decode('utf-8')
+                except UnicodeDecodeError:
+                    # 如果UTF-8解码失败，则使用base64编码
+                    import base64
+                    material_metadata["file_url"] = base64.b64encode(material_metadata["file_url"]).decode('utf-8')
+
             # 初始化视频元数据
             duration = None
             resolution = None
@@ -678,7 +778,7 @@ async def upload_material(
                 description=description,
                 material_type=material_type,
                 folder_id=folder_id,
-                file_path=oss_path,  # 存储OSS路径
+                file_path=file_path,  # 存储文件路径
                 file_size=file_size,
                 file_hash=file_hash,
                 mime_type=mime_type,
@@ -692,40 +792,82 @@ async def upload_material(
                 material_metadata=material_metadata
             )
             
+            log.info(f"Creating material record with data: {material_data}")
+            log.info(f"Material data dict: {material_data.model_dump()}")
+            
+            # 添加额外的验证
+            try:
+                # 验证数据是否符合模型要求
+                validated_data = HSAIMaterialForm(**material_data.model_dump())
+                log.info(f"Material data validated successfully: {validated_data}")
+            except Exception as validation_error:
+                log.error(f"Material data validation failed: {validation_error}")
+                log.error(f"Material data that failed validation: {material_data}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid material data: {str(validation_error)}"
+                )
+            
+            # 这里是关键部分 - 添加更多日志
+            log.info(f"About to call HSAIMaterials.insert_new_material with user_id: {user.id}")
+            log.info(f"Material data being passed: {material_data}")
+            
             material = HSAIMaterials.insert_new_material(user.id, material_data)
+            
+            log.info(f"Result from insert_new_material: {material}")
+            
             if not material:
-                # 如果数据库记录创建失败，尝试删除OSS文件
-                try:
-                    Storage.delete_file(oss_path)
-                except:
-                    log.warning(f"Failed to cleanup OSS file after database error: {oss_path}")
+                log.error("Failed to create material record in database")
+                log.error(f"User ID: {user.id}")
+                log.error(f"Material data that failed: {material_data}")
+                log.error(f"Material data dict: {material_data.model_dump()}")
+                # 如果是OSS存储且数据库记录创建失败，尝试删除OSS文件
+                if storage_provider == "oss":
+                    try:
+                        Storage.delete_file(file_path)
+                    except:
+                        log.warning(f"Failed to cleanup OSS file after database error: {file_path}")
                 
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Failed to create material record"
                 )
             
+            log.info(f"Successfully created material record with ID: {material.id}")
+            
             # 如果启用自动分析，异步执行AI分析
             if auto_analyze:
                 try:
-                    await _schedule_ai_analysis(material.id, oss_url, material_type, user.id)
+                    await _schedule_ai_analysis(material.id, file_url, material_type, user.id)
                 except Exception as ai_error:
                     log.warning(f"Failed to schedule AI analysis: {ai_error}")
             
+            # 处理可能的字节类型数据
+            safe_file_url = file_url
+            if isinstance(safe_file_url, bytes):
+                try:
+                    safe_file_url = safe_file_url.decode('utf-8')
+                except UnicodeDecodeError:
+                    import base64
+                    safe_file_url = base64.b64encode(safe_file_url).decode('utf-8')
+            
             return [HSAIMaterialResponse(
-                **material.model_dump(),
-                upload_url=oss_url,  # 返回OSS访问URL
+                **{k: v for k, v in material.model_dump().items() if k != 'properties_code'},
+                upload_url=safe_file_url,  # 返回文件访问URL
                 thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material_type in ["image", "video"] else None,
-                download_url=oss_url  # 直接使用OSS URL进行下载
+                download_url=safe_file_url,  # 直接使用文件URL进行下载
+                properties_code=material.properties_code.split("_") if material.properties_code else None  # 将字符串转换为列表
             )]
         
     except HTTPException:
         raise
     except Exception as e:
         log.exception(f"Error uploading material: {e}")
+        # 添加更详细的错误信息
+        error_detail = f"Error uploading material: {str(e)}"
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
+            detail=error_detail
         )
 
 ############################
@@ -850,14 +992,32 @@ async def get_materials(
             if not download_url.startswith(('http://', 'https://')):
                 download_url = f"/hsai/materials/{material.id}/download"
             
+            # 处理可能的字节类型数据
+            safe_download_url = download_url
+            if isinstance(safe_download_url, bytes):
+                try:
+                    safe_download_url = safe_download_url.decode('utf-8')
+                except UnicodeDecodeError:
+                    import base64
+                    safe_download_url = base64.b64encode(safe_download_url).decode('utf-8')
+            
+            # 处理属性代码，将其转换为列表格式
+            properties_list = None
+            if material.properties_code:
+                if isinstance(material.properties_code, str):
+                    properties_list = material.properties_code.split("_")
+                elif isinstance(material.properties_code, list):
+                    properties_list = material.properties_code
+            
             response = HSAIMaterialResponse(
-                **material.model_dump(),
-                upload_url=download_url,
+                **{k: v for k, v in material.model_dump().items() if k not in ['properties_code']},
+                upload_url=safe_download_url,
                 thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material.material_type in ["image", "video"] else None,
-                download_url=download_url
+                download_url=safe_download_url,
+                properties_code=properties_list  # 返回列表格式
             )
             responses.append(response)
-        
+
         # 计算分页数据
         total_pages = (total + ps - 1) // ps  # 向上取整
         
@@ -939,6 +1099,85 @@ async def get_material(
         raise
     except Exception as e:
         log.exception(f"Error getting material: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+
+class MaterialPropertiesResponse(BaseModel):
+    """素材属性响应模型"""
+    id: str = Field(description="素材唯一标识符")
+    name: str = Field(description="素材名称")
+    material_type: str = Field(description="素材类型")
+    file_size: Optional[int] = Field(default=None, description="文件大小(字节)")
+    mime_type: Optional[str] = Field(default=None, description="MIME类型")
+    # 分类属性
+    scene_code: Optional[str] = Field(default=None, description="场景代码")
+    technique_code: Optional[str] = Field(default=None, description="手法代码")
+    properties_code: Optional[List[str]] = Field(default=None, description="属性代码列表")
+    # 视频属性
+    duration: Optional[int] = Field(default=None, description="视频时长（秒）")
+    resolution: Optional[str] = Field(default=None, description="视频分辨率")
+    # OSS信息
+    oss_bucket: Optional[str] = Field(default=None, description="OSS Bucket")
+    oss_key: Optional[str] = Field(default=None, description="OSS对象键")
+    # 其他元数据
+    material_metadata: Optional[dict] = Field(default=None, description="素材元数据")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
+
+
+@router.get("/{material_id}/properties", response_model=MaterialPropertiesResponse, summary="获取素材属性")
+async def get_material_properties(
+    material_id: str,
+    user=Depends(get_verified_user)
+):
+    """
+    获取指定素材的详细属性信息。
+    
+    Args:
+        material_id (str): 素材ID
+        user: 已认证的用户对象
+        
+    Returns:
+        MaterialPropertiesResponse: 素材属性信息
+    """
+    try:
+        material = HSAIMaterials.get_material_by_id(material_id)
+        if not material or material.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Material not found"
+            )
+        
+        # 处理属性代码，将其转换为列表格式
+        properties_list = None
+        if material.properties_code:
+            properties_list = material.properties_code.split("_")
+        
+        return MaterialPropertiesResponse(
+            id=material.id,
+            name=material.name,
+            material_type=material.material_type,
+            file_size=material.file_size,
+            mime_type=material.mime_type,
+            scene_code=material.scene_code,
+            technique_code=material.technique_code,
+            properties_code=properties_list,
+            duration=material.duration,
+            resolution=material.resolution,
+            oss_bucket=material.oss_bucket,
+            oss_key=material.oss_key,
+            material_metadata=material.material_metadata,
+            created_at=material.created_at,
+            updated_at=material.updated_at
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception(f"Error getting material properties: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()
@@ -1109,1035 +1348,6 @@ async def get_material_stats(user=Depends(get_verified_user)):
         
     except Exception as e:
         log.exception(f"Error getting material stats: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-############################
-# 素材属性查询
-############################
-
-# 调试语句，确认Field是否可用
-# print(f"Field is available: {Field}")
-
-class MaterialPropertiesResponse(BaseModel):
-    """素材属性响应模型"""
-    id: str = Field(description="素材唯一标识符")
-    name: str = Field(description="素材名称")
-    material_type: str = Field(description="素材类型")
-    file_size: Optional[int] = Field(default=None, description="文件大小(字节)")
-    mime_type: Optional[str] = Field(default=None, description="MIME类型")
-    # 分类属性
-    scene_code: Optional[str] = Field(default=None, description="场景代码")
-    technique_code: Optional[str] = Field(default=None, description="手法代码")
-    properties_code: Optional[List[str]] = Field(default=None, description="属性代码列表")
-    # 视频属性
-    duration: Optional[int] = Field(default=None, description="视频时长（秒）")
-    resolution: Optional[str] = Field(default=None, description="视频分辨率")
-    # OSS信息
-    oss_bucket: Optional[str] = Field(default=None, description="OSS Bucket")
-    oss_key: Optional[str] = Field(default=None, description="OSS对象键")
-    # 其他元数据
-    material_metadata: Optional[dict] = Field(default=None, description="素材元数据")
-    created_at: int = Field(description="创建时间戳")
-    updated_at: int = Field(description="更新时间戳")
-
-@router.get("/{material_id}/properties", response_model=MaterialPropertiesResponse, summary="获取素材属性")
-async def get_material_properties(
-    material_id: str,
-    user=Depends(get_verified_user)
-):
-    """
-    获取指定素材的详细属性信息。
-    
-    Args:
-        material_id (str): 素材ID
-        user: 已认证的用户对象
-        
-    Returns:
-        MaterialPropertiesResponse: 素材属性信息
-    """
-    try:
-        material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Material not found"
-            )
-        
-        # 处理属性代码，将其转换为列表格式
-        properties_list = None
-        if material.properties_code:
-            properties_list = material.properties_code.split("_")
-        
-        return MaterialPropertiesResponse(
-            id=material.id,
-            name=material.name,
-            material_type=material.material_type,
-            file_size=material.file_size,
-            mime_type=material.mime_type,
-            scene_code=material.scene_code,
-            technique_code=material.technique_code,
-            properties_code=properties_list,
-            duration=material.duration,
-            resolution=material.resolution,
-            oss_bucket=material.oss_bucket,
-            oss_key=material.oss_key,
-            material_metadata=material.material_metadata,
-            created_at=material.created_at,
-            updated_at=material.updated_at
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error getting material properties: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-############################
-# 素材分类管理
-############################
-
-@router.get("/categories", response_model=PaginatedHSAIMaterialCategoryResponse, summary="获取素材分类列表")
-async def get_material_categories(
-    category_type: Optional[str] = Query(None, description="分类类型过滤：scene(场景)、technique(手法)、property(属性)"),
-    ps: int = Query(20, description="分页大小", ge=1, le=100),
-    pi: int = Query(1, description="分页索引，从1开始", ge=1)
-):
-    """
-    获取素材分类列表（分页），可按分类类型过滤。
-    
-    Args:
-        category_type (str, optional): 分类类型过滤
-        ps (int): 分页大小，范围1-100
-        pi (int): 分页索引，从1开始
-        
-    Returns:
-        PaginatedHSAIMaterialCategoryResponse: 分页的分类列表
-        - data: 分类列表
-        - pagination: 分页信息
-          - total: 总记录数
-          - page: 当前页码
-          - size: 每页大小
-          - total_pages: 总页数
-    """
-    try:
-        # 计算offset
-        offset = (pi - 1) * ps
-        
-        # 获取分类列表
-        if category_type:
-            categories = HSAIMaterialCategories.get_categories_by_type(category_type)
-        else:
-            categories = HSAIMaterialCategories.get_all_categories()
-        
-        # 应用分页（在内存中分页）
-        total = len(categories)
-        start_idx = offset
-        end_idx = offset + ps
-        paginated_categories = categories[start_idx:end_idx]
-        
-        # 转换为响应模型
-        responses = []
-        for category in paginated_categories:
-            response = HSAIMaterialCategoryResponse(
-                id=category.id,
-                name=category.name,
-                display_name=category.display_name,
-                category_type=category.category_type,
-                description=category.description,
-                is_active=category.is_active,
-                created_at=category.created_at,
-                updated_at=category.updated_at
-            )
-            responses.append(response)
-        
-        # 计算分页数据
-        total_pages = (total + ps - 1) // ps  # 向上取整
-        
-        pagination = PaginationData(
-            total=total,
-            page=pi,
-            size=ps,
-            total_pages=total_pages
-        )
-        
-        return PaginatedHSAIMaterialCategoryResponse(
-            data=responses,
-            pagination=pagination
-        )
-        
-    except Exception as e:
-        log.exception(f"Error getting material categories: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.post("/categories", response_model=HSAIMaterialCategoryResponse, summary="创建素材分类")
-async def create_material_category(
-    form_data: HSAIMaterialCategoryForm
-):
-    """
-    创建新的素材分类。
-    
-    Args:
-        form_data (HSAIMaterialCategoryForm): 分类表单数据
-        
-    Returns:
-        HSAIMaterialCategoryResponse: 创建的分类信息
-    """
-    try:
-        # 验证分类类型
-        valid_types = ["scene", "technique", "property"]
-        if form_data.category_type not in valid_types:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid category type. Must be one of: {', '.join(valid_types)}"
-            )
-        
-        # 验证分类名称长度（控制在10个字符以内）
-        if len(form_data.name) > 10:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Category name must be 10 characters or less"
-            )
-        
-        category = HSAIMaterialCategories.insert_new_category(form_data)
-        if not category:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create category"
-            )
-        
-        # 转换为响应模型
-        response = HSAIMaterialCategoryResponse(
-            id=category.id,
-            name=category.name,
-            display_name=category.display_name,
-            category_type=category.category_type,
-            description=category.description,
-            is_active=category.is_active,
-            created_at=category.created_at,
-            updated_at=category.updated_at
-        )
-        
-        return response
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error creating material category: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.put("/categories/{category_id}", response_model=HSAIMaterialCategoryResponse, summary="更新素材分类")
-async def update_material_category(
-    category_id: str,
-    form_data: HSAIMaterialCategoryForm
-):
-    """
-    更新指定的素材分类。
-    
-    Args:
-        category_id (str): 分类ID
-        form_data (HSAIMaterialCategoryForm): 分类表单数据
-        
-    Returns:
-        HSAIMaterialCategoryResponse: 更新的分类信息
-    """
-    try:
-        # 验证分类名称长度（控制在10个字符以内）
-        if form_data.name and len(form_data.name) > 10:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Category name must be 10 characters or less"
-            )
-        
-        category = HSAIMaterialCategories.get_category_by_id(category_id)
-        if not category:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Category not found"
-            )
-        
-        updated_category = HSAIMaterialCategories.update_category_by_id(category_id, form_data)
-        if not updated_category:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to update category"
-            )
-        
-        # 转换为响应模型
-        response = HSAIMaterialCategoryResponse(
-            id=updated_category.id,
-            name=updated_category.name,
-            display_name=updated_category.display_name,
-            category_type=updated_category.category_type,
-            description=updated_category.description,
-            is_active=updated_category.is_active,
-            created_at=updated_category.created_at,
-            updated_at=updated_category.updated_at
-        )
-        
-        return response
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error updating material category: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.delete("/categories/{category_id}", response_model=bool, summary="删除素材分类")
-async def delete_material_category(
-    category_id: str
-):
-    """
-    删除指定的素材分类（软删除）。
-    
-    Args:
-        category_id (str): 分类ID
-        
-    Returns:
-        bool: 删除成功返回True
-    """
-    try:
-        category = HSAIMaterialCategories.get_category_by_id(category_id)
-        if not category:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Category not found"
-            )
-        
-        result = HSAIMaterialCategories.delete_category_by_id(category_id)
-        return result
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error deleting material category: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-# 添加新的Pydantic模型用于回收站操作
-class MoveToRecoveryRequest(BaseModel):
-    """移入回收站请求模型"""
-    reason: Optional[str] = Field(default=None, description="操作原因")
-    # 移除了 operator_id 字段，直接使用当前登录用户信息
-
-
-class RestoreRequest(BaseModel):
-    """还原文件请求模型"""
-    target_directory: str = Field(description="目标目录")
-    # 移除了 operator_id 字段，直接使用当前登录用户信息
-
-
-class PermanentDeleteRequest(BaseModel):
-    """永久删除请求模型"""
-    reason: Optional[str] = Field(default=None, description="删除原因")
-    # 移除了 operator_id 字段，直接使用当前登录用户信息
-
-
-class BatchOperationRequest(BaseModel):
-    """批量操作请求模型"""
-    operation: str = Field(description="操作类型 (restore 或 delete)")
-    material_ids: List[str] = Field(description="素材ID列表")
-    target_directory: Optional[str] = Field(default=None, description="目标目录（restore操作时必需）")
-    # 移除了 operator_id 字段，直接使用当前登录用户信息
-
-
-# 添加文件操作日志模型
-class FileOperationLogModel(BaseModel):
-    """文件操作日志模型"""
-    id: str = Field(description="日志唯一标识符")
-    material_id: str = Field(description="素材唯一标识符")
-    operation_type: str = Field(description="操作类型")
-    source_path: str = Field(description="源文件路径")
-    target_path: Optional[str] = Field(default=None, description="目标文件路径")
-    operator_id: str = Field(description="操作人ID")
-    operation_time: int = Field(description="操作时间")
-    details: Optional[dict] = Field(default=None, description="操作详情")
-    created_at: int = Field(description="创建时间戳")
-    updated_at: int = Field(description="更新时间戳")
-
-
-class FileOperationLogForm(BaseModel):
-    """文件操作日志表单模型"""
-    material_id: str = Field(description="素材唯一标识符")
-    operation_type: str = Field(description="操作类型")
-    source_path: str = Field(description="源文件路径")
-    target_path: Optional[str] = Field(default=None, description="目标文件路径")
-    operation_time: int = Field(description="操作时间")
-    details: Optional[dict] = Field(default=None, description="操作详情")
-    # 移除了 operator_id 字段，直接使用当前登录用户信息
-import time
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
-
-# 已移除错误的导入语句
-# from app.api.dependencies import get_verified_user
-# from app.core.config import settings
-# from app.core.logger import log
-# from app.models.material import HSAIMaterialForm, HSAIMaterials
-# from app.schemas.material import HSAIMaterialResponse, MoveToRecoveryRequest
-# from app.schemas.pagination import PaginationData
-
-# 添加缺失的导入
-from open_webui.models.hsai_materials import HSAIMaterialForm, HSAIMaterials, HSAIFileOperationLogForm
-from open_webui.constants import ERROR_MESSAGES
-
-
-# 移除了重复的router定义
-
-
-class FileOperationLogResponse(BaseModel):
-    """文件操作日志响应模型"""
-    id: str = Field(description="日志唯一标识符")
-    material_id: str = Field(description="素材唯一标识符")
-    operation_type: str = Field(description="操作类型（upload/delete/restore/move/modify）")
-    source_path: str = Field(description="源文件路径")
-    target_path: Optional[str] = Field(default=None, description="目标文件路径")
-    operator_id: str = Field(description="操作人ID")
-    operation_time: int = Field(description="操作时间")
-    details: Optional[dict] = Field(default=None, description="操作详情")
-    created_at: int = Field(description="创建时间戳")
-    updated_at: int = Field(description="更新时间戳")
-
-
-class PaginatedHSAIFileOperationLogResponse(BaseModel):
-    """分页的文件操作日志响应模型"""
-    data: List[FileOperationLogResponse]
-    pagination: PaginationData
-
-# 添加文件操作日志的辅助函数
-async def _log_file_operation(
-    material_id: str,
-    operation_type: str,
-    source_path: str,
-    operator_id: str,
-    target_path: Optional[str] = None,
-    details: Optional[dict] = None
-):
-    """
-    记录文件操作日志
-    
-    Args:
-        material_id: 素材ID
-        operation_type: 操作类型
-        source_path: 源路径
-        operator_id: 操作人ID
-        target_path: 目标路径（可选）
-        details: 操作详情（可选）
-    """
-    # 这里应该将日志保存到数据库
-    # 为简化实现，我们只记录到日志中
-    log.info(f"File operation logged: material_id={material_id}, operation_type={operation_type}, "
-             f"source_path={source_path}, target_path={target_path}, operator_id={operator_id}, details={details}")
-
-############################
-# 回收站管理接口
-############################
-
-@router.post("/{material_id}/move-to-recovery", response_model=HSAIMaterialResponse, summary="移入回收站（软删除）")
-async def move_material_to_recovery(
-    material_id: str,
-    request: MoveToRecoveryRequest,
-    user=Depends(get_verified_user)
-):
-    """
-    将指定素材从原目录移动到回收站目录，在数据库中更新删除标志位和原目录信息，记录操作日志
-    
-    Args:
-        material_id (str): 素材唯一标识符
-        request (MoveToRecoveryRequest): 请求参数
-        user: 已认证的用户对象
-        
-    Returns:
-        HSAIMaterialResponse: 更新后的素材信息
-    """
-    try:
-        # 获取素材信息
-        material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Material not found"
-            )
-        
-        # 更新素材信息
-        update_data = {
-            "is_deleted": True,
-            "original_directory": material.file_path,
-            "deleted_at": int(time.time()),
-            "deleted_by": user.id  # 使用当前登录用户ID
-        }
-        
-        updated_material = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
-        if not updated_material:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to move material to recovery"
-            )
-        
-        # 记录操作日志
-        await _log_file_operation(
-            material_id=material_id,
-            operation_type="delete",
-            source_path=material.file_path,
-            target_path=f"recovery/{material_id}",
-            operator_id=user.id,  # 使用当前登录用户ID
-            details={"reason": request.reason} if request.reason else None
-        )
-        
-        # 返回更新后的素材信息
-        return HSAIMaterialResponse(
-            **updated_material.model_dump(),
-            upload_url=updated_material.file_path,
-            thumbnail_url=f"/hsai/materials/{material_id}/thumbnail" if updated_material.material_type in ["image", "video"] else None,
-            download_url=updated_material.file_path
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error moving material to recovery: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.post("/recovery/{material_id}/restore", response_model=HSAIMaterialResponse, summary="还原文件")
-async def restore_material(
-    material_id: str,
-    request: RestoreRequest,
-    user=Depends(get_verified_user)
-):
-    """
-    将回收站中的文件还原到指定目录，更新数据库记录，记录操作日志
-    
-    Args:
-        material_id (str): 素材唯一标识符
-        request (RestoreRequest): 请求参数
-        user: 已认证的用户对象
-        
-    Returns:
-        HSAIMaterialResponse: 更新后的素材信息
-    """
-    try:
-        # 获取素材信息
-        material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Material not found"
-            )
-        
-        if not material.is_deleted:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Material is not in recovery"
-            )
-        
-        if request.operation == "restore":
-            if not request.target_directory:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Target directory is required for restore operation"
-                )
-            
-            # 获取素材信息以获取原始目录
-            material = HSAIMaterials.get_material_by_id(material_id)
-            if not material or material.user_id != user.id:
-                continue
-            
-            if not material.is_deleted:
-                continue
-            
-            # 还原操作 - 使用原始目录进行还原
-            update_data = {
-                "is_deleted": False,
-                "file_path": material.original_directory,  # 从原始目录还原
-                "original_directory": None,
-                "deleted_at": None,
-                "deleted_by": None
-            }
-            
-            result = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
-            if result:
-                success_count += 1
-                
-                # 记录操作日志
-                await _log_file_operation(
-                    material_id=material_id,
-                    operation_type="restore",
-                    source_path=f"recovery/{material_id}",
-                    target_path=material.original_directory,  # 使用原始目录作为目标路径
-                    operator_id=user.id  # 使用当前登录用户ID
-                )
-        
-        updated_material = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
-        if not updated_material:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to restore material"
-            )
-        
-        # 记录操作日志
-        await _log_file_operation(
-            material_id=material_id,
-            operation_type="restore",
-            source_path=f"recovery/{material_id}",
-            target_path=updated_material.file_path,
-            operator_id=user.id  # 使用当前登录用户ID
-        )
-        
-        # 返回更新后的素材信息
-        return HSAIMaterialResponse(
-            **updated_material.model_dump(),
-            upload_url=updated_material.file_path,
-            thumbnail_url=f"/hsai/materials/{material_id}/thumbnail" if updated_material.material_type in ["image", "video"] else None,
-            download_url=updated_material.file_path
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error restoring material: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.delete("/{material_id}/permanent-delete", response_model=bool, summary="永久删除文件")
-async def permanent_delete_material(
-    material_id: str,
-    request: PermanentDeleteRequest,
-    user=Depends(get_verified_user)
-):
-    """
-    根据素材ID在素材表中找到对应的记录，通过素材文件的位置信息确定需要删除的OSS文件
-    （企业目录或回收站目录中的文件），彻底删除OSS文件和数据库记录，记录操作日志。
-    此接口统一处理所有永久删除操作，客户端无需关心文件具体位置。
-    
-    Args:
-        material_id (str): 素材唯一标识符
-        request (PermanentDeleteRequest): 请求参数
-        user: 已认证的用户对象
-        
-    Returns:
-        bool: 删除成功返回True
-    """
-    try:
-        # 获取素材信息
-        material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Material not found"
-            )
-        
-        # 删除OSS文件
-        try:
-            Storage.delete_file(material.file_path)
-        except Exception as e:
-            log.warning(f"Failed to delete OSS file {material.file_path}: {e}")
-        
-        # 删除数据库记录
-        result = HSAIMaterials.delete_material_by_id(material_id)
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to delete material record"
-            )
-        
-        # 记录操作日志
-        await _log_file_operation(
-            material_id=material_id,
-            operation_type="permanent_delete",
-            source_path=material.file_path,
-            operator_id=user.id,  # 使用当前登录用户ID
-            details={"reason": request.reason} if request.reason else None
-        )
-        
-        return True
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error permanently deleting material: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.get("/recovery/list", response_model=PaginatedHSAIMaterialResponse, summary="获取回收站文件列表")
-async def get_recovery_materials(
-    enterprise_id: str,
-    ps: int = Query(20, description="分页大小", ge=1, le=100),
-    pi: int = Query(1, description="分页索引，从1开始", ge=1),
-    sort_by: str = Query("delete_time", description="排序字段（delete_time/name/size）"),
-    order: str = Query("desc", description="排序方式（asc/desc）"),
-    user=Depends(get_verified_user)
-):
-    """
-    获取指定企业回收站中的文件列表
-    
-    Args:
-        enterprise_id (str): 企业ID
-        ps (int): 分页大小，范围1-100
-        pi (int): 分页索引，从1开始
-        sort_by (str): 排序字段（delete_time/name/size），默认delete_time
-        order (str): 排序方式（asc/desc），默认desc
-        user: 已认证的用户对象
-        
-    Returns:
-        PaginatedHSAIMaterialResponse: 分页的回收站文件列表
-        - data: 回收站文件列表
-        - pagination: 分页信息
-          - total: 总记录数
-          - page: 当前页码
-          - size: 每页大小
-          - total_pages: 总页数
-    """
-    try:
-        # 计算offset
-        offset = (pi - 1) * ps
-        
-        # 获取企业已删除的素材
-        materials = HSAIMaterials.get_deleted_materials_by_enterprise(
-            enterprise_id, 
-            limit=ps, 
-            offset=offset
-        )
-        
-        # 获取总数
-        total = HSAIMaterials.count_deleted_materials_by_enterprise(enterprise_id)
-        
-        # 转换为响应模型
-        responses = []
-        for material in materials:
-            response = HSAIMaterialResponse(
-                **material.model_dump(),
-                upload_url=material.file_path,
-                thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material.material_type in ["image", "video"] else None,
-                download_url=material.file_path
-            )
-            responses.append(response)
-        
-        # 计算分页数据
-        total_pages = (total + ps - 1) // ps  # 向上取整
-        
-        pagination = PaginationData(
-            total=total,
-            page=pi,
-            size=ps,
-            total_pages=total_pages
-        )
-        
-        return PaginatedHSAIMaterialResponse(
-            data=responses,
-            pagination=pagination
-        )
-        
-    except Exception as e:
-        log.exception(f"Error getting recovery materials: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.post("/recovery/batch-operation", response_model=bool, summary="批量操作回收站文件")
-async def batch_operation_recovery_materials(
-    request: BatchOperationRequest,
-    user=Depends(get_verified_user)
-):
-    """
-    对回收站中的多个文件进行批量还原或删除操作
-    
-    Args:
-        request (BatchOperationRequest): 请求参数
-        user: 已认证的用户对象
-        
-    Returns:
-        bool: 操作成功返回True
-    """
-    try:
-        success_count = 0
-        
-        for material_id in request.material_ids:
-            try:
-                if request.operation == "restore":
-                    if not request.target_directory:
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Target directory is required for restore operation"
-                        )
-                    
-                    # 还原操作
-                    update_data = {
-                        "is_deleted": False,
-                        "original_directory": None,
-                        "deleted_at": None,
-                        "deleted_by": None
-                    }
-                    
-                    result = HSAIMaterials.update_material_by_id(material_id, HSAIMaterialForm(**update_data))
-                    if result:
-                        success_count += 1
-                        
-                        # 记录操作日志
-                        await _log_file_operation(
-                            material_id=material_id,
-                            operation_type="restore",
-                            source_path=f"recovery/{material_id}",
-                            target_path=request.target_directory,
-                            operator_id=user.id  # 使用当前登录用户ID
-                        )
-                        
-                elif request.operation == "delete":
-                    # 永久删除操作
-                    material = HSAIMaterials.get_material_by_id(material_id)
-                    if material and material.user_id == user.id:
-                        # 删除OSS文件
-                        try:
-                            Storage.delete_file(material.file_path)
-                        except Exception as e:
-                            log.warning(f"Failed to delete OSS file {material.file_path}: {e}")
-                        
-                        # 删除数据库记录
-                        if HSAIMaterials.delete_material_by_id(material_id):
-                            success_count += 1
-                            
-                            # 记录操作日志
-                            await _log_file_operation(
-                                material_id=material_id,
-                                operation_type="permanent_delete",
-                                source_path=material.file_path,
-                                operator_id=user.id  # 使用当前登录用户ID
-                            )
-                
-                else:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Invalid operation: {request.operation}"
-                    )
-                    
-            except Exception as e:
-                log.warning(f"Error processing material {material_id}: {e}")
-                continue
-        
-        return success_count == len(request.material_ids)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error in batch operation: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-############################
-# 文件操作日志接口
-############################
-
-@router.post("/logs", response_model=HSAIFileOperationLogResponse, summary="记录文件操作日志")
-async def log_file_operation(
-    form_data: FileOperationLogForm,
-    user=Depends(get_verified_user)
-):
-    """
-    记录文件操作日志
-    
-    Args:
-        form_data (FileOperationLogForm): 日志表单数据
-        user: 已认证的用户对象
-        
-    Returns:
-        HSAIFileOperationLogResponse: 创建的日志信息
-    """
-    try:
-        # 转换表单数据为数据库模型，并添加当前用户ID
-        form_data_dict = form_data.model_dump()
-        form_data_dict["operator_id"] = user.id  # 使用当前登录用户ID
-        hsai_form_data = HSAIFileOperationLogForm(**form_data_dict)
-        
-        # 创建日志记录
-        log_entry = HSAIFileOperationLogs.insert_new_log(hsai_form_data)
-        if not log_entry:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create log entry"
-            )
-        
-        return HSAIFileOperationLogResponse(**log_entry.model_dump())
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error logging file operation: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.get("/logs", response_model=PaginatedHSAIFileOperationLogResponse, summary="查询文件操作日志")
-async def get_file_operation_logs(
-    material_id: Optional[str] = Query(None, description="素材唯一标识符"),
-    enterprise_id: Optional[str] = Query(None, description="企业ID"),
-    operation_type: Optional[str] = Query(None, description="操作类型"),
-    operator_id: Optional[str] = Query(None, description="操作人ID"),
-    start_time: Optional[int] = Query(None, description="查询起始时间"),
-    end_time: Optional[int] = Query(None, description="查询结束时间"),
-    ps: int = Query(20, description="分页大小", ge=1, le=100),
-    pi: int = Query(1, description="分页索引，从1开始", ge=1),
-    user=Depends(get_verified_user)
-):
-    """
-    查询文件操作日志（分页）
-    
-    Args:
-        material_id (str, optional): 素材唯一标识符
-        enterprise_id (str, optional): 企业ID
-        operation_type (str, optional): 操作类型
-        operator_id (str, optional): 操作人ID
-        start_time (int, optional): 查询起始时间
-        end_time (int, optional): 查询结束时间
-        ps (int): 分页大小，范围1-100
-        pi (int): 分页索引，从1开始
-        user: 已认证的用户对象
-        
-    Returns:
-        PaginatedHSAIFileOperationLogResponse: 分页的文件操作日志列表
-        - data: 日志列表
-        - pagination: 分页信息
-          - total: 总记录数
-          - page: 当前页码
-          - size: 每页大小
-          - total_pages: 总页数
-    """
-    try:
-        # 计算offset
-        offset = (pi - 1) * ps
-        
-        # 获取日志列表
-        logs = HSAIFileOperationLogs.get_logs(
-            material_id=material_id,
-            enterprise_id=enterprise_id,
-            operation_type=operation_type,
-            operator_id=operator_id,
-            start_time=start_time,
-            end_time=end_time,
-            limit=ps,
-            offset=offset
-        )
-        
-        # 获取总数
-        total = HSAIFileOperationLogs.get_logs_count(
-            material_id=material_id,
-            enterprise_id=enterprise_id,
-            operation_type=operation_type,
-            operator_id=operator_id,
-            start_time=start_time,
-            end_time=end_time
-        )
-        
-        # 转换为响应模型
-        responses = [HSAIFileOperationLogResponse(**log.model_dump()) for log in logs]
-        
-        # 计算分页数据
-        total_pages = (total + ps - 1) // ps  # 向上取整
-        
-        pagination = PaginationData(
-            total=total,
-            page=pi,
-            size=ps,
-            total_pages=total_pages
-        )
-        
-        return PaginatedHSAIFileOperationLogResponse(
-            data=responses,
-            pagination=pagination
-        )
-        
-    except Exception as e:
-        log.exception(f"Error getting file operation logs: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.get("/{material_id}/history", response_model=PaginatedHSAIFileOperationLogResponse, summary="获取文件操作历史")
-async def get_material_history(
-    material_id: str,
-    ps: int = Query(20, description="分页大小", ge=1, le=100),
-    pi: int = Query(1, description="分页索引，从1开始", ge=1),
-    user=Depends(get_verified_user)
-):
-    """
-    获取指定文件的所有操作历史记录（分页）
-    
-    Args:
-        material_id (str): 素材唯一标识符
-        ps (int): 分页大小，范围1-100
-        pi (int): 分页索引，从1开始
-        user: 已认证的用户对象
-        
-    Returns:
-        PaginatedHSAIFileOperationLogResponse: 分页的文件操作历史记录列表
-        - data: 历史记录列表
-        - pagination: 分页信息
-          - total: 总记录数
-          - page: 当前页码
-          - size: 每页大小
-          - total_pages: 总页数
-    """
-    try:
-        # 计算offset
-        offset = (pi - 1) * ps
-        
-        # 获取指定素材的日志列表
-        logs = HSAIFileOperationLogs.get_logs(
-            material_id=material_id,
-            limit=ps,
-            offset=offset
-        )
-        
-        # 获取总数
-        total = HSAIFileOperationLogs.get_logs_count(material_id=material_id)
-        
-        # 转换为响应模型
-        responses = [HSAIFileOperationLogResponse(**log.model_dump()) for log in logs]
-        
-        # 计算分页数据
-        total_pages = (total + ps - 1) // ps  # 向上取整
-        
-        pagination = PaginationData(
-            total=total,
-            page=pi,
-            size=ps,
-            total_pages=total_pages
-        )
-        
-        return PaginatedHSAIFileOperationLogResponse(
-            data=responses,
-            pagination=pagination
-        )
-        
-    except Exception as e:
-        log.exception(f"Error getting material history: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()
