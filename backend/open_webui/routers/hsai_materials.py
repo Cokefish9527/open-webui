@@ -37,11 +37,14 @@ from open_webui.env import SRC_LOG_LEVELS
 from open_webui.config import UPLOAD_DIR
 
 import aiofiles
-import os
 import hashlib
 import mimetypes
 import json
-from open_webui.storage.provider import Storage
+try:
+    from open_webui.storage.provider import Storage
+    HAS_OSS = True
+except ImportError:
+    HAS_OSS = False
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -50,6 +53,11 @@ router = APIRouter(prefix="/hsai/materials", tags=["HSAI 素材管理"])
 
 # HSAI素材存储配置 - 使用OSS存储
 HSAI_MATERIALS_PREFIX = "hsai/materials"  # OSS存储前缀
+
+# 确保上传目录存在
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+LOCAL_STORAGE_PATH = os.path.join(UPLOAD_DIR, "materials")
+os.makedirs(LOCAL_STORAGE_PATH, exist_ok=True)
 
 ############################
 # 辅助函数
@@ -73,7 +81,7 @@ def _determine_material_type(mime_type: str) -> str:
     else:
         return "document"
 
-async def _schedule_ai_analysis(material_id: str, oss_url: str, material_type: str, user_id: str):
+async def _schedule_ai_analysis(material_id: str, file_url: str, material_type: str, user_id: str):
     """异步调度AI分析任务"""
     # 这里可以集成AI分析服务
     # 例如：图片识别、视频内容分析、文档OCR等
@@ -284,6 +292,39 @@ def _process_zip_file(zip_file: UploadFile, user_id: str, base_scene_code: Optio
     
     return processed_files
 
+def _save_file_local(content: bytes, filename: str, user_id: str) -> tuple:
+    """
+    将文件保存到本地存储
+    
+    Args:
+        content: 文件内容
+        filename: 文件名
+        user_id: 用户ID
+        
+    Returns:
+        tuple: (文件访问URL, 文件存储路径)
+    """
+    # 生成唯一文件名
+    file_hash = hashlib.md5(content).hexdigest()
+    file_extension = Path(filename).suffix
+    unique_filename = f"{Path(filename).stem}_{file_hash}{file_extension}"
+    
+    # 创建用户特定的存储目录
+    user_storage_path = os.path.join(LOCAL_STORAGE_PATH, user_id)
+    os.makedirs(user_storage_path, exist_ok=True)
+    
+    # 完整文件路径
+    file_path = os.path.join(user_storage_path, unique_filename)
+    
+    # 保存文件
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # 生成访问URL
+    file_url = f"http://localhost:8080/uploads/materials/{user_id}/{unique_filename}"
+    
+    return file_url, file_path
+
 ############################
 # 文件夹管理
 ############################
@@ -354,10 +395,10 @@ async def create_material_folder(
         )
 
 ############################
-# 素材上传 - OSS集成版本
+# 素材上传 - 支持本地存储和OSS存储
 ############################
 
-@router.post("/upload", response_model=List[HSAIMaterialResponse], summary="上传素材到OSS")
+@router.post("/upload", response_model=List[HSAIMaterialResponse], summary="上传素材")
 async def upload_material(
     file: UploadFile = File(...),
     name: Optional[str] = Form(None),
@@ -372,11 +413,11 @@ async def upload_material(
     user=Depends(get_verified_user)
 ):
     """
-    上传素材文件到阿里云OSS。
+    上传素材文件，支持本地存储和OSS存储。
     
     支持多种文件格式的上传，包括图片、视频、音频、文档等。
     支持压缩包上传，系统会自动解析压缩包内的文件并按规则重命名。
-    文件将直接上传到阿里云OSS存储，上传后可选择进行AI自动分析。
+    文件将存储在本地或上传到阿里云OSS存储，上传后可选择进行AI自动分析。
     
     Args:
         file (UploadFile): 要上传的文件（支持单个文件或压缩包）
@@ -394,11 +435,11 @@ async def upload_material(
         List[HSAIMaterialResponse]: 上传成功的素材信息列表
         - id: 素材ID
         - name: 素材名称
-        - file_path: OSS存储路径
+        - file_path: 存储路径
         - file_size: 文件大小
         - mime_type: 文件MIME类型
         - material_type: 素材类型
-        - upload_url: OSS文件访问URL
+        - upload_url: 文件访问URL
         
     Raises:
         HTTPException: 400 - 文件格式不支持或文件过大
@@ -435,43 +476,57 @@ async def upload_material(
                 mime_type = mimetypes.guess_type(file_info["new_filename"])[0]
                 material_type = _determine_material_type(mime_type)
                 
-                # 生成OSS存储路径
-                storage_filename = f"{Path(file_info['new_filename']).stem}_{file_hash}{Path(file_info['new_filename']).suffix}"
-                
-                # 上传文件到OSS
-                try:
-                    # 使用Storage provider上传到OSS
-                    from io import BytesIO
-                    file_like = BytesIO(file_info["content"])
-                    
-                    oss_url, oss_path = Storage.upload_file(
-                        file=file_like,
-                        filename=storage_filename,
-                        tags={
-                            "user_id": user.id,
-                            "material_type": material_type,
-                            "hsai_module": "materials",
-                            "original_filename": file_info["original_filename"]
-                        }
-                    )
-                    
-                    log.info(f"Material uploaded to OSS: {oss_path}")
-                    
-                except Exception as upload_error:
-                    log.error(f"OSS upload failed: {upload_error}")
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Failed to upload file to OSS: {str(upload_error)}"
-                    )
+                # 尝试上传到OSS，如果失败则保存到本地
+                storage_provider = "local"
+                file_url = ""
+                file_path = ""
+                if HAS_OSS:
+                    try:
+                        # 使用Storage provider上传到OSS
+                        from io import BytesIO
+                        file_like = BytesIO(file_info["content"])
+                        
+                        oss_url, oss_path = Storage.upload_file(
+                            file=file_like,
+                            filename=file_info["new_filename"],
+                            tags={
+                                "user_id": user.id,
+                                "material_type": material_type,
+                                "hsai_module": "materials",
+                                "original_filename": file_info["original_filename"]
+                            }
+                        )
+                        
+                        log.info(f"Material uploaded to OSS: {oss_path}")
+                        file_path = oss_path
+                        file_url = oss_url
+                        storage_provider = "oss"
+                        
+                    except Exception as upload_error:
+                        log.warning(f"OSS upload failed, using local storage: {upload_error}")
+                        # 使用本地存储
+                        file_url, file_path = _save_file_local(file_info["content"], file_info["new_filename"], user.id)
+                else:
+                    # 使用本地存储
+                    file_url, file_path = _save_file_local(file_info["content"], file_info["new_filename"], user.id)
                 
                 # 提取文件元数据
                 material_metadata = {
                     "original_filename": file_info["original_filename"],
                     "upload_time": int(time.time()),
-                    "oss_url": oss_url,
-                    "storage_provider": "oss"
+                    "file_url": file_url,
+                    "storage_provider": storage_provider
                 }
                 
+                # 如果file_url是bytes类型，则进行解码
+                if isinstance(material_metadata.get("file_url"), bytes):
+                    try:
+                        material_metadata["file_url"] = material_metadata["file_url"].decode('utf-8')
+                    except UnicodeDecodeError:
+                        # 如果UTF-8解码失败，则使用base64编码
+                        import base64
+                        material_metadata["file_url"] = base64.b64encode(material_metadata["file_url"]).decode('utf-8')
+
                 # 初始化视频元数据
                 duration = None
                 resolution = None
@@ -507,15 +562,29 @@ async def upload_material(
                 # 处理属性代码
                 properties_list = None
                 if file_info["properties_code"]:
-                    properties_list = [file_info["properties_code"]]
-                
+                    # 如果是字符串格式，则尝试解析为列表
+                    if isinstance(file_info["properties_code"], str):
+                        try:
+                            properties_list = json.loads(file_info["properties_code"])
+                            # 确保是列表格式
+                            if isinstance(properties_list, str):
+                                properties_list = [properties_list]
+                            elif not isinstance(properties_list, list):
+                                properties_list = [file_info["properties_code"]]
+                        except json.JSONDecodeError:
+                            properties_list = [file_info["properties_code"]]
+                    elif isinstance(file_info["properties_code"], list):
+                        properties_list = file_info["properties_code"]
+                    else:
+                        properties_list = [str(file_info["properties_code"])]
+
                 # 创建素材记录
                 material_data = HSAIMaterialForm(
                     name=Path(file_info["new_filename"]).stem,
                     description=description,
                     material_type=material_type,
                     folder_id=folder_id,
-                    file_path=oss_path,  # 存储OSS路径
+                    file_path=file_path,  # 存储文件路径
                     file_size=len(file_info["content"]),
                     file_hash=file_hash,
                     mime_type=mime_type,
@@ -530,15 +599,19 @@ async def upload_material(
                 )
                 
                 log.info(f"Creating material record with data: {material_data}")
+                log.info(f"Material data dict: {material_data.model_dump()}")
                 
                 material = HSAIMaterials.insert_new_material(user.id, material_data)
                 if not material:
                     log.error("Failed to create material record in database")
-                    # 如果数据库记录创建失败，尝试删除OSS文件
-                    try:
-                        Storage.delete_file(oss_path)
-                    except:
-                        log.warning(f"Failed to cleanup OSS file after database error: {oss_path}")
+                    log.error(f"Material data that failed: {material_data}")
+                    log.error(f"Material data dict: {material_data.model_dump()}")
+                    # 如果是OSS存储且数据库记录创建失败，尝试删除OSS文件
+                    if storage_provider == "oss":
+                        try:
+                            Storage.delete_file(file_path)
+                        except:
+                            log.warning(f"Failed to cleanup OSS file after database error: {file_path}")
                     
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
@@ -550,15 +623,26 @@ async def upload_material(
                 # 如果启用自动分析，异步执行AI分析
                 if auto_analyze:
                     try:
-                        await _schedule_ai_analysis(material.id, oss_url, material_type, user.id)
+                        await _schedule_ai_analysis(material.id, file_url, material_type, user.id)
                     except Exception as ai_error:
                         log.warning(f"Failed to schedule AI analysis: {ai_error}")
                 
+                # 处理可能的字节类型数据
+                safe_file_url = file_url
+                if isinstance(safe_file_url, bytes):
+                    try:
+                        safe_file_url = safe_file_url.decode('utf-8')
+                    except UnicodeDecodeError:
+                        import base64
+                        safe_file_url = base64.b64encode(safe_file_url).decode('utf-8')
+                
+                # 创建响应对象时排除properties_code字段，使用处理后的值
                 response = HSAIMaterialResponse(
-                    **material.model_dump(),
-                    upload_url=oss_url,  # 返回OSS访问URL
+                    **{k: v for k, v in material.model_dump().items() if k != 'properties_code'},
+                    upload_url=safe_file_url,  # 返回文件访问URL
                     thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material_type in ["image", "video"] else None,
-                    download_url=oss_url  # 直接使用OSS URL进行下载
+                    download_url=safe_file_url,  # 直接使用文件URL进行下载
+                    properties_code=material.properties_code.split("_") if material.properties_code else None  # 将字符串转换为列表
                 )
                 
                 responses.append(response)
@@ -604,41 +688,56 @@ async def upload_material(
             base_name = name or Path(file.filename).stem
             filename_base = _generate_filename_with_codes(base_name, scene_code, technique_code, properties_list)
             
-            # 生成OSS存储路径
+            # 生成存储文件名
             file_extension = Path(file.filename).suffix
             storage_filename = f"{filename_base}_{file_hash}{file_extension}"
             
-            # 上传文件到OSS
-            try:
-                # 使用Storage provider上传到OSS
-                oss_url, oss_path = Storage.upload_file(
-                    file=file.file,
-                    filename=storage_filename,
-                    tags={
-                        "user_id": user.id,
-                        "material_type": material_type,
-                        "hsai_module": "materials",
-                        "original_filename": file.filename
-                    }
-                )
-                
-                log.info(f"Material uploaded to OSS: {oss_path}")
-                
-            except Exception as upload_error:
-                log.error(f"OSS upload failed: {upload_error}")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Failed to upload file to OSS: {str(upload_error)}"
-                )
+            # 尝试上传到OSS，如果失败则保存到本地
+            storage_provider = "local"
+            file_url = ""
+            file_path = ""
+            if HAS_OSS:
+                try:
+                    # 使用Storage provider上传到OSS
+                    file_url, file_path = Storage.upload_file(
+                        file=file.file,
+                        filename=storage_filename,
+                        tags={
+                            "user_id": user.id,
+                            "material_type": material_type,
+                            "hsai_module": "materials",
+                            "original_filename": file.filename
+                        }
+                    )
+                    
+                    log.info(f"Material uploaded to OSS: {file_path}")
+                    storage_provider = "oss"
+                    
+                except Exception as upload_error:
+                    log.warning(f"OSS upload failed, using local storage: {upload_error}")
+                    # 使用本地存储
+                    file_url, file_path = _save_file_local(content, storage_filename, user.id)
+            else:
+                # 使用本地存储
+                file_url, file_path = _save_file_local(content, storage_filename, user.id)
             
             # 提取文件元数据
             material_metadata = {
                 "original_filename": file.filename,
                 "upload_time": int(time.time()),
-                "oss_url": oss_url,
-                "storage_provider": "oss"
+                "file_url": file_url,
+                "storage_provider": storage_provider
             }
             
+            # 如果file_url是bytes类型，则进行解码
+            if isinstance(material_metadata.get("file_url"), bytes):
+                try:
+                    material_metadata["file_url"] = material_metadata["file_url"].decode('utf-8')
+                except UnicodeDecodeError:
+                    # 如果UTF-8解码失败，则使用base64编码
+                    import base64
+                    material_metadata["file_url"] = base64.b64encode(material_metadata["file_url"]).decode('utf-8')
+
             # 初始化视频元数据
             duration = None
             resolution = None
@@ -679,7 +778,7 @@ async def upload_material(
                 description=description,
                 material_type=material_type,
                 folder_id=folder_id,
-                file_path=oss_path,  # 存储OSS路径
+                file_path=file_path,  # 存储文件路径
                 file_size=file_size,
                 file_hash=file_hash,
                 mime_type=mime_type,
@@ -694,15 +793,40 @@ async def upload_material(
             )
             
             log.info(f"Creating material record with data: {material_data}")
+            log.info(f"Material data dict: {material_data.model_dump()}")
+            
+            # 添加额外的验证
+            try:
+                # 验证数据是否符合模型要求
+                validated_data = HSAIMaterialForm(**material_data.model_dump())
+                log.info(f"Material data validated successfully: {validated_data}")
+            except Exception as validation_error:
+                log.error(f"Material data validation failed: {validation_error}")
+                log.error(f"Material data that failed validation: {material_data}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid material data: {str(validation_error)}"
+                )
+            
+            # 这里是关键部分 - 添加更多日志
+            log.info(f"About to call HSAIMaterials.insert_new_material with user_id: {user.id}")
+            log.info(f"Material data being passed: {material_data}")
             
             material = HSAIMaterials.insert_new_material(user.id, material_data)
+            
+            log.info(f"Result from insert_new_material: {material}")
+            
             if not material:
                 log.error("Failed to create material record in database")
-                # 如果数据库记录创建失败，尝试删除OSS文件
-                try:
-                    Storage.delete_file(oss_path)
-                except:
-                    log.warning(f"Failed to cleanup OSS file after database error: {oss_path}")
+                log.error(f"User ID: {user.id}")
+                log.error(f"Material data that failed: {material_data}")
+                log.error(f"Material data dict: {material_data.model_dump()}")
+                # 如果是OSS存储且数据库记录创建失败，尝试删除OSS文件
+                if storage_provider == "oss":
+                    try:
+                        Storage.delete_file(file_path)
+                    except:
+                        log.warning(f"Failed to cleanup OSS file after database error: {file_path}")
                 
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -714,15 +838,24 @@ async def upload_material(
             # 如果启用自动分析，异步执行AI分析
             if auto_analyze:
                 try:
-                    await _schedule_ai_analysis(material.id, oss_url, material_type, user.id)
+                    await _schedule_ai_analysis(material.id, file_url, material_type, user.id)
                 except Exception as ai_error:
                     log.warning(f"Failed to schedule AI analysis: {ai_error}")
             
+            # 处理可能的字节类型数据
+            safe_file_url = file_url
+            if isinstance(safe_file_url, bytes):
+                try:
+                    safe_file_url = safe_file_url.decode('utf-8')
+                except UnicodeDecodeError:
+                    import base64
+                    safe_file_url = base64.b64encode(safe_file_url).decode('utf-8')
+            
             return [HSAIMaterialResponse(
-                **material.model_dump(),
-                upload_url=oss_url,  # 返回OSS访问URL
+                **{k: v for k, v in material.model_dump().items() if k != 'properties_code'},
+                upload_url=safe_file_url,  # 返回文件访问URL
                 thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material_type in ["image", "video"] else None,
-                download_url=oss_url,  # 直接使用OSS URL进行下载
+                download_url=safe_file_url,  # 直接使用文件URL进行下载
                 properties_code=material.properties_code.split("_") if material.properties_code else None  # 将字符串转换为列表
             )]
         
@@ -730,9 +863,11 @@ async def upload_material(
         raise
     except Exception as e:
         log.exception(f"Error uploading material: {e}")
+        # 添加更详细的错误信息
+        error_detail = f"Error uploading material: {str(e)}"
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
+            detail=error_detail
         )
 
 ############################
@@ -857,14 +992,32 @@ async def get_materials(
             if not download_url.startswith(('http://', 'https://')):
                 download_url = f"/hsai/materials/{material.id}/download"
             
+            # 处理可能的字节类型数据
+            safe_download_url = download_url
+            if isinstance(safe_download_url, bytes):
+                try:
+                    safe_download_url = safe_download_url.decode('utf-8')
+                except UnicodeDecodeError:
+                    import base64
+                    safe_download_url = base64.b64encode(safe_download_url).decode('utf-8')
+            
+            # 处理属性代码，将其转换为列表格式
+            properties_list = None
+            if material.properties_code:
+                if isinstance(material.properties_code, str):
+                    properties_list = material.properties_code.split("_")
+                elif isinstance(material.properties_code, list):
+                    properties_list = material.properties_code
+            
             response = HSAIMaterialResponse(
-                **material.model_dump(),
-                upload_url=download_url,
+                **{k: v for k, v in material.model_dump().items() if k not in ['properties_code']},
+                upload_url=safe_download_url,
                 thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material.material_type in ["image", "video"] else None,
-                download_url=download_url
+                download_url=safe_download_url,
+                properties_code=properties_list  # 返回列表格式
             )
             responses.append(response)
-        
+
         # 计算分页数据
         total_pages = (total + ps - 1) // ps  # 向上取整
         

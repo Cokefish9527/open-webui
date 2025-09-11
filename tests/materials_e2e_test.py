@@ -29,7 +29,7 @@ ENTERPRISE_ID: 企业ID（用于回收站列表接口）
 """
 
 # ========= 配置占位 =========
-BASE_URL = os.environ.get("HSAI_BASE_URL", "http://127.0.0.1:9090")  # 修改为9090端口
+BASE_URL = os.environ.get("HSAI_BASE_URL", "http://127.0.0.1:8080")  # 修改为9090端口
 TOKEN = os.environ.get("HSAI_TOKEN", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQ5NmUwZjQzLThiZmEtNDY0YS1iMzMzLTc3MzhkNGIzYjc2ZCJ9.AOSB4IFwd37m4mpnir4bZ0l_GjJuTl9VVG2XrwYmCOc")  # 不含 'Bearer '
 USER_ID = os.environ.get("HSAI_USER_ID", "496e0f43-8bfa-464a-b333-7738d4b3b76d")  # 修改为正确的用户ID
 ENTERPRISE_ID = os.environ.get("HSAI_ENTERPRISE_ID", "2")
