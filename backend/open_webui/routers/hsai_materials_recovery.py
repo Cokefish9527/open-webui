@@ -31,7 +31,9 @@ class MoveToRecoveryRequest(BaseModel):
 
 class RestoreRequest(BaseModel):
     """还原文件请求模型"""
-    target_directory: str = Field(description="目标目录")
+    # 为了向后兼容，保留target_directory参数，但不使用它
+    # 还原操作将自动使用original_directory字段记录的原始目录
+    target_directory: Optional[str] = Field(default=None, description="目标目录（已弃用，保留兼容性）")
 
 
 class PermanentDeleteRequest(BaseModel):
@@ -43,7 +45,7 @@ class BatchOperationRequest(BaseModel):
     """批量操作请求模型"""
     operation: str = Field(description="操作类型 (restore 或 delete)")
     material_ids: List[str] = Field(description="素材ID列表")
-    target_directory: Optional[str] = Field(default=None, description="目标目录（restore操作时必需）")
+    # 移除target_directory参数，还原操作将自动还原到原始目录
 
 
 # 辅助函数
@@ -102,10 +104,17 @@ async def move_material_to_recovery(
                 detail="Material not found"
             )
         
-        # 更新素材信息
+        # 更新素材信息 - 修复软删除逻辑
         update_data = {
+            "name": material.name,  # 保持原有名称
+            "material_type": material.material_type,  # 保持原有类型
+            "folder_id": None,  # 移入回收站时清空folder_id
+            "file_path": material.file_path,  # 保持原有文件路径
+            "file_size": material.file_size,  # 保持原有文件大小
+            "file_hash": material.file_hash,  # 保持原有文件哈希
+            "mime_type": material.mime_type,  # 保持原有MIME类型
             "is_deleted": True,
-            "original_directory": material.file_path,
+            "original_directory": material.folder_id,  # 记录原始folder_id用于还原
             "deleted_at": int(time.time()),
             "deleted_by": user.id  # 使用当前登录用户ID
         }
@@ -130,7 +139,6 @@ async def move_material_to_recovery(
         # 返回更新后的素材信息
         return HSAIMaterialResponse(
             **updated_material.model_dump(),
-            upload_url=updated_material.file_path,
             thumbnail_url=f"/hsai/materials/{material_id}/thumbnail" if updated_material.material_type in ["image", "video"] else None,
             download_url=updated_material.file_path
         )
@@ -148,19 +156,21 @@ async def move_material_to_recovery(
 @router.post("/recovery/{material_id}/restore", response_model=HSAIMaterialResponse, summary="还原文件")
 async def restore_material(
     material_id: str,
-    request: RestoreRequest,
+    request: RestoreRequest = None,  # 保持兼容性，但不使用参数
     user=Depends(get_verified_user)
 ):
     """
-    将回收站中的文件还原到指定目录，更新数据库记录，记录操作日志
+    将回收站中的文件还原到原始目录，更新数据库记录，记录操作日志
     
     Args:
         material_id (str): 素材唯一标识符
-        request (RestoreRequest): 请求参数
         user: 已认证的用户对象
         
     Returns:
         HSAIMaterialResponse: 更新后的素材信息
+    
+    Note:
+        还原操作将自动将素材还原到其原始目录（original_directory字段记录的位置）
     """
     try:
         # 获取素材信息
@@ -177,10 +187,22 @@ async def restore_material(
                 detail="Material is not in recovery"
             )
         
-        # 更新素材信息
+        if not material.original_directory:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Original directory information is missing, cannot restore"
+            )
+        
+        # 更新素材信息 - 修复还原逻辑
         update_data = {
+            "name": material.name,  # 保持原有名称
+            "material_type": material.material_type,  # 保持原有类型
+            "folder_id": material.original_directory,  # 还原到原始目录
+            "file_path": material.file_path,  # 保持文件路径不变
+            "file_size": material.file_size,  # 保持原有文件大小
+            "file_hash": material.file_hash,  # 保持原有文件哈希
+            "mime_type": material.mime_type,  # 保持原有MIME类型
             "is_deleted": False,
-            "file_path": material.original_directory,  # 还原到原始目录
             "original_directory": None,
             "deleted_at": None,
             "deleted_by": None
@@ -205,7 +227,6 @@ async def restore_material(
         # 返回更新后的素材信息
         return HSAIMaterialResponse(
             **updated_material.model_dump(),
-            upload_url=updated_material.file_path,
             thumbnail_url=f"/hsai/materials/{material_id}/thumbnail" if updated_material.material_type in ["image", "video"] else None,
             download_url=updated_material.file_path
         )
@@ -285,7 +306,6 @@ async def permanent_delete_material(
 
 @router.get("/recovery/list", response_model=PaginatedHSAIMaterialResponse, summary="获取回收站文件列表")
 async def get_recovery_materials(
-    enterprise_id: str,
     ps: int = Query(20, description="分页大小", ge=1, le=100),
     pi: int = Query(1, description="分页索引，从1开始", ge=1),
     sort_by: str = Query("delete_time", description="排序字段（delete_time/name/size）"),
@@ -293,10 +313,9 @@ async def get_recovery_materials(
     user=Depends(get_verified_user)
 ):
     """
-    获取指定企业回收站中的文件列表
+    获取当前用户回收站中的文件列表
     
     Args:
-        enterprise_id (str): 企业ID
         ps (int): 分页大小，范围1-100
         pi (int): 分页索引，从1开始
         sort_by (str): 排序字段（delete_time/name/size），默认delete_time
@@ -316,15 +335,15 @@ async def get_recovery_materials(
         # 计算offset
         offset = (pi - 1) * ps
         
-        # 获取企业已删除的素材
-        materials = HSAIMaterials.get_deleted_materials_by_enterprise(
-            enterprise_id, 
+        # 获取当前用户已删除的素材
+        materials = HSAIMaterials.get_deleted_materials_by_user_id(
+            user.id, 
             limit=ps, 
             offset=offset
         )
         
         # 获取总数
-        total = HSAIMaterials.count_deleted_materials_by_enterprise(enterprise_id)
+        total = HSAIMaterials.count_deleted_materials_by_user_id(user.id)
         
         # 转换为响应模型
         responses = []
@@ -381,15 +400,30 @@ async def batch_operation_recovery_materials(
         for material_id in request.material_ids:
             try:
                 if request.operation == "restore":
-                    if not request.target_directory:
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Target directory is required for restore operation"
-                        )
+                    # 还原操作 - 获取素材信息以检查original_directory
+                    material = HSAIMaterials.get_material_by_id(material_id)
+                    if not material or material.user_id != user.id:
+                        log.warning(f"Material {material_id} not found or access denied")
+                        continue
+                    
+                    if not material.is_deleted:
+                        log.warning(f"Material {material_id} is not in recovery")
+                        continue
+                    
+                    if not material.original_directory:
+                        log.warning(f"Material {material_id} missing original directory information")
+                        continue
                     
                     # 还原操作
                     update_data = {
+                        "name": material.name,  # 保持原有名称
+                        "material_type": material.material_type,  # 保持原有类型
+                        "folder_id": material.folder_id,  # 保持原有folder_id
+                        "file_size": material.file_size,  # 保持原有文件大小
+                        "file_hash": material.file_hash,  # 保持原有文件哈希
+                        "mime_type": material.mime_type,  # 保持原有MIME类型
                         "is_deleted": False,
+                        "file_path": material.original_directory,  # 还原到原始目录
                         "original_directory": None,
                         "deleted_at": None,
                         "deleted_by": None
@@ -404,7 +438,7 @@ async def batch_operation_recovery_materials(
                             material_id=material_id,
                             operation_type="restore",
                             source_path=f"recovery/{material_id}",
-                            target_path=request.target_directory,
+                            target_path=material.original_directory,  # 使用原始目录
                             operator_id=user.id  # 使用当前登录用户ID
                         )
                         

@@ -373,6 +373,57 @@ class FolderTestRunner:
             print(f"❌ 从目录树中查找文件夹时发生异常: {str(e)}")
             return None
     
+    def delete_folder(self, folder_id: str) -> bool:
+        """
+        步骤6: 删除指定的文件夹
+        """
+        print(f"\n=== 步骤6: 删除文件夹 (ID: {folder_id}) ===")
+        
+        try:
+            response = self._make_request("DELETE", f"/hsai/materials/folders/{folder_id}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result is True:
+                    print(f"✅ 成功删除文件夹 (ID: {folder_id})")
+                    return True
+                else:
+                    print(f"❌ 删除结果异常: {result}")
+                    return False
+            else:
+                print(f"❌ 删除文件夹失败: {response.status_code} - {response.text}")
+                try:
+                    error_detail = response.json().get('detail', '未知错误')
+                    print(f"   错误详情: {error_detail}")
+                except:
+                    pass
+                return False
+                
+        except Exception as e:
+            print(f"❌ 删除文件夹时发生异常: {str(e)}")
+            return False
+    
+    def verify_folder_deletion(self, folder_id: str) -> bool:
+        """
+        步骤7: 验证文件夹删除是否成功
+        """
+        print(f"\n=== 步骤7: 验证文件夹删除是否成功 ===")
+        
+        try:
+            # 尝试从目录树中查找被删除的文件夹
+            found_folder = self._find_folder_in_tree(folder_id)
+            
+            if found_folder:
+                print(f"❌ 验证失败: 文件夹仍然存在于目录树中")
+                return False
+            else:
+                print(f"✅ 验证成功: 文件夹已从目录树中移除")
+                return True
+                
+        except Exception as e:
+            print(f"❌ 验证文件夹删除时发生异常: {str(e)}")
+            return False
+    
     def run_complete_workflow(self) -> bool:
         """运行完整的测试工作流"""
         print("🚀 开始执行文件夹接口完整工作流测试")
@@ -419,6 +470,17 @@ class FolderTestRunner:
             if not folder_detail:
                 print(f"\n⚠️  无法获取新建目录 {new_folder_id} 的详细信息")
             
+            # 步骤6: 删除新建的目录
+            delete_success = self.delete_folder(new_folder_id)
+            if not delete_success:
+                print(f"\n❌ 删除目录失败")
+            
+            # 步骤7: 验证目录删除
+            if delete_success:
+                deletion_verified = self.verify_folder_deletion(new_folder_id)
+                if not deletion_verified:
+                    print(f"\n❌ 验证目录删除失败")
+            
             print("\n" + "=" * 60)
             print("🎉 文件夹接口测试工作流完成！")
             print("\n📋 测试总结:")
@@ -435,6 +497,15 @@ class FolderTestRunner:
                 print(f"   ✅ 成功获取新建目录详细信息")
             else:
                 print(f"   ⚠️  获取新建目录详细信息失败")
+            
+            if delete_success:
+                print(f"   ✅ 成功删除目录: {new_folder['name']} (ID: {new_folder_id})")
+                if deletion_verified:
+                    print(f"   ✅ 成功验证目录删除结果")
+                else:
+                    print(f"   ⚠️  验证目录删除结果失败")
+            else:
+                print(f"   ❌ 删除目录失败")
             
             return True
             

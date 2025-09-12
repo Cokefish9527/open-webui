@@ -463,11 +463,11 @@ def recovery_list(enterprise_id: str, ps: int, pi: int) -> Dict[str, Any]:
         }
 
 
-def restore(material_id: str, target_directory: str) -> Dict[str, Any]:
+def restore(material_id: str) -> Dict[str, Any]:
     try:
         logger.info(f"还原素材: material_id={material_id}")
-        payload = {"target_directory": target_directory}
-        resp = requests.post(url(f"{MATERIALS_PREFIX}/recovery/{material_id}/restore"), headers={**auth_headers(), "Content-Type": "application/json"}, data=json.dumps(payload), timeout=60)
+        # 移除target_directory参数，还原将自动使用original_directory
+        resp = requests.post(url(f"{MATERIALS_PREFIX}/recovery/{material_id}/restore"), headers={**auth_headers(), "Content-Type": "application/json"}, timeout=60)
         ensure_resp_ok(resp, "restore_material")
         logger.info(f"成功还原素材: material_id={material_id}")
         return resp.json()
@@ -489,15 +489,14 @@ def permanent_delete(material_id: str) -> bool:
         return True
 
 
-def batch_recovery_operation(operation: str, material_ids: List[str], target_directory: Optional[str] = None) -> bool:
+def batch_recovery_operation(operation: str, material_ids: List[str]) -> bool:
     try:
         logger.info(f"批量操作: operation={operation}, material_ids={material_ids}")
         payload = {
             "operation": operation,
             "material_ids": material_ids
         }
-        if operation == "restore":
-            payload["target_directory"] = target_directory or "restored/auto"
+        # 移除target_directory参数，还原将自动使用original_directory
         resp = requests.post(url(f"{MATERIALS_PREFIX}/recovery/batch-operation"), headers={**auth_headers(), "Content-Type": "application/json"}, data=json.dumps(payload), timeout=60)
         ensure_resp_ok(resp, "batch_operation")
         logger.info(f"成功批量操作: operation={operation}")
@@ -653,7 +652,7 @@ def run_business_test():
             to_restore = to_soft_delete[:NUM_RESTORE]
             for mid in to_restore:
                 try:
-                    restore(mid, target_directory="restored/auto")
+                    restore(mid)  # 移除target_directory参数
                     restore_success += 1
                 except Exception as e:
                     logger.error(f"还原 {mid} 失败: {e}")
@@ -678,7 +677,7 @@ def run_business_test():
         remaining_soft_deleted = [m for m in to_soft_delete if m not in (to_permanent[:0])]
         if remaining_soft_deleted:
             try:
-                ok = batch_recovery_operation("restore", remaining_soft_deleted, target_directory="restored/batch")
+                ok = batch_recovery_operation("restore", remaining_soft_deleted)  # 移除target_directory参数
                 batch_operation_success = ok
                 record_test("批量操作", True, "批量还原操作成功")
             except Exception as e:

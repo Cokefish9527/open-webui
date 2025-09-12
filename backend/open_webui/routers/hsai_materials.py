@@ -423,6 +423,24 @@ async def get_material_folders(user=Depends(get_verified_user)):
         roots_with_children = sum(1 for root in root_folders if root.children)
         log.info(f"Final result: {roots_with_children} root folders have children")
         
+        # 添加回收站虚拟目录
+        recovery_folder = HSAIMaterialFolderResponse(
+            id="recovery",
+            name="回收站",
+            label="回收站",  # 为label字段赋与name字段相同的值
+            description="已删除的素材文件",
+            parent_id=None,
+            settings=None,
+            sort_order=999,  # 排在最后
+            children=[],
+            material_count=0,  # 可以后续优化为实际统计回收站中的素材数量
+            created_at=0,
+            updated_at=0
+        )
+        
+        # 将回收站目录添加到根目录列表
+        root_folders.append(recovery_folder)
+        
         return root_folders
         
     except Exception as e:
@@ -492,6 +510,84 @@ async def create_material_folder(
         raise
     except Exception as e:
         log.exception(f"Error creating material folder: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+
+@router.delete("/folders/{folder_id}", response_model=bool, summary="删除素材文件夹")
+async def delete_material_folder(
+    folder_id: str,
+    user=Depends(get_verified_user)
+):
+    """
+    删除指定的素材文件夹。
+    
+    Args:
+        folder_id (str): 文件夹唯一标识符
+        user: 已认证的用户对象
+        
+    Returns:
+        bool: 删除成功返回true
+        
+    Raises:
+        HTTPException: 404 - 文件夹不存在或无权限访问
+        HTTPException: 400 - 文件夹不为空，无法删除
+        HTTPException: 500 - 删除失败
+    """
+    try:
+        # 验证文件夹所有权
+        folder = HSAIMaterialFolders.get_folder_by_id(folder_id)
+        if not folder or folder.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Folder not found or insufficient permissions"
+            )
+        
+        # 检查文件夹是否为空（没有子文件夹和素材）
+        with get_db() as db:
+            # 检查子文件夹
+            child_folders = db.query(HSAIMaterialFolder).filter_by(
+                parent_id=folder_id,
+                user_id=user.id
+            ).all()
+            
+            if child_folders:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot delete folder: contains {len(child_folders)} subfolder(s). Please delete or move subfolders first."
+                )
+            
+            # 检查文件夹中的素材
+            materials = db.query(HSAIMaterial).filter_by(
+                folder_id=folder_id,
+                user_id=user.id,
+                is_deleted=False  # 只检查未被软删除的素材
+            ).all()
+            
+            if materials:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot delete folder: contains {len(materials)} material(s). Please delete or move materials first."
+                )
+        
+        # 执行删除
+        result = HSAIMaterialFolders.delete_folder_by_id(folder_id)
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete folder"
+            )
+        
+        log.info(f"Folder deleted successfully: {folder.name} (ID: {folder_id}) by user {user.id}")
+        return True
+        
+    except HTTPException:
+        # 重新抛出 HTTP 异常
+        raise
+    except Exception as e:
+        log.exception(f"Error deleting material folder: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()
