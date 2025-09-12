@@ -327,46 +327,7 @@ def _save_file_local(content: bytes, filename: str, user_id: str) -> tuple:
     
     return file_url, file_path
 
-############################
-# 调试和诊断
-############################
 
-@router.get("/debug/folders", summary="调试：获取原始文件夹数据")
-async def debug_get_folders(user=Depends(get_verified_user)):
-    """调试端点：返回数据库原始查询结果，不经过Pydantic"""
-    try:
-        with get_db() as db:
-            # 直接查询数据库
-            raw_folders = db.query(HSAIMaterialFolder).filter_by(user_id=user.id).all()
-            
-            # 转换为字典，不使用Pydantic
-            result = []
-            for folder in raw_folders:
-                folder_dict = {
-                    "id": folder.id,
-                    "name": folder.name,
-                    "description": folder.description,
-                    "parent_id": folder.parent_id,  # 直接访问数据库字段
-                    "user_id": folder.user_id,
-                    "settings": folder.settings,
-                    "sort_order": folder.sort_order,
-                    "created_at": folder.created_at,
-                    "updated_at": folder.updated_at
-                }
-                result.append(folder_dict)
-            
-            return {
-                "total": len(result),
-                "folders": result,
-                "debug_info": {
-                    "raw_query_count": len(raw_folders),
-                    "root_count": len([f for f in result if f["parent_id"] is None]),
-                    "child_count": len([f for f in result if f["parent_id"] is not None])
-                }
-            }
-    except Exception as e:
-        log.exception(f"Debug endpoint error: {e}")
-        return {"error": str(e)}
 
 
 ############################
@@ -374,12 +335,31 @@ async def debug_get_folders(user=Depends(get_verified_user)):
 ############################
 
 @router.get("/folders", response_model=List[HSAIMaterialFolderResponse], summary="获取素材文件夹")
-async def get_material_folders(user=Depends(get_verified_user)):
+async def get_material_folders(
+    query: Optional[str] = Query(None, description="搜索关键词，用于按文件夹名称进行模糊搜索"),
+    user=Depends(get_verified_user)
+):
     """
     获取用户的素材文件夹树形结构，包含子文件夹和素材数量统计。
+    
+    Args:
+        query (str, optional): 搜索关键词，用于按文件夹名称进行模糊搜索
+        user: 已认证的用户对象
+        
+    Returns:
+        List[HSAIMaterialFolderResponse]: 文件夹树形结构列表
     """
     try:
         folders = HSAIMaterialFolders.get_folders_by_user_id(user.id)
+        
+        # 如果有搜索关键词，进行过滤
+        if query:
+            query_lower = query.lower()
+            filtered_folders = []
+            for folder in folders:
+                if query_lower in folder.name.lower() or (folder.description and query_lower in folder.description.lower()):
+                    filtered_folders.append(folder)
+            folders = filtered_folders
         
         # 构建树形结构
         folder_dict = {folder.id: folder for folder in folders}
@@ -423,23 +403,24 @@ async def get_material_folders(user=Depends(get_verified_user)):
         roots_with_children = sum(1 for root in root_folders if root.children)
         log.info(f"Final result: {roots_with_children} root folders have children")
         
-        # 添加回收站虚拟目录
-        recovery_folder = HSAIMaterialFolderResponse(
-            id="recovery",
-            name="回收站",
-            label="回收站",  # 为label字段赋与name字段相同的值
-            description="已删除的素材文件",
-            parent_id=None,
-            settings=None,
-            sort_order=999,  # 排在最后
-            children=[],
-            material_count=0,  # 可以后续优化为实际统计回收站中的素材数量
-            created_at=0,
-            updated_at=0
-        )
-        
-        # 将回收站目录添加到根目录列表
-        root_folders.append(recovery_folder)
+        # 如果没有搜索关键词，添加回收站虚拟目录
+        if not query:
+            recovery_folder = HSAIMaterialFolderResponse(
+                id="recovery",
+                name="回收站",
+                label="回收站",  # 为label字段赋与name字段相同的值
+                description="已删除的素材文件",
+                parent_id=None,
+                settings=None,
+                sort_order=999,  # 排在最后
+                children=[],
+                material_count=0,  # 可以后续优化为实际统计回收站中的素材数量
+                created_at=0,
+                updated_at=0
+            )
+            
+            # 将回收站目录添加到根目录列表
+            root_folders.append(recovery_folder)
         
         return root_folders
         
@@ -672,7 +653,7 @@ async def upload_material(
                 file_hash = hashlib.md5(file_info["content"]).hexdigest()
                 
                 # 确定文件类型
-                mime_type = mimetypes.guess_type(file_info["new_filename"])[0]
+                mime_type = mimetypes.guess_type(file_info["new_filename"])[0] or "application/octet-stream"
                 material_type = _determine_material_type(mime_type)
                 
                 # 尝试上传到OSS，如果失败则保存到本地
@@ -734,6 +715,7 @@ async def upload_material(
                 if material_type == "video":
                     try:
                         # 保存到临时文件以提取元数据
+                        import tempfile
                         with tempfile.NamedTemporaryFile(suffix=Path(file_info['new_filename']).suffix, delete=False) as tmp_file:
                             tmp_file.write(file_info["content"])
                             tmp_file_path = Path(tmp_file.name)
@@ -838,7 +820,6 @@ async def upload_material(
                 # 创建响应对象时排除properties_code字段，使用处理后的值
                 response = HSAIMaterialResponse(
                     **{k: v for k, v in material.model_dump().items() if k != 'properties_code'},
-                    upload_url=safe_file_url,  # 返回文件访问URL
                     thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material_type in ["image", "video"] else None,
                     download_url=safe_file_url,  # 直接使用文件URL进行下载
                     properties_code=material.properties_code.split("_") if material.properties_code else None  # 将字符串转换为列表
@@ -867,7 +848,7 @@ async def upload_material(
             file_hash = hashlib.md5(content).hexdigest()
             
             # 确定文件类型
-            mime_type = file.content_type or mimetypes.guess_type(file.filename)[0]
+            mime_type = file.content_type or mimetypes.guess_type(file.filename)[0] or "application/octet-stream"
             material_type = _determine_material_type(mime_type)
             
             # 处理属性代码
@@ -1052,7 +1033,6 @@ async def upload_material(
             
             return [HSAIMaterialResponse(
                 **{k: v for k, v in material.model_dump().items() if k != 'properties_code'},
-                upload_url=safe_file_url,  # 返回文件访问URL
                 thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material_type in ["image", "video"] else None,
                 download_url=safe_file_url,  # 直接使用文件URL进行下载
                 properties_code=material.properties_code.split("_") if material.properties_code else None  # 将字符串转换为列表
@@ -1115,7 +1095,7 @@ async def get_material_download_url(
         HSAIMaterials.increment_usage_count(material_id)
         
         # 如果存储的是OSS路径，直接返回
-        if material.file_path.startswith(('http://', 'https://', 's3://', 'gs://')):
+        if material.file_path and material.file_path.startswith(('http://', 'https://', 's3://', 'gs://')):
             return {
                 "download_url": material.file_path,
                 "filename": material.name,
@@ -1156,6 +1136,7 @@ async def get_material_download_url(
 async def get_materials(
     folder_id: Optional[str] = Query(None, description="文件夹ID，为空则获取根目录素材"),
     material_type: Optional[str] = Query(None, description="素材类型过滤"),
+    query: Optional[str] = Query(None, description="搜索关键词，用于按名称、描述、标签进行模糊搜索"),
     ps: int = Query(20, description="分页大小", ge=1, le=100),
     pi: int = Query(1, description="分页索引，从1开始", ge=1),
     user=Depends(get_verified_user)
@@ -1163,31 +1144,63 @@ async def get_materials(
     """
     获取用户的素材列表（分页）。
     
-    支持按文件夹和类型过滤，支持分页查询。
+    支持按文件夹、类型过滤和关键词搜索，支持分页查询。
+    
+    Args:
+        folder_id (str, optional): 文件夹ID，为空则获取根目录素材
+        material_type (str, optional): 素材类型过滤：image(图片)、video(视频)、audio(音频)、text(文本)、document(文档)
+        query (str, optional): 搜索关键词，用于按名称、描述、标签进行模糊搜索
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
+        user: 已认证的用户对象
+        
+    Returns:
+        PaginatedHSAIMaterialResponse: 分页的素材列表
+        - data: 素材列表
+        - pagination: 分页信息
     """
     try:
         # 计算offset
         offset = (pi - 1) * ps
         
-        materials = HSAIMaterials.get_materials_by_user_id(
-            user.id, 
-            folder_id=folder_id,
-            material_type=material_type,
-            limit=ps,
-            offset=offset
-        )
-        
-        # 获取总数
-        total = HSAIMaterials.get_materials_count(
-            user.id,
-            folder_id=folder_id,
-            material_type=material_type
-        )
+        # 根据是否有搜索关键词决定使用哪种查询方式
+        if query:
+            # 使用搜索接口
+            materials = HSAIMaterials.search_materials(
+                user.id, 
+                query=query, 
+                material_type=material_type,
+                limit=ps,
+                offset=offset
+            )
+            
+            # 获取搜索结果总数
+            total = HSAIMaterials.count_search_materials(
+                user.id,
+                query=query,
+                material_type=material_type
+            )
+        else:
+            # 使用常规列表查询
+            materials = HSAIMaterials.get_materials_by_user_id(
+                user.id, 
+                folder_id=folder_id,
+                material_type=material_type,
+                limit=ps,
+                offset=offset
+            )
+            
+            # 获取常规列表总数
+            total = HSAIMaterials.get_materials_count(
+                user.id,
+                folder_id=folder_id,
+                material_type=material_type
+            )
         
         responses = []
         for material in materials:
             # 确保返回OSS URL
-            download_url = material.file_path
+            download_url = material.file_path or ""
             if not download_url.startswith(('http://', 'https://')):
                 download_url = f"/hsai/materials/{material.id}/download"
             
@@ -1210,7 +1223,6 @@ async def get_materials(
             
             response = HSAIMaterialResponse(
                 **{k: v for k, v in material.model_dump().items() if k not in ['properties_code']},
-                upload_url=safe_download_url,
                 thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material.material_type in ["image", "video"] else None,
                 download_url=safe_download_url,
                 properties_code=properties_list  # 返回列表格式
@@ -1256,7 +1268,7 @@ async def get_material(
             )
         
         # 确保返回OSS URL
-        download_url = material.file_path
+        download_url = material.file_path or ""
         if not download_url.startswith(('http://', 'https://')):
             download_url = f"/hsai/materials/{material.id}/download"
         
@@ -1289,7 +1301,6 @@ async def get_material(
             oss_key=material.oss_key,
             created_at=material.created_at,
             updated_at=material.updated_at,
-            upload_url=download_url,
             thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material.material_type in ["image", "video"] else None,
             download_url=download_url
         )
@@ -1382,117 +1393,9 @@ async def get_material_properties(
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
-@router.delete("/{material_id}", response_model=bool, summary="删除素材")
-async def delete_material(
-    material_id: str,
-    user=Depends(get_verified_user)
-):
-    """
-    删除指定的素材文件。
-    
-    会同时删除OSS中的文件和数据库记录。
-    """
-    try:
-        material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Material not found"
-            )
-        
-        # 删除OSS文件
-        try:
-            Storage.delete_file(material.file_path)
-        except Exception as e:
-            log.warning(f"Failed to delete OSS file {material.file_path}: {e}")
-        
-        # 删除数据库记录
-        result = HSAIMaterials.delete_material_by_id(material_id)
-        return result
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.exception(f"Error deleting material: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
 
-############################
-# 素材搜索
-############################
 
-@router.get("/search", response_model=PaginatedHSAIMaterialResponse, summary="搜索素材")
-async def search_materials(
-    query: str = Query(..., description="搜索关键词"),
-    material_type: Optional[str] = Query(None, description="素材类型过滤"),
-    ps: int = Query(20, description="分页大小", ge=1, le=100),
-    pi: int = Query(1, description="分页索引，从1开始", ge=1),
-    user=Depends(get_verified_user)
-):
-    """
-    根据关键词搜索素材（分页）。
-    
-    支持按名称、描述、标签等字段进行模糊搜索。
-    """
-    try:
-        # 计算offset
-        offset = (pi - 1) * ps
-        
-        materials = HSAIMaterials.search_materials(
-            user.id, 
-            query=query, 
-            material_type=material_type,
-            limit=ps,
-            offset=offset
-        )
-        
-        # 获取总数
-        # 注意：当前search_materials方法不支持获取总数，需要修改数据库方法
-        
-        responses = []
-        for material in materials:
-            download_url = material.file_path
-            if not download_url.startswith(('http://', 'https://')):
-                download_url = f"/hsai/materials/{material.id}/download"
-            
-            response = HSAIMaterialResponse(
-                **material.model_dump(),
-                upload_url=download_url,
-                thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material.material_type in ["image", "video"] else None,
-                download_url=download_url
-            )
-            responses.append(response)
-        
-        # 获取总数
-        total = HSAIMaterials.count_search_materials(
-            user.id,
-            query=query,
-            material_type=material_type
-        )
-        
-        # 计算分页数据
-        total_pages = (total + ps - 1) // ps  # 向上取整
-        
-        pagination = PaginationData(
-            total=total,
-            page=pi,
-            size=ps,
-            total_pages=total_pages
-        )
-        
-        return PaginatedHSAIMaterialResponse(
-            data=responses,
-            pagination=pagination
-        )
-        
-    except Exception as e:
-        log.exception(f"Error searching materials: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
+
 
 ############################
 # 素材统计
