@@ -59,21 +59,29 @@ async def get_material_folders(user=Depends(get_verified_user)):
         
         # 构建树形结构
         folder_dict = {folder.id: folder for folder in folders}
+        response_dict = {}  # 用于存储HSAIMaterialFolderResponse对象
         root_folders = []
         
+        # 第一轮：创建所有的response对象
         for folder in folders:
             folder_response = HSAIMaterialFolderResponse(
                 **folder.model_dump(),
+                label=folder.name,  # 为label字段赋与name字段相同的值
                 children=[],
                 material_count=0  # 后续可以优化为实际统计
             )
+            response_dict[folder.id] = folder_response
             
             if folder.parent_id is None:
                 root_folders.append(folder_response)
-            else:
-                parent = folder_dict.get(folder.parent_id)
-                if parent and hasattr(parent, 'children'):
-                    parent.children.append(folder_response)
+        
+        # 第二轮：建立父子关系
+        for folder in folders:
+            if folder.parent_id is not None:
+                parent_response = response_dict.get(folder.parent_id)
+                child_response = response_dict.get(folder.id)
+                if parent_response and child_response:
+                    parent_response.children.append(child_response)
         
         return root_folders
         

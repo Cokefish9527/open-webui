@@ -1,7 +1,10 @@
 @echo off
+echo === Open-WebUI 启动脚本 ===
+echo.
 
 :: Set Hugging Face endpoint to a mirror for faster downloads
 SET HF_ENDPOINT=https://hf-mirror.com
+echo 设置 Hugging Face 镜像: %HF_ENDPOINT%
 
 :: Set environment variable to disable symlinks for Hugging Face cache
 SET HF_HUB_DISABLE_SYMLINKS_WARNING=1
@@ -9,28 +12,91 @@ SET HF_HUB_DISABLE_SYMLINKS_WARNING=1
 :: Clear potentially problematic environment variables
 set BT_PYTHON=
 
-:: Set the Python 3.11 path explicitly
-set PYTHON_HOME=C:\Users\bmkz\AppData\Local\Programs\Python\Python311
-set VIRTUAL_ENV=D:\Work\hsch\open-webui\venv
+:: Get the directory of the current script
+SET "SCRIPT_DIR=%~dp0"
+echo 切换到脚本目录: %SCRIPT_DIR%
+cd /d "%SCRIPT_DIR%" || (
+    echo 错误: 无法切换到脚本目录
+    pause
+    exit /b 1
+)
+echo 当前工作目录: %CD%
+echo.
 
-:: Set PATH to use Python 3.11 and virtual environment
-set PATH=%PYTHON_HOME%;%PYTHON_HOME%\Scripts;%VIRTUAL_ENV%\Scripts;%PATH%
+:: Detect Python executable path
+echo 检测Python环境...
+set "PYTHON_EXE="
+
+:: First check common virtual environment locations
+if exist "%SCRIPT_DIR%venv\Scripts\python.exe" (
+    echo 发现本地虚拟环境: %SCRIPT_DIR%venv
+    set "PYTHON_EXE=%SCRIPT_DIR%venv\Scripts\python.exe"
+) else if exist "%SCRIPT_DIR%..\.\.venv\Scripts\python.exe" (
+    echo 发现父目录虚拟环境: %SCRIPT_DIR%..\.\.venv
+    set "PYTHON_EXE=%SCRIPT_DIR%..\.\.venv\Scripts\python.exe"
+) else if exist "C:\work\open-webui\.venv\Scripts\python.exe" (
+    echo 发现特定虚拟环境: C:\work\open-webui\.venv
+    set "PYTHON_EXE=C:\work\open-webui\.venv\Scripts\python.exe"
+) else (
+    :: Try to find system Python
+    echo 尝试使用系统Python...
+    if exist "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe" (
+        set "PYTHON_EXE=C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe"
+        echo 找到系统Python: %PYTHON_EXE%
+    ) else if exist "C:\Python311\python.exe" (
+        set "PYTHON_EXE=C:\Python311\python.exe"
+        echo 找到系统Python: %PYTHON_EXE%
+    ) else (
+        echo 错误: 未找到Python 3.11安装。
+        echo 请检查以下路径是否存在Python:
+        echo - C:\work\open-webui\.venv\Scripts\python.exe
+        echo - C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe
+        echo - C:\Python311\python.exe
+        pause
+        exit /b 1
+    )
+)
+
+:: Test Python availability
+echo.
+echo 测试Python可用性...
+"%PYTHON_EXE%" --version
+if %ERRORLEVEL% neq 0 (
+    echo 错误: Python无法正常运行
+    pause
+    exit /b 1
+)
+echo Python测试成功!
+echo.
 
 SETLOCAL ENABLEDELAYEDEXPANSION
 
-:: Get the directory of the current script
-SET "SCRIPT_DIR=%~dp0"
-cd /d "%SCRIPT_DIR%" || exit /b
+:: Set environment variables
+echo 配置环境变量...
+set "PYTHONPATH=%CD%;%PYTHONPATH%"
+set "DATA_DIR=%CD%\data"
+set "DATABASE_URL=sqlite:///%CD%\data\webui.db"
+echo 设置PYTHONPATH: %CD%
+echo 设置DATA_DIR: %DATA_DIR%
+echo 设置DATABASE_URL: %DATABASE_URL%
+
+:: Create necessary directories
+if not exist "data" mkdir data
+if not exist "data\uploads" mkdir "data\uploads"
+if not exist "data\cache" mkdir "data\cache"
+if not exist "data\vector_db" mkdir "data\vector_db"
+echo 确保数据目录存在: %DATA_DIR%
+echo.
 
 :: Add conditional Playwright browser installation
 IF /I "%WEB_LOADER_ENGINE%" == "playwright" (
     IF "%PLAYWRIGHT_WS_URL%" == "" (
         echo Installing Playwright browsers...
-        "%PYTHON_HOME%\Scripts\playwright.exe" install chromium
-        "%PYTHON_HOME%\Scripts\playwright.exe" install-deps chromium
+        "%PYTHON_EXE%" -m playwright install chromium
+        "%PYTHON_EXE%" -m playwright install-deps chromium
     )
 
-    "%VIRTUAL_ENV%\Scripts\python.exe" -c "import nltk; nltk.download('punkt_tab')"
+    "%PYTHON_EXE%" -c "import nltk; nltk.download('punkt_tab')"
 )
 
 SET "KEY_FILE=.webui_secret_key"
@@ -59,9 +125,100 @@ IF "%WEBUI_SECRET_KEY%%WEBUI_JWT_SECRET_KEY%" == " " (
     SET /p WEBUI_SECRET_KEY=<%KEY_FILE%
 )
 
+:: Check necessary modules
+echo 检查必要的模块...
+"%PYTHON_EXE%" -c "import sys; sys.path.insert(0, '.'); import open_webui.main; print('open_webui模块可用')" 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo 警告: open_webui模块检查失败，但将继续尝试启动服务器...
+)
+echo open_webui模块检查完成!
+echo.
+
 :: Execute uvicorn with explicit Python path
 SET "WEBUI_SECRET_KEY=%WEBUI_SECRET_KEY%"
 IF "%UVICORN_WORKERS%"=="" SET UVICORN_WORKERS=1
 
-:: Use the virtual environment's Python executable directly
-"%VIRTUAL_ENV%\Scripts\python.exe" -m uvicorn open_webui.main:app --host "%HOST%" --port "%PORT%" --forwarded-allow-ips '*' --workers %UVICORN_WORKERS% --ws auto
+echo === 启动服务器 ===
+echo 使用Python: %PYTHON_EXE%
+echo 主机: %HOST%
+echo 端口: %PORT%
+echo 工作进程数: %UVICORN_WORKERS%
+echo 服务将在 http://localhost:%PORT% 上运行
+echo 按 Ctrl+C 停止服务
+echo.
+
+:: Use the detected Python executable
+"%PYTHON_EXE%" -m uvicorn open_webui.main:app --host "%HOST%" --port "%PORT%" --forwarded-allow-ips '*' --workers %UVICORN_WORKERS% --ws auto
+
+:: Add conditional Playwright browser installation
+IF /I "%WEB_LOADER_ENGINE%" == "playwright" (
+    IF "%PLAYWRIGHT_WS_URL%" == "" (
+        echo Installing Playwright browsers...
+        if "%VIRTUAL_ENV%" == "" (
+            playwright install chromium
+            playwright install-deps chromium
+        ) else (
+            "%VIRTUAL_ENV%\Scripts\playwright.exe" install chromium
+            "%VIRTUAL_ENV%\Scripts\playwright.exe" install-deps chromium
+        )
+    )
+
+    "%PYTHON_EXE%" -c "import nltk; nltk.download('punkt_tab')"
+)
+
+SET "KEY_FILE=.webui_secret_key"
+IF NOT "%WEBUI_SECRET_KEY_FILE%" == "" (
+    SET "KEY_FILE=%WEBUI_SECRET_KEY_FILE%"
+)
+
+IF "%PORT%"=="" SET PORT=8080
+IF "%HOST%"=="" SET HOST=0.0.0.0
+SET "WEBUI_SECRET_KEY=%WEBUI_SECRET_KEY%"
+SET "WEBUI_JWT_SECRET_KEY=%WEBUI_JWT_SECRET_KEY%"
+
+:: Check if WEBUI_SECRET_KEY and WEBUI_JWT_SECRET_KEY are not set
+IF "%WEBUI_SECRET_KEY%%WEBUI_JWT_SECRET_KEY%" == " " (
+    echo Loading WEBUI_SECRET_KEY from file, not provided as an environment variable.
+
+    IF NOT EXIST "%KEY_FILE%" (
+        echo Generating WEBUI_SECRET_KEY
+        :: Generate a random value to use as a WEBUI_SECRET_KEY in case the user didn't provide one
+        SET /p WEBUI_SECRET_KEY=<nul
+        FOR /L %%i IN (1,1,12) DO SET /p WEBUI_SECRET_KEY=<!random!>>%KEY_FILE%
+        echo WEBUI_SECRET_KEY generated
+    )
+
+    echo Loading WEBUI_SECRET_KEY from %KEY_FILE%
+    SET /p WEBUI_SECRET_KEY=<%KEY_FILE%
+)
+
+echo 检查必要的模块...
+echo 检查open_webui模块是否存在...
+"%PYTHON_EXE%" -c "import open_webui.main; print('open_webui模块可用')" 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo 错误: open_webui模块未找到或未正确安装
+    echo 请确保已在正确的目录中运行脚本，并且已安装了所有依赖
+    echo 当前目录: %CD%
+    echo 建议先运行: pip install -r requirements.txt
+    pause
+    exit /b 1
+)
+echo open_webui模块检查成功!
+echo.
+
+:: Execute uvicorn with explicit Python path
+SET "WEBUI_SECRET_KEY=%WEBUI_SECRET_KEY%"
+IF "%UVICORN_WORKERS%"=="" SET UVICORN_WORKERS=1
+
+echo.
+echo === 启动服务器 ===
+echo 使用Python: %PYTHON_EXE%
+echo 主机: %HOST%
+echo 端口: %PORT%
+echo 工作进程数: %UVICORN_WORKERS%
+echo 服务将在 http://localhost:%PORT% 上运行
+echo 按 Ctrl+C 停止服务
+echo.
+
+:: Use the detected Python executable
+"%PYTHON_EXE%" -m uvicorn open_webui.main:app --host "%HOST%" --port "%PORT%" --forwarded-allow-ips '*' --workers %UVICORN_WORKERS% --ws auto

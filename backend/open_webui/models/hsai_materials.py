@@ -1,4 +1,5 @@
 import logging
+import logging
 import time
 import uuid
 from typing import Optional, List
@@ -6,7 +7,7 @@ from typing import Optional, List
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean, Integer
 from sqlalchemy.orm import relationship
 
@@ -177,6 +178,14 @@ class HSAIMaterialFolderModel(BaseModel):
     sort_order: int = Field(default=0, description="排序权重")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
+    
+    @field_validator('parent_id', mode='before')
+    @classmethod
+    def validate_parent_id(cls, v):
+        """parent_id字段验证：空字符串转为None"""
+        if v == '':
+            return None
+        return v
 
 
 class HSAIMaterialModel(BaseModel):
@@ -334,6 +343,7 @@ class HSAIFileOperationLogForm(BaseModel):
 class HSAIMaterialFolderResponse(BaseModel):
     id: str = Field(description="文件夹唯一标识符")
     name: str = Field(description="文件夹名称")
+    label: str = Field(description="文件夹标签，与name字段相同，仅供前端使用")
     description: Optional[str] = Field(default=None, description="文件夹描述")
     parent_id: Optional[str] = Field(default=None, description="父文件夹ID")
     settings: Optional[dict] = Field(default=None, description="文件夹配置")
@@ -441,6 +451,25 @@ class HSAIMaterialFoldersTable:
         self, user_id: str, form_data: HSAIMaterialFolderForm
     ) -> Optional[HSAIMaterialFolderModel]:
         with get_db() as db:
+            # 验证 parent_id 是否有效（如果提供了的话）
+            if form_data.parent_id:
+                parent_folder = db.query(HSAIMaterialFolder).filter_by(
+                    id=form_data.parent_id, user_id=user_id
+                ).first()
+                if not parent_folder:
+                    log.error(f"Invalid parent_id: {form_data.parent_id} for user {user_id}")
+                    return None
+            
+            # 检查同一父目录下是否已有同名文件夹
+            existing_folder = db.query(HSAIMaterialFolder).filter_by(
+                name=form_data.name,
+                parent_id=form_data.parent_id,
+                user_id=user_id
+            ).first()
+            if existing_folder:
+                log.error(f"Folder with name '{form_data.name}' already exists in the same parent directory")
+                return None
+            
             id = str(uuid.uuid4())
             folder = HSAIMaterialFolderModel(
                 **{
@@ -459,6 +488,7 @@ class HSAIMaterialFoldersTable:
                 db.refresh(result)
                 return HSAIMaterialFolderModel.model_validate(result) if result else None
             except Exception as e:
+                db.rollback()
                 log.exception(f"Error creating folder: {e}")
                 return None
 
@@ -466,7 +496,62 @@ class HSAIMaterialFoldersTable:
         with get_db() as db:
             try:
                 folders = db.query(HSAIMaterialFolder).filter_by(user_id=user_id).all()
-                return [HSAIMaterialFolderModel.model_validate(folder) for folder in folders]
+                
+                # 调试信息：检查数据库原始数据
+                log.info(f"Raw DB query returned {len(folders)} folders for user {user_id}")
+                
+                raw_root_count = sum(1 for f in folders if f.parent_id is None)
+                raw_child_count = sum(1 for f in folders if f.parent_id is not None)
+                log.info(f"Raw DB data: {raw_root_count} roots, {raw_child_count} children")
+                
+                # 显示一些有parent_id的示例
+                children_examples = [f for f in folders if f.parent_id is not None][:3]
+                for example in children_examples:
+                    log.info(f"DB child example: {example.name} (ID: {example.id}) -> parent: {example.parent_id}")
+                
+                # 跳过Pydantic验证，直接构建字典并手动验证
+                result = []
+                for folder in folders:
+                    try:
+                        # 手动处理parent_id
+                        parent_id = folder.parent_id
+                        if parent_id == '':
+                            parent_id = None
+                        
+                        folder_dict = {
+                            "id": folder.id,
+                            "name": folder.name,
+                            "description": folder.description,
+                            "parent_id": parent_id,  # 手动处理的parent_id
+                            "user_id": folder.user_id,
+                            "settings": folder.settings,
+                            "sort_order": folder.sort_order or 0,
+                            "created_at": folder.created_at,
+                            "updated_at": folder.updated_at
+                        }
+                        
+                        # 使用字典直接创建Pydantic模型
+                        validated_folder = HSAIMaterialFolderModel(**folder_dict)
+                        result.append(validated_folder)
+                        
+                        # 调试：检查parent_id是否正确
+                        if folder.parent_id != validated_folder.parent_id:
+                            log.info(f"PARENT_ID CLEANED: DB='{folder.parent_id}' -> Pydantic='{validated_folder.parent_id}' for folder {folder.name}")
+                    except Exception as e:
+                        log.error(f"Failed to validate folder {folder.name}: {e}")
+                        continue
+                
+                # 调试信息：检查转换后的数据
+                validated_root_count = sum(1 for f in result if f.parent_id is None)
+                validated_child_count = sum(1 for f in result if f.parent_id is not None)
+                log.info(f"After manual validation: {validated_root_count} roots, {validated_child_count} children")
+                
+                if validated_child_count != raw_child_count:
+                    log.error(f"MANUAL CONVERSION ISSUE: Expected {raw_child_count} children, got {validated_child_count}")
+                else:
+                    log.info(f"SUCCESS: Manual conversion preserved all {validated_child_count} children")
+                
+                return result
             except Exception as e:
                 log.exception(f"Error getting folders: {e}")
                 return []

@@ -5,6 +5,7 @@ import re
 import zipfile
 import tempfile
 import os
+import logging
 from typing import Optional, List
 from pathlib import Path
 from datetime import datetime
@@ -29,6 +30,7 @@ from open_webui.models.hsai_materials import (
     PaginationData,
     PaginatedHSAIMaterialResponse
 )
+from open_webui.internal.db import get_db
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.utils.access_control import has_permission
@@ -326,6 +328,48 @@ def _save_file_local(content: bytes, filename: str, user_id: str) -> tuple:
     return file_url, file_path
 
 ############################
+# 调试和诊断
+############################
+
+@router.get("/debug/folders", summary="调试：获取原始文件夹数据")
+async def debug_get_folders(user=Depends(get_verified_user)):
+    """调试端点：返回数据库原始查询结果，不经过Pydantic"""
+    try:
+        with get_db() as db:
+            # 直接查询数据库
+            raw_folders = db.query(HSAIMaterialFolder).filter_by(user_id=user.id).all()
+            
+            # 转换为字典，不使用Pydantic
+            result = []
+            for folder in raw_folders:
+                folder_dict = {
+                    "id": folder.id,
+                    "name": folder.name,
+                    "description": folder.description,
+                    "parent_id": folder.parent_id,  # 直接访问数据库字段
+                    "user_id": folder.user_id,
+                    "settings": folder.settings,
+                    "sort_order": folder.sort_order,
+                    "created_at": folder.created_at,
+                    "updated_at": folder.updated_at
+                }
+                result.append(folder_dict)
+            
+            return {
+                "total": len(result),
+                "folders": result,
+                "debug_info": {
+                    "raw_query_count": len(raw_folders),
+                    "root_count": len([f for f in result if f["parent_id"] is None]),
+                    "child_count": len([f for f in result if f["parent_id"] is not None])
+                }
+            }
+    except Exception as e:
+        log.exception(f"Debug endpoint error: {e}")
+        return {"error": str(e)}
+
+
+############################
 # 文件夹管理
 ############################
 
@@ -339,21 +383,45 @@ async def get_material_folders(user=Depends(get_verified_user)):
         
         # 构建树形结构
         folder_dict = {folder.id: folder for folder in folders}
+        response_dict = {}  # 用于存储HSAIMaterialFolderResponse对象
         root_folders = []
         
+        # 调试信息
+        log.info(f"Building folder tree for user {user.id}: {len(folders)} total folders")
+        root_count = sum(1 for f in folders if f.parent_id is None)
+        child_count = sum(1 for f in folders if f.parent_id is not None)
+        log.info(f"Raw data: {root_count} root folders, {child_count} child folders")
+        
+        # 第一轮：创建所有的response对象
         for folder in folders:
             folder_response = HSAIMaterialFolderResponse(
                 **folder.model_dump(),
+                label=folder.name,  # 为label字段赋与name字段相同的值
                 children=[],
                 material_count=0  # 后续可以优化为实际统计
             )
+            response_dict[folder.id] = folder_response
             
             if folder.parent_id is None:
                 root_folders.append(folder_response)
-            else:
-                parent = folder_dict.get(folder.parent_id)
-                if parent and hasattr(parent, 'children'):
-                    parent.children.append(folder_response)
+        
+        # 第二轮：建立父子关系
+        children_added = 0
+        for folder in folders:
+            if folder.parent_id is not None:
+                parent_response = response_dict.get(folder.parent_id)
+                child_response = response_dict.get(folder.id)
+                if parent_response and child_response:
+                    parent_response.children.append(child_response)
+                    children_added += 1
+                elif not parent_response:
+                    log.warning(f"Parent not found for folder {folder.name} (ID: {folder.id}), parent_id: {folder.parent_id}")
+        
+        log.info(f"Tree building complete: {len(root_folders)} root responses, {children_added} children added")
+        
+        # 统计有子目录的根文件夹
+        roots_with_children = sum(1 for root in root_folders if root.children)
+        log.info(f"Final result: {roots_with_children} root folders have children")
         
         return root_folders
         
@@ -374,19 +442,54 @@ async def create_material_folder(
     创建新的素材文件夹。
     """
     try:
-        folder = HSAIMaterialFolders.insert_new_folder(user.id, form_data)
-        if not folder:
+        # 验证输入数据
+        if not form_data.name or not form_data.name.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create folder"
+                detail="Folder name cannot be empty"
             )
+        
+        # 验证父目录是否存在（如果提供了的话）
+        if form_data.parent_id:
+            parent_folder = HSAIMaterialFolders.get_folder_by_id(form_data.parent_id)
+            if not parent_folder or parent_folder.user_id != user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid parent folder ID or insufficient permissions"
+                )
+        
+        folder = HSAIMaterialFolders.insert_new_folder(user.id, form_data)
+        if not folder:
+            # 检查具体原因
+            existing_folder_check = None
+            with get_db() as db:
+                existing_folder_check = db.query(HSAIMaterialFolder).filter_by(
+                    name=form_data.name,
+                    parent_id=form_data.parent_id,
+                    user_id=user.id
+                ).first()
+            
+            if existing_folder_check:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="A folder with the same name already exists in this location"
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to create folder"
+                )
         
         return HSAIMaterialFolderResponse(
             **folder.model_dump(),
+            label=folder.name,  # 为 label 字段赋与 name 字段相同的值
             children=[],
             material_count=0
         )
         
+    except HTTPException:
+        # 重新抛出 HTTP 异常
+        raise
     except Exception as e:
         log.exception(f"Error creating material folder: {e}")
         raise HTTPException(
