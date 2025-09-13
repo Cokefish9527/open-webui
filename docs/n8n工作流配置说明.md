@@ -24,30 +24,29 @@ class N8NWorkflowType(str, Enum):
 ### 2.2 工作流URL配置
 
 ```python
-# n8n工作流webhook映射 - 基于实际的n8n工作流
-# 更新为新的工作流地址
+# n8n工作流webhook映射 - 根据实际部署更新地址
 N8N_WORKFLOW_WEBHOOKS = {
-    N8NWorkflowType.MAIN: os.getenv("N8N_MAIN_WORKFLOW_URL", "https://n8n.hsai.cc/webhook-test/n8n_chat"),
-    N8NWorkflowType.COMPANY_INFO: os.getenv("N8N_COMPANY_INFO_WORKFLOW_URL", "https://n8n.hsai.cc/webhook-test/business_information_get"),
-    N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://n8n.hsai.cc/webhook-test/viral-learning")
+    N8NWorkflowType.MAIN: os.getenv("N8N_MAIN_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/n8n_chat"),
+    N8NWorkflowType.COMPANY_INFO: os.getenv("N8N_COMPANY_INFO_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/business_information_get"),
+    N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/keywords2video")
 }
 ```
 
 ## 3. 当前工作流地址
 
-### 3.1 主要工作流
+### 3.1 三个核心工作流
 
 1. **主对话工作流**
-   - 功能: 处理通用对话和任务分发
-   - URL: `https://n8n.hsai.cc/webhook-test/n8n_chat`
+   - 功能: 协助用户完成视频合成发布的任务，提供爆款脚本库中的脚本并进行视频合成
+   - URL: `https://webhook-n8n.hsai.cc/webhook/n8n_chat`
 
 2. **信息收集工作流**
-   - 功能: 收集公司信息并生成作战地图
-   - URL: `https://n8n.hsai.cc/webhook-test/business_information_get`
+   - 功能: 用户首次使用产品时触发，进行用户初始信息收集，根据用户信息创建初始项目并计算KPI
+   - URL: `https://webhook-n8n.hsai.cc/webhook/business_information_get`
 
 3. **爆款学习工作流**
-   - 功能: 分析爆款内容并学习模式（定时调用）
-   - URL: `https://n8n.hsai.cc/webhook-test/viral-learning`
+   - 功能: 主动触发爆款学习，抓取热门视频链接并进行视频下载、脚本拆解、写入爆款库
+   - URL: `https://webhook-n8n.hsai.cc/webhook/keywords2video`
 
 ## 4. 环境变量配置
 
@@ -57,22 +56,24 @@ N8N_WORKFLOW_WEBHOOKS = {
 
 | 环境变量 | 默认值 | 说明 |
 |---------|--------|------|
-| `N8N_MAIN_WORKFLOW_URL` | `https://n8n.hsai.cc/webhook-test/n8n_chat` | 主工作流URL |
-| `N8N_COMPANY_INFO_WORKFLOW_URL` | `https://n8n.hsai.cc/webhook-test/business_information_get` | 公司信息工作流URL |
-| `N8N_VIRAL_LEARNING_WORKFLOW_URL` | `https://n8n.hsai.cc/webhook-test/viral-learning` | 爆款学习工作流URL |
+| `N8N_MAIN_WORKFLOW_URL` | `https://webhook-n8n.hsai.cc/webhook/n8n_chat` | 主对话工作流URL |
+| `N8N_COMPANY_INFO_WORKFLOW_URL` | `https://webhook-n8n.hsai.cc/webhook/business_information_get` | 信息收集工作流URL |
+| `N8N_VIRAL_LEARNING_WORKFLOW_URL` | `https://webhook-n8n.hsai.cc/webhook/keywords2video` | 爆款学习工作流URL |
 
 ### 4.2 设置环境变量
 
 在Windows系统中:
 ```cmd
-set N8N_MAIN_WORKFLOW_URL=https://your-n8n-instance.com/webhook-test/n8n_chat
-set N8N_COMPANY_INFO_WORKFLOW_URL=https://your-n8n-instance.com/webhook-test/business_information_get
+set N8N_MAIN_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/n8n_chat
+set N8N_COMPANY_INFO_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/business_information_get
+set N8N_VIRAL_LEARNING_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/keywords2video
 ```
 
 在Linux/macOS系统中:
 ```bash
-export N8N_MAIN_WORKFLOW_URL=https://your-n8n-instance.com/webhook-test/n8n_chat
-export N8N_COMPANY_INFO_WORKFLOW_URL=https://your-n8n-instance.com/webhook-test/business_information_get
+export N8N_MAIN_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/n8n_chat
+export N8N_COMPANY_INFO_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/business_information_get
+export N8N_VIRAL_LEARNING_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/keywords2video
 ```
 
 ## 5. 在代码中使用配置

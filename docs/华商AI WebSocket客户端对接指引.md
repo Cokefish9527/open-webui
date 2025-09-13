@@ -7,11 +7,11 @@
 
 ### 连接地址
 ```
-# 方式一：使用OpenWebUI原生WebSocket（推荐）
-ws://localhost:8080/api/v1/ws/hsai/{user_id}?token={jwt_token}
+# 使用OpenWebUI原生Socket.IO（官方推荐）
+ws://localhost:8080/socket.io/?token={jwt_token}&user_id={user_id}
 
-# 方式二：使用Socket.IO（兼容OpenWebUI原有系统）
-ws://localhost:8080/ws/socket.io/?token={jwt_token}&user_id={user_id}
+# 注意：前端通过OpenWebUI原生的Socket.IO与服务端通讯
+# 这是OpenWebUI的标准通信协议，确保与现有系统的兼容性
 ```
 
 ### 认证方式
@@ -21,38 +21,14 @@ ws://localhost:8080/ws/socket.io/?token={jwt_token}&user_id={user_id}
 
 ### 连接示例
 
-#### 方式一：原生WebSocket连接
-```javascript
-const userId = "user_123";
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // JWT令牌
-const websocket = new WebSocket(`ws://localhost:8080/api/v1/ws/hsai/${userId}?token=${token}`);
-
-websocket.onopen = function(event) {
-    console.log("WebSocket连接已建立");
-};
-
-websocket.onmessage = function(event) {
-    const response = JSON.parse(event.data);
-    console.log("收到服务器响应:", response);
-};
-
-websocket.onclose = function(event) {
-    console.log("WebSocket连接已关闭");
-};
-
-websocket.onerror = function(error) {
-    console.error("WebSocket错误:", error);
-};
-```
-
-#### 方式二：Socket.IO连接（兼容原系统）
+#### Socket.IO连接（推荐使用）
 ```javascript
 // 需要引入socket.io-client库
 const io = require('socket.io-client');
 
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
 const socket = io('ws://localhost:8080', {
-    path: '/ws/socket.io',
+    path: '/socket.io',
     auth: {
         token: token
     },
@@ -65,8 +41,13 @@ socket.on('connect', function() {
     console.log("Socket.IO连接已建立");
 });
 
-socket.on('chat-events', function(data) {
-    console.log("收到聊天事件:", data);
+// OpenWebUI原生事件监听
+socket.on('message', function(data) {
+    console.log("收到消息:", data);
+});
+
+socket.on('workflow_status', function(data) {
+    console.log("工作流状态更新:", data);
 });
 
 socket.on('disconnect', function() {
@@ -90,19 +71,23 @@ socket.on('disconnect', function() {
 ### Socket.IO事件发送
 ```javascript
 // 发送聊天消息
-socket.emit('send_message', {
+socket.emit('message', {
     type: "chat",
     content: "你好",
     user_id: "user_123",
     session_id: "session_456",
     entry_type: "chat"
 });
+
+// 注意：使用OpenWebUI原生的'message'事件名称
+// 服务端会根据entry_type选择对应的n8n工作流
 ```
 
 ### 入口类型说明
-- `chat`: 普通聊天入口 -> 主工作流
-- `company`: 公司信息入口 -> 信息收集工作流
-- `business`: 商业分析入口 -> 信息收集工作流
+- `chat`: 普通聊天入口 -> 主对话工作流（https://webhook-n8n.hsai.cc/webhook/n8n_chat）
+- `company`: 公司信息入口 -> 信息收集工作流（https://webhook-n8n.hsai.cc/webhook/business_information_get）
+- `business`: 商业分析入口 -> 信息收集工作流（https://webhook-n8n.hsai.cc/webhook/business_information_get）
+- `viral_learning`: 爆款学习入口 -> 爆款学习工作流（https://webhook-n8n.hsai.cc/webhook/keywords2video）
 
 ## 响应格式
 
@@ -125,36 +110,27 @@ socket.emit('send_message', {
 
 ### 服务端推送通知
 ```javascript
-// 连接成功通知
-{
-  "type": "status",
-  "content": "连接成功",
-  "timestamp": 1640995200,
-  "available_workflows": [
-    {"type": "MAIN", "name": "主工作流", "description": "处理通用对话和任务分发"},
-    {"type": "COMPANY_INFO", "name": "公司信息收集", "description": "收集公司信息并生成作战地图"}
-  ]
-}
+// 连接成功通知（通过OpenWebUI原生事件）
+socket.on('connect', function() {
+    // 连接已建立，可以开始通信
+});
 
-// 工作流处理状态通知
-{
-  "type": "workflow_status",
-  "status": "processing",
-  "message": "正在处理您的请求...",
-  "progress": 50,
-  "timestamp": 1640995200
-}
+// 消息响应（n8n工作流处理结果）
+socket.on('message', function(data) {
+    console.log('收到n8n工作流响应:', data);
+    // data的格式由服务端重新组织后返回，遵循约定的数据结构
+});
 
-// 工作流完成通知
-{
-  "type": "workflow_complete",
-  "status": "completed",
-  "data": {
-    "content": "处理结果",
-    "type": "text"
-  },
-  "timestamp": 1640995200
-}
+// 工作流状态更新（长任务处理进度）
+socket.on('workflow_status', function(data) {
+    console.log('工作流状态更新:', data);
+    // 通过redis信号触发的实时状态通知
+});
+
+// 错误通知
+socket.on('error', function(error) {
+    console.error('发生错误:', error);
+});
 ```
 
 ## 错误处理
@@ -175,91 +151,94 @@ socket.emit('send_message', {
 
 ## 最佳实践
 
-### 1. 连接管理
+### 1. Socket.IO连接管理
 ```javascript
-class HSAIWebSocketClient {
+class HSAISocketIOClient {
     constructor(userId, token) {
         this.userId = userId;
         this.token = token;
-        this.websocket = null;
+        this.socket = null;
         this.isConnected = false;
     }
     
     connect() {
-        this.websocket = new WebSocket(
-            `ws://localhost:8080/api/v1/ws/hsai/${this.userId}?token=${this.token}`
-        );
+        // 使用OpenWebUI原生Socket.IO连接
+        this.socket = io('ws://localhost:8080', {
+            path: '/socket.io',
+            auth: {
+                token: this.token
+            },
+            query: {
+                user_id: this.userId
+            }
+        });
         
-        this.websocket.onopen = () => {
+        this.socket.on('connect', () => {
             this.isConnected = true;
-            console.log("WebSocket连接已建立");
-        };
+            console.log("Socket.IO连接已建立");
+        });
         
-        this.websocket.onclose = () => {
+        this.socket.on('disconnect', () => {
             this.isConnected = false;
-            console.log("WebSocket连接已关闭");
-        };
+            console.log("Socket.IO连接已关闭");
+        });
         
-        this.websocket.onerror = (error) => {
-            console.error("WebSocket错误:", error);
-        };
+        this.socket.on('error', (error) => {
+            console.error("Socket.IO错误:", error);
+        });
     }
     
     sendMessage(message) {
         if (this.isConnected) {
-            this.websocket.send(JSON.stringify(message));
+            // 使用OpenWebUI原生的message事件
+            this.socket.emit('message', message);
         } else {
-            console.error("WebSocket未连接");
+            console.error("Socket.IO未连接");
         }
     }
     
     onMessage(callback) {
-        this.websocket.onmessage = (event) => {
-            const response = JSON.parse(event.data);
-            callback(response);
-        };
+        // 监听OpenWebUI原生消息事件
+        this.socket.on('message', callback);
+    }
+    
+    onWorkflowStatus(callback) {
+        // 监听工作流状态更新
+        this.socket.on('workflow_status', callback);
     }
 }
 ```
 
 ### 2. 消息处理
 ```javascript
-const client = new HSAIWebSocketClient("user_123", "jwt_token");
+const client = new HSAISocketIOClient("user_123", "jwt_token");
 client.connect();
 
+// 监听主要响应消息
 client.onMessage((response) => {
-    switch(response.type) {
-        case 'status':
-            // 处理连接状态消息
-            console.log("连接状态:", response.content);
-            break;
-        case 'workflow_status':
-            // 处理工作流状态更新
-            console.log("处理进度:", response.progress + "%");
-            break;
-        case 'workflow_complete':
-            // 处理工作流完成
-            displayMessage(response.data.content);
-            break;
-        case 'error':
-            // 处理错误响应
-            displayError(response.content);
-            break;
-        default:
-            // 处理其他响应
-            if (response.success) {
-                displayMessage(response.displayText);
-                handleData(response.data);
-            }
+    // 服务端已经对n8n返回的字符串进行了重新组织
+    // 按照约定的数据结构填充后返回给前端
+    console.log('收到响应:', response);
+    displayMessage(response.content);
+    
+    // 如果有特殊数据结构，由服务端处理后传递
+    if (response.structured_data) {
+        handleStructuredData(response.structured_data);
     }
 });
 
-// 发送消息
+// 监听工作流状态（通过redis信号触发）
+client.onWorkflowStatus((status) => {
+    console.log('工作流状态更新:', status);
+    updateProgressIndicator(status.progress);
+});
+
+// 发送消息（将自动转发给相应的n8n工作流）
 client.sendMessage({
     type: "chat",
     content: "你好",
     user_id: "user_123",
-    entry_type: "chat"
+    entry_type: "chat"  // 服务端根据此字段选择相应的n8n工作流
 });
 ```
 
@@ -278,10 +257,18 @@ client.sendMessage({
 - **可选字段**: `session_id`, `entry_type`, `metadata`
 
 ### 3. 服务端推送事件
-- `status`: 连接状态和可用工作流信息
-- `workflow_status`: 工作流处理进度通知
-- `workflow_complete`: 工作流处理完成通知
+- `message`: n8n工作流处理结果响应
+- `workflow_status`: 工作流处理进度通知（通过redis信号实时触发）
 - `error`: 错误通知
+
+## 注意事项
+1. **使用Socket.IO**: 前端必须使用OpenWebUI原生的Socket.IO进行通信，保证与现有系统的兼容性
+2. **消息结构**: 服务端会对n8n返回的字符串进行重新组织，按照约定的数据结构填充后返回前端
+3. **工作流路由**: 服务端根据entry_type字段自动选择相应的n8n工作流URL
+4. **长任务处理**: 对于需要长时间处理的任务，服务端通过redis信号进行实时通知
+5. **JWT令牌**: 确保JWT令牌有效且未过期
+6. **错误处理**: 正确处理连接异常和重连机制
+7. **会话管理**: 合理管理会话ID以维持对话上下文
 
 ## 注意事项
 1. 确保JWT令牌有效且未过期

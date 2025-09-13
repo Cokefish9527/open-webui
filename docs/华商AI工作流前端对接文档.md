@@ -2,11 +2,360 @@
 
 ## 概览
 
-华商AI系统基于n8n工作流引擎，提供两个核心工作流：
-- `business_information_get`：信息收集工作流
-- `n8n_chat`：主对话工作流
+华商AI系统基于n8n工作流引擎，提供三个核心工作流：
+- `business_information_get`：信息收集工作流（https://webhook-n8n.hsai.cc/webhook/business_information_get）
+- `n8n_chat`：主对话工作流（https://webhook-n8n.hsai.cc/webhook/n8n_chat）
+- `keywords2video`：爆款学习工作流（https://webhook-n8n.hsai.cc/webhook/keywords2video）
 
-## 工作流状态管理
+## 核心问题与解决方案
+
+### 问题分析
+1. **返回结构不固定**：每个节点返回格式不同，增加前端解析复杂度
+2. **间歇性响应异常**：状态码200但无返回内容
+3. **流程中断**：Agent回复“稍后会...”但基于webhook无法主动推送
+
+### 解决策略
+1. **统一响应结构**：约定标准的返回格式
+2. **异常处理机制**：定义错误状态和重试策略
+3. **同步交互模式**：避免异步等待，确保流程连贯
+
+## 标准化响应结构约定
+
+### 统一解析后的数据结构
+```javascript
+{
+  "success": boolean,           // 请求是否成功
+  "messageType": "string",      // 消息类型标识
+  "displayText": "string",      // 用户可见的对话内容
+  "data": object | null,        // 结构化数据
+  "actions": array | null,      // 可执行的操作列表
+  "status": "string",           // 当前流程状态
+  "error": object | null        // 错误信息
+}
+```
+
+### 消息类型定义
+```javascript
+const MESSAGE_TYPES = {
+  // 基础对话
+  GREETING: 'greeting',                    // 问候消息
+  TEXT_ONLY: 'text_only',                 // 纯文本回复
+  
+  // 信息收集流程
+  INFO_REQUEST: 'info_request',           // 信息收集请求
+  KEYWORD_EXTRACT: 'keyword_extract',     // 关键词提取
+  INFO_CONFIRM: 'info_confirm',           // 信息确认
+  
+  // 视频创作流程
+  VIDEO_LIST: 'video_list',               // 视频列表展示
+  SCRIPT_OPTIONS: 'script_options',       // 脚本方案选择
+  VIDEO_SYNTHESIS: 'video_synthesis',     // 视频合成
+  
+  // 异常状态
+  KEYWORD_NOT_FOUND: 'keyword_not_found', // 关键词未找到
+  PROCESS_INTERRUPT: 'process_interrupt', // 流程中断
+  SYSTEM_ERROR: 'system_error'            // 系统错误
+}
+```
+
+## 具体场景响应结构约定
+
+### 信息收集工作流响应示例
+
+#### 初始信息收集请求
+```javascript
+// 原始响应
+{
+  "output": "{\"消息\":\"您好，我是您的公司信息提取助手。\\
+为了给您量身定制视频，请上传您的工厂图片、产品图片或相关的介绍文档。我可以处理多种格式的文件（如 .txt, .docx, .pdf）以及图片（.jpg, .png）。\",\"use_tool_name\":\"\"}"
+}
+
+// 标准化解析结果
+{
+  "success": true,
+  "messageType": "info_request",
+  "displayText": "您好，我是您的公司信息提取助手。\n为了给您量身定制视频，请上传您的工厂图片、产品图片或相关的介绍文档。我可以处理多种格式的文件（如 .txt, .docx, .pdf）以及图片（.jpg, .png）。",
+  "data": {
+    "uploadTypes": [".txt", ".docx", ".pdf", ".jpg", ".png"],
+    "isInfoCollected": false,
+    "use_tool_name": ""
+  },
+  "actions": [
+    { "type": "file_upload", "label": "上传文件" },
+    { "type": "skip_upload", "label": "跳过上传" }
+  ],
+  "status": "waiting_for_info"
+}
+```
+
+#### 关键词提取响应
+```javascript
+// 原始响应
+{
+  "output": "{\n\t\"消息\": \"好的，我们跳过上传资料的步骤。根据您提供的信息，我们是家具行业，主营木质家具。我为您提炼了以下行业关键词：实木家具, 木制家具, 家具定制, 家具制造商, 酒店家具, 办公家具, 家具批发。您看是否准确？或者您想补充一些？\",\n\t\"use_tool_name\": \"\"\n}"
+}
+
+// 标准化解析结果
+{
+  "success": true,
+  "messageType": "keyword_extract",
+  "displayText": "好的，我们跳过上传资料的步骤。根据您提供的信息，我们是家具行业，主营木质家具。我为您提炼了以下行业关键词：实木家具, 木制家具, 家具定制, 家具制造商, 酒店家具, 办公家具, 家具批发。您看是否准确？或者您想补充一些？",
+  "data": {
+    "extractedKeywords": [
+      "实木家具", "木制家具", "家具定制", "家具制造商", 
+      "酒店家具", "办公家具", "家具批发"
+    ],
+    "industry": "家具行业",
+    "mainProduct": "木质家具",
+    "use_tool_name": ""
+  },
+  "actions": [
+    { "type": "confirm_keywords", "label": "确认关键词" },
+    { "type": "modify_keywords", "label": "修改关键词" }
+  ],
+  "status": "keyword_confirmation"
+}
+```
+
+### 异常情况处理示例
+
+#### 关键词未找到响应
+```javascript
+// 原始响应
+{
+  "output": "我没有找到与'红木餐桌'相关的视频文案，请您换一个关键词，我再帮您重新寻找。"
+}
+
+// 标准化解析结果
+{
+  "success": false,
+  "messageType": "keyword_not_found",
+  "displayText": "我没有找到与'红木餐桌'相关的视频文案，请您换一个关键词，我再帮您重新寻找。",
+  "data": {
+    "searchedKeyword": "红木餐桌",
+    "suggestions": [
+      "实木餐桌", "木质家具", "餐厅家具", "红木家具"
+    ]
+  },
+  "actions": [
+    { "type": "retry_with_keyword", "label": "重新输入关键词" },
+    { "type": "use_suggestion", "label": "使用建议关键词" }
+  ],
+  "status": "keyword_search_failed"
+}
+```
+
+#### 流程中断响应
+```javascript
+// 原始响应
+{
+  "output": "我正在将您输入的产品名称\u201c实木椅子\u201d翻译成英文，并与数据库中的文案进行匹配，以为您挑选5个最匹配的文案和素材。请稍候。"
+}
+
+// 标准化解析结果
+{
+  "success": false,
+  "messageType": "process_interrupt",
+  "displayText": "系统正在处理您的请求，由于当前基于webhook通信方式，无法异步返回结果。请重新发送消息以获取处理结果。",
+  "data": {
+    "originalMessage": "我正在将您输入的产品名称\u201c实木椅子\u201d翻译成英文，并与数据库中的文案进行匹配，以为您挑选5个最匹配的文案和素材。请稍候。",
+    "processingKeyword": "实木椅子",
+    "retryable": true
+  },
+  "actions": [
+    { "type": "retry_request", "label": "重新请求" },
+    { "type": "change_keyword", "label": "更换关键词" }
+  ],
+  "status": "processing_interrupted"
+}
+```
+
+## 前端统一处理函数
+
+### 响应解析函数
+```javascript
+function standardizeWorkflowResponse(rawResponse) {
+  try {
+    const output = rawResponse.output;
+    
+    // 尝试解析JSON数据
+    let parsedData = null;
+    try {
+      parsedData = JSON.parse(output);
+    } catch (e) {
+      // 非JSON格式，直接使用文本
+    }
+    
+    // 根据内容特征识别消息类型
+    const messageType = detectMessageType(output, parsedData);
+    
+    // 构建标准化响应
+    return buildStandardResponse(output, parsedData, messageType);
+    
+  } catch (error) {
+    return {
+      success: false,
+      messageType: 'system_error',
+      displayText: '系统处理错误，请重试',
+      data: null,
+      actions: [{ type: 'retry', label: '重试' }],
+      status: 'error',
+      error: { message: error.message }
+    };
+  }
+}
+
+function detectMessageType(output, parsedData) {
+  // 根据关键词识别消息类型
+  if (output.includes('没有找到')) {
+    return 'keyword_not_found';
+  }
+  if (output.includes('请稍候') || output.includes('正在')) {
+    return 'process_interrupt';
+  }
+  if (parsedData && parsedData.use_tool_name === 'keywords_agent') {
+    return 'info_confirm';
+  }
+  if (output.includes('关键词')) {
+    return 'keyword_extract';
+  }
+  if (output.includes('上传') || output.includes('文件')) {
+    return 'info_request';
+  }
+  if (output.includes('视频') && output.includes('编号')) {
+    return 'video_list';
+  }
+  
+  return 'text_only';
+}
+```
+
+## n8n工作流业务逻辑详细说明
+
+### 业务场景概述
+华商AI系统围绕视频内容创作和企业信息管理，设计了完整的业务流程。以下是三个核心工作流的详细业务逻辑：
+
+### 1. 信息收集工作流详细说明
+
+#### 业务背景
+当企业用户首次接触华商AI系统时，需要通过信息收集工作流建立用户画像，为后续的个性化服务奠定基础。
+
+#### 详细业务流程
+1. **初始信息录入阶段**
+   - 用户上传企业相关资料（文档、图片等）
+   - 系统识别文件类型并进行智能解析
+   - 提取企业基本信息：公司名称、行业类别、主营产品/服务
+
+2. **关键词提取与确认阶段**
+   - AI分析企业资料，自动提取行业关键词
+   - 向用户展示提取的关键词列表
+   - 用户确认或修改关键词，系统记录最终关键词集合
+
+3. **作战地图生成阶段**
+   - 基于确认的关键词，分析竞争对手和市场机会
+   - 生成企业专属的市场作战地图
+   - 识别潜在的内容创作方向和营销机会点
+
+4. **项目初始化阶段**
+   - 在数据库中创建企业专属项目记录
+   - 设置初始KPI目标（如月度视频发布数量、预期传播效果等）
+   - 生成首批任务建议，引导用户开始内容创作
+
+#### 触发条件与后续动作
+- 触发条件：用户首次登录且未完成信息收集
+- 完成标志：use_tool_name字段不为空
+- 后续动作：每日定时任务计算当天KPI并分派具体任务
+
+### 2. 主对话工作流详细说明
+
+#### 业务背景
+主对话工作流是日常内容创作的核心引擎，负责协助用户完成从需求表达到视频发布的完整流程。
+
+#### 详细业务流程
+1. **需求理解与任务分析阶段**
+   - 接收用户的内容创作需求（文字描述、关键产品等）
+   - 结合用户的企业信息和历史偏好，理解创作意图
+   - 分析当前任务的复杂度和所需资源
+
+2. **脚本推荐与选择阶段**
+   - 从爆款脚本库中筛选匹配的脚本模板
+   - 考虑脚本的历史表现数据（播放量、互动率等）
+   - 向用户推荐3-5个最佳脚本选项，并说明推荐理由
+
+3. **内容定制与优化阶段**
+   - 根据用户选择的脚本模板，结合企业特色进行定制
+   - 调整脚本内容以匹配用户的产品/服务特点
+   - 优化关键信息点，确保营销效果
+
+4. **视频合成与预览阶段**
+   - 调用视频合成工具，生成初版视频
+   - 应用企业品牌元素（logo、色彩、字体等）
+   - 生成预览版本供用户确认
+
+5. **发布准备与执行阶段**
+   - 用户确认预览无误后，生成最终版本
+   - 根据用户配置的发布平台，准备相应格式
+   - 执行自动发布或提供发布素材包
+
+#### 智能优化特性
+- 学习用户偏好，逐步提高推荐准确性
+- 实时分析市场趋势，调整内容策略
+- 跟踪发布效果，为下次创作提供数据支持
+
+### 3. 爆款学习工作流详细说明
+
+#### 业务背景
+爆款学习工作流通过持续学习市场上的热门内容，不断更新和丰富脚本库，为用户提供最新、最有效的创作素材。
+
+#### 详细业务流程
+1. **数据获取与筛选阶段**
+   - 根据用户的行业关键词，在各大视频平台抓取热门内容
+   - 应用多维度筛选条件：播放量、发布时间、互动数据等
+   - 识别符合企业调性的优质内容
+
+2. **内容分析与拆解阶段**
+   - 对筛选出的视频进行深度分析
+   - 提取视频脚本结构、关键话术、视觉元素
+   - 分析成功要素：开头吸引点、情节转折、结尾call-to-action等
+
+3. **脚本模板生成阶段**
+   - 将分析结果转化为可复用的脚本模板
+   - 去除品牌相关信息，保留核心创意框架
+   - 标注适用场景和预期效果
+
+4. **质量评估与入库阶段**
+   - 对生成的脚本模板进行质量评分
+   - 与现有脚本库进行重复性检查
+   - 高质量脚本正式入库，供主对话工作流调用
+
+#### 学习策略优化
+- 基于用户反馈调整学习权重
+- 定期清理过时或效果不佳的脚本
+- 跟踪脚本使用情况，识别最受欢迎的模板类型
+
+### 工作流协同机制
+
+#### 数据流转关系
+1. **信息收集 → 主对话**：企业信息、关键词、用户偏好
+2. **信息收集 → 爆款学习**：行业关键词、内容方向指引
+3. **爆款学习 → 主对话**：最新脚本模板、市场趋势数据
+
+#### 反馈循环优化
+- 主对话工作流的使用数据反馈给爆款学习，优化学习策略
+- 用户的满意度和内容效果数据，指导信息收集阶段的关键词调整
+- 形成闭环的持续优化机制
+
+### 异常处理与容错机制
+
+#### 常见异常场景
+1. **关键词未找到匹配脚本**：提供通用模板或引导用户调整关键词
+2. **视频合成失败**：重试机制或降级到纯文字版本
+3. **外部平台限制**：切换备用数据源或延迟执行
+
+#### 容错策略
+- 多级降级方案确保服务可用性
+- 异步任务队列处理长耗时操作
+- 详细的错误日志和用户友好的错误提示
 
 ### 用户状态标识
 ```javascript
@@ -22,14 +371,16 @@ const isInfoCollected = (response) => {
 1. **新用户首次访问** → 触发 `business_information_get` 工作流
 2. **检查返回的 use_tool_name 字段**：
    - 无值：用户未完成信息收集，继续收集流程
-   - 有值：用户已完成信息收集
+   - 有值：用户已完成信息收集，初始化任务拆解，每日定时计算任务
 3. **后续对话** → 仅触发 `n8n_chat` 工作流
+4. **爆款学习** → 通过主动/定时调用触发 `keywords2video` 工作流
 
 ## API接口规范
 
 ### 主对话工作流接口
 **接口地址**：`https://webhook-n8n.hsai.cc/webhook/n8n_chat`  
 **请求方式**：POST
+**任务描述**：协助用户完成视频合成发布的任务，根据任务系统记录提供已学习的爆款脚本库中的脚本，进行视频合成和发布工作
 
 #### 请求参数
 ```javascript
@@ -42,8 +393,9 @@ const isInfoCollected = (response) => {
 ```
 
 ### 信息收集工作流接口
-**接口地址**：`business_information_get` 工作流触发地址  
+**接口地址**：`https://webhook-n8n.hsai.cc/webhook/business_information_get`  
 **请求方式**：POST
+**任务描述**：用户首次使用产品时触发，进行用户初始信息的收集，根据用户提供的信息创建初始项目，计算KPI并进行初始化的任务拆解
 
 #### 请求参数
 ```javascript
@@ -51,6 +403,20 @@ const isInfoCollected = (response) => {
   "user_id": "string",      // 用户唯一标识
   "session_id": "string",   // 会话标识（UUID格式）
   "message": "string"       // 用户消息内容（可选）
+}
+```
+
+### 爆款学习工作流接口
+**接口地址**：`https://webhook-n8n.hsai.cc/webhook/keywords2video`  
+**请求方式**：POST
+**任务描述**：主动触发爆款学习，让n8n抓取热门视频中头部几条，将链接写入数据库，用户确认后进行视频下载、脚本拆解、写入爆款库
+
+#### 请求参数
+```javascript
+{
+  "keywords": ["string"],   // 关键词列表
+  "user_id": "string",      // 用户唯一标识
+  "session_id": "string"    // 会话标识（可选）
 }
 ```
 
