@@ -8,21 +8,17 @@ from typing import Dict, Any
 log = logging.getLogger(__name__)
 
 def register_hsai_events(sio, emitter):
-    """注册HSAI相关的WebSocket事件处理器"""
+    """注册HSAI相关的WebSocket事件处理器 - 统一到Socket.IO"""
     if not emitter:
         log.warning("WebSocket emitter not available for HSAI events registration")
         return
     
-    # 注意：emitter 是一个函数，不是具有 .on() 方法的对象
-    # 所以我们不能为 emitter 注册事件处理器
-    # 我们只注册 sio 事件处理器
-    
-    # 添加处理客户端发送消息的事件处理器
-    @sio.on("send_message")
-    async def handle_send_message(sid, data):
-        """处理客户端发送的消息"""
+    # 注册HSAI消息处理事件 - 统一的Socket.IO事件处理
+    @sio.on("hsai_message")
+    async def handle_hsai_message(sid, data):
+        """处理HSAI消息 - 统一的Socket.IO入口"""
         try:
-            log.info(f"[HSAI事件处理器] 接收到客户端sid {sid} 发送的消息: {data}")
+            log.info(f"[HSAI统一事件] 接收到客户端sid {sid} 发送的HSAI消息: {data}")
             
             # 获取用户ID
             user_id = None
@@ -36,50 +32,129 @@ def register_hsai_events(sio, emitter):
                 user_id = data.get("user_id")
             
             if user_id:
-                log.info(f"[HSAI事件处理器] 识别到用户 {user_id} 的消息，准备转发给HSAI聊天处理器")
+                log.info(f"[HSAI统一事件] 识别到用户 {user_id} 的消息，使用工作流编排中心处理")
                 
-                # 将消息转发给HSAI聊天处理器进行n8n工作流处理
-                from open_webui.socket.hsai_chat_handler import chat_handler
+                # 直接使用工作流编排中心处理消息
+                from open_webui.services.workflow_orchestration_center import workflow_orchestration_center
                 
-                # 构造符合ChatMessage格式的消息
-                message_data = {
-                    "type": "chat",
-                    "content": data.get("content", ""),
-                    "user_id": user_id,
-                    "session_id": data.get("session_id"),
+                # 获取或创建会话ID
+                session_id = data.get("session_id") or f"session_{user_id}_{int(__import__('time').time())}"
+                
+                # 构建上下文信息
+                context = {
+                    "business_name": data.get("business_name", "HSAI"),
+                    "entry_type": data.get("entry_type", "chat"),
                     "workflow_type": data.get("workflow_type"),
-                    "entry_type": data.get("entry_type"),
-                    "metadata": data.get("metadata", {})
+                    "additional_data": data.get("metadata", {}),
+                    "socket_id": sid
                 }
                 
-                log.info(f"[HSAI事件处理器] 构造的消息数据: {message_data}")
+                log.info(f"[HSAI统一事件] 通过WOC处理请求，上下文: {context}")
                 
-                # 异步处理消息
-                log.info(f"[HSAI事件处理器] 启动异步任务处理用户 {user_id} 的消息")
-                asyncio.create_task(chat_handler.handle_message(user_id, message_data))
+                # 通过工作流编排中心处理请求
+                result = await workflow_orchestration_center.process_request(
+                    user_input=data.get("content", ""),
+                    user_id=user_id,
+                    session_id=session_id,
+                    context=context
+                )
                 
-                # 不再发送确认消息给客户端，让工作流处理完成后直接返回结果
+                log.info(f"[HSAI统一事件] WOC处理结果: {result}")
+                
+                # 构建统一的Socket.IO响应格式
+                if result["success"]:
+                    response_data = {
+                        "type": "hsai_response",
+                        "success": True,
+                        "execution_id": result["execution_id"],
+                        "workflow_type": result["workflow_type"],
+                        "workflow_name": result["workflow_name"],
+                        "session_id": session_id,
+                        "user_id": user_id,
+                        "execution_time": result["execution_time"],
+                        "timestamp": __import__('time').time()
+                    }
+                    
+                    # 添加响应数据
+                    if result.get("response_data"):
+                        response_data.update(result["response_data"])
+                    
+                    log.info(f"[HSAI统一事件] 发送成功响应给sid {sid}")
+                    await sio.emit("hsai_response", response_data, to=sid)
+                else:
+                    # 处理失败的响应
+                    error_data = {
+                        "type": "hsai_error",
+                        "content": result.get("error_message", "工作流处理失败"),
+                        "execution_id": result.get("execution_id"),
+                        "timestamp": __import__('time').time()
+                    }
+                    log.error(f"[HSAI统一事件] 发送错误响应给sid {sid}: {error_data}")
+                    await sio.emit("hsai_error", error_data, to=sid)
+                    
             else:
-                log.warning(f"[HSAI事件处理器] 无法识别sid {sid} 的用户身份")
+                log.warning(f"[HSAI统一事件] 无法识别sid {sid} 的用户身份")
                 error_data = {
-                    "type": "authentication_error",
+                    "type": "hsai_authentication_error",
                     "content": "用户身份验证失败",
                     "timestamp": __import__('time').time()
                 }
-                log.warning(f"[HSAI事件处理器] 发送身份验证错误消息给客户端sid {sid}: {error_data}")
-                await sio.emit("error", error_data, to=sid)
+                await sio.emit("hsai_error", error_data, to=sid)
                 
         except Exception as e:
-            log.error(f"[HSAI事件处理器] 处理消息时发生错误: {e}", exc_info=True)
+            log.error(f"[HSAI统一事件] 处理消息时发生错误: {e}", exc_info=True)
             error_data = {
-                "type": "processing_error",
+                "type": "hsai_processing_error",
                 "content": f"消息处理失败: {str(e)}",
                 "timestamp": __import__('time').time()
             }
-            log.error(f"[HSAI事件处理器] 发送处理错误消息给客户端sid {sid}: {error_data}")
-            await sio.emit("error", error_data, to=sid)
+            await sio.emit("hsai_error", error_data, to=sid)
     
-    log.info("HSAI WebSocket事件处理器注册成功")
+    # 注册HSAI状态查询事件
+    @sio.on("hsai_status")
+    async def handle_hsai_status(sid, data):
+        """处理HSAI状态查询"""
+        try:
+            log.info(f"[HSAI状态查询] 处理sid {sid} 的状态查询")
+            
+            # 获取用户ID
+            user_id = None
+            from open_webui.socket.main import SESSION_POOL
+            if sid in SESSION_POOL:
+                user = SESSION_POOL[sid]
+                user_id = user.get("id")
+            
+            if user_id:
+                # 获取系统状态
+                from open_webui.utils.n8n_monitor import n8n_monitor
+                system_health = n8n_monitor.get_system_health()
+                
+                status_data = {
+                    "type": "hsai_status_response",
+                    "user_id": user_id,
+                    "system_health": system_health,
+                    "timestamp": __import__('time').time()
+                }
+                
+                await sio.emit("hsai_status_response", status_data, to=sid)
+            else:
+                error_data = {
+                    "type": "hsai_authentication_error",
+                    "content": "身份验证失败",
+                    "timestamp": __import__('time').time()
+                }
+                await sio.emit("hsai_error", error_data, to=sid)
+                
+        except Exception as e:
+            log.error(f"[HSAI状态查询] 处理状态查询时发生错误: {e}", exc_info=True)
+            error_data = {
+                "type": "hsai_processing_error",
+                "content": f"状态查询失败: {str(e)}",
+                "timestamp": __import__('time').time()
+            }
+            await sio.emit("hsai_error", error_data, to=sid)
+    
+    log.info("HSAI统一WebSocket事件处理器注册成功")
 
 # WebSocket事件类型定义
 HSAI_WEBSOCKET_EVENTS = {

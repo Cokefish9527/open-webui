@@ -1220,6 +1220,10 @@ app.include_router(hsai_dashboard.router, prefix="/api/v1")
 app.include_router(hsai_chat.router, prefix="/api/v1")
 app.include_router(hsai_workflows.router, prefix="/api/v1")
 
+# 导入并注册WOC路由
+from open_webui.routers import hsai_woc
+app.include_router(hsai_woc.router)
+
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)
 except ValueError as e:

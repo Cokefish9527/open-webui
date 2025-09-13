@@ -1,0 +1,110 @@
+{
+{
+  "test_config": {
+    "base_url": "http://localhost:8080",
+    "websocket_url": "ws://localhost:8080/hsai/ws",
+    "username": "saiter2306@163.com",
+    "password": "123456",
+    "timeout": 30,
+    "debug": true
+  },
+  "test_scenarios": {
+    "company_info": {
+      "name": "企业信息收集",
+      "description": "测试企业信息收集和竞品分析工作流",
+      "content": "帮我收集和分析阿里巴巴集团的企业信息，包括公司背景、业务结构、竞争对手分析等",
+      "entry_type": "company",
+      "metadata": {
+        "test_scenario": "company_info_collection",
+        "company_name": "阿里巴巴集团"
+      }
+    },
+    "video_creation": {
+      "name": "视频创作",
+      "description": "测试B2B智能视频创作主工作流",
+      "content": "帮我创作一个关于人工智能发展趋势的短视频，包括脚本撰写、关键词优化和发布建议",
+      "entry_type": "chat",
+      "metadata": {
+        "test_scenario": "video_creation",
+        "video_topic": "人工智能发展趋势",
+        "target_platform": "抖音"
+      }
+    },
+    "video_analysis": {
+      "name": "视频分析",
+      "description": "测试异步视频内容爬取和关键词分析工作流",
+      "content": "帮我分析最近抖音上关于科技类视频的热门内容和关键词趋势",
+      "entry_type": "chat",
+      "metadata": {
+        "test_scenario": "video_analysis",
+        "platform": "抖音",
+        "category": "科技"
+      }
+    },
+    "viral_learning": {
+      "name": "爆款学习",
+      "description": "测试被动触发爆款学习工作流",
+      "content": "分析最近的爆款内容并总结成功模式",
+      "entry_type": "chat",
+      "metadata": {
+        "test_scenario": "viral_learning",
+        "content_type": "短视频"
+      }
+    }
+  },
+  "test_data": {
+    "companies": [
+      "阿里巴巴集团",
+      "腾讯控股",
+      "字节跳动",
+      "美团",
+      "京东集团"
+    ],
+    "video_topics": [
+      "人工智能发展趋势",
+      "短视频营销策略",
+      "企业数字化转型",
+      "新能源汽车市场",
+      "元宇宙技术应用"
+    ],
+    "platforms": [
+      "抖音",
+      "快手",
+      "小红书",
+      "B站",
+      "微信视频号"
+    ]
+  },
+  "woc_endpoints": {
+    "health": "/api/v1/woc/health",
+    "status": "/api/v1/woc/status",
+    "executions": "/api/v1/woc/executions/user",
+    "execution_detail": "/api/v1/woc/execution",
+    "cancel_execution": "/api/v1/woc/execution/{execution_id}/cancel",
+    "cleanup": "/api/v1/woc/cleanup"
+  },
+  "expected_responses": {
+    "company_info": {
+      "messageType": "assistant",
+      "success": true,
+      "data": {
+        "company_analysis": "expected"
+      }
+    },
+    "video_creation": {
+      "messageType": "assistant", 
+      "success": true,
+      "data": {
+        "script": "expected",
+        "keywords": "expected"
+      }
+    },
+    "video_analysis": {
+      "messageType": "assistant",
+      "success": true,
+      "data": {
+        "analysis_result": "expected"
+      }
+    }
+  }
+}

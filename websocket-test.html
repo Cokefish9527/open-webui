@@ -215,10 +215,37 @@
                         console.error('Socket.IO connection error:', error);
                     });
                     
-                    // 监听chat-events事件
-                    this.socket.on('chat-events', (data) => {
-                        this.displayReceivedMessage('chat-events', data);
-                        console.log('Received chat-events:', data);
+                    // 监听HSAI响应事件
+                    this.socket.on('hsai_response', (data) => {
+                        this.displayReceivedMessage('hsai_response', data);
+                        console.log('Received HSAI response:', data);
+                    });
+                    
+                    // 监听HSAI错误事件
+                    this.socket.on('hsai_error', (data) => {
+                        this.displayReceivedMessage('hsai_error', data);
+                        console.log('Received HSAI error:', data);
+                    });
+                    
+                    // 监听HSAI工作流事件
+                    this.socket.on('hsai_workflow_started', (data) => {
+                        this.displayReceivedMessage('hsai_workflow_started', data);
+                        console.log('Workflow started:', data);
+                    });
+                    
+                    this.socket.on('hsai_workflow_progress', (data) => {
+                        this.displayReceivedMessage('hsai_workflow_progress', data);
+                        console.log('Workflow progress:', data);
+                    });
+                    
+                    this.socket.on('hsai_workflow_completed', (data) => {
+                        this.displayReceivedMessage('hsai_workflow_completed', data);
+                        console.log('Workflow completed:', data);
+                    });
+                    
+                    this.socket.on('hsai_workflow_failed', (data) => {
+                        this.displayReceivedMessage('hsai_workflow_failed', data);
+                        console.log('Workflow failed:', data);
                     });
                     
                     // 监听其他可能的事件
@@ -271,11 +298,11 @@
                     if (!message.user_id) {
                         message.user_id = this.userIdInput.value.trim();
                     }
-                    // 发送消息到服务器
-                    console.log('Sending message:', message);
-                    this.socket.emit('send_message', message);
+                    // 使用新的HSAI事件名称发送消息到服务器
+                    console.log('Sending HSAI message:', message);
+                    this.socket.emit('hsai_message', message);
                     this.displaySentMessage(message);
-                    this.showMessage('消息已发送', 'info');
+                    this.showMessage('HSAI消息已发送', 'info');
                 } catch (error) {
                     this.showMessage(`发送失败: ${error.message}`, 'error');
                     console.error('Send message failed:', error);
