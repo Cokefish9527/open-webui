@@ -9,7 +9,7 @@ import json
 import logging
 from typing import Dict, Any, Optional
 from datetime import datetime
-import aioredis
+from redis import asyncio as aioredis
 
 from open_webui.env import WEBSOCKET_REDIS_URL
 from open_webui.socket.main import sio

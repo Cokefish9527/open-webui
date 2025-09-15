@@ -91,7 +91,8 @@ AIOHTTP_CLIENT_READ_BUFFER_SIZE=65536
 
 ```
 # 缓存
-REDIS_URL=redis://:<password>@<host>:6379/0
+REDIS_URL=redis://192.168.20.31:6379/0
+WEBSOCKET_REDIS_URL=redis://192.168.20.31:6379/0
 
 # 邮件相关
 SMTP_HOST=smtp.email.qq.com
