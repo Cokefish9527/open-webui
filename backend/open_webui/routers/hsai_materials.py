@@ -497,6 +497,76 @@ async def create_material_folder(
         )
 
 
+@router.post("/folders/{folder_id}/rename", response_model=HSAIMaterialFolderResponse, summary="重命名素材文件夹")
+async def rename_material_folder(
+    folder_id: str,
+    form_data: HSAIMaterialFolderForm,
+    user=Depends(get_verified_user)
+):
+    """
+    重命名素材文件夹。
+    
+    Args:
+        folder_id (str): 文件夹唯一标识符
+        form_data (HSAIMaterialFolderForm): 包含新文件夹名称的表单数据
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAIMaterialFolderResponse: 更新后的文件夹信息
+        
+    Raises:
+        HTTPException: 404 - 文件夹不存在或无权限访问
+        HTTPException: 400 - 文件夹名称已存在
+        HTTPException: 500 - 更新失败
+    """
+    try:
+        # 首先验证文件夹所有权
+        folder = HSAIMaterialFolders.get_folder_by_id(folder_id)
+        if not folder or folder.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Folder not found or insufficient permissions"
+            )
+        
+        # 验证文件夹所有权并更新名称
+        updated_folder = HSAIMaterialFolders.update_folder_name_by_id(folder_id, form_data.name)
+        if not updated_folder:
+            # 检查具体原因
+            existing_folder_check = None
+            with get_db() as db:
+                existing_folder_check = db.query(HSAIMaterialFolder).filter_by(
+                    id=folder_id,
+                    user_id=user.id
+                ).first()
+            
+            if not existing_folder_check:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Folder not found or insufficient permissions"
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="A folder with the same name already exists in this location"
+                )
+        
+        return HSAIMaterialFolderResponse(
+            **updated_folder.model_dump(),
+            label=updated_folder.name,  # 为 label 字段赋与 name 字段相同的值
+            children=[],
+            material_count=0
+        )
+        
+    except HTTPException:
+        # 重新抛出 HTTP 异常
+        raise
+    except Exception as e:
+        log.exception(f"Error renaming material folder: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
 @router.delete("/folders/{folder_id}", response_model=bool, summary="删除素材文件夹")
 async def delete_material_folder(
     folder_id: str,
@@ -1454,3 +1524,12 @@ async def get_material_stats(user=Depends(get_verified_user)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()
         )
+
+
+# 初始化全局实例
+from open_webui.models.hsai_materials import (
+    HSAIMaterialFolders,
+    HSAIMaterials,
+    HSAIMaterialCategories,
+    HSAIFileOperationLogs
+)

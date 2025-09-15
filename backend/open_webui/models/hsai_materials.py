@@ -595,6 +595,49 @@ class HSAIMaterialFoldersTable:
                 log.exception(f"Error deleting folder: {e}")
                 return False
 
+    def update_folder_name_by_id(
+        self, folder_id: str, name: str
+    ) -> Optional[HSAIMaterialFolderModel]:
+        """
+        更新素材文件夹名称
+        
+        Args:
+            folder_id (str): 文件夹ID
+            name (str): 新的文件夹名称
+            
+        Returns:
+            Optional[HSAIMaterialFolderModel]: 更新后的文件夹模型
+        """
+        with get_db() as db:
+            try:
+                # 获取文件夹信息（后续在路由层验证所有权）
+                folder = db.query(HSAIMaterialFolder).filter_by(id=folder_id).first()
+                
+                if not folder:
+                    return None
+                
+                # 检查同一父目录下是否已有同名文件夹
+                existing_folder = db.query(HSAIMaterialFolder).filter_by(
+                    name=name,
+                    parent_id=folder.parent_id,
+                    user_id=folder.user_id
+                ).first()
+                
+                if existing_folder and existing_folder.id != folder_id:
+                    # 同名文件夹已存在
+                    return None
+                
+                # 更新文件夹名称
+                folder.name = name
+                folder.updated_at = int(time.time())
+                db.commit()
+                db.refresh(folder)
+                return HSAIMaterialFolderModel.model_validate(folder)
+            except Exception as e:
+                log.exception(f"Error updating folder name: {e}")
+                db.rollback()
+                return None
+
 
 class HSAIMaterialsTable:
     def insert_new_material(
