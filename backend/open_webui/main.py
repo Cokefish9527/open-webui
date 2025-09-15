@@ -547,6 +547,18 @@ async def lifespan(app: FastAPI):
             redis_task_command_listener(app)
         )
 
+    # 初始化工作流编排中心
+    from open_webui.services.workflow_orchestration_center import workflow_orchestration_center
+    await workflow_orchestration_center.initialize()
+
+    # 启动Redis信号处理器
+    from open_webui.utils.redis_signal_handler import redis_signal_handler
+    await redis_signal_handler.initialize()
+    app.state.redis_signal_handler = redis_signal_handler
+    app.state.redis_signal_monitoring_task = asyncio.create_task(
+        redis_signal_handler.start_monitoring()
+    )
+
     if THREAD_POOL_SIZE and THREAD_POOL_SIZE > 0:
         limiter = anyio.to_thread.current_default_thread_limiter()
         limiter.total_tokens = THREAD_POOL_SIZE
@@ -554,6 +566,11 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(periodic_usage_pool_cleanup())
 
     yield
+
+    # 停止Redis信号处理器
+    if hasattr(app.state, "redis_signal_monitoring_task"):
+        app.state.redis_signal_monitoring_task.cancel()
+        await redis_signal_handler.stop_monitoring()
 
     if hasattr(app.state, "redis_task_command_listener"):
         app.state.redis_task_command_listener.cancel()

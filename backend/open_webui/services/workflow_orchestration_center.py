@@ -17,6 +17,7 @@ import aiohttp
 
 from open_webui.utils.n8n_workflow_manager import WorkflowType, WorkflowConfig, workflow_manager
 from open_webui.utils.n8n_client import n8n_client, ExecutionRequest, ExecutionResult
+from open_webui.utils.redis_signal_handler import redis_signal_handler
 
 log = logging.getLogger(__name__)
 
@@ -45,8 +46,7 @@ class RouterManager:
         self.workflow_endpoints = {
             WorkflowType.MAIN: "https://webhook-n8n.hsai.cc/webhook/n8n_chat",
             WorkflowType.COMPANY_INFO: "https://webhook-n8n.hsai.cc/webhook/business_information_get",
-            WorkflowType.VIRAL_LEARNING: "https://webhook-n8n.hsai.cc/webhook/viral-learning",
-            WorkflowType.VIDEO_ANALYSIS: "https://webhook-n8n.hsai.cc/webhook/video_analysis"
+            WorkflowType.VIRAL_LEARNING: "https://webhook-n8n.hsai.cc/webhook/keywords2video"
         }
 
     def _initialize_routing_rules(self) -> List[RoutingRule]:
@@ -285,6 +285,9 @@ class WorkflowOrchestrationCenter:
             
         # 确保N8N客户端已初始化
         await n8n_client.initialize()
+        
+        # 确保Redis信号处理器已初始化
+        await redis_signal_handler.initialize()
         
         log.info("工作流编排中心初始化完成")
         

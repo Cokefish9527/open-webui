@@ -20,7 +20,7 @@ class N8NWorkflowType(str, Enum):
 N8N_WORKFLOW_WEBHOOKS = {
     N8NWorkflowType.MAIN: os.getenv("N8N_MAIN_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/n8n_chat"),
     N8NWorkflowType.COMPANY_INFO: os.getenv("N8N_COMPANY_INFO_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/business_information_get"),
-    N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/viral-learning"),
+    N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/keywords2video"),
     N8NWorkflowType.VIDEO_PUBLISH: os.getenv("N8N_VIDEO_PUBLISH_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/video_publish")
 }
 

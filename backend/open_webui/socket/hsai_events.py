@@ -13,11 +13,20 @@ def register_hsai_events(sio, emitter):
         log.warning("WebSocket emitter not available for HSAI events registration")
         return
     
-    # 注册HSAI消息处理事件 - 统一的Socket.IO事件处理
-    @sio.on("hsai_message")
+    # 注册HSAI消息处理事件 - 使用OpenWebUI原生事件名称
+    @sio.on("message")
     async def handle_hsai_message(sid, data):
-        """处理HSAI消息 - 统一的Socket.IO入口"""
+        """处理HSAI消息 - OpenWebUI原生message事件入口"""
+        log.info(f"📥 HSAI MESSAGE事件 - SID: {sid}")
+        log.debug(f"消息数据: {data}")
+        
         try:
+            # 检查是否为HSAI消息（通过消息结构判断）
+            if not isinstance(data, dict) or not data.get("type") in ["chat", "workflow_trigger"]:
+                log.debug("不是HSAI消息，跳过处理")
+                # 不是HSAI消息，跳过处理让其他处理器处理
+                return
+                
             log.info(f"[HSAI统一事件] 接收到客户端sid {sid} 发送的HSAI消息: {data}")
             
             # 获取用户ID
@@ -80,7 +89,7 @@ def register_hsai_events(sio, emitter):
                         response_data.update(result["response_data"])
                     
                     log.info(f"[HSAI统一事件] 发送成功响应给sid {sid}")
-                    await sio.emit("hsai_response", response_data, to=sid)
+                    await sio.emit("message", response_data, to=sid)
                 else:
                     # 处理失败的响应
                     error_data = {
@@ -90,7 +99,7 @@ def register_hsai_events(sio, emitter):
                         "timestamp": __import__('time').time()
                     }
                     log.error(f"[HSAI统一事件] 发送错误响应给sid {sid}: {error_data}")
-                    await sio.emit("hsai_error", error_data, to=sid)
+                    await sio.emit("error", error_data, to=sid)
                     
             else:
                 log.warning(f"[HSAI统一事件] 无法识别sid {sid} 的用户身份")
@@ -99,7 +108,7 @@ def register_hsai_events(sio, emitter):
                     "content": "用户身份验证失败",
                     "timestamp": __import__('time').time()
                 }
-                await sio.emit("hsai_error", error_data, to=sid)
+                await sio.emit("error", error_data, to=sid)
                 
         except Exception as e:
             log.error(f"[HSAI统一事件] 处理消息时发生错误: {e}", exc_info=True)
@@ -108,7 +117,7 @@ def register_hsai_events(sio, emitter):
                 "content": f"消息处理失败: {str(e)}",
                 "timestamp": __import__('time').time()
             }
-            await sio.emit("hsai_error", error_data, to=sid)
+            await sio.emit("error", error_data, to=sid)
     
     # 注册HSAI状态查询事件
     @sio.on("hsai_status")
@@ -136,14 +145,14 @@ def register_hsai_events(sio, emitter):
                     "timestamp": __import__('time').time()
                 }
                 
-                await sio.emit("hsai_status_response", status_data, to=sid)
+                await sio.emit("workflow_status", status_data, to=sid)
             else:
                 error_data = {
                     "type": "hsai_authentication_error",
                     "content": "身份验证失败",
                     "timestamp": __import__('time').time()
                 }
-                await sio.emit("hsai_error", error_data, to=sid)
+                await sio.emit("error", error_data, to=sid)
                 
         except Exception as e:
             log.error(f"[HSAI状态查询] 处理状态查询时发生错误: {e}", exc_info=True)
@@ -152,7 +161,7 @@ def register_hsai_events(sio, emitter):
                 "content": f"状态查询失败: {str(e)}",
                 "timestamp": __import__('time').time()
             }
-            await sio.emit("hsai_error", error_data, to=sid)
+            await sio.emit("error", error_data, to=sid)
     
     log.info("HSAI统一WebSocket事件处理器注册成功")
 

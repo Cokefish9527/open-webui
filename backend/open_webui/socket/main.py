@@ -3,7 +3,9 @@ import socketio
 import logging
 import sys
 import time
+import os
 from redis import asyncio as aioredis
+from typing import Any, Dict, List, Optional
 
 from open_webui.models.users import Users, UserNameResponse
 from open_webui.models.channels import Channels
@@ -33,6 +35,9 @@ logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["SOCKET"])
 
+# Initialize global variables
+sio: Optional[socketio.AsyncServer] = None
+mgr: Optional[socketio.AsyncRedisManager] = None
 
 if WEBSOCKET_MANAGER == "redis":
     if WEBSOCKET_SENTINEL_HOSTS:
@@ -60,11 +65,17 @@ else:
         always_connect=True,
     )
 
+# Ensure sio is not None
+if sio is None:
+    raise RuntimeError("Failed to initialize socket.io server")
 
 # Timeout duration in seconds
 TIMEOUT_DURATION = 3
 
 # Dictionary to maintain the user pool
+SESSION_POOL: Dict[str, Any] = {}
+USER_POOL: Dict[str, List[str]] = {}
+USAGE_POOL: Dict[str, Dict[str, Any]] = {}
 
 if WEBSOCKET_MANAGER == "redis":
     log.debug("Using Redis to manage websockets.")
@@ -139,9 +150,13 @@ async def periodic_usage_pool_cleanup():
         release_func()
 
 
+# Get socketio path from environment variable, with fallback to default
+SOCKETIO_PATH = os.environ.get("SOCKETIO_PATH", "/socket.io")
+
+# 由于在main.py中使用了app.mount("/ws", socket_app)，这里应该使用相对路径
 app = socketio.ASGIApp(
     sio,
-    socketio_path="/ws/socket.io",
+    socketio_path="",  # 使用空字符串，因为路径已经在挂载时处理
 )
 
 def get_event_emitter(request_info, update_db=True):
@@ -248,17 +263,19 @@ def get_user_id_from_session_pool(sid):
 
 
 def get_user_ids_from_room(room):
-    active_session_ids = sio.manager.get_participants(
-        namespace="/",
-        room=room,
-    )
-
-    active_user_ids = list(
-        set(
-            [SESSION_POOL.get(session_id[0])["id"] for session_id in active_session_ids]
+    if hasattr(sio.manager, 'get_participants'):
+        active_session_ids = sio.manager.get_participants(
+            namespace="/",
+            room=room,
         )
-    )
-    return active_user_ids
+
+        active_user_ids = list(
+            set(
+                [SESSION_POOL.get(session_id[0], {}).get("id") for session_id in active_session_ids if SESSION_POOL.get(session_id[0])]
+            )
+        )
+        return active_user_ids
+    return []
 
 
 def get_active_status_by_user_id(user_id):
@@ -267,129 +284,151 @@ def get_active_status_by_user_id(user_id):
     return False
 
 
-@sio.on("usage")
-async def usage(sid, data):
-    if sid in SESSION_POOL:
-        model_id = data["model"]
-        # Record the timestamp for the last update
-        current_time = int(time.time())
+if sio is not None:
+    @sio.on("usage")
+    async def usage(sid, data):
+        if sid in SESSION_POOL:
+            model_id = data["model"]
+            # Record the timestamp for the last update
+            current_time = int(time.time())
 
-        # Store the new usage data and task
-        USAGE_POOL[model_id] = {
-            **(USAGE_POOL[model_id] if model_id in USAGE_POOL else {}),
-            sid: {"updated_at": current_time},
-        }
+            # Store the new usage data and task
+            USAGE_POOL[model_id] = {
+                **(USAGE_POOL[model_id] if model_id in USAGE_POOL else {}),
+                sid: {"updated_at": current_time},
+            }
 
 
-@sio.event
-async def connect(sid, environ, auth):
-    user = None
-    if auth and "token" in auth:
-        data = decode_token(auth["token"])
+    @sio.event
+    async def connect(sid, environ, auth):
+        log.info(f"📥 CONNECT事件 - SID: {sid}")
+        log.debug(f".environ: {environ}")
+        log.debug(f".auth: {auth}")
+        
+        user = None
+        if auth and "token" in auth:
+            log.info("🔐 验证token...")
+            data = decode_token(auth["token"])
+            log.debug(f"解码token结果: {data}")
 
-        if data is not None and "id" in data:
-            user = Users.get_user_by_id(data["id"])
+            if data is not None and "id" in data:
+                user = Users.get_user_by_id(data["id"])
+                log.debug(f"获取用户信息: {user}")
 
-        if user:
-            SESSION_POOL[sid] = user.model_dump()
-            if user.id in USER_POOL:
-                USER_POOL[user.id] = USER_POOL[user.id] + [sid]
+            if user:
+                log.info(f"✅ 用户 {user.name} ({user.email}) 认证成功")
+                SESSION_POOL[sid] = user.model_dump()
+                if user.id in USER_POOL:
+                    USER_POOL[user.id] = USER_POOL[user.id] + [sid]
+                else:
+                    USER_POOL[user.id] = [sid]
+                log.info(f"💾 会话 {sid} 已存储到会话池")
             else:
-                USER_POOL[user.id] = [sid]
+                log.warning("❌ 用户认证失败")
+                return False
+        else:
+            log.warning("⚠️  连接请求中没有提供认证信息")
+            return False
 
 
-@sio.on("user-join")
-async def user_join(sid, data):
+    @sio.on("user-join")
+    async def user_join(sid, data):
 
-    auth = data["auth"] if "auth" in data else None
-    if not auth or "token" not in auth:
-        return
+        auth = data["auth"] if "auth" in data else None
+        if not auth or "token" not in auth:
+            return
 
-    data = decode_token(auth["token"])
-    if data is None or "id" not in data:
-        return
+        data = decode_token(auth["token"])
+        if data is None or "id" not in data:
+            return
 
-    user = Users.get_user_by_id(data["id"])
-    if not user:
-        return
+        user = Users.get_user_by_id(data["id"])
+        if not user:
+            return
 
-    SESSION_POOL[sid] = user.model_dump()
-    if user.id in USER_POOL:
-        USER_POOL[user.id] = USER_POOL[user.id] + [sid]
-    else:
-        USER_POOL[user.id] = [sid]
+        SESSION_POOL[sid] = user.model_dump()
+        if user.id in USER_POOL:
+            USER_POOL[user.id] = USER_POOL[user.id] + [sid]
+        else:
+            USER_POOL[user.id] = [sid]
 
-    # Join all the channels
-    channels = Channels.get_channels_by_user_id(user.id)
-    log.debug(f"{channels=}")
-    for channel in channels:
-        await sio.enter_room(sid, f"channel:{channel.id}")
-    return {"id": user.id, "name": user.name}
-
-
-@sio.on("join-channels")
-async def join_channel(sid, data):
-    auth = data["auth"] if "auth" in data else None
-    if not auth or "token" not in auth:
-        return
-
-    data = decode_token(auth["token"])
-    if data is None or "id" not in data:
-        return
-
-    user = Users.get_user_by_id(data["id"])
-    if not user:
-        return
-
-    # Join all the channels
-    channels = Channels.get_channels_by_user_id(user.id)
-    log.debug(f"{channels=}")
-    for channel in channels:
-        await sio.enter_room(sid, f"channel:{channel.id}")
+        # Join all the channels
+        channels = Channels.get_channels_by_user_id(user.id)
+        log.debug(f"{channels=}")
+        for channel in channels:
+            await sio.enter_room(sid, f"channel:{channel.id}")
+        return {"id": user.id, "name": user.name}
 
 
-@sio.on("channel-events")
-async def channel_events(sid, data):
-    room = f"channel:{data['channel_id']}"
-    participants = sio.manager.get_participants(
-        namespace="/",
-        room=room,
-    )
+    @sio.on("join-channels")
+    async def join_channel(sid, data):
+        auth = data["auth"] if "auth" in data else None
+        if not auth or "token" not in auth:
+            return
 
-    sids = [sid for sid, _ in participants]
-    if sid not in sids:
-        return
+        data = decode_token(auth["token"])
+        if data is None or "id" not in data:
+            return
 
-    event_data = data["data"]
-    event_type = event_data["type"]
+        user = Users.get_user_by_id(data["id"])
+        if not user:
+            return
 
-    if event_type == "typing":
-        await sio.emit(
-            "channel-events",
-            {
-                "channel_id": data["channel_id"],
-                "message_id": data.get("message_id", None),
-                "data": event_data,
-                "user": UserNameResponse(**SESSION_POOL[sid]).model_dump(),
-            },
-            room=room,
-        )
+        # Join all the channels
+        channels = Channels.get_channels_by_user_id(user.id)
+        log.debug(f"{channels=}")
+        for channel in channels:
+            await sio.enter_room(sid, f"channel:{channel.id}")
 
 
-@sio.event
-async def disconnect(sid):
-    if sid in SESSION_POOL:
-        user = SESSION_POOL[sid]
-        del SESSION_POOL[sid]
+    @sio.on("channel-events")
+    async def channel_events(sid, data):
+        room = f"channel:{data['channel_id']}"
+        if hasattr(sio.manager, 'get_participants'):
+            participants = sio.manager.get_participants(
+                namespace="/",
+                room=room,
+            )
 
-        user_id = user["id"]
-        USER_POOL[user_id] = [_sid for _sid in USER_POOL[user_id] if _sid != sid]
+            sids = [sid for sid, _ in participants]
+            if sid not in sids:
+                return
 
-        if len(USER_POOL[user_id]) == 0:
-            del USER_POOL[user_id]
-    else:
-        pass
-        # print(f"Unknown session ID {sid} disconnected")
+            event_data = data["data"]
+            event_type = event_data["type"]
+
+            if event_type == "typing":
+                await sio.emit(
+                    "channel-events",
+                    {
+                        "channel_id": data["channel_id"],
+                        "message_id": data.get("message_id", None),
+                        "data": event_data,
+                        "user": UserNameResponse(**SESSION_POOL[sid]).model_dump(),
+                    },
+                    room=room,
+                )
+
+
+    @sio.event
+    async def disconnect(sid):
+        log.info(f"📥 DISCONNECT事件 - SID: {sid}")
+        
+        if sid in SESSION_POOL:
+            user = SESSION_POOL[sid]
+            del SESSION_POOL[sid]
+            log.info(f"🗑️  会话 {sid} 已从会话池移除")
+
+            user_id = user["id"]
+            USER_POOL[user_id] = [_sid for _sid in USER_POOL[user_id] if _sid != sid]
+
+            if len(USER_POOL[user_id]) == 0:
+                del USER_POOL[user_id]
+                log.info(f"🗑️  用户 {user_id} 已从用户池移除")
+            else:
+                log.info(f"🔄 用户 {user_id} 仍有 {len(USER_POOL[user_id])} 个连接")
+        else:
+            log.warning(f"⚠️  未知会话 {sid} 断开连接")
 
 
 def get_event_call(request_info):
