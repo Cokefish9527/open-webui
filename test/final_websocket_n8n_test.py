@@ -96,7 +96,8 @@ class FinalWebSocketN8NTester:
             # 发送Socket.IO连接消息，包含认证信息
             # 格式: 40<namespace>,<auth_data>
             # 对于默认命名空间，格式为: 40{"token":"<token>"} 或 40"","{"token":"<token>"}
-            auth_msg = f'40"","{{\\"token\\":\\"{self.token}\\"}}"'
+            # 修复认证消息格式，使用正确的Socket.IO格式
+            auth_msg = f'40{{"token":"{self.token}"}}'
             logger.info(f"📤 发送认证消息: {auth_msg}")
             await self.websocket.send(auth_msg)
             

@@ -94,7 +94,8 @@ class FinalConnectionTest:
                     logger.warning(f"⚠️  解析会话ID失败: {e}")
             
             # 发送认证消息
-            auth_msg = f'40"","{{\\"token\\":\\"{self.token}\\"}}"'
+            # 修复认证消息格式，使用正确的Socket.IO格式
+            auth_msg = f'40{{"token":"{self.token}"}}'
             logger.info(f"📤 发送认证消息: {auth_msg}")
             await self.websocket.send(auth_msg)
             
@@ -124,9 +125,18 @@ class FinalConnectionTest:
     
     async def close_connection(self):
         """关闭连接"""
-        if self.websocket and not self.websocket.closed:
-            await self.websocket.close()
-            logger.info("🔒 WebSocket连接已关闭")
+        if self.websocket:
+            # 修复属性检查，websockets库使用open属性而不是closed
+            if hasattr(self.websocket, 'open') and self.websocket.open:
+                await self.websocket.close()
+                logger.info("🔒 WebSocket连接已关闭")
+            elif not hasattr(self.websocket, 'open'):
+                # 如果没有open属性，尝试直接关闭
+                try:
+                    await self.websocket.close()
+                    logger.info("🔒 WebSocket连接已关闭")
+                except:
+                    pass  # 忽略关闭时的错误
     
     async def run_test(self):
         """运行测试"""
