@@ -122,12 +122,23 @@
             <textarea id="messageInput" placeholder='请输入要发送的消息，例如：
 {
   "type": "chat",
-  "content": "你好",
-  "user_id": "user_123"
+  "content": "测试HSAI chat 消息",
+  "user_id": "user_123",
+  "entry_type": "chat",
+  "session_id": "test_chat_1234567890",
+  "workflow_type": "main",
+  "timestamp": "2023-01-01T00:00:00.000Z",
+  "test": true
 }'></textarea>
         </div>
         
         <button id="sendBtn" disabled>发送消息</button>
+        
+        <div class="form-group">
+            <label>快速测试消息:</label>
+            <button id="sendChatTestBtn" disabled>发送聊天测试消息</button>
+            <button id="sendWorkflowTestBtn" disabled>发送工作流测试消息</button>
+        </div>
         
         <div class="form-group">
             <label for="messagesOutput">接收到的消息:</label>
@@ -144,6 +155,15 @@
             constructor() {
                 this.socket = null;
                 this.isConnected = false;
+                this.token = null; // 保存token的变量
+                this.userId = null; // 保存用户ID的变量
+                this.serverBaseUrl = "http://localhost:8080"; // 服务器基础URL
+                
+                // 预设的登录凭据
+                this.loginCredentials = {
+                    email: "saiter2306@163.com",
+                    password: "123456"
+                };
                 
                 // 获取DOM元素
                 this.userIdInput = document.getElementById('userId');
@@ -152,23 +172,74 @@
                 this.connectBtn = document.getElementById('connectBtn');
                 this.disconnectBtn = document.getElementById('disconnectBtn');
                 this.sendBtn = document.getElementById('sendBtn');
+                this.sendChatTestBtn = document.getElementById('sendChatTestBtn');
+                this.sendWorkflowTestBtn = document.getElementById('sendWorkflowTestBtn');
                 this.messageInput = document.getElementById('messageInput');
                 this.messagesOutput = document.getElementById('messagesOutput');
                 this.connectionStatus = document.getElementById('connectionStatus');
                 this.clearBtn = document.getElementById('clearBtn');
                 
+                // 设置默认服务器URL
+                this.serverUrlInput.value = this.serverBaseUrl;
+                
+                // 页面加载时自动登录
+                this.autoLogin();
+                
                 // 绑定事件
                 this.bindEvents();
+            }
+            
+            // 自动登录函数
+            async autoLogin() {
+                try {
+                    this.showMessage('正在自动登录...', 'info');
+                    
+                    const response = await fetch(`${this.serverBaseUrl}/api/v1/auths/signin`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(this.loginCredentials)
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.token = data.token;
+                        this.userId = data.id;
+                        
+                        // 更新UI
+                        this.tokenInput.value = this.token;
+                        this.userIdInput.value = this.userId;
+                        
+                        this.showMessage('自动登录成功', 'info');
+                        console.log('Auto login successful, token:', this.token);
+                    } else {
+                        const errorData = await response.json();
+                        this.showMessage(`自动登录失败: ${errorData.detail || response.statusText}`, 'error');
+                        console.error('Auto login failed:', errorData);
+                    }
+                } catch (error) {
+                    this.showMessage(`登录请求失败: ${error.message}`, 'error');
+                    console.error('Login request failed:', error);
+                }
             }
             
             bindEvents() {
                 this.connectBtn.addEventListener('click', () => this.connect());
                 this.disconnectBtn.addEventListener('click', () => this.disconnect());
                 this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.sendChatTestBtn.addEventListener('click', () => this.sendTestMessage('chat'));
+                this.sendWorkflowTestBtn.addEventListener('click', () => this.sendTestMessage('workflow_trigger'));
                 this.clearBtn.addEventListener('click', () => this.clearMessages());
             }
             
             connect() {
+                // 如果没有token，先尝试获取
+                if (!this.token) {
+                    this.showMessage('请先登录获取token', 'error');
+                    return;
+                }
+                
                 const userId = this.userIdInput.value.trim();
                 const token = this.tokenInput.value.trim();
                 const serverUrl = this.serverUrlInput.value.trim();
@@ -280,6 +351,38 @@
                 this.updateConnectionStatus('已断开连接', false);
             }
             
+            // 发送测试消息
+            sendTestMessage(messageType) {
+                if (!this.isConnected || !this.socket) {
+                    this.showMessage('未连接到服务器', 'error');
+                    return;
+                }
+                
+                // 构造标准HSAI消息
+                const message = {
+                    "type": messageType,
+                    "content": `测试HSAI ${messageType} 消息`,
+                    "user_id": this.userIdInput.value.trim() || this.userId,
+                    "entry_type": messageType === "chat" ? "chat" : "workflow",
+                    "session_id": `test_${messageType}_${Math.floor(Date.now() / 1000)}`,
+                    "workflow_type": "main",
+                    "timestamp": new Date().toISOString(),
+                    "test": true
+                };
+                
+                try {
+                    // 使用正确的事件名称发送消息到服务器
+                    console.log('Sending HSAI test message:', message);
+                    // 修复：使用"message"事件名称而不是"hsai_message"
+                    this.socket.emit('message', message);
+                    this.displaySentMessage(message);
+                    this.showMessage(`HSAI ${messageType} 测试消息已发送`, 'info');
+                } catch (error) {
+                    this.showMessage(`发送失败: ${error.message}`, 'error');
+                    console.error('Send message failed:', error);
+                }
+            }
+            
             sendMessage() {
                 if (!this.isConnected || !this.socket) {
                     this.showMessage('未连接到服务器', 'error');
@@ -296,11 +399,31 @@
                     const message = JSON.parse(messageText);
                     // 确保消息包含用户ID
                     if (!message.user_id) {
-                        message.user_id = this.userIdInput.value.trim();
+                        message.user_id = this.userIdInput.value.trim() || this.userId;
                     }
-                    // 使用新的HSAI事件名称发送消息到服务器
+                    // 确保消息包含必要字段
+                    if (!message.type) {
+                        message.type = "chat";
+                    }
+                    if (!message.entry_type) {
+                        message.entry_type = message.type === "chat" ? "chat" : "workflow";
+                    }
+                    if (!message.session_id) {
+                        message.session_id = `test_${message.type}_${Math.floor(Date.now() / 1000)}`;
+                    }
+                    if (!message.workflow_type) {
+                        message.workflow_type = "main";
+                    }
+                    if (!message.timestamp) {
+                        message.timestamp = new Date().toISOString();
+                    }
+                    if (message.test === undefined) {
+                        message.test = true;
+                    }
+                    // 使用正确的事件名称发送消息到服务器
                     console.log('Sending HSAI message:', message);
-                    this.socket.emit('hsai_message', message);
+                    // 修复：使用"message"事件名称而不是"hsai_message"
+                    this.socket.emit('message', message);
                     this.displaySentMessage(message);
                     this.showMessage('HSAI消息已发送', 'info');
                 } catch (error) {
@@ -350,6 +473,8 @@
                 this.connectBtn.disabled = connected;
                 this.disconnectBtn.disabled = !connected;
                 this.sendBtn.disabled = !connected;
+                this.sendChatTestBtn.disabled = !connected;
+                this.sendWorkflowTestBtn.disabled = !connected;
             }
             
             clearMessages() {

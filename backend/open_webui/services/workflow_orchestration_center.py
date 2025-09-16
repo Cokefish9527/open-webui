@@ -327,7 +327,9 @@ class WorkflowOrchestrationCenter:
                 message=user_input,
                 business_name=context.get("business_name") if context else None,
                 additional_data=context,
-                timeout=workflow.timeout
+                timeout=workflow.timeout,
+                # 如果上下文中指定了n8n_webhook_url，则使用该URL
+                n8n_webhook_url=context.get("n8n_webhook_url") if context else None
             )
             
             # 4. 更新状态为运行中

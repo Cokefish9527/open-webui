@@ -41,6 +41,8 @@ class ExecutionRequest:
     additional_data: Optional[Dict[str, Any]] = None
     priority: int = 1
     timeout: int = 30
+    # 添加n8n_webhook_url字段以支持自定义端点
+    n8n_webhook_url: Optional[str] = None
     
     def to_webhook_payload(self) -> Dict[str, Any]:
         """转换为webhook负载"""
@@ -182,9 +184,14 @@ class N8NClient:
                 # 添加日志打印
                 log.info(f"Prepared webhook payload for execution {execution_id}: {payload}")
                 
+                # 确定使用的工作流URL
+                # 如果请求中指定了自定义URL，则使用该URL，否则使用工作流配置中的URL
+                webhook_url = request.n8n_webhook_url or workflow.webhook_url
+                log.info(f"Using webhook URL: {webhook_url}")
+                
                 # 执行HTTP请求（带重试）
                 response_data = await self._execute_with_retry(
-                    workflow.webhook_url,
+                    webhook_url,
                     payload,
                     workflow.timeout or request.timeout,
                     workflow.retry_count or self.max_retries

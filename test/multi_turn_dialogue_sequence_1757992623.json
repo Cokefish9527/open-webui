@@ -1,0 +1,171 @@
+{
+  "test_session": "multi_turn_test_1757992547",
+  "n8n_endpoint": "https://n8n.hsai.cc/webhook-test/n8n_chat",
+  "timestamp": "2025-09-16T11:17:03.364725",
+  "message_sequence": [
+    {
+      "timestamp": "11:15:51.747",
+      "sender": "服务端",
+      "type": "初始连接",
+      "content": "0{\"sid\":\"UCTBbv038-bsB4qlAAAA\",\"upgrades\":[],\"pingTimeout\":20000,\"pingInterval\":25000,\"maxPayload\":1000000}"
+    },
+    {
+      "timestamp": "11:15:51.748",
+      "sender": "前端",
+      "type": "认证请求",
+      "content": "40{\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQ5NmUwZjQzLThiZmEtNDY0YS1iMzMzLTc3MzhkNGIzYjc2ZCJ9.AOSB4IFwd37m4mpnir4bZ0l_GjJuTl9VVG2XrwYmCOc\"}"
+    },
+    {
+      "timestamp": "11:15:51.757",
+      "sender": "服务端",
+      "type": "认证响应",
+      "content": "40{\"sid\":\"kuGh_a9RdVq33js1AAAB\"}"
+    },
+    {
+      "timestamp": "11:15:51.758",
+      "sender": "前端",
+      "type": "对话消息#1",
+      "content": "42[\"message\",{\"type\": \"workflow_trigger\", \"content\": \"你好，请介绍一下你们的服务\", \"user_id\": \"496e0f43-8bfa-464a-b333-7738d4b3b76d\", \"entry_type\": \"chat\", \"session_id\": \"multi_turn_test_1757992547\", \"workflow_typ..."
+    },
+    {
+      "timestamp": "11:15:53.777",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_started\",{\"type\":\"workflow_started\",\"timestamp\":1757992551.7663069,\"execution_id\":\"33deb7ff-8a2e-419e-ac5e-5398dc09ca27\",\"workflow_type\":\"main\",\"workflow_name\":\"\\u4e3b\\u5de5\\u4f5c\\u6..."
+    },
+    {
+      "timestamp": "11:15:53.778",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_progress\",{\"type\":\"workflow_progress\",\"timestamp\":1757992551.767326,\"execution_id\":\"33deb7ff-8a2e-419e-ac5e-5398dc09ca27\",\"progress\":10,\"message\":\"\\u5de5\\u4f5c\\u6d41\\u6b63\\u5728\\u626..."
+    },
+    {
+      "timestamp": "11:16:07.080",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_completed\",{\"type\":\"workflow_completed\",\"timestamp\":1757992567.0768542,\"execution_id\":\"33deb7ff-8a2e-419e-ac5e-5398dc09ca27\",\"result\":{\"success\":true,\"messageType\":\"\",\"displayText\":\"..."
+    },
+    {
+      "timestamp": "11:16:07.081",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"message\",{\"type\":\"hsai_response\",\"success\":true,\"execution_id\":\"33deb7ff-8a2e-419e-ac5e-5398dc09ca27\",\"workflow_type\":\"main\",\"workflow_name\":\"\\u4e3b\\u5de5\\u4f5c\\u6d41\",\"session_id\":\"multi_turn_tes..."
+    },
+    {
+      "timestamp": "11:16:09.090",
+      "sender": "前端",
+      "type": "对话消息#2",
+      "content": "42[\"message\",{\"type\": \"workflow_trigger\", \"content\": \"我想了解视频创作流程\", \"user_id\": \"496e0f43-8bfa-464a-b333-7738d4b3b76d\", \"entry_type\": \"chat\", \"session_id\": \"multi_turn_test_1757992547\", \"workflow_type\":..."
+    },
+    {
+      "timestamp": "11:16:11.108",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_started\",{\"type\":\"workflow_started\",\"timestamp\":1757992569.1007237,\"execution_id\":\"a67948bd-32a8-44eb-a8e1-5888738c1994\",\"workflow_type\":\"main\",\"workflow_name\":\"\\u4e3b\\u5de5\\u4f5c\\u6..."
+    },
+    {
+      "timestamp": "11:16:11.108",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_progress\",{\"type\":\"workflow_progress\",\"timestamp\":1757992569.1027231,\"execution_id\":\"a67948bd-32a8-44eb-a8e1-5888738c1994\",\"progress\":10,\"message\":\"\\u5de5\\u4f5c\\u6d41\\u6b63\\u5728\\u62..."
+    },
+    {
+      "timestamp": "11:16:16.750",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "2"
+    },
+    {
+      "timestamp": "11:16:38.131",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_completed\",{\"type\":\"workflow_completed\",\"timestamp\":1757992598.1281502,\"execution_id\":\"a67948bd-32a8-44eb-a8e1-5888738c1994\",\"result\":{\"success\":true,\"messageType\":\"\",\"displayText\":\"..."
+    },
+    {
+      "timestamp": "11:16:38.132",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"message\",{\"type\":\"hsai_response\",\"success\":true,\"execution_id\":\"a67948bd-32a8-44eb-a8e1-5888738c1994\",\"workflow_type\":\"main\",\"workflow_name\":\"\\u4e3b\\u5de5\\u4f5c\\u6d41\",\"session_id\":\"multi_turn_tes..."
+    },
+    {
+      "timestamp": "11:16:40.141",
+      "sender": "前端",
+      "type": "对话消息#3",
+      "content": "42[\"message\",{\"type\": \"workflow_trigger\", \"content\": \"能否提供一些爆款视频的建议？\", \"user_id\": \"496e0f43-8bfa-464a-b333-7738d4b3b76d\", \"entry_type\": \"chat\", \"session_id\": \"multi_turn_test_1757992547\", \"workflow_ty..."
+    },
+    {
+      "timestamp": "11:16:42.154",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_started\",{\"type\":\"workflow_started\",\"timestamp\":1757992600.1470938,\"execution_id\":\"7743e9c0-1935-4d17-b672-7e19b77c2bd2\",\"workflow_type\":\"main\",\"workflow_name\":\"\\u4e3b\\u5de5\\u4f5c\\u6..."
+    },
+    {
+      "timestamp": "11:16:42.155",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_progress\",{\"type\":\"workflow_progress\",\"timestamp\":1757992600.1480873,\"execution_id\":\"7743e9c0-1935-4d17-b672-7e19b77c2bd2\",\"progress\":10,\"message\":\"\\u5de5\\u4f5c\\u6d41\\u6b63\\u5728\\u62..."
+    },
+    {
+      "timestamp": "11:16:42.156",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "2"
+    },
+    {
+      "timestamp": "11:16:53.064",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_completed\",{\"type\":\"workflow_completed\",\"timestamp\":1757992613.0612974,\"execution_id\":\"7743e9c0-1935-4d17-b672-7e19b77c2bd2\",\"result\":{\"success\":true,\"messageType\":\"\",\"displayText\":\"..."
+    },
+    {
+      "timestamp": "11:16:53.065",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"message\",{\"type\":\"hsai_response\",\"success\":true,\"execution_id\":\"7743e9c0-1935-4d17-b672-7e19b77c2bd2\",\"workflow_type\":\"main\",\"workflow_name\":\"\\u4e3b\\u5de5\\u4f5c\\u6d41\",\"session_id\":\"multi_turn_tes..."
+    },
+    {
+      "timestamp": "11:16:55.073",
+      "sender": "前端",
+      "type": "对话消息#4",
+      "content": "42[\"message\",{\"type\": \"workflow_trigger\", \"content\": \"谢谢你的帮助\", \"user_id\": \"496e0f43-8bfa-464a-b333-7738d4b3b76d\", \"entry_type\": \"chat\", \"session_id\": \"multi_turn_test_1757992547\", \"workflow_type\": \"ma..."
+    },
+    {
+      "timestamp": "11:16:57.085",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_started\",{\"type\":\"workflow_started\",\"timestamp\":1757992615.078916,\"execution_id\":\"aea3dd94-9ba4-4bd1-9ca5-04c5838f8031\",\"workflow_type\":\"main\",\"workflow_name\":\"\\u4e3b\\u5de5\\u4f5c\\u6d..."
+    },
+    {
+      "timestamp": "11:16:57.085",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_progress\",{\"type\":\"workflow_progress\",\"timestamp\":1757992615.0799174,\"execution_id\":\"aea3dd94-9ba4-4bd1-9ca5-04c5838f8031\",\"progress\":10,\"message\":\"\\u5de5\\u4f5c\\u6d41\\u6b63\\u5728\\u62..."
+    },
+    {
+      "timestamp": "11:17:03.358",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"hsai_workflow_completed\",{\"type\":\"workflow_completed\",\"timestamp\":1757992623.3557374,\"execution_id\":\"aea3dd94-9ba4-4bd1-9ca5-04c5838f8031\",\"result\":{\"success\":true,\"messageType\":\"\",\"displayText\":\"..."
+    },
+    {
+      "timestamp": "11:17:03.359",
+      "sender": "服务端",
+      "type": "响应消息#1",
+      "content": "42[\"message\",{\"type\":\"hsai_response\",\"success\":true,\"execution_id\":\"aea3dd94-9ba4-4bd1-9ca5-04c5838f8031\",\"workflow_type\":\"main\",\"workflow_name\":\"\\u4e3b\\u5de5\\u4f5c\\u6d41\",\"session_id\":\"multi_turn_tes..."
+    },
+    {
+      "timestamp": "11:17:03.361",
+      "sender": "前端",
+      "type": "连接关闭",
+      "content": "WebSocket连接已关闭"
+    }
+  ],
+  "test_results": {
+    "connection": true,
+    "authentication": true,
+    "messages_sent": 4,
+    "responses_received": 4,
+    "workflow_triggered": 4,
+    "sequence_correct": true
+  }
+}

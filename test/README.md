@@ -28,12 +28,22 @@
   - 包含完整的测试流程，从连接建立到工作流触发和响应接收
   - 适用于验证WebSocket与n8n的完整集成
 
+### 4. [n8n_multi_turn_dialogue_test.py](file:///c:/work/open-webui/test/n8n_multi_turn_dialogue_test.py)
+- **用途**: n8n多轮对话测试脚本
+- **功能**: 测试向n8n测试地址发送消息的多轮对话交互
+- **特点**: 
+  - 支持多轮连续对话测试
+  - 详细记录前端和服务端之间的消息收发顺序
+  - 适用于验证复杂对话场景下的系统表现
+  - 可生成详细的对话序列报告
+
 ## 使用建议
 
 - 对于日常测试，请根据需要选择合适的测试脚本：
   - 如果需要快速验证WebSocket连接，使用[final_connection_test.py](file:///c:/work/open-webui/test/final_connection_test.py)
   - 如果需要测试HSAI系统的完整功能，使用[comprehensive_hsai_test.py](file:///c:/work/open-webui/test/comprehensive_hsai_test.py)
   - 如果需要测试WebSocket与n8n的集成，使用[final_websocket_n8n_test.py](file:///c:/work/open-webui/test/final_websocket_n8n_test.py)
+  - 如果需要测试多轮对话交互，使用[n8n_multi_turn_dialogue_test.py](file:///c:/work/open-webui/test/n8n_multi_turn_dialogue_test.py)
 
 - 所有脚本都包含了详细的日志输出，便于调试和问题排查
 - 在维护测试脚本时，请基于现有脚本进行修改，不要创建新的中间验证脚本
