@@ -101,6 +101,20 @@ SMTP_USERNAME=example@qq.com
 SMTP_PASSWORD=password
 ```
 
+### Redis配置切换
+
+项目支持内网和公网Redis配置的切换，可以通过修改`.env`文件中的`REDIS_MODE`变量来实现：
+
+```
+# 使用内网Redis (默认)
+REDIS_MODE=internal
+
+# 使用公网Redis
+REDIS_MODE=external
+```
+
+详细配置说明请参考 [docs/Redis配置与切换指南.md](./docs/Redis配置与切换指南.md)
+
 ### 品牌/LOGO定制能力说明
 
 本项目尊重并遵守 [Open WebUI License](https://docs.openwebui.com/license) 的品牌保护条款；我们鼓励社区用户尽量保留原有 Open WebUI 品牌，支持开源生态！

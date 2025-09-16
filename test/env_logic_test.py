@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""
+测试env.py中的Redis配置逻辑
+"""
+
+import os
+import sys
+from pathlib import Path
+
+# 添加项目路径到sys.path
+backend_path = Path(__file__).parent.parent / 'backend'
+sys.path.insert(0, str(backend_path))
+
+# 模拟env.py中的逻辑
+def test_redis_config_logic():
+    print("=" * 60)
+    print("Redis配置逻辑测试")
+    print("=" * 60)
+    
+    # 模拟环境变量
+    REDIS_MODE = os.environ.get("REDIS_MODE", "internal")
+    INTERNAL_REDIS_URL = os.environ.get("INTERNAL_REDIS_URL", "")
+    EXTERNAL_REDIS_HOST = os.environ.get("EXTERNAL_REDIS_HOST", "")
+    EXTERNAL_REDIS_PORT = os.environ.get("EXTERNAL_REDIS_PORT", "6379")
+    EXTERNAL_REDIS_DB = os.environ.get("EXTERNAL_REDIS_DB", "0")
+    EXTERNAL_REDIS_USERNAME = os.environ.get("EXTERNAL_REDIS_USERNAME", "")
+    EXTERNAL_REDIS_PASSWORD = os.environ.get("EXTERNAL_REDIS_PASSWORD", "")
+    
+    print(f"REDIS_MODE: {REDIS_MODE}")
+    print(f"INTERNAL_REDIS_URL: {INTERNAL_REDIS_URL}")
+    print(f"EXTERNAL_REDIS_HOST: {EXTERNAL_REDIS_HOST}")
+    print(f"EXTERNAL_REDIS_PORT: {EXTERNAL_REDIS_PORT}")
+    print(f"EXTERNAL_REDIS_DB: {EXTERNAL_REDIS_DB}")
+    print(f"EXTERNAL_REDIS_USERNAME: {EXTERNAL_REDIS_USERNAME}")
+    print(f"EXTERNAL_REDIS_PASSWORD: {'*' * len(EXTERNAL_REDIS_PASSWORD) if EXTERNAL_REDIS_PASSWORD else ''}")
+    
+    # 模拟env.py中的逻辑
+    if REDIS_MODE == "external" and EXTERNAL_REDIS_HOST:
+        # 构建公网Redis URL
+        if EXTERNAL_REDIS_USERNAME and EXTERNAL_REDIS_PASSWORD:
+            REDIS_URL = f"redis://{EXTERNAL_REDIS_USERNAME}:{EXTERNAL_REDIS_PASSWORD}@{EXTERNAL_REDIS_HOST}:{EXTERNAL_REDIS_PORT}/{EXTERNAL_REDIS_DB}"
+        else:
+            REDIS_URL = f"redis://{EXTERNAL_REDIS_HOST}:{EXTERNAL_REDIS_PORT}/{EXTERNAL_REDIS_DB}"
+    else:
+        # 使用内网Redis配置
+        REDIS_URL = os.environ.get("REDIS_URL", INTERNAL_REDIS_URL)
+    
+    print(f"\n计算出的REDIS_URL: {REDIS_URL}")
+    
+    # 测试WebSocket Redis URL逻辑
+    INTERNAL_WEBSOCKET_REDIS_URL = os.environ.get("INTERNAL_WEBSOCKET_REDIS_URL", "")
+    EXTERNAL_WEBSOCKET_REDIS_HOST = os.environ.get("EXTERNAL_WEBSOCKET_REDIS_HOST", "")
+    EXTERNAL_WEBSOCKET_REDIS_PORT = os.environ.get("EXTERNAL_WEBSOCKET_REDIS_PORT", "6379")
+    EXTERNAL_WEBSOCKET_REDIS_DB = os.environ.get("EXTERNAL_WEBSOCKET_REDIS_DB", "0")
+    EXTERNAL_WEBSOCKET_REDIS_USERNAME = os.environ.get("EXTERNAL_WEBSOCKET_REDIS_USERNAME", "")
+    EXTERNAL_WEBSOCKET_REDIS_PASSWORD = os.environ.get("EXTERNAL_WEBSOCKET_REDIS_PASSWORD", "")
+    
+    print(f"\nWebSocket配置:")
+    print(f"INTERNAL_WEBSOCKET_REDIS_URL: {INTERNAL_WEBSOCKET_REDIS_URL}")
+    print(f"EXTERNAL_WEBSOCKET_REDIS_HOST: {EXTERNAL_WEBSOCKET_REDIS_HOST}")
+    print(f"EXTERNAL_WEBSOCKET_REDIS_PORT: {EXTERNAL_WEBSOCKET_REDIS_PORT}")
+    print(f"EXTERNAL_WEBSOCKET_REDIS_DB: {EXTERNAL_WEBSOCKET_REDIS_DB}")
+    print(f"EXTERNAL_WEBSOCKET_REDIS_USERNAME: {EXTERNAL_WEBSOCKET_REDIS_USERNAME}")
+    print(f"EXTERNAL_WEBSOCKET_REDIS_PASSWORD: {'*' * len(EXTERNAL_WEBSOCKET_REDIS_PASSWORD) if EXTERNAL_WEBSOCKET_REDIS_PASSWORD else ''}")
+    
+    # 模拟WebSocket Redis URL逻辑
+    if REDIS_MODE == "external" and EXTERNAL_WEBSOCKET_REDIS_HOST:
+        # 构建公网WebSocket Redis URL
+        if EXTERNAL_WEBSOCKET_REDIS_USERNAME and EXTERNAL_WEBSOCKET_REDIS_PASSWORD:
+            WEBSOCKET_REDIS_URL = f"redis://{EXTERNAL_WEBSOCKET_REDIS_USERNAME}:{EXTERNAL_WEBSOCKET_REDIS_PASSWORD}@{EXTERNAL_WEBSOCKET_REDIS_HOST}:{EXTERNAL_WEBSOCKET_REDIS_PORT}/{EXTERNAL_WEBSOCKET_REDIS_DB}"
+        else:
+            WEBSOCKET_REDIS_URL = f"redis://{EXTERNAL_WEBSOCKET_REDIS_HOST}:{EXTERNAL_WEBSOCKET_REDIS_PORT}/{EXTERNAL_WEBSOCKET_REDIS_DB}"
+    else:
+        # 使用内网WebSocket Redis配置
+        WEBSOCKET_REDIS_URL = os.environ.get("WEBSOCKET_REDIS_URL", INTERNAL_WEBSOCKET_REDIS_URL if INTERNAL_WEBSOCKET_REDIS_URL else REDIS_URL)
+    
+    print(f"\n计算出的WEBSOCKET_REDIS_URL: {WEBSOCKET_REDIS_URL}")
+
+if __name__ == "__main__":
+    test_redis_config_logic()
