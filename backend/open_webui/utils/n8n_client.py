@@ -38,7 +38,7 @@ class ExecutionRequest:
     user_id: str
     message: str
     business_name: Optional[str] = None
-    additional_data: Dict[str, Any] = None
+    additional_data: Optional[Dict[str, Any]] = None
     priority: int = 1
     timeout: int = 30
     
@@ -58,7 +58,9 @@ class ExecutionRequest:
         if self.additional_data:
             payload.update(self.additional_data)
             
-        return {"body": payload}
+        # 直接返回payload，而不是包装在body字段中
+        # 这样可以避免n8n工作流中的多层body嵌套问题
+        return payload
 
 @dataclass
 class ExecutionResult:
@@ -69,7 +71,7 @@ class ExecutionResult:
     request_data: Dict[str, Any]
     response_data: Optional[Dict[str, Any]] = None
     error_message: Optional[str] = None
-    start_time: datetime = None
+    start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     duration: Optional[float] = None
     retry_count: int = 0
@@ -83,14 +85,16 @@ class ExecutionResult:
         self.status = ExecutionStatus.COMPLETED
         self.response_data = response_data
         self.end_time = datetime.now()
-        self.duration = (self.end_time - self.start_time).total_seconds()
+        if self.start_time:
+            self.duration = (self.end_time - self.start_time).total_seconds()
         
     def mark_failed(self, error_message: str):
         """标记为失败"""
         self.status = ExecutionStatus.FAILED
         self.error_message = error_message
         self.end_time = datetime.now()
-        self.duration = (self.end_time - self.start_time).total_seconds()
+        if self.start_time:
+            self.duration = (self.end_time - self.start_time).total_seconds()
 
 class N8NClient:
     """N8N客户端"""
@@ -230,6 +234,10 @@ class N8NClient:
         """带重试的HTTP请求执行"""
         last_exception = None
         
+        # 确保session已初始化
+        if self.session is None:
+            raise RuntimeError("N8N client not initialized. Call initialize() first.")
+        
         for attempt in range(max_retries + 1):
             try:
                 if attempt > 0:
@@ -283,7 +291,10 @@ class N8NClient:
                     break
                     
         # 所有重试都失败了
-        raise last_exception
+        if last_exception:
+            raise last_exception
+        else:
+            raise RuntimeError("All retry attempts failed")
         
     async def get_execution_status(self, execution_id: str) -> Optional[ExecutionResult]:
         """获取执行状态"""
@@ -357,6 +368,10 @@ class N8NClient:
     async def health_check(self) -> Dict[str, Any]:
         """健康检查"""
         try:
+            # 确保session已初始化
+            if self.session is None:
+                raise RuntimeError("N8N client not initialized. Call initialize() first.")
+            
             start_time = time.time()
             
             # 尝试访问n8n健康检查端点

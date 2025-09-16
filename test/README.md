@@ -12,7 +12,7 @@
   - 包含完整的测试流程和结果验证
   - 适用于日常的综合功能测试
 
-### 2. [final_connection_test.py](file:///c:/work/open-web-webui/test/final_connection_test.py)
+### 2. [final_connection_test.py](file:///c:/work/open-webui/test/final_connection_test.py)
 - **用途**: 最终版WebSocket连接测试脚本
 - **功能**: 测试WebSocket连接和认证功能
 - **特点**: 
@@ -37,3 +37,8 @@
 
 - 所有脚本都包含了详细的日志输出，便于调试和问题排查
 - 在维护测试脚本时，请基于现有脚本进行修改，不要创建新的中间验证脚本
+
+## 版本兼容性说明
+
+- **websockets库版本问题**: 为确保在不同版本的websockets库中都能正常运行，测试脚本中已移除`extra_headers`参数，以避免出现`BaseEventLoop.create_connection() got an unexpected keyword argument 'extra_headers'`错误。
+- 如果需要在特定环境中使用`extra_headers`，请根据实际使用的websockets库版本进行相应调整。

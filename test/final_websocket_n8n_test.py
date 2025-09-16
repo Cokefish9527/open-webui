@@ -78,15 +78,9 @@ class FinalWebSocketN8NTester:
             ws_url = f"ws://localhost:8080/ws/socket.io/?EIO=4&transport=websocket"
             logger.info(f"📍 连接地址: {ws_url}")
             
-            # 连接WebSocket，添加必要的headers
-            headers = {
-                "Origin": "http://localhost:8080",
-                "User-Agent": "Python WebSocket Client"
-            }
-            
+            # 连接WebSocket，不使用extra_headers参数以避免版本兼容性问题
             self.websocket = await websockets.connect(
-                ws_url,
-                extra_headers=headers
+                ws_url
             )
             
             # 处理初始连接消息 (Engine.IO handshake)

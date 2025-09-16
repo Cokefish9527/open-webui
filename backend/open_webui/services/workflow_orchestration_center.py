@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 import aiohttp
 
 from open_webui.utils.n8n_workflow_manager import WorkflowType, WorkflowConfig, workflow_manager
-from open_webui.utils.n8n_client import n8n_client, ExecutionRequest, ExecutionResult
+from open_webui.utils.n8n_client import n8n_client, ExecutionRequest, ExecutionResult, ExecutionStatus
 from open_webui.utils.redis_signal_handler import redis_signal_handler
 
 log = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class RoutingRule:
     pattern: str
     workflow_type: WorkflowType
     priority: int
-    conditions: List[str] = None
+    conditions: Optional[List[str]] = None
 
 class RouterManager:
     """路由管理器 - 智能路由请求到合适的n8n工作流"""
@@ -92,7 +92,7 @@ class RouterManager:
             )
         ]
 
-    def route_request(self, user_input: str, context: Dict[str, Any] = None) -> WorkflowType:
+    def route_request(self, user_input: str, context: Optional[Dict[str, Any]] = None) -> WorkflowType:
         """根据用户输入路由到合适的工作流"""
         context = context or {}
         
@@ -131,7 +131,7 @@ class RouterManager:
         # 可以添加更多条件检查
         return True
 
-    def get_workflow_endpoint(self, workflow_type: WorkflowType) -> str:
+    def get_workflow_endpoint(self, workflow_type: WorkflowType) -> Optional[str]:
         """获取工作流端点"""
         return self.workflow_endpoints.get(workflow_type)
 
@@ -164,8 +164,8 @@ class StateManager:
         return execution_data
         
     def update_execution_status(self, execution_id: str, status: WorkflowStatus, 
-                              progress: int = None, current_step: str = None,
-                              error_message: str = None) -> bool:
+                              progress: Optional[int] = None, current_step: Optional[str] = None,
+                              error_message: Optional[str] = None) -> bool:
         """更新执行状态"""
         if execution_id not in self.executions:
             log.warning(f"执行ID不存在: {execution_id}")
@@ -292,7 +292,7 @@ class WorkflowOrchestrationCenter:
         log.info("工作流编排中心初始化完成")
         
     async def process_request(self, user_input: str, user_id: str, session_id: str,
-                            context: Dict[str, Any] = None) -> Dict[str, Any]:
+                            context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """处理用户请求的核心方法"""
         execution_id = str(uuid.uuid4())
         
@@ -325,7 +325,7 @@ class WorkflowOrchestrationCenter:
                 session_id=session_id,
                 user_id=user_id,
                 message=user_input,
-                business_name=context.get("business_name"),
+                business_name=context.get("business_name") if context else None,
                 additional_data=context,
                 timeout=workflow.timeout
             )
@@ -405,12 +405,17 @@ class WorkflowOrchestrationCenter:
             }
             
     async def _notify_socket_event(self, event_type: str, data: Dict[str, Any], 
-                                 context: Dict[str, Any] = None):
+                                 context: Optional[Dict[str, Any]] = None):
         """通过Socket.IO发送事件通知"""
         try:
             # 获取Socket.IO实例
             from open_webui.socket.main import sio
             
+            # 检查sio是否已初始化
+            if sio is None:
+                log.warning("Socket.IO未初始化，无法发送事件")
+                return
+                
             socket_id = context.get("socket_id") if context else None
             user_id = data.get("user_id")
             
@@ -435,70 +440,7 @@ class WorkflowOrchestrationCenter:
                 
         except Exception as e:
             log.error(f"发送Socket.IO事件失败: {e}", exc_info=True)
-            
-            if not workflow:
-                raise Exception(f"找不到工作流: {workflow_type}")
-                
-            # 2. 状态管理 - 开始跟踪执行
-            execution_data = self.state_manager.track_execution(
-                execution_id, workflow.id, user_id, session_id
-            )
-            
-            # 3. 构建执行请求
-            request = ExecutionRequest(
-                workflow_id=workflow.id,
-                session_id=session_id,
-                user_id=user_id,
-                message=user_input,
-                business_name=context.get("business_name"),
-                additional_data=context.get("additional_data", {}),
-                timeout=workflow.timeout
-            )
-            
-            # 4. 更新状态为运行中
-            self.state_manager.update_execution_status(
-                execution_id, WorkflowStatus.RUNNING, 0, "开始执行"
-            )
-            
-            # 5. 通信管理 - 执行工作流
-            result = await self.communication_manager.execute_workflow(workflow, request)
-            
-            # 6. 更新最终状态
-            if result.status.value == "completed":
-                self.state_manager.update_execution_status(
-                    execution_id, WorkflowStatus.COMPLETED, 100, "执行完成"
-                )
-            else:
-                self.state_manager.update_execution_status(
-                    execution_id, WorkflowStatus.FAILED, 0, "执行失败",
-                    result.error_message
-                )
-                
-            # 7. 返回格式化结果
-            return {
-                "success": result.status.value == "completed",
-                "execution_id": execution_id,
-                "workflow_type": workflow_type.value,
-                "workflow_name": workflow.name,
-                "response_data": result.response_data,
-                "execution_time": result.duration,
-                "error_message": result.error_message
-            }
-            
-        except Exception as e:
-            log.error(f"WOC处理请求失败: {e}")
-            
-            # 更新失败状态
-            self.state_manager.update_execution_status(
-                execution_id, WorkflowStatus.FAILED, 0, "处理失败", str(e)
-            )
-            
-            return {
-                "success": False,
-                "execution_id": execution_id,
-                "error_message": str(e)
-            }
-            
+
     async def get_execution_status(self, execution_id: str) -> Optional[Dict[str, Any]]:
         """获取执行状态"""
         return self.state_manager.get_execution_status(execution_id)
