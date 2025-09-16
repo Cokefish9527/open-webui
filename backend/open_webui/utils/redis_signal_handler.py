@@ -10,9 +10,11 @@ import logging
 from typing import Dict, Any, Optional
 from datetime import datetime
 from redis import asyncio as aioredis
+import socketio
 
 from open_webui.env import WEBSOCKET_REDIS_URL
 from open_webui.socket.main import sio
+from open_webui.utils.redis_failover_manager import get_redis_connection_manager, redis_failover_decorator
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ class RedisSignalHandler:
     """Redis信号处理器"""
     
     def __init__(self):
-        self.redis_client = None
+        self.redis_manager = get_redis_connection_manager(WEBSOCKET_REDIS_URL)
         self.pubsub = None
         self.is_monitoring = False
         self.monitoring_task: Optional[asyncio.Task] = None
@@ -49,17 +51,23 @@ class RedisSignalHandler:
     async def initialize(self):
         """初始化Redis连接"""
         try:
-            if WEBSOCKET_REDIS_URL:
-                self.redis_client = aioredis.from_url(WEBSOCKET_REDIS_URL)
-                log.info("Redis信号处理器初始化成功")
+            await self.redis_manager.initialize()
+            if self.redis_manager.is_connected():
+                log.info(f"Redis信号处理器初始化成功，当前模式: {self.redis_manager.get_current_mode()}")
             else:
-                log.warning("未配置Redis URL，Redis信号处理器无法初始化")
+                log.warning("Redis信号处理器初始化失败，无法连接到任何Redis服务")
         except Exception as e:
             log.error(f"Redis信号处理器初始化失败: {e}")
     
     async def start_monitoring(self):
         """开始监听Redis信号"""
-        if self.is_monitoring or not self.redis_client:
+        if self.is_monitoring:
+            return
+            
+        # 确保Redis连接有效
+        redis_client = await self.redis_manager.get_client()
+        if redis_client is None:
+            log.error("无法获取Redis客户端，无法启动监听")
             return
             
         self.is_monitoring = True
@@ -80,8 +88,14 @@ class RedisSignalHandler:
     async def _monitoring_loop(self):
         """监听循环"""
         try:
+            # 获取Redis客户端
+            redis_client = await self.redis_manager.get_client()
+            if redis_client is None:
+                log.error("无法获取Redis客户端")
+                return
+                
             # 创建pubsub连接
-            self.pubsub = self.redis_client.pubsub()
+            self.pubsub = redis_client.pubsub()
             
             # 订阅所有信号模式
             for pattern in self.signal_patterns.values():
@@ -133,7 +147,7 @@ class RedisSignalHandler:
             progress = data.get('progress', 0)
             message = data.get('message', '')
             
-            if user_id:
+            if user_id and sio is not None:
                 # 通过Socket.IO向前端发送状态更新
                 await sio.emit('workflow_status', {
                     'type': 'workflow_status',
@@ -157,7 +171,7 @@ class RedisSignalHandler:
             task_result = data.get('result')
             kpi_data = data.get('kpi_data', {})
             
-            if user_id:
+            if user_id and sio is not None:
                 # 发送任务完成通知
                 await sio.emit('task_complete', {
                     'type': 'task_complete',
@@ -181,7 +195,7 @@ class RedisSignalHandler:
             progress = data.get('progress', 0)
             video_url = data.get('video_url', '')
             
-            if user_id:
+            if user_id and sio is not None:
                 # 发送视频合成状态更新
                 await sio.emit('video_synthesis', {
                     'type': 'video_synthesis',
@@ -204,7 +218,7 @@ class RedisSignalHandler:
             kpi_data = data.get('kpi_data', {})
             calculation_time = data.get('calculation_time', '')
             
-            if user_id:
+            if user_id and sio is not None:
                 # 发送KPI计算完成通知
                 await sio.emit('kpi_update', {
                     'type': 'kpi_update',
@@ -263,10 +277,10 @@ class RedisSignalHandler:
             }
             
             # 如果有session_id，发送给对应的用户
-            if session_id:
+            if session_id and sio is not None:
                 await sio.emit('agent_message', message_data, room=f'session_{session_id}')
                 log.info(f"已发送Agent消息给会话 {session_id}: {reply_message_id}")
-            else:
+            elif sio is not None:
                 # 否则广播给所有用户（这种情况应该很少见）
                 await sio.emit('agent_message', message_data)
                 log.info(f"已广播Agent消息: {reply_message_id}")

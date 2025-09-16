@@ -5,7 +5,7 @@ import sys
 import time
 import os
 from redis import asyncio as aioredis
-from typing import Any, Dict, List, Optional, Union, Awaitable
+from typing import Any, Dict, List, Optional, Union
 
 from open_webui.models.users import Users, UserNameResponse
 from open_webui.models.channels import Channels
@@ -127,13 +127,28 @@ async def periodic_usage_pool_cleanup():
 
             now = int(time.time())
             send_usage = False
-            # 处理RedisDict的情况
-            usage_items = USAGE_POOL.items() if hasattr(USAGE_POOL, 'items') else await USAGE_POOL.items()
-            for model_id, connections in list(usage_items):
+            
+            # 简化处理，假设USAGE_POOL是dict类型
+            if isinstance(USAGE_POOL, dict):
+                usage_items = list(USAGE_POOL.items())
+            else:
+                # RedisDict情况，直接遍历
+                usage_items = []
+                for key in USAGE_POOL.keys():
+                    usage_items.append((key, USAGE_POOL[key]))
+            
+            for model_id, connections in usage_items:
                 # Creating a list of sids to remove if they have timed out
                 expired_sids = []
-                # 处理RedisDict的情况
-                connections_items = connections.items() if hasattr(connections, 'items') else await connections.items()
+                # 简化处理，假设connections是dict类型
+                if isinstance(connections, dict):
+                    connections_items = list(connections.items())
+                else:
+                    # RedisDict情况，直接遍历
+                    connections_items = []
+                    for key in connections.keys():
+                        connections_items.append((key, connections[key]))
+                        
                 for sid, details in connections_items:
                     if now - details["updated_at"] > TIMEOUT_DURATION:
                         expired_sids.append(sid)
@@ -166,17 +181,18 @@ def get_event_emitter(request_info, update_db=True):
     async def __event_emitter__(event_data):
         user_id = request_info["user_id"]
 
-        # 处理RedisDict的情况
+        # 简化处理
         user_pool_value = USER_POOL.get(user_id, [])
-        user_pool_list = user_pool_value if isinstance(user_pool_value, list) else await user_pool_value
-        session_id_value = [request_info.get("session_id")] if request_info.get("session_id") else []
-        session_id_list = session_id_value if isinstance(session_id_value, list) else await session_id_value
+        if not isinstance(user_pool_value, list):
+            # RedisDict情况，获取实际值
+            user_pool_list = list(user_pool_value) if hasattr(user_pool_value, '__iter__') else [user_pool_value]
+        else:
+            user_pool_list = user_pool_value
+            
+        session_id_value = request_info.get("session_id")
+        session_id_list = [session_id_value] if session_id_value else []
         
-        session_ids = list(
-            set(
-                user_pool_list + session_id_list
-            )
-        )
+        session_ids = list(set(user_pool_list + session_id_list))
 
         emit_tasks = []
         if sio is not None:
@@ -247,17 +263,22 @@ register_hsai_events(sio, emitter)
 
 def get_models_in_use():
     # List models that are currently in use
-    # 处理RedisDict的情况
-    keys = USAGE_POOL.keys() if hasattr(USAGE_POOL, 'keys') else USAGE_POOL.keys()
-    models_in_use = list(keys) if isinstance(keys, (list, dict_keys)) else list(await keys)
-    return models_in_use
+    # 简化处理
+    if isinstance(USAGE_POOL, dict):
+        return list(USAGE_POOL.keys())
+    else:
+        # RedisDict情况
+        return list(USAGE_POOL.keys())
 
 
 def get_active_user_ids():
     """Get the list of active user IDs."""
-    # 处理RedisDict的情况
-    keys = USER_POOL.keys() if hasattr(USER_POOL, 'keys') else USER_POOL.keys()
-    return list(keys) if isinstance(keys, (list, dict_keys)) else list(await keys)
+    # 简化处理
+    if isinstance(USER_POOL, dict):
+        return list(USER_POOL.keys())
+    else:
+        # RedisDict情况
+        return list(USER_POOL.keys())
 
 
 def get_user_active_status(user_id):
@@ -283,7 +304,12 @@ def get_user_ids_from_room(room):
         for session_id in active_session_ids:
             session_data = SESSION_POOL.get(session_id[0])
             if session_data:
-                session_dict = session_data if isinstance(session_data, dict) else await session_data
+                # 简化处理
+                if isinstance(session_data, dict):
+                    session_dict = session_data
+                else:
+                    # RedisDict情况，获取实际值
+                    session_dict = dict(session_data) if hasattr(session_data, '__iter__') else session_data
                 user_id = session_dict.get("id")
                 if user_id:
                     active_user_ids.append(user_id)
