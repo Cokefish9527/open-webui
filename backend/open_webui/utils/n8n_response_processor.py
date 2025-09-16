@@ -109,11 +109,11 @@ class N8NResponseProcessor:
             # 根据对接文档规范格式化响应
             response_data = {
                 "success": processed_response.status == ResponseStatus.SUCCESS,
-                "messageType": processed_response.workflow_type or "unknown",
+                "messageType": 3,  # 默认使用Agent2Redis消息体的content_type=3 (text)
                 "displayText": processed_response.message,
                 "data": processed_response.data,
                 "status": processed_response.status.value,
-                "timestamp": processed_response.timestamp.isoformat() if processed_response.timestamp else None
+                "timestamp": int(processed_response.timestamp.timestamp()) if processed_response.timestamp else None
             }
             
             # 如果有执行ID，添加到响应中

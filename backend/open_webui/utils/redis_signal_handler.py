@@ -30,7 +30,8 @@ class RedisSignalHandler:
             'workflow_status': 'n8n:workflow:status:*',
             'task_complete': 'n8n:task:complete:*',
             'video_synthesis': 'n8n:video:synthesis:*',
-            'kpi_calculated': 'n8n:kpi:calculated:*'
+            'kpi_calculated': 'n8n:kpi:calculated:*',
+            'agent_message': 'agent:message:*'
         }
         
         # 信号处理映射
@@ -38,8 +39,12 @@ class RedisSignalHandler:
             'workflow_status': self._handle_workflow_status,
             'task_complete': self._handle_task_complete,
             'video_synthesis': self._handle_video_synthesis,
-            'kpi_calculated': self._handle_kpi_calculated
+            'kpi_calculated': self._handle_kpi_calculated,
+            'agent_message': self._handle_agent_message
         }
+        
+        # 用于容错机制的消息缓存
+        self.message_cache: Dict[str, Dict[str, Any]] = {}
     
     async def initialize(self):
         """初始化Redis连接"""
@@ -136,7 +141,7 @@ class RedisSignalHandler:
                     'status': status,
                     'progress': progress,
                     'message': message,
-                    'timestamp': datetime.now().isoformat()
+                    'timestamp': int(datetime.now().timestamp())
                 }, room=f'user_{user_id}')
                 
                 log.info(f"已发送工作流状态更新给用户 {user_id}: {status} ({progress}%)")
@@ -159,7 +164,7 @@ class RedisSignalHandler:
                     'task_id': task_id,
                     'result': task_result,
                     'kpi_data': kpi_data,
-                    'timestamp': datetime.now().isoformat()
+                    'timestamp': int(datetime.now().timestamp())
                 }, room=f'user_{user_id}')
                 
                 log.info(f"已发送任务完成通知给用户 {user_id}: {task_id}")
@@ -184,7 +189,7 @@ class RedisSignalHandler:
                     'status': status,
                     'progress': progress,
                     'video_url': video_url,
-                    'timestamp': datetime.now().isoformat()
+                    'timestamp': int(datetime.now().timestamp())
                 }, room=f'user_{user_id}')
                 
                 log.info(f"已发送视频合成状态给用户 {user_id}: {video_id} - {status}")
@@ -205,13 +210,69 @@ class RedisSignalHandler:
                     'type': 'kpi_update',
                     'kpi_data': kpi_data,
                     'calculation_time': calculation_time,
-                    'timestamp': datetime.now().isoformat()
+                    'timestamp': int(datetime.now().timestamp())
                 }, room=f'user_{user_id}')
                 
                 log.info(f"已发送KPI更新给用户 {user_id}")
                 
         except Exception as e:
             log.error(f"处理KPI计算信号时出错: {e}")
+    
+    async def _handle_agent_message(self, data: Dict[str, Any]):
+        """处理Agent消息并实现基于reply_message_id和reply_seq的容错机制"""
+        try:
+            # 提取关键字段
+            reply_message_id = data.get('reply_message_id')
+            reply_seq = data.get('reply_seq', 0)
+            session_id = data.get('session_id')
+            
+            # 如果有reply_message_id，实现容错机制
+            if reply_message_id:
+                # 检查缓存中是否已有该reply_message_id的消息
+                cached_message = self.message_cache.get(reply_message_id)
+                
+                # 如果缓存中有消息且reply_seq更大，则更新缓存
+                if cached_message and cached_message.get('reply_seq', 0) >= reply_seq:
+                    log.info(f"忽略旧的Agent消息: {reply_message_id}, seq {reply_seq} <= {cached_message.get('reply_seq')}")
+                    return
+                
+                # 更新缓存
+                self.message_cache[reply_message_id] = data
+                
+                # 清理过期的缓存消息（保留最近的100条）
+                if len(self.message_cache) > 100:
+                    # 删除最旧的消息
+                    oldest_key = next(iter(self.message_cache))
+                    del self.message_cache[oldest_key]
+            
+            # 通过Socket.IO向前端发送消息
+            # 构造符合Agent2Redis消息体规范的消息格式
+            message_data = {
+                'type': 'agent_message',
+                'env': data.get('env'),
+                'session_id': session_id,
+                'reply_id': data.get('reply_id'),
+                'reply_seq': reply_seq,
+                'reply_message_id': reply_message_id,
+                'operate_id': data.get('operate_id'),
+                'status': data.get('status'),
+                'content_type': data.get('content_type'),
+                'content': data.get('content'),
+                'create_ts': data.get('create_ts'),
+                'timestamp': int(datetime.now().timestamp())
+            }
+            
+            # 如果有session_id，发送给对应的用户
+            if session_id:
+                await sio.emit('agent_message', message_data, room=f'session_{session_id}')
+                log.info(f"已发送Agent消息给会话 {session_id}: {reply_message_id}")
+            else:
+                # 否则广播给所有用户（这种情况应该很少见）
+                await sio.emit('agent_message', message_data)
+                log.info(f"已广播Agent消息: {reply_message_id}")
+                
+        except Exception as e:
+            log.error(f"处理Agent消息时出错: {e}", exc_info=True)
 
 # 全局Redis信号处理器实例
 redis_signal_handler = RedisSignalHandler()

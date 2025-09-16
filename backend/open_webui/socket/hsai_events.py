@@ -47,13 +47,11 @@ def register_hsai_events(sio, emitter):
                 from open_webui.services.workflow_orchestration_center import workflow_orchestration_center
                 
                 # 获取或创建会话ID
-                session_id = data.get("session_id") or f"session_{user_id}_{int(__import__('time').time())}"
+                session_id = f"session_{user_id}_{int(__import__('time').time())}"
                 
                 # 构建上下文信息
                 context = {
-                    "business_name": data.get("business_name", "HSAI"),
                     "entry_type": data.get("entry_type", "chat"),
-                    "workflow_type": data.get("workflow_type"),
                     "additional_data": data.get("metadata", {}),
                     "socket_id": sid
                 }
@@ -76,12 +74,10 @@ def register_hsai_events(sio, emitter):
                         "type": "hsai_response",
                         "success": True,
                         "execution_id": result["execution_id"],
-                        "workflow_type": result["workflow_type"],
-                        "workflow_name": result["workflow_name"],
                         "session_id": session_id,
                         "user_id": user_id,
-                        "execution_time": result["execution_time"],
-                        "timestamp": __import__('time').time()
+                        "execution_time": f"{result['execution_time']:.2f}s",
+                        "timestamp": int(__import__('time').time())
                     }
                     
                     # 添加响应数据
@@ -96,7 +92,7 @@ def register_hsai_events(sio, emitter):
                         "type": "hsai_error",
                         "content": result.get("error_message", "工作流处理失败"),
                         "execution_id": result.get("execution_id"),
-                        "timestamp": __import__('time').time()
+                        "timestamp": int(__import__('time').time())
                     }
                     log.error(f"[HSAI统一事件] 发送错误响应给sid {sid}: {error_data}")
                     await sio.emit("error", error_data, to=sid)
@@ -106,7 +102,7 @@ def register_hsai_events(sio, emitter):
                 error_data = {
                     "type": "hsai_authentication_error",
                     "content": "用户身份验证失败",
-                    "timestamp": __import__('time').time()
+                    "timestamp": int(__import__('time').time())
                 }
                 await sio.emit("error", error_data, to=sid)
                 
@@ -115,7 +111,7 @@ def register_hsai_events(sio, emitter):
             error_data = {
                 "type": "hsai_processing_error",
                 "content": f"消息处理失败: {str(e)}",
-                "timestamp": __import__('time').time()
+                "timestamp": int(__import__('time').time())
             }
             await sio.emit("error", error_data, to=sid)
     
@@ -142,7 +138,7 @@ def register_hsai_events(sio, emitter):
                     "type": "hsai_status_response",
                     "user_id": user_id,
                     "system_health": system_health,
-                    "timestamp": __import__('time').time()
+                    "timestamp": int(__import__('time').time())
                 }
                 
                 await sio.emit("workflow_status", status_data, to=sid)
@@ -150,7 +146,7 @@ def register_hsai_events(sio, emitter):
                 error_data = {
                     "type": "hsai_authentication_error",
                     "content": "身份验证失败",
-                    "timestamp": __import__('time').time()
+                    "timestamp": int(__import__('time').time())
                 }
                 await sio.emit("error", error_data, to=sid)
                 
@@ -159,7 +155,7 @@ def register_hsai_events(sio, emitter):
             error_data = {
                 "type": "hsai_processing_error",
                 "content": f"状态查询失败: {str(e)}",
-                "timestamp": __import__('time').time()
+                "timestamp": int(__import__('time').time())
             }
             await sio.emit("error", error_data, to=sid)
     
