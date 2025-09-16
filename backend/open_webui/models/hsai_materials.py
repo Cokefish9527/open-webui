@@ -346,6 +346,7 @@ class HSAIMaterialFolderResponse(BaseModel):
     label: str = Field(description="文件夹标签，与name字段相同，仅供前端使用")
     description: Optional[str] = Field(default=None, description="文件夹描述")
     parent_id: Optional[str] = Field(default=None, description="父文件夹ID")
+    parent_name: Optional[str] = Field(default=None, description="父文件夹名称")  # 添加父文件夹名称字段
     settings: Optional[dict] = Field(default=None, description="文件夹配置")
     sort_order: int = Field(default=0, description="排序权重")
     children: Optional[List['HSAIMaterialFolderResponse']] = Field(default=None, description="子文件夹列表")

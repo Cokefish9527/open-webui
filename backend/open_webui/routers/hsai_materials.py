@@ -378,14 +378,15 @@ async def get_material_folders(
                 **folder.model_dump(),
                 label=folder.name,  # 为label字段赋与name字段相同的值
                 children=[],
-                material_count=0  # 后续可以优化为实际统计
+                material_count=0,  # 后续可以优化为实际统计
+                parent_name=None  # 初始化父文件夹名称为None
             )
             response_dict[folder.id] = folder_response
             
             if folder.parent_id is None:
                 root_folders.append(folder_response)
         
-        # 第二轮：建立父子关系
+        # 第二轮：建立父子关系，并设置父文件夹名称
         children_added = 0
         for folder in folders:
             if folder.parent_id is not None:
@@ -393,6 +394,8 @@ async def get_material_folders(
                 child_response = response_dict.get(folder.id)
                 if parent_response and child_response:
                     parent_response.children.append(child_response)
+                    # 设置子文件夹的父文件夹名称
+                    child_response.parent_name = parent_response.name
                     children_added += 1
                 elif not parent_response:
                     log.warning(f"Parent not found for folder {folder.name} (ID: {folder.id}), parent_id: {folder.parent_id}")
@@ -416,7 +419,8 @@ async def get_material_folders(
                 children=[],
                 material_count=0,  # 可以后续优化为实际统计回收站中的素材数量
                 created_at=0,
-                updated_at=0
+                updated_at=0,
+                parent_name=None  # 回收站没有父文件夹
             )
             
             # 将回收站目录添加到根目录列表
