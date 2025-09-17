@@ -5,7 +5,7 @@ import sys
 import time
 import os
 from redis import asyncio as aioredis
-from typing import Any, Dict, List, Optional, Union, Awaitable
+from typing import Any, Dict, List, Optional
 
 from open_webui.models.users import Users, UserNameResponse
 from open_webui.models.channels import Channels
@@ -73,9 +73,9 @@ if sio is None:
 TIMEOUT_DURATION = 3
 
 # Dictionary to maintain the user pool
-SESSION_POOL: Union[Dict[str, Any], RedisDict] = {}
-USER_POOL: Union[Dict[str, List[str]], RedisDict] = {}
-USAGE_POOL: Union[Dict[str, Dict[str, Any]], RedisDict] = {}
+SESSION_POOL: Dict[str, Any] = {}
+USER_POOL: Dict[str, List[str]] = {}
+USAGE_POOL: Dict[str, Dict[str, Any]] = {}
 
 if WEBSOCKET_MANAGER == "redis":
     log.debug("Using Redis to manage websockets.")
@@ -127,16 +127,13 @@ async def periodic_usage_pool_cleanup():
 
             now = int(time.time())
             send_usage = False
-            # 处理RedisDict的情况
-            usage_items = USAGE_POOL.items() if hasattr(USAGE_POOL, 'items') else await USAGE_POOL.items()
-            for model_id, connections in list(usage_items):
+            for model_id, connections in list(USAGE_POOL.items()):
                 # Creating a list of sids to remove if they have timed out
-                expired_sids = []
-                # 处理RedisDict的情况
-                connections_items = connections.items() if hasattr(connections, 'items') else await connections.items()
-                for sid, details in connections_items:
-                    if now - details["updated_at"] > TIMEOUT_DURATION:
-                        expired_sids.append(sid)
+                expired_sids = [
+                    sid
+                    for sid, details in connections.items()
+                    if now - details["updated_at"] > TIMEOUT_DURATION
+                ]
 
                 for sid in expired_sids:
                     del connections[sid]
@@ -166,34 +163,31 @@ def get_event_emitter(request_info, update_db=True):
     async def __event_emitter__(event_data):
         user_id = request_info["user_id"]
 
-        # 处理RedisDict的情况
-        user_pool_value = USER_POOL.get(user_id, [])
-        user_pool_list = user_pool_value if isinstance(user_pool_value, list) else await user_pool_value
-        session_id_value = [request_info.get("session_id")] if request_info.get("session_id") else []
-        session_id_list = session_id_value if isinstance(session_id_value, list) else await session_id_value
-        
         session_ids = list(
             set(
-                user_pool_list + session_id_list
+                USER_POOL.get(user_id, [])
+                + (
+                    [request_info.get("session_id")]
+                    if request_info.get("session_id")
+                    else []
+                )
             )
         )
 
-        emit_tasks = []
-        if sio is not None:
-            for session_id in session_ids:
-                task = sio.emit(
-                    "chat-events",
-                    {
-                        "chat_id": request_info.get("chat_id", None),
-                        "message_id": request_info.get("message_id", None),
-                        "data": event_data,
-                    },
-                    to=session_id,
-                )
-                emit_tasks.append(task)
+        emit_tasks = [
+            sio.emit(
+                "chat-events",
+                {
+                    "chat_id": request_info.get("chat_id", None),
+                    "message_id": request_info.get("message_id", None),
+                    "data": event_data,
+                },
+                to=session_id,
+            )
+            for session_id in session_ids
+        ]
 
-        if emit_tasks:
-            await asyncio.gather(*emit_tasks)
+        await asyncio.gather(*emit_tasks)
 
         if update_db:
             if "type" in event_data and event_data["type"] == "status":
@@ -247,17 +241,13 @@ register_hsai_events(sio, emitter)
 
 def get_models_in_use():
     # List models that are currently in use
-    # 处理RedisDict的情况
-    keys = USAGE_POOL.keys() if hasattr(USAGE_POOL, 'keys') else USAGE_POOL.keys()
-    models_in_use = list(keys) if isinstance(keys, (list, dict_keys)) else list(await keys)
+    models_in_use = list(USAGE_POOL.keys())
     return models_in_use
 
 
 def get_active_user_ids():
     """Get the list of active user IDs."""
-    # 处理RedisDict的情况
-    keys = USER_POOL.keys() if hasattr(USER_POOL, 'keys') else USER_POOL.keys()
-    return list(keys) if isinstance(keys, (list, dict_keys)) else list(await keys)
+    return list(USER_POOL.keys())
 
 
 def get_user_active_status(user_id):
@@ -273,21 +263,18 @@ def get_user_id_from_session_pool(sid):
 
 
 def get_user_ids_from_room(room):
-    if sio is not None and hasattr(sio.manager, 'get_participants'):
+    if hasattr(sio.manager, 'get_participants'):
         active_session_ids = sio.manager.get_participants(
             namespace="/",
             room=room,
         )
 
-        active_user_ids = []
-        for session_id in active_session_ids:
-            session_data = SESSION_POOL.get(session_id[0])
-            if session_data:
-                session_dict = session_data if isinstance(session_data, dict) else await session_data
-                user_id = session_dict.get("id")
-                if user_id:
-                    active_user_ids.append(user_id)
-        return list(set(active_user_ids))
+        active_user_ids = list(
+            set(
+                [SESSION_POOL.get(session_id[0], {}).get("id") for session_id in active_session_ids if SESSION_POOL.get(session_id[0])]
+            )
+        )
+        return active_user_ids
     return []
 
 
@@ -368,9 +355,8 @@ if sio is not None:
         # Join all the channels
         channels = Channels.get_channels_by_user_id(user.id)
         log.debug(f"{channels=}")
-        if sio is not None:
-            for channel in channels:
-                await sio.enter_room(sid, f"channel:{channel.id}")
+        for channel in channels:
+            await sio.enter_room(sid, f"channel:{channel.id}")
         return {"id": user.id, "name": user.name}
 
 
@@ -391,15 +377,14 @@ if sio is not None:
         # Join all the channels
         channels = Channels.get_channels_by_user_id(user.id)
         log.debug(f"{channels=}")
-        if sio is not None:
-            for channel in channels:
-                await sio.enter_room(sid, f"channel:{channel.id}")
+        for channel in channels:
+            await sio.enter_room(sid, f"channel:{channel.id}")
 
 
     @sio.on("channel-events")
     async def channel_events(sid, data):
         room = f"channel:{data['channel_id']}"
-        if sio is not None and hasattr(sio.manager, 'get_participants'):
+        if hasattr(sio.manager, 'get_participants'):
             participants = sio.manager.get_participants(
                 namespace="/",
                 room=room,
@@ -448,18 +433,16 @@ if sio is not None:
 
 def get_event_call(request_info):
     async def __event_caller__(event_data):
-        if sio is not None:
-            response = await sio.call(
-                "chat-events",
-                {
-                    "chat_id": request_info.get("chat_id", None),
-                    "message_id": request_info.get("message_id", None),
-                    "data": event_data,
-                },
-                to=request_info["session_id"],
-            )
-            return response
-        return None
+        response = await sio.call(
+            "chat-events",
+            {
+                "chat_id": request_info.get("chat_id", None),
+                "message_id": request_info.get("message_id", None),
+                "data": event_data,
+            },
+            to=request_info["session_id"],
+        )
+        return response
 
     return __event_caller__
 
