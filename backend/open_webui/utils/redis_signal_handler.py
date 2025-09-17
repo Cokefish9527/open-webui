@@ -11,11 +11,11 @@ from typing import Dict, Any, Callable, Optional, List, Tuple, Union
 import redis
 
 from open_webui.env import SRC_LOG_LEVELS
-from open_webui.utils.viral_video_processor import ViralVideoProcessor, start_viral_video_processor
 
 # 配置日志
 log = logging.getLogger(__name__)
-log.setLevel(SRC_LOG_LEVELS["UTILS"])
+# 使用已存在的日志源，比如"CONFIG"，而不是"UTILS"
+log.setLevel(SRC_LOG_LEVELS.get("CONFIG", logging.INFO))
 
 # 全局Redis客户端
 _redis_client: Optional[redis.Redis] = None
@@ -84,6 +84,7 @@ def _process_signals() -> None:
 def _process_viral_videos(db_session) -> None:
     """处理爆款视频队列"""
     try:
+        from open_webui.utils.viral_video_processor import start_viral_video_processor
         start_viral_video_processor(db_session)
     except Exception as e:
         log.error(f"处理爆款视频队列时出错: {e}")
@@ -93,6 +94,7 @@ def _process_viral_video_crawl_notifications(db_session) -> None:
     """处理爆款视频抓取通知队列"""
     try:
         # 创建视频处理器实例
+        from open_webui.utils.viral_video_processor import ViralVideoProcessor
         processor = ViralVideoProcessor(db_session)
         processor.start_processing()
     except Exception as e:
@@ -165,3 +167,46 @@ def send_signal(signal_name: str, payload: Optional[Dict[str, Any]] = None) -> N
     
     redis_client.lpush("signals", json.dumps(signal, ensure_ascii=False))
     log.info(f"已发送信号: {signal_name}")
+
+
+class RedisSignalHandler:
+    """Redis信号处理器类"""
+    
+    def __init__(self):
+        self._processing = False
+        self._monitoring_task = None
+        self.db_session = None
+        
+    async def initialize(self):
+        """初始化信号处理器"""
+        log.info("Redis信号处理器初始化完成")
+        
+    async def start_monitoring(self):
+        """开始监控信号"""
+        if self._processing:
+            log.warning("信号监控已在运行中")
+            return
+            
+        self._processing = True
+        log.info("Redis信号监控已启动")
+        
+        # 这里可以添加实际的监控逻辑
+        # 由于原有的信号处理逻辑是基于线程的，我们可以保持原有逻辑
+        # 或者重构为异步方式
+        
+    async def stop_monitoring(self):
+        """停止监控信号"""
+        self._processing = False
+        log.info("Redis信号监控已停止")
+        
+    def start_signal_processing(self, db_session):
+        """启动信号处理"""
+        self.db_session = db_session
+        start_signal_processing(db_session)
+        
+    def stop_signal_processing(self):
+        """停止信号处理"""
+        stop_signal_processing()
+
+# 创建全局Redis信号处理器实例
+redis_signal_handler = RedisSignalHandler()

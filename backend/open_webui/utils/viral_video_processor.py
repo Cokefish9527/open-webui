@@ -6,9 +6,10 @@ import redis
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from open_webui.models.hsai_viral_videos import HSAIViralVideos, HSAIViralVideoStatus
-from open_webui.models.hsai_tasks import HSAITasks, HSAITaskStatus, HSAITaskType
-from open_webui.utils.redis_signal_handler import get_redis_client
+# 根据新流程说明，不再需要hsai_viral_videos模型
+# from open_webui.models.hsai_viral_videos import HSAIViralVideos, HSAIViralVideoStatus
+from open_webui.models.hsai_tasks import HSAITasks, HSAITaskStatus, HSAITaskType, HSAITaskForm
+from open_webui.models.hsai_materials import HSAIMaterials, HSAIMaterialForm
 
 # 配置日志
 log = logging.getLogger(__name__)
@@ -17,15 +18,22 @@ __all__ = ['ViralVideoProcessor', 'start_viral_video_processor']
 
 
 class ViralVideoProcessor:
-    """爆款视频处理器，负责从Redis队列读取消息并处理任务表数据添加"""
+    """爆款视频处理器，负责从Redis队列读取消息并直接创建学习任务"""
     
     def __init__(self, db_session: Session):
         self.db_session = db_session
-        self.redis_client = get_redis_client()
+        # 直接创建Redis客户端，避免循环导入
+        self.redis_client = self._get_redis_client()
         self.main_queue_key = "viral_video_crawled_notification"
         self.processing_queue_key = "viral_video_processing"
         self.dead_letter_queue_key = "viral_video_dead_letter"
         self.max_retry_count = 3
+        
+    def _get_redis_client(self) -> redis.Redis:
+        """获取Redis客户端实例"""
+        # 使用默认的Redis连接信息
+        redis_url = "redis://localhost:6379/0"
+        return redis.from_url(redis_url)
         
     def start_processing(self):
         """启动视频处理循环"""
@@ -56,8 +64,8 @@ class ViralVideoProcessor:
             # 备份消息到处理队列
             self._backup_message(message_json)
             
-            # 处理视频数据添加
-            success = self._handle_video_creation(message)
+            # 根据新流程说明，直接为视频创建学习任务，而不是创建视频记录
+            success = self._create_learning_task_for_video(message)
             
             if success:
                 # 处理成功，从队列中删除消息
@@ -95,46 +103,88 @@ class ViralVideoProcessor:
         except Exception as e:
             log.warning(f"删除已处理消息失败: {e}")
             
-    def _handle_video_creation(self, message: Dict[str, Any]) -> bool:
-        """处理视频数据添加"""
+    def _create_learning_task_for_video(self, message: Dict[str, Any]) -> bool:
+        """为爆款视频直接创建学习任务"""
         try:
             # 开始数据库事务
             self.db_session.begin()
             
             try:
-                # 创建视频记录
-                video_data = {
-                    "video_url": message.get("video_url", ""),
-                    "title": message.get("video_title", ""),
-                    "description": message.get("video_description", ""),
-                    "thumbnail_url": message.get("thumbnail_url", ""),
-                    "duration": message.get("duration", 0),
-                    "platform": message.get("platform", ""),
-                    "tags": message.get("tags", []),
-                    "metadata": message.get("metadata", {}),
-                    "status": HSAIViralVideoStatus.PENDING,
-                    "is_learned": False,
-                    "created_at": int(time.time()),
-                    "updated_at": int(time.time())
-                }
+                video_url = message.get("video_url", "")
+                video_title = message.get("video_title", "")
+                video_description = message.get("video_description", "")
+                thumbnail_url = message.get("thumbnail_url", "")
+                duration = message.get("duration", 0)
+                platform = message.get("platform", "")
+                tags = message.get("tags", [])
+                metadata = message.get("metadata", {})
                 
-                # 检查视频是否已存在
-                existing_video = HSAIViralVideos.get_video_by_url(video_data["video_url"])
-                if existing_video:
-                    # 更新现有视频记录
-                    video = HSAIViralVideos.update_video_by_id(
-                        existing_video.id, 
-                        video_data
+                # 这里需要根据实际业务逻辑确定要派发任务的用户
+                # 暂时使用默认用户或从配置中读取
+                # 在实际应用中，可能需要从系统配置或数据库中获取指定用户列表
+                target_user_ids = ["admin"]  # 示例用户ID，实际应用中需要根据业务需求确定
+                
+                # 为每个指定用户创建学习任务
+                for user_id in target_user_ids:
+                    # 1. 保存视频链接到素材库
+                    material_form = HSAIMaterialForm(
+                        name=video_title,
+                        description=video_description or "",
+                        material_type="video",
+                        file_path=video_url,
+                        file_size=0,  # 视频链接不占用本地存储空间
+                        file_hash="",  # 视频链接不需要文件哈希
+                        mime_type="video/mp4",  # 假设为MP4格式
+                        tags=tags,
+                        material_metadata={
+                            "thumbnail_url": thumbnail_url,
+                            "duration": duration,
+                            "platform": platform,
+                            "source": "viral_learning",
+                            **(metadata or {})
+                        }
                     )
-                    video_id = existing_video.id
-                else:
-                    # 创建新视频记录
-                    video = HSAIViralVideos.insert_new_video(video_data)
-                    video_id = video.id if video else None
+                    
+                    material = HSAIMaterials.insert_new_material(user_id, material_form)
+                    if not material:
+                        log.error(f"为用户 {user_id} 创建视频素材失败")
+                        continue
+                    
+                    # 2. 创建学习任务
+                    task_form = HSAITaskForm(
+                        title=f"学习爆款视频: {video_title}",
+                        description=video_description or f"学习来自{platform}平台的爆款视频内容",
+                        task_type=HSAITaskType.CONTENT_ANALYSIS,  # 使用内容分析任务类型
+                        config={
+                            "video_url": video_url,
+                            "thumbnail_url": thumbnail_url,
+                            "platform": platform,
+                            "duration": duration,
+                            "material_id": material.id
+                        },
+                        inputs={
+                            "video_data": {
+                                "video_url": video_url,
+                                "title": video_title,
+                                "description": video_description,
+                                "thumbnail_url": thumbnail_url,
+                                "duration": duration,
+                                "platform": platform,
+                                "tags": tags,
+                                "metadata": metadata
+                            }
+                        }
+                    )
+                    
+                    task = HSAITasks.insert_new_task(user_id, task_form)
+                    if task:
+                        log.info(f"为用户 {user_id} 创建了学习任务: {task.id}")
+                    else:
+                        log.error(f"为用户 {user_id} 创建学习任务失败")
                 
                 # 提交事务
                 self.db_session.commit()
-                log.info(f"成功创建视频记录，视频ID: {video_id}")
+                log.info(f"成功为视频创建学习任务: {video_url}")
                 return True
                 
             except Exception as e:
@@ -147,7 +197,7 @@ class ViralVideoProcessor:
             log.error(f"数据库连接错误: {e}")
             return False
         except Exception as e:
-            log.error(f"视频创建过程中发生错误: {e}")
+            log.error(f"为视频创建学习任务过程中发生错误: {e}")
             return False
             
     def _handle_processing_failure(self, message: Dict[str, Any], message_json: bytes):

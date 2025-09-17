@@ -88,8 +88,11 @@ from open_webui.routers import (
     hsai_dashboard,
     hsai_chat,
     hsai_workflows,
+    hsai_woc,  # 添加WOC路由导入
     # 移除hsai_websocket路由以避免与Socket.IO冲突
     # hsai_websocket,
+    # 根据新流程说明，不再需要爆款视频路由
+    # hsai_viral_videos,  # 移除爆款视频路由导入
 )
 
 from open_webui.routers.retrieval import (
@@ -1236,11 +1239,8 @@ app.include_router(hsai_ai.router, prefix="/api/v1")
 app.include_router(hsai_dashboard.router, prefix="/api/v1")
 app.include_router(hsai_chat.router, prefix="/api/v1")
 app.include_router(hsai_workflows.router, prefix="/api/v1")
-app.include_router(hsai_viral_videos.router, prefix="/api/v1")  # 添加爆款视频路由
-
-# 导入并注册WOC路由
-from open_webui.routers import hsai_woc
-app.include_router(hsai_woc.router)
+# 根据新流程说明，不再需要爆款视频路由
+# app.include_router(hsai_viral_videos.router, prefix="/api/v1")  # 添加爆款视频路由
 
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)
