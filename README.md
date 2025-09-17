@@ -70,7 +70,24 @@ ghcr.io/u8f69/open-webui:<版本号>
 
 ### 支持注册邮箱验证
 
-![email](./docs/sign_verify_user.png)
+![verify email](./docs/sign_verify_user.png)
+
+## 文档说明
+
+本项目包含以下重要文档，帮助开发者和用户更好地理解和使用系统：
+
+### 爆款视频学习入库流程
+- [爆款视频学习入库流程说明.md](./docs/爆款视频学习入库流程说明.md) - 详细描述了从n8n工作流抓取爆款视频到用户确认学习的完整流程，包含泳道图形式的流程图
+
+### Redis队列处理
+- [Agent2Redis消息体-技术文档-Michaell.md](./docs/Agent2Redis消息体-技术文档-Michaell.md) - 详细说明了Agent和n8n工作流如何通过Redis队列与后端通信的消息体结构
+
+### 前端开发调试
+- [前端调试用测试任务数据说明.md](./docs/前端调试用测试任务数据说明.md) - 为前端开发人员提供的测试任务数据说明，用于调试任务列表和任务详情功能
+
+### 其他重要文档
+- [Redis配置与切换指南.md](./docs/Redis配置与切换指南.md) - Redis配置切换的详细说明
+- [WebSocket协议规范说明.md](./docs/WebSocket协议规范说明.md) - WebSocket通信协议规范
 
 ## 拓展配置
 

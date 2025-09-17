@@ -93,7 +93,7 @@ class HSAIViralVideoModel(BaseModel):
     learned_at: Optional[int] = Field(default=None, description="学习时间")
 
 
-class HSAIViralVideoTable:
+class HSAIViralVideosTable:
     """HSAI爆款视频表操作类"""
     
     def insert_new_video(self, form_data: dict) -> Optional[HSAIViralVideoModel]:
@@ -113,6 +113,24 @@ class HSAIViralVideoTable:
             db.refresh(video)
             
             return HSAIViralVideoModel.model_validate(video) if video else None
+    
+    def update_video_by_id(self, video_id: str, form_data: dict) -> Optional[HSAIViralVideoModel]:
+        """根据ID更新视频记录"""
+        with get_db() as db:
+            video = db.query(HSAIViralVideo).filter(HSAIViralVideo.id == video_id).first()
+            if video:
+                # 更新字段
+                for key, value in form_data.items():
+                    if hasattr(video, key):
+                        setattr(video, key, value)
+                
+                setattr(video, 'updated_at', int(time.time()))
+                
+                db.commit()
+                db.refresh(video)
+                
+                return HSAIViralVideoModel.model_validate(video)
+            return None
     
     def get_videos_by_status(self, status: str) -> List[HSAIViralVideoModel]:
         """根据状态获取视频列表"""
@@ -138,9 +156,10 @@ class HSAIViralVideoTable:
         with get_db() as db:
             video = db.query(HSAIViralVideo).filter(HSAIViralVideo.id == video_id).first()
             if video:
-                video.status = status
-                video.processed_at = processed_at or int(time.time())
-                video.updated_at = int(time.time())
+                # 使用setattr来避免类型检查错误
+                setattr(video, 'status', status)
+                setattr(video, 'processed_at', processed_at or int(time.time()))
+                setattr(video, 'updated_at', int(time.time()))
                 
                 db.commit()
                 db.refresh(video)
@@ -153,16 +172,27 @@ class HSAIViralVideoTable:
         with get_db() as db:
             video = db.query(HSAIViralVideo).filter(HSAIViralVideo.id == video_id).first()
             if video:
-                video.is_learned = True
-                video.task_id = task_id
-                video.material_id = material_id
-                video.learned_at = int(time.time())
-                video.updated_at = int(time.time())
+                # 使用setattr来避免类型检查错误
+                setattr(video, 'is_learned', True)
+                setattr(video, 'task_id', task_id)
+                setattr(video, 'material_id', material_id)
+                setattr(video, 'learned_at', int(time.time()))
+                setattr(video, 'updated_at', int(time.time()))
                 
                 db.commit()
                 db.refresh(video)
                 
                 return HSAIViralVideoModel.model_validate(video)
+            return None
+    
+    @staticmethod
+    def get_video_by_url(video_url: str) -> Optional[HSAIViralVideoModel]:
+        """根据视频URL获取视频记录"""
+        try:
+            with get_db() as db:
+                video = db.query(HSAIViralVideo).filter(HSAIViralVideo.video_url == video_url).first()
+                return HSAIViralVideoModel.model_validate(video) if video else None
+        except Exception:
             return None
     
     def get_video_by_id(self, video_id: str) -> Optional[HSAIViralVideoModel]:
@@ -173,4 +203,4 @@ class HSAIViralVideoTable:
 
 
 # 全局实例
-HSAIViralVideos = HSAIViralVideoTable()
+HSAIViralVideos = HSAIViralVideosTable()

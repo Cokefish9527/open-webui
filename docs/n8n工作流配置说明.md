@@ -7,6 +7,8 @@
 
 本文档说明了HSAI系统中n8n工作流的配置方式，包括如何更新工作流地址、环境变量配置以及如何在代码中使用这些配置。
 
+**注意**: n8n工作流的具体实现由n8n开发者自行设计实现，本文档仅说明系统中与n8n工作流集成的相关配置。
+
 ## 2. 工作流配置文件
 
 工作流配置位于: `backend/open_webui/config/n8n_workflows.py`
@@ -95,18 +97,6 @@ main_workflow_url = N8N_WORKFLOW_WEBHOOKS[N8NWorkflowType.MAIN]
 
 # 获取公司信息工作流URL
 company_info_url = N8N_WORKFLOW_WEBHOOKS[N8NWorkflowType.COMPANY_INFO]
-```
-
-### 5.3 在聊天处理器中使用
-
-聊天处理器会自动加载这些配置：
-
-```python
-from open_webui.socket.hsai_chat_handler import chat_handler
-
-# 获取工作流配置
-main_config = chat_handler.workflow_configs[N8NWorkflowType.MAIN]
-print(f"主工作流URL: {main_config.webhook_url}")
 ```
 
 ## 6. 配置更新流程

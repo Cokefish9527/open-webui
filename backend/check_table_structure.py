@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-检查数据库表结构的简单脚本
+检查hsai_tasks表结构的脚本
 """
 
 import sqlite3
@@ -10,16 +10,32 @@ def check_table_structure():
     """检查hsai_tasks表结构"""
     
     # 数据库路径
-    db_path = "data/webui.db"
+    db_paths = [
+        "data/webui.db",
+        "./data/webui.db",
+        "../data/webui.db",
+        "c:/work/open-webui/backend/data/webui.db",
+        "D:/Work/hsch/open-webui/backend/data/webui.db"
+    ]
     
-    if not os.path.exists(db_path):
-        print(f"❌ 数据库文件不存在: {db_path}")
+    db_conn = None
+    for path in db_paths:
+        try:
+            if os.path.exists(path):
+                db_conn = sqlite3.connect(path)
+                print(f"✅ 连接到数据库: {path}")
+                break
+            else:
+                print(f"❌ 数据库文件不存在: {path}")
+        except Exception as e:
+            print(f"❌ 无法连接到数据库 {path}: {e}")
+            continue
+    
+    if not db_conn:
+        print("❌ 无法连接到任何数据库")
         return
     
     try:
-        db_conn = sqlite3.connect(db_path)
-        print(f"✅ 连接到数据库: {db_path}")
-        
         cursor = db_conn.cursor()
         
         # 检查表是否存在
@@ -52,6 +68,8 @@ def check_table_structure():
         
     except Exception as e:
         print(f"❌ 数据库操作失败: {str(e)}")
+        if db_conn:
+            db_conn.close()
 
 if __name__ == "__main__":
     check_table_structure()

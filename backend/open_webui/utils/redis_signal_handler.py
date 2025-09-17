@@ -1,278 +1,167 @@
 """
-Redis信号处理器
-
-监听Redis信号变化，处理n8n工作流的实时状态更新
+Redis信号处理器，用于监听Redis队列中的信号并触发相应的操作
 """
 
 import asyncio
 import json
 import logging
-from typing import Dict, Any, Optional
-from datetime import datetime
-from redis import asyncio as aioredis
+import threading
+import time
+from typing import Dict, Any, Callable, Optional, List, Tuple, Union
+import redis
 
-from open_webui.env import WEBSOCKET_REDIS_URL
-from open_webui.socket.main import sio
+from open_webui.env import SRC_LOG_LEVELS
+from open_webui.utils.viral_video_processor import ViralVideoProcessor, start_viral_video_processor
 
+# 配置日志
 log = logging.getLogger(__name__)
+log.setLevel(SRC_LOG_LEVELS["UTILS"])
 
-class RedisSignalHandler:
-    """Redis信号处理器"""
-    
-    def __init__(self):
-        self.redis_client = None
-        self.pubsub = None
-        self.is_monitoring = False
-        self.monitoring_task: Optional[asyncio.Task] = None
-        
-        # 信号模式定义
-        self.signal_patterns = {
-            'workflow_status': 'n8n:workflow:status:*',
-            'task_complete': 'n8n:task:complete:*',
-            'video_synthesis': 'n8n:video:synthesis:*',
-            'kpi_calculated': 'n8n:kpi:calculated:*',
-            'agent_message': 'agent:message:*'
-        }
-        
-        # 信号处理映射
-        self.signal_handlers = {
-            'workflow_status': self._handle_workflow_status,
-            'task_complete': self._handle_task_complete,
-            'video_synthesis': self._handle_video_synthesis,
-            'kpi_calculated': self._handle_kpi_calculated,
-            'agent_message': self._handle_agent_message
-        }
-        
-        # 用于容错机制的消息缓存
-        self.message_cache: Dict[str, Dict[str, Any]] = {}
-    
-    async def initialize(self):
-        """初始化Redis连接"""
-        try:
-            if WEBSOCKET_REDIS_URL:
-                self.redis_client = aioredis.from_url(WEBSOCKET_REDIS_URL)
-                log.info("Redis信号处理器初始化成功")
-            else:
-                log.warning("未配置Redis URL，Redis信号处理器无法初始化")
-        except Exception as e:
-            log.error(f"Redis信号处理器初始化失败: {e}")
-    
-    async def start_monitoring(self):
-        """开始监听Redis信号"""
-        if self.is_monitoring or not self.redis_client:
-            return
-            
-        self.is_monitoring = True
-        self.monitoring_task = asyncio.create_task(self._monitoring_loop())
-        log.info("Redis信号监听已启动")
-    
-    async def stop_monitoring(self):
-        """停止监听Redis信号"""
-        self.is_monitoring = False
-        if self.monitoring_task:
-            self.monitoring_task.cancel()
-            try:
-                await self.monitoring_task
-            except asyncio.CancelledError:
-                pass
-        log.info("Redis信号监听已停止")
-    
-    async def _monitoring_loop(self):
-        """监听循环"""
-        try:
-            # 创建pubsub连接
-            self.pubsub = self.redis_client.pubsub()
-            
-            # 订阅所有信号模式
-            for pattern in self.signal_patterns.values():
-                await self.pubsub.psubscribe(pattern)
-            
-            log.info("已订阅Redis信号频道")
-            
-            # 监听消息
-            async for message in self.pubsub.listen():
-                if not self.is_monitoring:
-                    break
-                    
-                if message['type'] == 'pmessage':
-                    await self._handle_signal(message)
-                    
-        except asyncio.CancelledError:
-            log.info("Redis信号监听循环被取消")
-        except Exception as e:
-            log.error(f"Redis信号监听循环出错: {e}")
-        finally:
-            if self.pubsub:
-                await self.pubsub.close()
-    
-    async def _handle_signal(self, message):
-        """处理Redis信号"""
-        try:
-            channel = message['channel'].decode('utf-8')
-            data = json.loads(message['data'].decode('utf-8'))
-            
-            log.info(f"接收到Redis信号: {channel}")
-            
-            # 根据频道类型调用相应的处理函数
-            for signal_type, pattern in self.signal_patterns.items():
-                if pattern.rstrip('*') in channel:
-                    handler = self.signal_handlers.get(signal_type)
-                    if handler:
-                        await handler(data)
-                    break
-                    
-        except Exception as e:
-            log.error(f"处理Redis信号时出错: {e}")
-    
-    async def _handle_workflow_status(self, data: Dict[str, Any]):
-        """处理工作流状态更新信号"""
-        try:
-            user_id = data.get('user_id')
-            execution_id = data.get('execution_id')
-            status = data.get('status')
-            progress = data.get('progress', 0)
-            message = data.get('message', '')
-            
-            if user_id:
-                # 通过Socket.IO向前端发送状态更新
-                await sio.emit('workflow_status', {
-                    'type': 'workflow_status',
-                    'execution_id': execution_id,
-                    'status': status,
-                    'progress': progress,
-                    'message': message,
-                    'timestamp': int(datetime.now().timestamp())
-                }, room=f'user_{user_id}')
-                
-                log.info(f"已发送工作流状态更新给用户 {user_id}: {status} ({progress}%)")
-                
-        except Exception as e:
-            log.error(f"处理工作流状态信号时出错: {e}")
-    
-    async def _handle_task_complete(self, data: Dict[str, Any]):
-        """处理任务完成信号"""
-        try:
-            user_id = data.get('user_id')
-            task_id = data.get('task_id')
-            task_result = data.get('result')
-            kpi_data = data.get('kpi_data', {})
-            
-            if user_id:
-                # 发送任务完成通知
-                await sio.emit('task_complete', {
-                    'type': 'task_complete',
-                    'task_id': task_id,
-                    'result': task_result,
-                    'kpi_data': kpi_data,
-                    'timestamp': int(datetime.now().timestamp())
-                }, room=f'user_{user_id}')
-                
-                log.info(f"已发送任务完成通知给用户 {user_id}: {task_id}")
-                
-        except Exception as e:
-            log.error(f"处理任务完成信号时出错: {e}")
-    
-    async def _handle_video_synthesis(self, data: Dict[str, Any]):
-        """处理视频合成信号"""
-        try:
-            user_id = data.get('user_id')
-            video_id = data.get('video_id')
-            status = data.get('status')
-            progress = data.get('progress', 0)
-            video_url = data.get('video_url', '')
-            
-            if user_id:
-                # 发送视频合成状态更新
-                await sio.emit('video_synthesis', {
-                    'type': 'video_synthesis',
-                    'video_id': video_id,
-                    'status': status,
-                    'progress': progress,
-                    'video_url': video_url,
-                    'timestamp': int(datetime.now().timestamp())
-                }, room=f'user_{user_id}')
-                
-                log.info(f"已发送视频合成状态给用户 {user_id}: {video_id} - {status}")
-                
-        except Exception as e:
-            log.error(f"处理视频合成信号时出错: {e}")
-    
-    async def _handle_kpi_calculated(self, data: Dict[str, Any]):
-        """处理KPI计算完成信号"""
-        try:
-            user_id = data.get('user_id')
-            kpi_data = data.get('kpi_data', {})
-            calculation_time = data.get('calculation_time', '')
-            
-            if user_id:
-                # 发送KPI计算完成通知
-                await sio.emit('kpi_update', {
-                    'type': 'kpi_update',
-                    'kpi_data': kpi_data,
-                    'calculation_time': calculation_time,
-                    'timestamp': int(datetime.now().timestamp())
-                }, room=f'user_{user_id}')
-                
-                log.info(f"已发送KPI更新给用户 {user_id}")
-                
-        except Exception as e:
-            log.error(f"处理KPI计算信号时出错: {e}")
-    
-    async def _handle_agent_message(self, data: Dict[str, Any]):
-        """处理Agent消息并实现基于reply_message_id和reply_seq的容错机制"""
-        try:
-            # 提取关键字段
-            reply_message_id = data.get('reply_message_id')
-            reply_seq = data.get('reply_seq', 0)
-            session_id = data.get('session_id')
-            
-            # 如果有reply_message_id，实现容错机制
-            if reply_message_id:
-                # 检查缓存中是否已有该reply_message_id的消息
-                cached_message = self.message_cache.get(reply_message_id)
-                
-                # 如果缓存中有消息且reply_seq更大，则更新缓存
-                if cached_message and cached_message.get('reply_seq', 0) >= reply_seq:
-                    log.info(f"忽略旧的Agent消息: {reply_message_id}, seq {reply_seq} <= {cached_message.get('reply_seq')}")
-                    return
-                
-                # 更新缓存
-                self.message_cache[reply_message_id] = data
-                
-                # 清理过期的缓存消息（保留最近的100条）
-                if len(self.message_cache) > 100:
-                    # 删除最旧的消息
-                    oldest_key = next(iter(self.message_cache))
-                    del self.message_cache[oldest_key]
-            
-            # 通过Socket.IO向前端发送消息
-            # 构造符合Agent2Redis消息体规范的消息格式
-            message_data = {
-                'type': 'agent_message',
-                'env': data.get('env'),
-                'session_id': session_id,
-                'reply_id': data.get('reply_id'),
-                'reply_seq': reply_seq,
-                'reply_message_id': reply_message_id,
-                'operate_id': data.get('operate_id'),
-                'status': data.get('status'),
-                'content_type': data.get('content_type'),
-                'content': data.get('content'),
-                'create_ts': data.get('create_ts'),
-                'timestamp': int(datetime.now().timestamp())
-            }
-            
-            # 如果有session_id，发送给对应的用户
-            if session_id:
-                await sio.emit('agent_message', message_data, room=f'session_{session_id}')
-                log.info(f"已发送Agent消息给会话 {session_id}: {reply_message_id}")
-            else:
-                # 否则广播给所有用户（这种情况应该很少见）
-                await sio.emit('agent_message', message_data)
-                log.info(f"已广播Agent消息: {reply_message_id}")
-                
-        except Exception as e:
-            log.error(f"处理Agent消息时出错: {e}", exc_info=True)
+# 全局Redis客户端
+_redis_client: Optional[redis.Redis] = None
 
-# 全局Redis信号处理器实例
-redis_signal_handler = RedisSignalHandler()
+# 信号处理注册表
+_signal_handlers: Dict[str, Callable] = {}
+
+# 处理线程
+_processing_thread: Optional[threading.Thread] = None
+_video_processing_thread: Optional[threading.Thread] = None
+_video_crawl_notification_thread: Optional[threading.Thread] = None
+
+# 处理标志
+_processing = False
+
+
+def get_redis_client() -> redis.Redis:
+    """获取Redis客户端实例"""
+    global _redis_client
+    if _redis_client is None:
+        # 使用默认的Redis连接信息
+        redis_url = "redis://localhost:6379/0"
+        _redis_client = redis.from_url(redis_url)
+    return _redis_client
+
+
+def register_signal_handler(signal_name: str, handler: Callable) -> None:
+    """注册信号处理器"""
+    _signal_handlers[signal_name] = handler
+    log.info(f"已注册信号处理器: {signal_name}")
+
+
+def _process_signals() -> None:
+    """处理Redis队列中的信号"""
+    global _processing
+    redis_client = get_redis_client()
+    
+    while _processing:
+        try:
+            # 从Redis队列中获取信号
+            message = redis_client.brpop(["signals"], timeout=1)
+            if message:
+                # brpop返回的是一个元组(key, value)或None
+                if isinstance(message, (list, tuple)) and len(message) == 2:
+                    _, signal_data = message
+                    signal = json.loads(signal_data.decode("utf-8"))
+                    
+                    # 处理信号
+                    signal_name = signal.get("signal")
+                    payload = signal.get("payload", {})
+                    
+                    if signal_name in _signal_handlers:
+                        try:
+                            _signal_handlers[signal_name](payload)
+                            log.info(f"已处理信号: {signal_name}")
+                        except Exception as e:
+                            log.error(f"处理信号 {signal_name} 时出错: {e}")
+                    else:
+                        log.warning(f"未找到信号处理器: {signal_name}")
+                    
+        except Exception as e:
+            log.error(f"处理信号时出错: {e}")
+            time.sleep(1)  # 出错时短暂休眠
+
+
+def _process_viral_videos(db_session) -> None:
+    """处理爆款视频队列"""
+    try:
+        start_viral_video_processor(db_session)
+    except Exception as e:
+        log.error(f"处理爆款视频队列时出错: {e}")
+
+
+def _process_viral_video_crawl_notifications(db_session) -> None:
+    """处理爆款视频抓取通知队列"""
+    try:
+        # 创建视频处理器实例
+        processor = ViralVideoProcessor(db_session)
+        processor.start_processing()
+    except Exception as e:
+        log.error(f"处理爆款视频抓取通知队列时出错: {e}")
+
+
+def start_signal_processing(db_session) -> None:
+    """启动信号处理"""
+    global _processing, _processing_thread, _video_processing_thread, _video_crawl_notification_thread
+    
+    if _processing:
+        log.warning("信号处理已在运行中")
+        return
+        
+    _processing = True
+    
+    # 启动信号处理线程
+    _processing_thread = threading.Thread(target=_process_signals, daemon=True)
+    _processing_thread.start()
+    
+    # 启动视频处理线程
+    _video_processing_thread = threading.Thread(
+        target=_process_viral_videos, 
+        args=(db_session,),
+        daemon=True
+    )
+    _video_processing_thread.start()
+    
+    # 启动视频抓取通知处理线程
+    _video_crawl_notification_thread = threading.Thread(
+        target=_process_viral_video_crawl_notifications,
+        args=(db_session,),
+        daemon=True
+    )
+    _video_crawl_notification_thread.start()
+    
+    log.info("信号处理已启动")
+
+
+def stop_signal_processing() -> None:
+    """停止信号处理"""
+    global _processing, _processing_thread, _video_processing_thread, _video_crawl_notification_thread
+    
+    _processing = False
+    
+    if _processing_thread:
+        _processing_thread.join(timeout=5)
+        _processing_thread = None
+        
+    if _video_processing_thread:
+        _video_processing_thread.join(timeout=5)
+        _video_processing_thread = None
+        
+    if _video_crawl_notification_thread:
+        _video_crawl_notification_thread.join(timeout=5)
+        _video_crawl_notification_thread = None
+        
+    log.info("信号处理已停止")
+
+
+def send_signal(signal_name: str, payload: Optional[Dict[str, Any]] = None) -> None:
+    """发送信号到Redis队列"""
+    redis_client = get_redis_client()
+    
+    signal = {
+        "signal": signal_name,
+        "payload": payload or {},
+        "timestamp": int(time.time())
+    }
+    
+    redis_client.lpush("signals", json.dumps(signal, ensure_ascii=False))
+    log.info(f"已发送信号: {signal_name}")
