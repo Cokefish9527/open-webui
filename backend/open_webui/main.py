@@ -1236,6 +1236,7 @@ app.include_router(hsai_ai.router, prefix="/api/v1")
 app.include_router(hsai_dashboard.router, prefix="/api/v1")
 app.include_router(hsai_chat.router, prefix="/api/v1")
 app.include_router(hsai_workflows.router, prefix="/api/v1")
+app.include_router(hsai_viral_videos.router, prefix="/api/v1")  # 添加爆款视频路由
 
 # 导入并注册WOC路由
 from open_webui.routers import hsai_woc

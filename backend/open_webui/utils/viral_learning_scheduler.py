@@ -9,13 +9,16 @@ import logging
 import time
 import aiohttp
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from open_webui.config.n8n_workflows import (
     N8NWorkflowType, 
     get_workflow_config,
     get_viral_learning_schedule_config,
     N8N_WORKFLOW_WEBHOOKS
 )
+from open_webui.models.hsai_viral_videos import HSAIViralVideos, HSAIViralVideoStatus
+from open_webui.models.hsai_materials import HSAIMaterials, HSAIMaterialForm
+from open_webui.models.hsai_tasks import HSAITasks, HSAITaskForm, HSAITaskType, HSAITaskStatus
 
 log = logging.getLogger(__name__)
 
@@ -131,6 +134,14 @@ class ViralLearningScheduler:
         try:
             log.info("Executing viral learning workflow...")
             
+            # 首先检查是否有未处理的爆款视频数据
+            unprocessed_videos = HSAIViralVideos.get_unprocessed_videos()
+            if unprocessed_videos:
+                log.info(f"发现 {len(unprocessed_videos)} 个未处理的爆款视频，开始创建学习任务")
+                # 为每个未处理的视频创建学习任务
+                for video in unprocessed_videos:
+                    await self._create_learning_task_for_video(video)
+            
             # 准备payload
             payload = {
                 "trigger_type": "scheduled",
@@ -167,6 +178,83 @@ class ViralLearningScheduler:
                 log.warning(f"Max retry attempts reached, waiting {retry_delay_minutes} minutes")
                 await asyncio.sleep(retry_delay_minutes * 60)
                 self.failed_attempts = 0
+    
+    async def _create_learning_task_for_video(self, video) -> bool:
+        """
+        为爆款视频创建学习任务
+        """
+        try:
+            # 这里需要根据实际业务逻辑确定要派发任务的用户
+            # 暂时使用默认用户或从配置中读取
+            # 在实际应用中，可能需要从系统配置或数据库中获取指定用户列表
+            target_user_ids = ["admin"]  # 示例用户ID，实际应用中需要根据业务需求确定
+            
+            # 为每个指定用户创建学习任务
+            for user_id in target_user_ids:
+                # 1. 保存视频链接到素材库
+                material_form = HSAIMaterialForm(
+                    name=video.title,
+                    description=video.description or "",
+                    material_type="video",
+                    file_path=video.video_url,
+                    file_size=0,  # 视频链接不占用本地存储空间
+                    file_hash="",  # 视频链接不需要文件哈希
+                    mime_type="video/mp4",  # 假设为MP4格式
+                    tags=video.tags,
+                    material_metadata={
+                        "thumbnail_url": video.thumbnail_url,
+                        "duration": video.duration,
+                        "platform": video.platform,
+                        "source": "viral_learning",
+                        **(video.metadata or {})
+                    }
+                )
+                
+                material = HSAIMaterials.insert_new_material(user_id, material_form)
+                if not material:
+                    log.error(f"为用户 {user_id} 创建视频素材失败")
+                    continue
+                
+                # 2. 创建学习任务
+                task_form = HSAITaskForm(
+                    title=f"学习爆款视频: {video.title}",
+                    description=video.description or f"学习来自{video.platform}平台的爆款视频内容",
+                    task_type=HSAITaskType.CONTENT_ANALYSIS,  # 使用内容分析任务类型
+                    config={
+                        "video_url": video.video_url,
+                        "thumbnail_url": video.thumbnail_url,
+                        "platform": video.platform,
+                        "duration": video.duration,
+                        "material_id": material.id,
+                        "video_id": video.id
+                    },
+                    inputs={
+                        "video_data": {
+                            "id": video.id,
+                            "video_url": video.video_url,
+                            "title": video.title,
+                            "description": video.description,
+                            "thumbnail_url": video.thumbnail_url,
+                            "duration": video.duration,
+                            "platform": video.platform,
+                            "tags": video.tags,
+                            "metadata": video.metadata
+                        }
+                    }
+                )
+                
+                task = HSAITasks.insert_new_task(user_id, task_form)
+                if task:
+                    # 更新视频状态为已处理，并关联任务和素材
+                    HSAIViralVideos.update_video_status(video.id, HSAIViralVideoStatus.PROCESSED)
+                    log.info(f"为用户 {user_id} 创建了学习任务: {task.id}")
+                else:
+                    log.error(f"为用户 {user_id} 创建学习任务失败")
+            
+            return True
+        except Exception as e:
+            log.exception(f"为视频 {video.id} 创建学习任务时出错: {e}")
+            return False
     
     async def _call_n8n_workflow(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """调用n8n爆款学习工作流"""
