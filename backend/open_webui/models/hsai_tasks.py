@@ -351,6 +351,7 @@ class HSAITaskResponse(BaseModel):
     started_at: Optional[int] = Field(default=None, description="任务开始时间戳")
     completed_at: Optional[int] = Field(default=None, description="任务完成时间戳")
     error_message: Optional[str] = Field(default=None, description="错误信息")
+    config: Optional[dict] = Field(default=None, description="任务配置参数")
     estimated_duration: Optional[int] = Field(default=None, description="预估耗时(秒)")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
