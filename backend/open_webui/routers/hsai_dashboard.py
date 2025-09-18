@@ -286,11 +286,11 @@ async def get_recent_activities(
                 activities.append(RecentActivity(
                     id=f"material_{material.id}",
                     type="material",
-                    title=f"素材: {material.filename}",
-                    description=f"类型: {material.file_type}",
+                    title=f"素材: {material.name}",
+                    description=f"类型: {material.material_type}",
                     timestamp=material.updated_at or material.created_at,
                     status="uploaded",
-                    metadata={"file_type": material.file_type, "file_size": material.file_size}
+                    metadata={"file_type": material.material_type, "file_size": material.file_size}
                 ))
         
         # 获取对话活动
