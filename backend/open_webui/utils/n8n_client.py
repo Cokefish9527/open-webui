@@ -19,6 +19,11 @@ from .performance_monitor import monitor_n8n_operation, async_perf_context
 from .hsai_monitor import ComponentType
 from .hsai_logger import hsai_logger
 
+# 导入配置和用户模型
+from open_webui.config import BUSINESS_NAME as CONFIG_BUSINESS_NAME
+from open_webui.models.users import Users
+from open_webui.models.companies import Companies
+
 log = logging.getLogger(__name__)
 
 class ExecutionStatus(str, Enum):
@@ -46,17 +51,33 @@ class ExecutionRequest:
     
     def to_webhook_payload(self) -> Dict[str, Any]:
         """转换为webhook负载"""
+        # 获取business_name的逻辑：
+        # 1. 如果请求中已提供business_name，则直接使用
+        # 2. 如果未提供，则从用户所属公司获取
+        # 3. 如果用户没有关联公司，则从全局配置获取
+        business_name = self.business_name
+        if not business_name:
+            # 尝试从用户所属公司获取business_name
+            company = Users.get_user_company(self.user_id)
+            if company:
+                business_name = company.business_name
+            else:
+                # 从全局配置获取business_name
+                business_name = CONFIG_BUSINESS_NAME.value
+        
+        # 检查business_name字段是否存在
+        if not business_name:
+            raise ValueError("business_name字段是必需的，但未提供")
+            
         payload = {
             "session_id": self.session_id,
             "user_id": self.user_id,
             "message": self.message,
             "timestamp": int(time.time() * 1000),
-            "request_id": str(uuid.uuid4())
+            "request_id": str(uuid.uuid4()),
+            "business_name": business_name
         }
         
-        if self.business_name:
-            payload["business_name"] = self.business_name
-            
         if self.additional_data:
             payload.update(self.additional_data)
             

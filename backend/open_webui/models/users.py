@@ -2,14 +2,13 @@ import time
 from typing import List, Optional
 
 from open_webui.internal.db import Base, JSONField, get_db
-
+from open_webui.models.companies import Companies, CompanyModel
 
 from open_webui.models.chats import Chats
 from open_webui.models.groups import Groups
 
-
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Column, String, Text
+from sqlalchemy import BigInteger, Column, String, Text, ForeignKey
 from sqlalchemy import or_
 
 
@@ -37,6 +36,7 @@ class User(Base):
     info = Column(JSONField, nullable=True)
 
     oauth_sub = Column(Text, unique=True)
+    company_id = Column(String, ForeignKey("company.id"), nullable=True)
 
 
 class UserSettings(BaseModel):
@@ -59,6 +59,7 @@ class UserModel(BaseModel):
     settings: Optional[UserSettings] = Field(default=None, description="用户设置")
     info: Optional[dict] = Field(default=None, description="用户信息")
     oauth_sub: Optional[str] = Field(default=None, description="OAuth子标识符")
+    company_id: Optional[str] = Field(default=None, description="公司ID")
 
     model_config = ConfigDict(from_attributes=True, extra="allow")
 
@@ -407,6 +408,18 @@ class UsersTable:
                 return UserModel.model_validate(user)
             else:
                 return None
+
+    def get_user_company(self, user_id: str) -> Optional[CompanyModel]:
+        """获取用户所属公司"""
+        try:
+            with get_db() as db:
+                user = db.query(User).filter_by(id=user_id).first()
+                if user is not None and user.company_id is not None:
+                    company = Companies.get_company_by_id(str(user.company_id))
+                    return company
+                return None
+        except Exception:
+            return None
 
 
 Users = UsersTable()
