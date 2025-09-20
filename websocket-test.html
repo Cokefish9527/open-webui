@@ -38,7 +38,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            height: calc(100% - 40px);
+            height: 100%;
         }
         h1 {
             color: #333;
@@ -234,6 +234,7 @@
             flex-direction: column;
             overflow: hidden;
             margin-bottom: 10px;
+            height: calc(100% - 100px);
         }
         #messagesOutput {
             flex: 1;
@@ -244,6 +245,7 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
         .fixed-buttons {
             flex-shrink: 0;
@@ -809,6 +811,7 @@
                 this.currentMessageCount = 1;
                 this.updateMessageCount();
             }
+
             
             // 添加消息到历史记录
             addMessageToHistory(eventType, data) {
