@@ -353,10 +353,14 @@ class WorkflowOrchestrationCenter:
                     execution_id, WorkflowStatus.COMPLETED, progress=100
                 )
                 
-                # 通过Socket.IO通知完成
+                # 通过Socket.IO通知完成，并发送n8n响应数据
+                response_data = result.response_data or {}
                 await self._notify_socket_event("workflow_completed", {
                     "execution_id": execution_id,
-                    "result": result.response_data
+                    "workflow_type": workflow_type.value,
+                    "workflow_name": workflow.name,
+                    "result": response_data,
+                    "execution_time": result.duration or 0
                 }, context)
                 
                 return {
@@ -364,7 +368,7 @@ class WorkflowOrchestrationCenter:
                     "execution_id": execution_id,
                     "workflow_type": workflow_type.value,
                     "workflow_name": workflow.name,
-                    "response_data": result.response_data,
+                    "response_data": response_data,
                     "execution_time": result.duration or 0
                 }
             else:

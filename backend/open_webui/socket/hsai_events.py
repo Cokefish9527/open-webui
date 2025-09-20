@@ -3,6 +3,7 @@ HSAI WebSocket事件处理器
 """
 import logging
 import asyncio
+import json
 from typing import Dict, Any
 
 log = logging.getLogger(__name__)
@@ -68,8 +69,15 @@ def register_hsai_events(sio, emitter):
                 
                 log.info(f"[HSAI统一事件] WOC处理结果: {result}")
                 
+                # 调试日志：查看result对象的详细内容
+                log.info(f"[HSAI统一事件] WOC返回结果详细内容: {json.dumps(result, ensure_ascii=False, default=str)}")
+                
                 # 构建统一的Socket.IO响应格式
                 if result["success"]:
+                    # 保存workflow_type，防止被覆盖
+                    workflow_type = result.get("workflow_type", "main")
+                    
+                    # 先添加基础响应数据
                     response_data = {
                         "type": "hsai_response",
                         "success": True,
@@ -80,12 +88,22 @@ def register_hsai_events(sio, emitter):
                         "timestamp": int(__import__('time').time())
                     }
                     
-                    # 添加响应数据
+                    # 添加工作流返回的响应数据，但确保不覆盖我们设置的关键字段
                     if result.get("response_data"):
-                        response_data.update(result["response_data"])
+                        workflow_response = result["response_data"].copy()
+                        # 移除可能冲突的字段
+                        for key in ["type", "success", "execution_id", "workflow_type", "session_id", "user_id", "execution_time", "timestamp"]:
+                            workflow_response.pop(key, None)
+                        response_data.update(workflow_response)
+                    
+                    # 确保添加workflow_type字段
+                    log.info(f"[HSAI统一事件] 添加workflow_type字段: {workflow_type}")
+                    response_data["workflow_type"] = workflow_type
+                    log.info(f"[HSAI统一事件] 最终响应数据: {json.dumps(response_data, ensure_ascii=False, default=str)}")
                     
                     log.info(f"[HSAI统一事件] 发送成功响应给sid {sid}")
-                    await sio.emit("message", response_data, to=sid)
+                    # 按照设计文档发送标准化的hsai_response事件
+                    await sio.emit("hsai_response", response_data, to=sid)
                 else:
                     # 处理失败的响应
                     error_data = {
@@ -95,7 +113,8 @@ def register_hsai_events(sio, emitter):
                         "timestamp": int(__import__('time').time())
                     }
                     log.error(f"[HSAI统一事件] 发送错误响应给sid {sid}: {error_data}")
-                    await sio.emit("error", error_data, to=sid)
+                    # 按照设计文档发送标准化的hsai_error事件
+                    await sio.emit("hsai_error", error_data, to=sid)
                     
             else:
                 log.warning(f"[HSAI统一事件] 无法识别sid {sid} 的用户身份")
