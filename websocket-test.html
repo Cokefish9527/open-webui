@@ -301,6 +301,7 @@
                     <select id="messageType">
                         <option value="chat" selected>chat (聊天消息)</option>
                         <option value="workflow_trigger">workflow_trigger (工作流触发)</option>
+                        <option value="welcome">welcome (欢迎消息)</option>
                     </select>
                 </div>
                 
@@ -333,6 +334,7 @@
             <div class="button-group">
                 <button id="sendChatTestBtn" disabled>发送聊天测试消息</button>
                 <button id="sendWorkflowTestBtn" disabled>发送工作流测试消息</button>
+                <button id="sendWelcomeTestBtn" disabled>发送欢迎测试消息</button>
             </div>
             
             <!-- 移除了原来的连接状态指示器 -->
@@ -426,6 +428,7 @@
                 this.sendBtn = document.getElementById('sendBtn');
                 this.sendChatTestBtn = document.getElementById('sendChatTestBtn');
                 this.sendWorkflowTestBtn = document.getElementById('sendWorkflowTestBtn');
+                this.sendWelcomeTestBtn = document.getElementById('sendWelcomeTestBtn');
                 this.messageInput = document.getElementById('messageInput');
                 this.messagesOutput = document.getElementById('messagesOutput');
                 this.clearBtn = document.getElementById('clearBtn');
@@ -493,6 +496,7 @@
                 this.sendBtn.addEventListener('click', () => this.sendMessage());
                 this.sendChatTestBtn.addEventListener('click', () => this.sendTestMessage('chat'));
                 this.sendWorkflowTestBtn.addEventListener('click', () => this.sendTestMessage('workflow_trigger'));
+                this.sendWelcomeTestBtn.addEventListener('click', () => this.sendTestMessage('welcome'));
                 this.clearBtn.addEventListener('click', () => this.clearMessages());
                 this.viewDetailsBtn.addEventListener('click', () => this.viewDetails());
                 this.messageFilter.addEventListener('change', () => this.filterMessages());
@@ -634,7 +638,11 @@
                 }
                 
                 // 构造标准HSAI消息
-                const content = `测试HSAI ${messageType} 消息`;
+                let content = `测试HSAI ${messageType} 消息`;
+                if (messageType === 'welcome') {
+                    content = ''; // welcome消息不需要内容
+                }
+                
                 const message = this.buildMessage(content, messageType);
                 
                 try {
@@ -688,13 +696,15 @@
                 }
                 
                 const content = this.messageInput.value.trim();
-                if (!content) {
+                const messageType = document.getElementById('messageType')?.value || "chat";
+                
+                // welcome消息不需要内容
+                if (messageType !== 'welcome' && !content) {
                     this.showMessage('请输入要发送的消息内容', 'error');
                     return;
                 }
                 
                 try {
-                    const messageType = document.getElementById('messageType')?.value || "chat";
                     const message = this.buildMessage(content, messageType);
                     
                     // 使用正确的事件名称发送消息到服务器
@@ -704,8 +714,10 @@
                     this.addMessageToHistory('sent_message', message);
                     this.showMessage('HSAI消息已发送', 'info');
                     
-                    // 清空输入框
-                    this.messageInput.value = '';
+                    // 清空输入框（welcome消息除外）
+                    if (messageType !== 'welcome') {
+                        this.messageInput.value = '';
+                    }
                 } catch (error) {
                     this.showMessage(`发送失败: ${error.message}`, 'error');
                     console.error('Send message failed:', error);
@@ -716,7 +728,7 @@
                 const messageElement = document.createElement('div');
                 messageElement.className = 'message message-sent';
                 messageElement.innerHTML = `
-                    <strong>发送的消息:</strong> ${message.content}
+                    <strong>发送的消息:</strong> ${message.content || `[${message.type}消息]`}
                     <small>${new Date().toLocaleString()}</small>
                 `;
                 this.messagesOutput.appendChild(messageElement);
@@ -799,6 +811,7 @@
                 this.sendBtn.disabled = !connected;
                 this.sendChatTestBtn.disabled = !connected;
                 this.sendWorkflowTestBtn.disabled = !connected;
+                this.sendWelcomeTestBtn.disabled = !connected;
             }
             
             clearMessages() {

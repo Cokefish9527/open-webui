@@ -1,6 +1,3 @@
-"""
-HSAI WebSocket事件处理器
-"""
 import logging
 import asyncio
 import json
@@ -23,9 +20,38 @@ def register_hsai_events(sio, emitter):
         
         try:
             # 检查是否为HSAI消息（通过消息结构判断）
-            if not isinstance(data, dict) or not data.get("type") in ["chat", "workflow_trigger"]:
+            if not isinstance(data, dict) or not data.get("type") in ["chat", "workflow_trigger", "welcome"]:
                 log.debug("不是HSAI消息，跳过处理")
                 # 不是HSAI消息，跳过处理让其他处理器处理
+                return
+                
+            # 处理welcome消息类型
+            if data.get("type") == "welcome":
+                log.info(f"[HSAI统一事件] 接收到客户端sid {sid} 发送的welcome消息")
+                
+                # 获取用户ID
+                user_id = None
+                from open_webui.socket.main import SESSION_POOL
+                if sid in SESSION_POOL:
+                    user = SESSION_POOL[sid]
+                    user_id = user.get("id")
+                
+                # 如果没有用户ID，尝试从数据中获取
+                if not user_id and isinstance(data, dict):
+                    user_id = data.get("user_id")
+                
+                # 发送欢迎语
+                welcome_message = {
+                    "type": "welcome_response",
+                    "success": True,
+                    "content": "欢迎使用华商AI系统！我们致力于为您提供最优质的服务体验。",
+                    "displayText": "欢迎使用华商AI系统！我们致力于为您提供最优质的服务体验。有任何问题都可以随时向我提问。",
+                    "timestamp": int(__import__('time').time()),
+                    "messageType": "assistant",
+                    "user_id": user_id
+                }
+                
+                await sio.emit("hsai_response", welcome_message, to=sid)
                 return
                 
             log.info(f"[HSAI统一事件] 接收到客户端sid {sid} 发送的HSAI消息: {data}")
