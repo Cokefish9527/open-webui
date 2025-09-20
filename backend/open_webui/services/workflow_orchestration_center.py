@@ -425,24 +425,73 @@ class WorkflowOrchestrationCenter:
             socket_id = context.get("socket_id") if context else None
             user_id = data.get("user_id")
             
-            # 构建事件数据
+            # 构建标准的HSAI响应消息体结构
             event_data = {
-                "type": event_type,
-                "timestamp": time.time(),
+                "timestamp": int(time.time()),
                 **data
             }
             
+            # 根据事件类型确定发送的核心事件和子类型，并构建标准消息体
+            core_event = "hsai_response"  # 默认使用成功响应事件
+            if event_type in ["workflow_started", "workflow_progress", "workflow_completed", "status"]:
+                # 工作流相关事件和状态事件合并到hsai_response
+                core_event = "hsai_response"
+                event_data["type"] = event_type  # 使用具体的事件类型作为type字段值
+                
+                # 如果有消息内容，将其填充到displayText字段
+                if "message" in data:
+                    event_data["displayText"] = data["message"]
+                    # 从数据中移除message字段，避免重复
+                    del event_data["message"]
+                elif "displayText" not in event_data and event_type == "workflow_started":
+                    event_data["displayText"] = f"工作流 {data.get('workflow_name', '')} 已开始执行"
+                elif "displayText" not in event_data and event_type == "workflow_progress":
+                    event_data["displayText"] = data.get("message", "工作流正在执行中...")
+                elif "displayText" not in event_data and event_type == "workflow_completed":
+                    # 对于完成事件，如果有result中的displayText，则使用它
+                    result = data.get("result", {})
+                    if isinstance(result, dict) and "displayText" in result:
+                        event_data["displayText"] = result["displayText"]
+                    else:
+                        event_data["displayText"] = f"工作流 {data.get('workflow_name', '')} 执行完成"
+                
+                # 添加标准的响应字段
+                event_data["success"] = True
+                event_data["messageType"] = "assistant"
+                
+            elif event_type in ["workflow_failed", "workflow_error", "error"]:
+                # 工作流失败和错误事件合并到hsai_error
+                core_event = "hsai_error"
+                event_data["type"] = event_type  # 使用具体的事件类型作为type字段值
+                
+                # 错误消息处理
+                if "error" in data:
+                    event_data["displayText"] = f"工作流执行出错: {data['error']}"
+                    # 从数据中移除error字段，避免重复
+                    del event_data["error"]
+                elif "displayText" not in event_data:
+                    event_data["displayText"] = "工作流执行失败"
+                
+                # 添加标准的错误响应字段
+                event_data["success"] = False
+                event_data["messageType"] = "error"
+                
+            else:
+                # 其他事件保持原有的命名方式
+                core_event = f"hsai_{event_type}"
+                event_data["type"] = event_type
+            
             # 如果有socket_id，直接发送到特定连接
             if socket_id:
-                await sio.emit(f"hsai_{event_type}", event_data, to=socket_id)
-                log.info(f"通过Socket.IO发送事件到sid {socket_id}: {event_type}")
+                await sio.emit(core_event, event_data, to=socket_id)
+                log.info(f"通过Socket.IO发送事件到sid {socket_id}: {event_type} (合并到 {core_event})")
             # 否则发送给用户的所有连接
             elif user_id:
                 from open_webui.socket.main import USER_POOL
                 user_sids = USER_POOL.get(user_id, [])
                 for sid in user_sids:
-                    await sio.emit(f"hsai_{event_type}", event_data, to=sid)
-                log.info(f"通过Socket.IO发送事件到用户 {user_id}: {event_type}")
+                    await sio.emit(core_event, event_data, to=sid)
+                log.info(f"通过Socket.IO发送事件到用户 {user_id}: {event_type} (合并到 {core_event})")
                 
         except Exception as e:
             log.error(f"发送Socket.IO事件失败: {e}", exc_info=True)

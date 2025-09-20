@@ -60,79 +60,38 @@ def register_hsai_events(sio, emitter):
                 log.info(f"[HSAI统一事件] 通过WOC处理请求，上下文: {context}")
                 
                 # 通过工作流编排中心处理请求
-                result = await workflow_orchestration_center.process_request(
+                # 注意：工作流编排中心内部会通过_notify_socket_event发送相应的事件
+                # 这里只需要调用处理方法，不需要再发送重复的事件
+                await workflow_orchestration_center.process_request(
                     user_input=data.get("content", ""),
                     user_id=user_id,
                     session_id=session_id,
                     context=context
                 )
-                
-                log.info(f"[HSAI统一事件] WOC处理结果: {result}")
-                
-                # 调试日志：查看result对象的详细内容
-                log.info(f"[HSAI统一事件] WOC返回结果详细内容: {json.dumps(result, ensure_ascii=False, default=str)}")
-                
-                # 构建统一的Socket.IO响应格式
-                if result["success"]:
-                    # 保存workflow_type，防止被覆盖
-                    workflow_type = result.get("workflow_type", "main")
-                    
-                    # 先添加基础响应数据
-                    response_data = {
-                        "type": "hsai_response",
-                        "success": True,
-                        "execution_id": result["execution_id"],
-                        "session_id": session_id,
-                        "user_id": user_id,
-                        "execution_time": f"{result['execution_time']:.2f}s",
-                        "timestamp": int(__import__('time').time())
-                    }
-                    
-                    # 添加工作流返回的响应数据，但确保不覆盖我们设置的关键字段
-                    if result.get("response_data"):
-                        workflow_response = result["response_data"].copy()
-                        # 移除可能冲突的字段
-                        for key in ["type", "success", "execution_id", "workflow_type", "session_id", "user_id", "execution_time", "timestamp"]:
-                            workflow_response.pop(key, None)
-                        response_data.update(workflow_response)
-                    
-                    # 确保添加workflow_type字段
-                    log.info(f"[HSAI统一事件] 添加workflow_type字段: {workflow_type}")
-                    response_data["workflow_type"] = workflow_type
-                    log.info(f"[HSAI统一事件] 最终响应数据: {json.dumps(response_data, ensure_ascii=False, default=str)}")
-                    
-                    log.info(f"[HSAI统一事件] 发送成功响应给sid {sid}")
-                    # 按照设计文档发送标准化的hsai_response事件
-                    await sio.emit("hsai_response", response_data, to=sid)
-                else:
-                    # 处理失败的响应
-                    error_data = {
-                        "type": "hsai_error",
-                        "content": result.get("error_message", "工作流处理失败"),
-                        "execution_id": result.get("execution_id"),
-                        "timestamp": int(__import__('time').time())
-                    }
-                    log.error(f"[HSAI统一事件] 发送错误响应给sid {sid}: {error_data}")
-                    # 按照设计文档发送标准化的hsai_error事件
-                    await sio.emit("hsai_error", error_data, to=sid)
                     
             else:
                 log.warning(f"[HSAI统一事件] 无法识别sid {sid} 的用户身份")
                 error_data = {
-                    "type": "hsai_authentication_error",
+                    "type": "authentication_error",
+                    "success": False,
                     "content": "用户身份验证失败",
-                    "timestamp": int(__import__('time').time())
+                    "timestamp": int(__import__('time').time()),
+                    "messageType": "error",
+                    "displayText": "用户身份验证失败"
                 }
-                await sio.emit("error", error_data, to=sid)
+                await sio.emit("hsai_error", error_data, to=sid)
                 
         except Exception as e:
             log.error(f"[HSAI统一事件] 处理消息时发生错误: {e}", exc_info=True)
             error_data = {
-                "type": "hsai_processing_error",
+                "type": "processing_error",
+                "success": False,
                 "content": f"消息处理失败: {str(e)}",
-                "timestamp": int(__import__('time').time())
+                "timestamp": int(__import__('time').time()),
+                "messageType": "error",
+                "displayText": f"消息处理失败: {str(e)}"
             }
-            await sio.emit("error", error_data, to=sid)
+            await sio.emit("hsai_error", error_data, to=sid)
     
     # 注册HSAI状态查询事件
     @sio.on("hsai_status")
@@ -153,54 +112,68 @@ def register_hsai_events(sio, emitter):
                 from open_webui.utils.n8n_monitor import n8n_monitor
                 system_health = n8n_monitor.get_system_health()
                 
+                # 构建标准的HSAI响应消息体结构
                 status_data = {
-                    "type": "hsai_status_response",
+                    "type": "status_response",
+                    "success": True,
                     "user_id": user_id,
                     "system_health": system_health,
-                    "timestamp": int(__import__('time').time())
+                    "timestamp": int(__import__('time').time()),
+                    "messageType": "assistant",
+                    "displayText": "系统状态查询完成"
                 }
                 
-                await sio.emit("workflow_status", status_data, to=sid)
+                await sio.emit("hsai_response", status_data, to=sid)
             else:
                 error_data = {
-                    "type": "hsai_authentication_error",
+                    "type": "authentication_error",
+                    "success": False,
                     "content": "身份验证失败",
-                    "timestamp": int(__import__('time').time())
+                    "timestamp": int(__import__('time').time()),
+                    "messageType": "error",
+                    "displayText": "身份验证失败"
                 }
-                await sio.emit("error", error_data, to=sid)
+                await sio.emit("hsai_error", error_data, to=sid)
                 
         except Exception as e:
             log.error(f"[HSAI状态查询] 处理状态查询时发生错误: {e}", exc_info=True)
             error_data = {
-                "type": "hsai_processing_error",
+                "type": "processing_error",
+                "success": False,
                 "content": f"状态查询失败: {str(e)}",
-                "timestamp": int(__import__('time').time())
+                "timestamp": int(__import__('time').time()),
+                "messageType": "error",
+                "displayText": f"状态查询失败: {str(e)}"
             }
-            await sio.emit("error", error_data, to=sid)
+            await sio.emit("hsai_error", error_data, to=sid)
     
     log.info("HSAI统一WebSocket事件处理器注册成功")
 
 # WebSocket事件类型定义
 HSAI_WEBSOCKET_EVENTS = {
-    # 工作流相关事件
-    "WORKFLOW_STARTED": "hsai_workflow_started",
-    "WORKFLOW_PROGRESS": "hsai_workflow_progress",
-    "WORKFLOW_COMPLETED": "hsai_workflow_completed",
-    "WORKFLOW_FAILED": "hsai_workflow_failed",
+    # 核心事件（已实现）
+    "RESPONSE": "hsai_response",      # 成功响应事件
+    "ERROR": "hsai_error",            # 错误响应事件
     
-    # 聊天相关事件
-    "CHAT_MESSAGE": "hsai_chat_message",
-    "CHAT_TYPING": "hsai_chat_typing",
-    "USER_JOINED": "hsai_user_joined",
-    "USER_LEFT": "hsai_user_left",
+    # 工作流相关事件（已合并到核心事件中）
+    # "WORKFLOW_STARTED": "hsai_workflow_started",     # 已合并到hsai_response，通过subtype区分
+    # "WORKFLOW_PROGRESS": "hsai_workflow_progress",   # 已合并到hsai_response，通过subtype区分
+    # "WORKFLOW_COMPLETED": "hsai_workflow_completed", # 已合并到hsai_response，通过subtype区分
+    # "WORKFLOW_FAILED": "hsai_workflow_failed",       # 已合并到hsai_error，通过subtype区分
     
-    # 工作台相关事件
-    "DASHBOARD_UPDATE": "hsai_dashboard_update",
-    "KPI_UPDATE": "hsai_kpi_update",
-    "ACTIVITY_UPDATE": "hsai_activity_update",
+    # 状态和系统事件（已合并到核心事件中）
+    # "WORKFLOW_STATUS": "workflow_status",  # 已合并到hsai_response，通过subtype区分
+    # "GENERIC_ERROR": "error",              # 已合并到hsai_error，通过subtype区分
     
-    # 系统相关事件
-    "SYSTEM_ALERT": "hsai_system_alert",
-    "SYSTEM_MAINTENANCE": "hsai_system_maintenance",
-    "SYSTEM_STATUS": "hsai_system_status"
+    # 预留事件（暂未实现）
+    # "CHAT_MESSAGE": "hsai_chat_message",        # 预留事件名，暂未实现
+    # "CHAT_TYPING": "hsai_chat_typing",          # 预留事件名，暂未实现
+    # "USER_JOINED": "hsai_user_joined",          # 预留事件名，暂未实现
+    # "USER_LEFT": "hsai_user_left",              # 预留事件名，暂未实现
+    # "DASHBOARD_UPDATE": "hsai_dashboard_update",# 预留事件名，暂未实现
+    # "KPI_UPDATE": "hsai_kpi_update",            # 预留事件名，暂未实现
+    # "ACTIVITY_UPDATE": "hsai_activity_update",  # 预留事件名，暂未实现
+    # "SYSTEM_ALERT": "hsai_system_alert",        # 预留事件名，暂未实现
+    # "SYSTEM_MAINTENANCE": "hsai_system_maintenance",# 预留事件名，暂未实现
+    # "SYSTEM_STATUS": "hsai_system_status"       # 预留事件名，暂未实现
 }

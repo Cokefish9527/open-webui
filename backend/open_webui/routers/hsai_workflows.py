@@ -201,8 +201,10 @@ async def trigger_workflow(
         emitter = get_event_emitter()
         if emitter:
             await emitter.emit(
-                "hsai_workflow_started",
+                "hsai_response",  # 合并到核心事件中
                 {
+                    "type": "hsai_response",
+                    "subtype": "workflow_started",  # 添加子类型用于区分原始事件
                     "execution_id": execution_id,
                     "workflow_id": request_data.workflow_id,
                     "user_id": user.id
@@ -383,8 +385,10 @@ async def cancel_workflow_execution(
         emitter = get_event_emitter()
         if emitter:
             await emitter.emit(
-                "hsai_workflow_cancelled",
+                "hsai_response",  # 合并到核心事件中
                 {
+                    "type": "hsai_response",
+                    "subtype": "workflow_cancelled",  # 添加子类型用于区分原始事件
                     "execution_id": execution_id,
                     "user_id": user.id
                 },
@@ -536,8 +540,10 @@ async def workflow_webhook(
         emitter = get_event_emitter()
         if emitter:
             await emitter.emit(
-                f"hsai_workflow_{webhook_data.event_type}",
+                "hsai_response" if webhook_data.event_type != "failed" else "hsai_error",  # 合并到核心事件中
                 {
+                    "type": "hsai_response" if webhook_data.event_type != "failed" else "hsai_error",
+                    "subtype": f"workflow_{webhook_data.event_type}",  # 添加子类型用于区分原始事件
                     "execution_id": webhook_data.execution_id,
                     "workflow_id": webhook_data.workflow_id,
                     "status": webhook_data.status,
@@ -776,8 +782,10 @@ async def _execute_workflow_async(
             emitter = get_event_emitter()
             if emitter:
                 await emitter.emit(
-                    "hsai_workflow_progress",
+                    "hsai_response",  # 合并到核心事件中
                     {
+                        "type": "hsai_response",
+                        "subtype": "workflow_progress",  # 添加子类型用于区分原始事件
                         "execution_id": execution_id,
                         "workflow_id": workflow_id,
                         "progress": progress,
@@ -795,8 +803,10 @@ async def _execute_workflow_async(
         emitter = get_event_emitter()
         if emitter:
             await emitter.emit(
-                "hsai_workflow_completed",
+                "hsai_response",  # 合并到核心事件中
                 {
+                    "type": "hsai_response",
+                    "subtype": "workflow_completed",  # 添加子类型用于区分原始事件
                     "execution_id": execution_id,
                     "workflow_id": workflow_id,
                     "status": "completed",
@@ -814,8 +824,10 @@ async def _execute_workflow_async(
         emitter = get_event_emitter()
         if emitter:
             await emitter.emit(
-                "hsai_workflow_failed",
+                "hsai_error",  # 合并到核心事件中
                 {
+                    "type": "hsai_error",
+                    "subtype": "workflow_failed",  # 添加子类型用于区分原始事件
                     "execution_id": execution_id,
                     "workflow_id": workflow_id,
                     "status": "failed",

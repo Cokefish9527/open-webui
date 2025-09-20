@@ -68,42 +68,26 @@ class UnifiedSocketIOTester:
         async def connect_error(data):
             logger.error(f"× Socket.IO连接错误: {data}")
             
-        # HSAI响应事件
+        # HSAI核心事件（合并后的工作流事件）
         @self.sio.on('hsai_response')
         async def hsai_response(data):
             logger.info(f"✓ 收到HSAI响应: {data}")
+            # 检查是否为工作流事件
+            event_type = data.get('type', '')
+            if event_type in ['workflow_started', 'workflow_progress', 'workflow_completed', 'status_response']:
+                logger.info(f"🚀 工作流事件: {event_type} - {data}")
             self.responses.append(('hsai_response', data))
             
         @self.sio.on('hsai_error')
         async def hsai_error(data):
             logger.error(f"× 收到HSAI错误: {data}")
+            # 检查是否为工作流失败事件
+            event_type = data.get('type', '')
+            if event_type in ['workflow_failed', 'workflow_error']:
+                logger.error(f"❌ 工作流失败: {data}")
             self.responses.append(('hsai_error', data))
             
-        # HSAI工作流事件
-        @self.sio.on('hsai_workflow_started')
-        async def workflow_started(data):
-            logger.info(f"🚀 工作流开始: {data}")
-            self.responses.append(('workflow_started', data))
-            
-        @self.sio.on('hsai_workflow_progress')
-        async def workflow_progress(data):
-            logger.info(f"⏳ 工作流进度: {data}")
-            self.responses.append(('workflow_progress', data))
-            
-        @self.sio.on('hsai_workflow_completed')
-        async def workflow_completed(data):
-            logger.info(f"✅ 工作流完成: {data}")
-            self.responses.append(('workflow_completed', data))
-            
-        @self.sio.on('hsai_workflow_failed')
-        async def workflow_failed(data):
-            logger.error(f"❌ 工作流失败: {data}")
-            self.responses.append(('workflow_failed', data))
-            
-        @self.sio.on('hsai_status_response')
-        async def status_response(data):
-            logger.info(f"📊 状态响应: {data}")
-            self.responses.append(('status_response', data))
+
             
         logger.info("事件处理器设置完成")
         
@@ -164,4 +148,140 @@ class UnifiedSocketIOTester:
         """测试状态查询"""
         try:
             logger.info("发送状态查询")
-            await self.sio.emit('hsai_status', {})\n            \n            # 等待状态响应\n            start_time = time.time()\n            status_received = False\n            \n            while time.time() - start_time < 10:\n                for event_type, data in self.responses:\n                    if event_type == 'status_response':\n                        status_received = True\n                        break\n                if status_received:\n                    break\n                await asyncio.sleep(0.5)\n                \n            if status_received:\n                logger.info("✓ 状态查询测试成功")\n                return True\n            else:\n                logger.warning("⚠ 状态查询测试超时")\n                return False\n                \n        except Exception as e:\n            logger.error(f"× 状态查询测试失败: {e}")\n            return False\n            \n    async def run_comprehensive_test(self):\n        """运行综合测试"""\n        logger.info("="*60)\n        logger.info("开始统一Socket.IO集成综合测试")\n        logger.info("="*60)\n        \n        # 设置事件处理器\n        await self.setup_event_handlers()\n        \n        # 1. 连接测试\n        logger.info("\\n[1/4] Socket.IO连接测试")\n        if not await self.connect_to_server():\n            logger.error("连接测试失败，终止测试")\n            return False\n            \n        # 2. 简单消息测试\n        logger.info("\\n[2/4] 简单消息测试")\n        self.responses.clear()\n        simple_message = {\n            "content": "你好，这是一个测试消息",\n            "user_id": TEST_CONFIG["test_user"]["id"],\n            "session_id": f"test_session_{int(time.time())}"\n        }\n        \n        simple_test_result = await self.test_hsai_message(simple_message)\n        \n        # 3. 复杂消息测试（指定工作流类型）\n        logger.info("\\n[3/4] 指定工作流类型测试")\n        self.responses.clear()\n        workflow_message = {\n            "content": "请分析这家公司的信息",\n            "user_id": TEST_CONFIG["test_user"]["id"],\n            "session_id": f"test_session_{int(time.time())}",\n            "workflow_type": "company_info",\n            "business_name": "测试公司",\n            "metadata": {\n                "test_mode": True\n            }\n        }\n        \n        workflow_test_result = await self.test_hsai_message(workflow_message)\n        \n        # 4. 状态查询测试\n        logger.info("\\n[4/4] 状态查询测试")\n        self.responses.clear()\n        status_test_result = await self.test_status_query()\n        \n        # 汇总结果\n        logger.info("\\n" + "="*60)\n        logger.info("测试结果汇总")\n        logger.info("="*60)\n        logger.info(f"Socket.IO连接: {'✓ 成功' if True else '× 失败'}")\n        logger.info(f"简单消息测试: {'✓ 成功' if simple_test_result else '× 失败'}")\n        logger.info(f"工作流消息测试: {'✓ 成功' if workflow_test_result else '× 失败'}")\n        logger.info(f"状态查询测试: {'✓ 成功' if status_test_result else '× 失败'}")\n        \n        # 总体评估\n        total_tests = 4\n        passed_tests = sum([\n            True,  # 连接成功\n            simple_test_result,\n            workflow_test_result,\n            status_test_result\n        ])\n        \n        success_rate = passed_tests / total_tests * 100\n        logger.info(f"\\n总体成功率: {success_rate:.1f}% ({passed_tests}/{total_tests})")\n        \n        if success_rate >= 75:\n            logger.info("🎉 统一Socket.IO集成测试整体成功！")\n            return True\n        else:\n            logger.error("😞 统一Socket.IO集成测试存在问题，需要检查")\n            return False\n            \n    async def cleanup(self):\n        """清理资源"""\n        try:\n            if self.connected:\n                await self.sio.disconnect()\n            logger.info("资源清理完成")\n        except Exception as e:\n            logger.error(f"清理资源时出错: {e}")\n\nasync def main():\n    """主函数"""\n    tester = UnifiedSocketIOTester()\n    \n    try:\n        # 运行综合测试\n        success = await tester.run_comprehensive_test()\n        \n        # 等待一下让日志输出完整\n        await asyncio.sleep(1)\n        \n        return 0 if success else 1\n        \n    except KeyboardInterrupt:\n        logger.info("\\n测试被用户中断")\n        return 1\n    except Exception as e:\n        logger.error(f"测试过程中发生未预期错误: {e}")\n        return 1\n    finally:\n        await tester.cleanup()\n\nif __name__ == "__main__":\n    # 运行测试\n    exit_code = asyncio.run(main())\n    exit(exit_code)
+            await self.sio.emit('hsai_status', {})
+            
+            # 等待状态响应
+            start_time = time.time()
+            status_received = False
+            
+            while time.time() - start_time < 10:
+                for event_type, data in self.responses:
+                    # 现在状态响应也使用hsai_response事件，通过type字段区分
+                    if event_type == 'hsai_response' and isinstance(data, dict) and data.get('type') == 'status_response':
+                        status_received = True
+                        break
+                if status_received:
+                    break
+                await asyncio.sleep(0.5)
+                
+            if status_received:
+                logger.info("✓ 状态查询测试成功")
+                return True
+            else:
+                logger.warning("⚠ 状态查询测试超时")
+                return False
+                
+        except Exception as e:
+            logger.error(f"× 状态查询测试失败: {e}")
+            return False
+            
+    async def run_comprehensive_test(self):
+        """运行综合测试"""
+        logger.info("="*60)
+        logger.info("开始统一Socket.IO集成综合测试")
+        logger.info("="*60)
+        
+        # 设置事件处理器
+        await self.setup_event_handlers()
+        
+        # 1. 连接测试
+        logger.info("\n[1/4] Socket.IO连接测试")
+        if not await self.connect_to_server():
+            logger.error("连接测试失败，终止测试")
+            return False
+            
+        # 2. 简单消息测试
+        logger.info("\n[2/4] 简单消息测试")
+        self.responses.clear()
+        simple_message = {
+            "content": "你好，这是一个测试消息",
+            "user_id": TEST_CONFIG["test_user"]["id"],
+            "session_id": f"test_session_{int(time.time())}"
+        }
+        
+        simple_test_result = await self.test_hsai_message(simple_message)
+        
+        # 3. 复杂消息测试（指定工作流类型）
+        logger.info("\n[3/4] 指定工作流类型测试")
+        self.responses.clear()
+        workflow_message = {
+            "content": "请分析这家公司的信息",
+            "user_id": TEST_CONFIG["test_user"]["id"],
+            "session_id": f"test_session_{int(time.time())}",
+            "workflow_type": "company_info",
+            "business_name": "测试公司",
+            "metadata": {
+                "test_mode": True
+            }
+        }
+        
+        workflow_test_result = await self.test_hsai_message(workflow_message)
+        
+        # 4. 状态查询测试
+        logger.info("\n[4/4] 状态查询测试")
+        self.responses.clear()
+        status_test_result = await self.test_status_query()
+        
+        # 汇总结果
+        logger.info("\n" + "="*60)
+        logger.info("测试结果汇总")
+        logger.info("="*60)
+        logger.info(f"Socket.IO连接: {'✓ 成功' if True else '× 失败'}")
+        logger.info(f"简单消息测试: {'✓ 成功' if simple_test_result else '× 失败'}")
+        logger.info(f"工作流消息测试: {'✓ 成功' if workflow_test_result else '× 失败'}")
+        logger.info(f"状态查询测试: {'✓ 成功' if status_test_result else '× 失败'}")
+        
+        # 总体评估
+        total_tests = 4
+        passed_tests = sum([
+            True,  # 连接成功
+            simple_test_result,
+            workflow_test_result,
+            status_test_result
+        ])
+        
+        success_rate = passed_tests / total_tests * 100
+        logger.info(f"\n总体成功率: {success_rate:.1f}% ({passed_tests}/{total_tests})")
+        
+        if success_rate >= 75:
+            logger.info("🎉 统一Socket.IO集成测试整体成功！")
+            return True
+        else:
+            logger.error("😞 统一Socket.IO集成测试存在问题，需要检查")
+            return False
+            
+    async def cleanup(self):
+        """清理资源"""
+        try:
+            if self.connected:
+                await self.sio.disconnect()
+            logger.info("资源清理完成")
+        except Exception as e:
+            logger.error(f"清理资源时出错: {e}")
+
+async def main():
+    """主函数"""
+    tester = UnifiedSocketIOTester()
+    
+    try:
+        # 运行综合测试
+        success = await tester.run_comprehensive_test()
+        
+        # 等待一下让日志输出完整
+        await asyncio.sleep(1)
+        
+        return 0 if success else 1
+        
+    except KeyboardInterrupt:
+        logger.info("\n测试被用户中断")
+        return 1
+    except Exception as e:
+        logger.error(f"测试过程中发生未预期错误: {e}")
+        return 1
+    finally:
+        await tester.cleanup()
+
+if __name__ == "__main__":
+    # 运行测试
+    exit_code = asyncio.run(main())
+    exit(exit_code)
