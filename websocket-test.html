@@ -11,11 +11,13 @@
             margin: 0;
             padding: 20px;
             background-color: #f5f5f5;
+            height: calc(100vh - 40px);
+            overflow: hidden;
         }
         .container {
             display: flex;
             gap: 20px;
-            height: calc(100vh - 40px);
+            height: 100%;
         }
         .left-panel {
             width: 40%;
@@ -36,6 +38,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            height: 100%;
         }
         h1 {
             color: #333;
@@ -215,14 +218,29 @@
             margin-bottom: 10px;
             font-weight: bold;
         }
+        /* 右侧面板布局优化 */
+        .right-panel-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+        .messages-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
         #messagesOutput {
             flex: 1;
-            min-height: 200px;
-            max-height: none;
             overflow-y: auto;
             border: 1px solid #ddd;
             padding: 10px;
             background-color: #f8f9fa;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
         }
         .search-container {
             display: flex;
@@ -231,6 +249,10 @@
         }
         #searchInput {
             flex: 1;
+        }
+        .fixed-buttons {
+            flex-shrink: 0;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -310,46 +332,52 @@
         <div class="right-panel">
             <h1>消息监控</h1>
             
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="输入关键词搜索消息内容...">
-                <button id="searchBtn">搜索</button>
-            </div>
-            
-            <div class="controls">
-                <div class="filter-container">
-                    <label for="messageFilter">消息过滤:</label>
-                    <select id="messageFilter">
-                        <option value="all">全部消息</option>
-                        <option value="hsai_response">hsai_response</option>
-                        <option value="hsai_error">hsai_error</option>
-                        <option value="hsai_workflow_started">hsai_workflow_started</option>
-                        <option value="hsai_workflow_progress">hsai_workflow_progress</option>
-                        <option value="hsai_workflow_completed">hsai_workflow_completed</option>
-                        <option value="hsai_workflow_failed">hsai_workflow_failed</option>
-                        <option value="other">其他事件</option>
-                    </select>
+            <div class="right-panel-content">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="输入关键词搜索消息内容...">
+                    <button id="searchBtn">搜索</button>
                 </div>
-                <div class="auto-scroll-container">
-                    <input type="checkbox" id="autoScroll" checked>
-                    <label for="autoScroll">自动滚动</label>
+                
+                <div class="controls">
+                    <div class="filter-container">
+                        <label for="messageFilter">消息过滤:</label>
+                        <select id="messageFilter">
+                            <option value="all">全部消息</option>
+                            <option value="hsai_response">hsai_response</option>
+                            <option value="hsai_error">hsai_error</option>
+                            <option value="hsai_workflow_started">hsai_workflow_started</option>
+                            <option value="hsai_workflow_progress">hsai_workflow_progress</option>
+                            <option value="hsai_workflow_completed">hsai_workflow_completed</option>
+                            <option value="hsai_workflow_failed">hsai_workflow_failed</option>
+                            <option value="other">其他事件</option>
+                        </select>
+                    </div>
+                    <div class="auto-scroll-container">
+                        <input type="checkbox" id="autoScroll" checked>
+                        <label for="autoScroll">自动滚动</label>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="message-stats">
-                <div>当前消息: <span id="currentMessageCount">0</span></div>
-                <div>历史消息: <span id="historyMessageCount">0</span></div>
-            </div>
-            
-            <div class="form-group">
-                <label for="messagesOutput">接收到的消息:</label>
-                <div id="messagesOutput">
-                    <div class="message">等待消息...</div>
+                
+                <div class="message-stats">
+                    <div>当前消息: <span id="currentMessageCount">0</span></div>
+                    <div>历史消息: <span id="historyMessageCount">0</span></div>
                 </div>
-            </div>
-            
-            <div class="button-group">
-                <button id="clearBtn" class="btn-danger">清空消息</button>
-                <button id="viewDetailsBtn" class="btn-secondary">查看完整信息</button>
+                
+                <div class="messages-container">
+                    <div class="form-group">
+                        <label for="messagesOutput">接收到的消息:</label>
+                        <div id="messagesOutput">
+                            <div class="message" style="display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px; text-align: center; padding: 20px; width: 100%;">等待消息...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="fixed-buttons">
+                    <div class="button-group">
+                        <button id="clearBtn" class="btn-danger">清空消息</button>
+                        <button id="viewDetailsBtn" class="btn-secondary">查看完整信息</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -776,8 +804,12 @@
             }
             
             clearMessages() {
-                this.messagesOutput.innerHTML = '<div class="message">消息记录已清空</div>';
-                this.currentMessageCount = 0;
+                this.messagesOutput.innerHTML = '';
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message';
+                messageElement.innerHTML = '<div class="message" style="display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px; text-align: center; padding: 20px; width: 100%;">消息记录已清空</div>';
+                this.messagesOutput.appendChild(messageElement);
+                this.currentMessageCount = 1;
                 this.updateMessageCount();
             }
             
@@ -822,8 +854,14 @@
                 
                 // 如果没有消息，显示提示
                 if (this.messagesOutput.children.length === 0) {
-                    this.messagesOutput.innerHTML = '<div class="message">没有匹配的消息</div>';
+                    const noMessageElement = document.createElement('div');
+                    noMessageElement.className = 'message';
+                    noMessageElement.innerHTML = '<div class="message" style="display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px; text-align: center; padding: 20px; width: 100%;">没有匹配的消息</div>';
+                    this.messagesOutput.innerHTML = '';
+                    this.messagesOutput.appendChild(noMessageElement);
+                    this.currentMessageCount = 1;
                 }
+                this.updateMessageCount();
             }
             
             // 搜索消息
