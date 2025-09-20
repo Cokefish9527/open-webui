@@ -8,20 +8,39 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            margin: 0;
             padding: 20px;
             background-color: #f5f5f5;
         }
         .container {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+        .left-panel {
+            width: 40%;
             background-color: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .right-panel {
+            width: 60%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         h1 {
             color: #333;
             text-align: center;
+            margin-top: 0;
         }
         .form-group {
             margin-bottom: 15px;
@@ -43,6 +62,12 @@
             font-family: monospace;
             resize: both; /* 允许拖拽调整大小 */
         }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
         button {
             background-color: #007bff;
             color: white;
@@ -51,8 +76,8 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
-            margin-right: 10px;
-            margin-bottom: 10px;
+            flex: 1;
+            min-width: 120px;
         }
         button:hover {
             background-color: #0056b3;
@@ -72,6 +97,12 @@
         }
         .btn-success:hover {
             background-color: #218838;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
         }
         .status {
             padding: 10px;
@@ -178,108 +209,159 @@
             align-items: center;
             gap: 5px;
         }
+        .message-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        #messagesOutput {
+            flex: 1;
+            min-height: 200px;
+            max-height: none;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        #searchInput {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>OpenWebUI Socket.IO 测试页面</h1>
-        
-        <div class="form-group">
-            <label for="userId">用户ID:</label>
-            <input type="text" id="userId" placeholder="请输入用户ID" value="user_123">
-        </div>
-        
-        <div class="form-group">
-            <label for="token">JWT令牌:</label>
-            <input type="text" id="token" placeholder="请输入JWT令牌">
-        </div>
-        
-        <div class="form-group">
-            <label for="serverUrl">服务器地址:</label>
-            <input type="text" id="serverUrl" placeholder="请输入服务器地址" value="http://localhost:8080">
-        </div>
-        
-        <button id="connectBtn">连接Socket.IO</button>
-        <button id="disconnectBtn" disabled>断开连接</button>
-        <span id="connectionIndicator" class="connection-indicator disconnected-indicator"></span>
-        <span id="connectionText">未连接</span>
-        
-        <div class="form-group">
-            <label for="messageInput">发送消息内容:</label>
-            <textarea id="messageInput" placeholder='请输入要发送的消息内容，例如：
+        <!-- 左侧面板 - 配置和操作 -->
+        <div class="left-panel">
+            <h1>OpenWebUI Socket.IO 测试</h1>
+            
+            <div class="form-group">
+                <label for="userId">用户ID:</label>
+                <input type="text" id="userId" placeholder="请输入用户ID" value="user_123">
+            </div>
+            
+            <div class="form-group">
+                <label for="token">JWT令牌:</label>
+                <input type="text" id="token" placeholder="请输入JWT令牌">
+            </div>
+            
+            <div class="form-group">
+                <label for="serverUrl">服务器地址:</label>
+                <input type="text" id="serverUrl" placeholder="请输入服务器地址" value="http://localhost:8080">
+            </div>
+            
+            <div class="button-group">
+                <button id="connectBtn">连接Socket.IO</button>
+                <button id="disconnectBtn" disabled>断开连接</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="messageInput">发送消息内容:</label>
+                <textarea id="messageInput" placeholder='请输入要发送的消息内容，例如：
 测试HSAI chat 消息'></textarea>
-        </div>
-        
-        <div class="form-group">
-            <label for="messageType">消息类型:</label>
-            <select id="messageType">
-                <option value="chat" selected>chat (聊天消息)</option>
-                <option value="workflow_trigger">workflow_trigger (工作流触发)</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="entryType">入口类型:</label>
-            <select id="entryType">
-                <option value="chat" selected>chat (普通聊天)</option>
-                <option value="company">company (公司信息)</option>
-                <option value="business">business (商业分析)</option>
-                <option value="video_publish">video_publish (视频发布)</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="taskId">任务ID (task_id):</label>
-            <input type="text" id="taskId" placeholder="请输入任务ID（可选）">
-        </div>
-        
-        <button id="sendBtn" disabled>发送消息</button>
-        
-        <div class="form-group">
-            <label>快速测试消息:</label>
-            <button id="sendChatTestBtn" disabled>发送聊天测试消息</button>
-            <button id="sendWorkflowTestBtn" disabled>发送工作流测试消息</button>
-        </div>
-        
-        <div class="controls">
-            <div class="filter-container">
-                <label for="messageFilter">消息过滤:</label>
-                <select id="messageFilter">
-                    <option value="all">全部消息</option>
-                    <option value="hsai_response">hsai_response</option>
-                    <option value="hsai_error">hsai_error</option>
-                    <option value="hsai_workflow_started">hsai_workflow_started</option>
-                    <option value="hsai_workflow_progress">hsai_workflow_progress</option>
-                    <option value="hsai_workflow_completed">hsai_workflow_completed</option>
-                    <option value="hsai_workflow_failed">hsai_workflow_failed</option>
-                    <option value="other">其他事件</option>
+            </div>
+            
+            <div class="form-group">
+                <label for="messageType">消息类型:</label>
+                <select id="messageType">
+                    <option value="chat" selected>chat (聊天消息)</option>
+                    <option value="workflow_trigger">workflow_trigger (工作流触发)</option>
                 </select>
             </div>
-            <div class="auto-scroll-container">
-                <input type="checkbox" id="autoScroll" checked>
-                <label for="autoScroll">自动滚动</label>
+            
+            <div class="form-group">
+                <label for="entryType">入口类型:</label>
+                <select id="entryType">
+                    <option value="chat" selected>chat (普通聊天)</option>
+                    <option value="company">company (公司信息)</option>
+                    <option value="business">business (商业分析)</option>
+                    <option value="video_publish">video_publish (视频发布)</option>
+                </select>
             </div>
-        </div>
-        
-        <div class="form-group">
-            <label for="messagesOutput">接收到的消息:</label>
-            <div id="messagesOutput" style="min-height: 200px; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f8f9fa;">
-                <div class="message">等待消息...</div>
+            
+            <div class="form-group">
+                <label for="taskId">任务ID (task_id):</label>
+                <input type="text" id="taskId" placeholder="请输入任务ID（可选）">
             </div>
-        </div>
-        
-        <button id="clearBtn">清空消息</button>
-        <button id="viewDetailsBtn">查看完整信息</button>
-        
-        <!-- 模态框 -->
-        <div id="detailsModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>完整Socket消息明细</h2>
-                    <span class="close">&times;</span>
+            
+            <div class="button-group">
+                <button id="sendBtn" disabled>发送消息</button>
+            </div>
+            
+            <div class="button-group">
+                <button id="sendChatTestBtn" disabled>发送聊天测试消息</button>
+                <button id="sendWorkflowTestBtn" disabled>发送工作流测试消息</button>
+            </div>
+            
+            <div class="form-group">
+                <div style="display: flex; align-items: center;">
+                    <span id="connectionIndicator" class="connection-indicator disconnected-indicator"></span>
+                    <span id="connectionText">未连接</span>
                 </div>
-                <div id="modalContent"></div>
             </div>
+        </div>
+        
+        <!-- 右侧面板 - 消息显示和过滤 -->
+        <div class="right-panel">
+            <h1>消息监控</h1>
+            
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="输入关键词搜索消息内容...">
+                <button id="searchBtn">搜索</button>
+            </div>
+            
+            <div class="controls">
+                <div class="filter-container">
+                    <label for="messageFilter">消息过滤:</label>
+                    <select id="messageFilter">
+                        <option value="all">全部消息</option>
+                        <option value="hsai_response">hsai_response</option>
+                        <option value="hsai_error">hsai_error</option>
+                        <option value="hsai_workflow_started">hsai_workflow_started</option>
+                        <option value="hsai_workflow_progress">hsai_workflow_progress</option>
+                        <option value="hsai_workflow_completed">hsai_workflow_completed</option>
+                        <option value="hsai_workflow_failed">hsai_workflow_failed</option>
+                        <option value="other">其他事件</option>
+                    </select>
+                </div>
+                <div class="auto-scroll-container">
+                    <input type="checkbox" id="autoScroll" checked>
+                    <label for="autoScroll">自动滚动</label>
+                </div>
+            </div>
+            
+            <div class="message-stats">
+                <div>当前消息: <span id="currentMessageCount">0</span></div>
+                <div>历史消息: <span id="historyMessageCount">0</span></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="messagesOutput">接收到的消息:</label>
+                <div id="messagesOutput">
+                    <div class="message">等待消息...</div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button id="clearBtn" class="btn-danger">清空消息</button>
+                <button id="viewDetailsBtn" class="btn-secondary">查看完整信息</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>完整Socket消息明细</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div id="modalContent"></div>
         </div>
     </div>
 
@@ -293,6 +375,7 @@
                 this.serverBaseUrl = "http://localhost:8080";
                 this.messageHistory = []; // 存储完整消息历史
                 this.displayedMessages = []; // 存储已显示的消息类型
+                this.currentMessageCount = 0; // 当前显示的消息数量
                 
                 // 预设的登录凭据
                 this.loginCredentials = {
@@ -319,6 +402,10 @@
                 this.autoScroll = document.getElementById('autoScroll');
                 this.connectionIndicator = document.getElementById('connectionIndicator');
                 this.connectionText = document.getElementById('connectionText');
+                this.searchInput = document.getElementById('searchInput');
+                this.searchBtn = document.getElementById('searchBtn');
+                this.currentMessageCountElement = document.getElementById('currentMessageCount');
+                this.historyMessageCountElement = document.getElementById('historyMessageCount');
                 
                 // 设置默认服务器URL
                 this.serverUrlInput.value = this.serverBaseUrl;
@@ -377,6 +464,12 @@
                 this.clearBtn.addEventListener('click', () => this.clearMessages());
                 this.viewDetailsBtn.addEventListener('click', () => this.viewDetails());
                 this.messageFilter.addEventListener('change', () => this.filterMessages());
+                this.searchBtn.addEventListener('click', () => this.searchMessages());
+                this.searchInput.addEventListener('keyup', (e) => {
+                    if (e.key === 'Enter') {
+                        this.searchMessages();
+                    }
+                });
                 
                 // 模态框关闭事件
                 const closeBtn = this.detailsModal.querySelector('.close');
@@ -601,6 +694,8 @@
                     <small>${new Date().toLocaleString()}</small>
                 `;
                 this.messagesOutput.appendChild(messageElement);
+                this.currentMessageCount++;
+                this.updateMessageCount();
                 this.scrollToBottom();
             }
             
@@ -652,6 +747,8 @@
                     <small>${new Date().toLocaleString()}</small>
                 `;
                 this.messagesOutput.appendChild(messageElement);
+                this.currentMessageCount++;
+                this.updateMessageCount();
                 this.scrollToBottom();
             }
             
@@ -663,6 +760,8 @@
                     <small>${new Date().toLocaleString()}</small>
                 `;
                 this.messagesOutput.appendChild(messageElement);
+                this.currentMessageCount++;
+                this.updateMessageCount();
                 this.scrollToBottom();
             }
             
@@ -678,6 +777,8 @@
             
             clearMessages() {
                 this.messagesOutput.innerHTML = '<div class="message">消息记录已清空</div>';
+                this.currentMessageCount = 0;
+                this.updateMessageCount();
             }
             
             // 添加消息到历史记录
@@ -687,12 +788,20 @@
                     eventType: eventType,
                     data: data
                 });
+                this.historyMessageCountElement.textContent = this.messageHistory.length;
+            }
+            
+            // 更新消息计数器
+            updateMessageCount() {
+                this.currentMessageCountElement.textContent = this.currentMessageCount;
+                this.historyMessageCountElement.textContent = this.messageHistory.length;
             }
             
             // 过滤消息显示
             filterMessages() {
                 // 清空当前显示
                 this.messagesOutput.innerHTML = '';
+                this.currentMessageCount = 0;
                 
                 // 根据过滤器重新显示消息
                 const filterValue = this.messageFilter.value;
@@ -715,6 +824,58 @@
                 if (this.messagesOutput.children.length === 0) {
                     this.messagesOutput.innerHTML = '<div class="message">没有匹配的消息</div>';
                 }
+            }
+            
+            // 搜索消息
+            searchMessages() {
+                const searchTerm = this.searchInput.value.trim().toLowerCase();
+                if (!searchTerm) {
+                    // 如果搜索词为空，显示所有消息
+                    this.filterMessages();
+                    return;
+                }
+                
+                // 清空当前显示
+                this.messagesOutput.innerHTML = '';
+                this.currentMessageCount = 0;
+                
+                // 根据搜索词过滤消息
+                let foundCount = 0;
+                this.messageHistory.forEach(item => {
+                    // 将消息数据转换为字符串进行搜索
+                    const messageString = JSON.stringify(item.data).toLowerCase();
+                    if (messageString.includes(searchTerm)) {
+                        foundCount++;
+                        if (item.eventType === 'sent_message') {
+                            // 显示发送的消息
+                            this.displaySentMessage(item.data);
+                        } else if (item.eventType === 'connect' || item.eventType === 'disconnect' || item.eventType === 'connect_error') {
+                            // 显示连接状态消息
+                            this.showMessage(item.data.message || item.data.reason || item.data.error, 'info');
+                        } else {
+                            // 显示接收的消息
+                            this.displayReceivedMessage(item.eventType.replace('any_', ''), item.data);
+                        }
+                    }
+                });
+                
+                // 显示搜索结果统计
+                const resultElement = document.createElement('div');
+                resultElement.className = 'message';
+                resultElement.innerHTML = `<strong>搜索结果:</strong> 找到 ${foundCount} 条包含 "${searchTerm}" 的消息`;
+                this.messagesOutput.insertBefore(resultElement, this.messagesOutput.firstChild);
+                this.currentMessageCount++;
+                
+                // 如果没有匹配的消息，显示提示
+                if (foundCount === 0) {
+                    const noResultElement = document.createElement('div');
+                    noResultElement.className = 'message';
+                    noResultElement.innerHTML = `<strong>搜索结果:</strong> 没有找到包含 "${searchTerm}" 的消息`;
+                    this.messagesOutput.appendChild(noResultElement);
+                    this.currentMessageCount++;
+                }
+                
+                this.updateMessageCount();
             }
             
             // 滚动到底部
