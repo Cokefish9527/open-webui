@@ -254,6 +254,16 @@
             flex-shrink: 0;
             margin-top: 10px;
         }
+        /* 优化消息类型、入口类型、任务ID的布局 */
+        .message-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .message-controls .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -282,33 +292,36 @@
                 <button id="disconnectBtn" disabled>断开连接</button>
             </div>
             
+            <!-- 将消息类型、入口类型、任务ID移到发送消息内容上方并放在一行 -->
+            <div class="message-controls">
+                <div class="form-group">
+                    <label for="messageType">消息类型:</label>
+                    <select id="messageType">
+                        <option value="chat" selected>chat (聊天消息)</option>
+                        <option value="workflow_trigger">workflow_trigger (工作流触发)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="entryType">入口类型:</label>
+                    <select id="entryType">
+                        <option value="chat" selected>chat (普通聊天)</option>
+                        <option value="company">company (公司信息)</option>
+                        <option value="business">business (商业分析)</option>
+                        <option value="video_publish">video_publish (视频发布)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="taskId">任务ID (task_id):</label>
+                    <input type="text" id="taskId" placeholder="请输入任务ID（可选）">
+                </div>
+            </div>
+            
             <div class="form-group">
                 <label for="messageInput">发送消息内容:</label>
                 <textarea id="messageInput" placeholder='请输入要发送的消息内容，例如：
 测试HSAI chat 消息'></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="messageType">消息类型:</label>
-                <select id="messageType">
-                    <option value="chat" selected>chat (聊天消息)</option>
-                    <option value="workflow_trigger">workflow_trigger (工作流触发)</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="entryType">入口类型:</label>
-                <select id="entryType">
-                    <option value="chat" selected>chat (普通聊天)</option>
-                    <option value="company">company (公司信息)</option>
-                    <option value="business">business (商业分析)</option>
-                    <option value="video_publish">video_publish (视频发布)</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="taskId">任务ID (task_id):</label>
-                <input type="text" id="taskId" placeholder="请输入任务ID（可选）">
             </div>
             
             <div class="button-group">
