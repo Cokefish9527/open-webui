@@ -270,7 +270,13 @@
     <div class="container">
         <!-- 左侧面板 - 配置和操作 -->
         <div class="left-panel">
-            <h1>OpenWebUI Socket.IO 测试</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1>OpenWebUI Socket.IO 测试</h1>
+                <div style="display: flex; align-items: center;">
+                    <span id="connectionIndicator" class="connection-indicator disconnected-indicator"></span>
+                    <span id="connectionText" style="margin-left: 5px;">未连接</span>
+                </div>
+            </div>
             
             <div class="form-group">
                 <label for="userId">用户ID:</label>
@@ -333,17 +339,15 @@
                 <button id="sendWorkflowTestBtn" disabled>发送工作流测试消息</button>
             </div>
             
-            <div class="form-group">
-                <div style="display: flex; align-items: center;">
-                    <span id="connectionIndicator" class="connection-indicator disconnected-indicator"></span>
-                    <span id="connectionText">未连接</span>
-                </div>
-            </div>
+            <!-- 移除了原来的连接状态指示器 -->
         </div>
         
         <!-- 右侧面板 - 消息显示和过滤 -->
         <div class="right-panel">
-            <h1>消息监控</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1>消息监控</h1>
+                <!-- 可以在这里添加右侧的状态指示器或其他控件 -->
+            </div>
             
             <div class="right-panel-content">
                 <div class="search-container">
