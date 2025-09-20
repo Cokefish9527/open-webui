@@ -31,7 +31,7 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -41,6 +41,7 @@
         textarea {
             min-height: 100px;
             font-family: monospace;
+            resize: both; /* 允许拖拽调整大小 */
         }
         button {
             background-color: #007bff;
@@ -50,6 +51,8 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
         }
         button:hover {
             background-color: #0056b3;
@@ -57,6 +60,18 @@
         button:disabled {
             background-color: #ccc;
             cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
         }
         .status {
             padding: 10px;
@@ -89,6 +104,80 @@
         .message-error {
             border-left-color: #dc3545;
         }
+        .message-display-text {
+            border-left-color: #6f42c1;
+            background-color: #f0f8ff;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .filter-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .connection-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .connected-indicator {
+            background-color: #28a745;
+        }
+        .disconnected-indicator {
+            background-color: #dc3545;
+        }
+        .auto-scroll-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -112,10 +201,8 @@
         
         <button id="connectBtn">连接Socket.IO</button>
         <button id="disconnectBtn" disabled>断开连接</button>
-        
-        <div id="connectionStatus" class="status disconnected">
-            未连接
-        </div>
+        <span id="connectionIndicator" class="connection-indicator disconnected-indicator"></span>
+        <span id="connectionText">未连接</span>
         
         <div class="form-group">
             <label for="messageInput">发送消息内容:</label>
@@ -154,6 +241,26 @@
             <button id="sendWorkflowTestBtn" disabled>发送工作流测试消息</button>
         </div>
         
+        <div class="controls">
+            <div class="filter-container">
+                <label for="messageFilter">消息过滤:</label>
+                <select id="messageFilter">
+                    <option value="all">全部消息</option>
+                    <option value="hsai_response">hsai_response</option>
+                    <option value="hsai_error">hsai_error</option>
+                    <option value="hsai_workflow_started">hsai_workflow_started</option>
+                    <option value="hsai_workflow_progress">hsai_workflow_progress</option>
+                    <option value="hsai_workflow_completed">hsai_workflow_completed</option>
+                    <option value="hsai_workflow_failed">hsai_workflow_failed</option>
+                    <option value="other">其他事件</option>
+                </select>
+            </div>
+            <div class="auto-scroll-container">
+                <input type="checkbox" id="autoScroll" checked>
+                <label for="autoScroll">自动滚动</label>
+            </div>
+        </div>
+        
         <div class="form-group">
             <label for="messagesOutput">接收到的消息:</label>
             <div id="messagesOutput" style="min-height: 200px; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background-color: #f8f9fa;">
@@ -162,6 +269,18 @@
         </div>
         
         <button id="clearBtn">清空消息</button>
+        <button id="viewDetailsBtn">查看完整信息</button>
+        
+        <!-- 模态框 -->
+        <div id="detailsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>完整Socket消息明细</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <div id="modalContent"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -169,9 +288,11 @@
             constructor() {
                 this.socket = null;
                 this.isConnected = false;
-                this.token = null; // 保存token的变量
-                this.userId = null; // 保存用户ID的变量
-                this.serverBaseUrl = "http://localhost:8080"; // 服务器基础URL
+                this.token = null;
+                this.userId = null;
+                this.serverBaseUrl = "http://localhost:8080";
+                this.messageHistory = []; // 存储完整消息历史
+                this.displayedMessages = []; // 存储已显示的消息类型
                 
                 // 预设的登录凭据
                 this.loginCredentials = {
@@ -190,8 +311,14 @@
                 this.sendWorkflowTestBtn = document.getElementById('sendWorkflowTestBtn');
                 this.messageInput = document.getElementById('messageInput');
                 this.messagesOutput = document.getElementById('messagesOutput');
-                this.connectionStatus = document.getElementById('connectionStatus');
                 this.clearBtn = document.getElementById('clearBtn');
+                this.viewDetailsBtn = document.getElementById('viewDetailsBtn');
+                this.detailsModal = document.getElementById('detailsModal');
+                this.modalContent = document.getElementById('modalContent');
+                this.messageFilter = document.getElementById('messageFilter');
+                this.autoScroll = document.getElementById('autoScroll');
+                this.connectionIndicator = document.getElementById('connectionIndicator');
+                this.connectionText = document.getElementById('connectionText');
                 
                 // 设置默认服务器URL
                 this.serverUrlInput.value = this.serverBaseUrl;
@@ -248,6 +375,17 @@
                 this.sendChatTestBtn.addEventListener('click', () => this.sendTestMessage('chat'));
                 this.sendWorkflowTestBtn.addEventListener('click', () => this.sendTestMessage('workflow_trigger'));
                 this.clearBtn.addEventListener('click', () => this.clearMessages());
+                this.viewDetailsBtn.addEventListener('click', () => this.viewDetails());
+                this.messageFilter.addEventListener('change', () => this.filterMessages());
+                
+                // 模态框关闭事件
+                const closeBtn = this.detailsModal.querySelector('.close');
+                closeBtn.addEventListener('click', () => this.closeModal());
+                window.addEventListener('click', (event) => {
+                    if (event.target === this.detailsModal) {
+                        this.closeModal();
+                    }
+                });
             }
             
             connect() {
@@ -283,8 +421,8 @@
                     this.socket.on('connect', () => {
                         this.isConnected = true;
                         this.updateConnectionStatus('已连接', true);
-                        this.showMessage(`Socket.IO连接已建立，Socket ID: ${this.socket.id}`, 'info');
-                        console.log('Socket.IO connected, socket id:', this.socket.id);
+                        this.showMessage('Socket.IO连接已建立', 'info');
+                        this.addMessageToHistory('connect', {message: 'Socket.IO连接已建立', socketId: this.socket.id});
                     });
                     
                     // 断开连接事件
@@ -292,7 +430,7 @@
                         this.isConnected = false;
                         this.updateConnectionStatus(`已断开连接 (${reason})`, false);
                         this.showMessage(`Socket.IO连接已断开，原因: ${reason}`, 'info');
-                        console.log('Socket.IO disconnected, reason:', reason);
+                        this.addMessageToHistory('disconnect', {reason: reason});
                     });
                     
                     // 连接错误事件
@@ -300,57 +438,58 @@
                         this.isConnected = false;
                         this.updateConnectionStatus(`连接错误: ${error.message}`, false);
                         this.showMessage(`Socket.IO连接错误: ${error.message}`, 'error');
-                        console.error('Socket.IO connection error:', error);
+                        this.addMessageToHistory('connect_error', {error: error.message});
                     });
                     
                     // 监听HSAI响应事件
                     this.socket.on('hsai_response', (data) => {
                         this.displayReceivedMessage('hsai_response', data);
-                        console.log('Received HSAI response:', data);
+                        this.addMessageToHistory('hsai_response', data);
                     });
                     
                     // 监听HSAI错误事件
                     this.socket.on('hsai_error', (data) => {
                         this.displayReceivedMessage('hsai_error', data);
-                        console.log('Received HSAI error:', data);
+                        this.addMessageToHistory('hsai_error', data);
                     });
                     
                     // 监听HSAI工作流事件
                     this.socket.on('hsai_workflow_started', (data) => {
                         this.displayReceivedMessage('hsai_workflow_started', data);
-                        console.log('Workflow started:', data);
+                        this.addMessageToHistory('hsai_workflow_started', data);
                     });
                     
                     this.socket.on('hsai_workflow_progress', (data) => {
                         this.displayReceivedMessage('hsai_workflow_progress', data);
-                        console.log('Workflow progress:', data);
+                        this.addMessageToHistory('hsai_workflow_progress', data);
                     });
                     
                     this.socket.on('hsai_workflow_completed', (data) => {
                         this.displayReceivedMessage('hsai_workflow_completed', data);
-                        console.log('Workflow completed:', data);
+                        this.addMessageToHistory('hsai_workflow_completed', data);
                     });
                     
                     this.socket.on('hsai_workflow_failed', (data) => {
                         this.displayReceivedMessage('hsai_workflow_failed', data);
-                        console.log('Workflow failed:', data);
+                        this.addMessageToHistory('hsai_workflow_failed', data);
                     });
                     
                     // 监听其他可能的事件
                     this.socket.on('status', (data) => {
                         this.displayReceivedMessage('status', data);
-                        console.log('Received status:', data);
+                        this.addMessageToHistory('status', data);
                     });
                     
                     this.socket.on('error', (data) => {
                         this.displayReceivedMessage('error', data);
-                        console.log('Received error:', data);
+                        this.addMessageToHistory('error', data);
                     });
                     
                     // 监听所有事件（用于调试）
                     this.socket.onAny((eventName, ...args) => {
                         console.log(`收到事件: ${eventName}`, args);
                         this.showMessage(`收到事件: ${eventName}`, 'info');
+                        this.addMessageToHistory(`any_${eventName}`, args);
                     });
                     
                 } catch (error) {
@@ -384,6 +523,7 @@
                     console.log('Sending HSAI test message:', message);
                     this.socket.emit('message', message);
                     this.displaySentMessage(message);
+                    this.addMessageToHistory('sent_message', message);
                     this.showMessage(`HSAI ${messageType} 测试消息已发送`, 'info');
                 } catch (error) {
                     this.showMessage(`发送失败: ${error.message}`, 'error');
@@ -442,6 +582,7 @@
                     console.log('Sending HSAI message:', message);
                     this.socket.emit('message', message);
                     this.displaySentMessage(message);
+                    this.addMessageToHistory('sent_message', message);
                     this.showMessage('HSAI消息已发送', 'info');
                     
                     // 清空输入框
@@ -456,75 +597,62 @@
                 const messageElement = document.createElement('div');
                 messageElement.className = 'message message-sent';
                 messageElement.innerHTML = `
-                    <strong>发送的消息:</strong><br>
-                    <pre>${JSON.stringify(message, null, 2)}</pre>
+                    <strong>发送的消息:</strong> ${message.content}
                     <small>${new Date().toLocaleString()}</small>
                 `;
                 this.messagesOutput.appendChild(messageElement);
-                this.messagesOutput.scrollTop = this.messagesOutput.scrollHeight;
+                this.scrollToBottom();
             }
             
             displayReceivedMessage(eventType, data) {
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message message-received';
+                // 检查是否应该显示此消息类型
+                const filterValue = this.messageFilter.value;
+                const isWorkflowEvent = eventType.startsWith('hsai_workflow');
+                const isOtherEvent = !eventType.startsWith('hsai_') && eventType !== 'status' && eventType !== 'error';
                 
-                // 根据服务端消息结构规范文档格式化接收的消息
-                let formattedData = data;
-                if (eventType === 'hsai_response') {
-                    // 格式化 hsai_response 消息，严格按照规范文档
-                    formattedData = {
-                        type: data.type || 'hsai_response',
-                        success: data.success,
-                        execution_id: data.execution_id,
-                        session_id: data.session_id,
-                        user_id: data.user_id,
-                        execution_time: data.execution_time,
-                        timestamp: data.timestamp,
-                        messageType: data.messageType,
-                        displayText: data.displayText,
-                        status: data.status
-                    };
-                    
-                    // 只添加存在的数据字段，按照规范文档的结构
-                    if (data.data) {
-                        formattedData.data = {};
-                        
-                        // 按照规范文档中的字段顺序添加
-                        if (data.data.actions !== undefined) formattedData.data.actions = data.data.actions;
-                        if (data.data.title !== undefined) formattedData.data.title = data.data.title;
-                        if (data.data.markdown !== undefined) formattedData.data.markdown = data.data.markdown;
-                        if (data.data.images !== undefined) formattedData.data.images = data.data.images;
-                        if (data.data.question !== undefined) formattedData.data.question = data.data.question;
-                        if (data.data.selections !== undefined) formattedData.data.selections = data.data.selections;
-                        if (data.data.multi_selections !== undefined) formattedData.data.multi_selections = data.data.multi_selections;
-                        if (data.data.period !== undefined) formattedData.data.period = data.data.period;
-                        if (data.data.filters !== undefined) formattedData.data.filters = data.data.filters;
+                let shouldDisplay = false;
+                if (filterValue === 'all') {
+                    shouldDisplay = true;
+                } else if (filterValue === 'other') {
+                    shouldDisplay = isOtherEvent;
+                } else {
+                    shouldDisplay = eventType === filterValue;
+                }
+                
+                if (!shouldDisplay) {
+                    // 仍然添加到历史记录但不显示
+                    return;
+                }
+                
+                // 只显示displayText信息的简化版本
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message message-display-text';
+                
+                let displayText = '';
+                if (data && typeof data === 'object') {
+                    // 优先显示displayText字段
+                    if (data.displayText) {
+                        displayText = data.displayText;
+                    } else if (data.message) {
+                        displayText = data.message;
+                    } else if (data.content) {
+                        displayText = data.content;
+                    } else if (data.error) {
+                        displayText = `错误: ${data.error}`;
+                    } else {
+                        // 如果没有displayText，显示事件类型
+                        displayText = `收到 ${eventType} 事件`;
                     }
-                } else if (eventType.includes('workflow')) {
-                    // 格式化工作流消息
-                    formattedData = {
-                        status: data.status,
-                        message: data.message
-                    };
-                    
-                    // 添加工作流相关的数据字段
-                    if (data.data) {
-                        formattedData.data = {};
-                        if (data.data.actions !== undefined) formattedData.data.actions = data.data.actions;
-                        if (data.data.title !== undefined) formattedData.data.title = data.data.title;
-                        if (data.data.markdown !== undefined) formattedData.data.markdown = data.data.markdown;
-                        if (data.data.question !== undefined) formattedData.data.question = data.data.question;
-                        if (data.data.selections !== undefined) formattedData.data.selections = data.data.selections;
-                    }
+                } else {
+                    displayText = String(data);
                 }
                 
                 messageElement.innerHTML = `
-                    <strong>收到 ${eventType} 事件:</strong><br>
-                    <pre>${JSON.stringify(formattedData, null, 2)}</pre>
+                    <strong>${eventType}:</strong> ${displayText}
                     <small>${new Date().toLocaleString()}</small>
                 `;
                 this.messagesOutput.appendChild(messageElement);
-                this.messagesOutput.scrollTop = this.messagesOutput.scrollHeight;
+                this.scrollToBottom();
             }
             
             showMessage(message, type) {
@@ -535,12 +663,12 @@
                     <small>${new Date().toLocaleString()}</small>
                 `;
                 this.messagesOutput.appendChild(messageElement);
-                this.messagesOutput.scrollTop = this.messagesOutput.scrollHeight;
+                this.scrollToBottom();
             }
             
             updateConnectionStatus(message, connected) {
-                this.connectionStatus.textContent = message;
-                this.connectionStatus.className = `status ${connected ? 'connected' : 'disconnected'}`;
+                this.connectionText.textContent = message;
+                this.connectionIndicator.className = `connection-indicator ${connected ? 'connected-indicator' : 'disconnected-indicator'}`;
                 this.connectBtn.disabled = connected;
                 this.disconnectBtn.disabled = !connected;
                 this.sendBtn.disabled = !connected;
@@ -550,6 +678,101 @@
             
             clearMessages() {
                 this.messagesOutput.innerHTML = '<div class="message">消息记录已清空</div>';
+            }
+            
+            // 添加消息到历史记录
+            addMessageToHistory(eventType, data) {
+                this.messageHistory.push({
+                    timestamp: new Date().toISOString(),
+                    eventType: eventType,
+                    data: data
+                });
+            }
+            
+            // 过滤消息显示
+            filterMessages() {
+                // 清空当前显示
+                this.messagesOutput.innerHTML = '';
+                
+                // 根据过滤器重新显示消息
+                const filterValue = this.messageFilter.value;
+                
+                // 重新处理所有历史消息
+                this.messageHistory.forEach(item => {
+                    if (item.eventType === 'sent_message') {
+                        // 重新显示发送的消息
+                        this.displaySentMessage(item.data);
+                    } else if (item.eventType === 'connect' || item.eventType === 'disconnect' || item.eventType === 'connect_error') {
+                        // 重新显示连接状态消息
+                        this.showMessage(item.data.message || item.data.reason || item.data.error, 'info');
+                    } else {
+                        // 重新显示接收的消息
+                        this.displayReceivedMessage(item.eventType.replace('any_', ''), item.data);
+                    }
+                });
+                
+                // 如果没有消息，显示提示
+                if (this.messagesOutput.children.length === 0) {
+                    this.messagesOutput.innerHTML = '<div class="message">没有匹配的消息</div>';
+                }
+            }
+            
+            // 滚动到底部
+            scrollToBottom() {
+                if (this.autoScroll.checked) {
+                    this.messagesOutput.scrollTop = this.messagesOutput.scrollHeight;
+                }
+            }
+            
+            // 查看完整信息
+            viewDetails() {
+                if (this.messageHistory.length === 0) {
+                    this.modalContent.innerHTML = '<p>暂无消息记录</p>';
+                } else {
+                    let html = '<h3>完整Socket消息明细</h3>';
+                    html += '<div style="text-align: right; margin-bottom: 10px;">';
+                    html += `<button onclick="socketClient.exportHistory()" style="margin-left: 10px;" class="btn-secondary">导出历史记录</button>`;
+                    html += '</div>';
+                    html += '<div style="max-height: 60vh; overflow-y: auto;">';
+                    
+                    // 按时间倒序显示
+                    const sortedHistory = [...this.messageHistory].reverse();
+                    
+                    sortedHistory.forEach((item, index) => {
+                        html += `
+                            <div style="border: 1px solid #ddd; margin: 10px 0; padding: 10px; border-radius: 4px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <strong>${item.eventType}</strong>
+                                    <span>${new Date(item.timestamp).toLocaleString()}</span>
+                                </div>
+                                <pre style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word;">${JSON.stringify(item.data, null, 2)}</pre>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    this.modalContent.innerHTML = html;
+                }
+                
+                this.detailsModal.style.display = 'block';
+            }
+            
+            // 关闭模态框
+            closeModal() {
+                this.detailsModal.style.display = 'none';
+            }
+            
+            // 导出历史记录
+            exportHistory() {
+                const dataStr = JSON.stringify(this.messageHistory, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `socket_messages_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
             }
         }
         
