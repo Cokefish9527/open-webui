@@ -21,7 +21,7 @@ class WorkflowType(str, Enum):
     MAIN = "main"
     COMPANY_INFO = "company_info"
     VIRAL_LEARNING = "viral_learning"
-    VIDEO_ANALYSIS = "video_analysis"
+    VIDEO_CRAWL = "video_crawl"
 
 class WorkflowConfig(BaseModel):
     """工作流配置模型"""
@@ -44,7 +44,7 @@ class WorkflowConfig(BaseModel):
 class N8NWorkflowManager:
     """N8N工作流管理器"""
     
-    def __init__(self, workflow_dir: str = None):
+    def __init__(self, workflow_dir: Optional[str] = None):
         self.workflow_dir = workflow_dir or os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 
             "backend", "n8n_workflows"
@@ -64,8 +64,8 @@ class N8NWorkflowManager:
                 "description": "公司信息收集和竞品分析工作流"
             },
             "视频分析.json": {
-                "type": WorkflowType.VIDEO_ANALYSIS,
-                "webhook_url": "https://webhook-n8n.hsai.cc/webhook/video_analysis",
+                "type": WorkflowType.VIDEO_CRAWL,
+                "webhook_url": "https://webhook-n8n.hsai.cc/webhook/video_crawl",
                 "keywords": ["视频", "爬取", "关键词", "分析", "数据"],
                 "description": "异步视频内容爬取和关键词分析工作流"
             }
@@ -141,7 +141,7 @@ class N8NWorkflowManager:
             WorkflowType.MAIN: 60,
             WorkflowType.COMPANY_INFO: 120,
             WorkflowType.VIRAL_LEARNING: 45,
-            WorkflowType.VIDEO_ANALYSIS: 90
+            WorkflowType.VIDEO_CRAWL: 90
         }
         return 30  # 默认值
         

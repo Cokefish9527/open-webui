@@ -190,7 +190,7 @@ class WorkflowSelector:
             MessageIntent.VIDEO_CREATION: [WorkflowType.MAIN],
             MessageIntent.COMPANY_ANALYSIS: [WorkflowType.COMPANY_INFO],
             MessageIntent.CONTENT_LEARNING: [WorkflowType.VIRAL_LEARNING],
-            MessageIntent.DATA_ANALYSIS: [WorkflowType.VIDEO_ANALYSIS]
+            MessageIntent.DATA_ANALYSIS: [WorkflowType.VIDEO_CRAWL]
         }
         
         if workflow.type in intent_mapping.get(intent, []):

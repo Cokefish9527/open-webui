@@ -44,9 +44,10 @@ class RouterManager:
     def __init__(self):
         self.routing_rules = self._initialize_routing_rules()
         self.workflow_endpoints = {
-            WorkflowType.MAIN: "https://webhook-n8n.hsai.cc/webhook/n8n_chat",
+            WorkflowType.MAIN: "https://n8n.hsai.cc/webhook-test/n8n_chat",
             WorkflowType.COMPANY_INFO: "https://webhook-n8n.hsai.cc/webhook/business_information_get",
-            WorkflowType.VIRAL_LEARNING: "https://webhook-n8n.hsai.cc/webhook/keywords2video"
+            WorkflowType.VIDEO_CRAWL: "https://webhook-n8n.hsai.cc/webhook/video_crawl",
+            WorkflowType.VIRAL_LEARNING: "https://webhook-n8n.hsai.cc/webhook/viral_learning"
         }
 
     def _initialize_routing_rules(self) -> List[RoutingRule]:
@@ -65,15 +66,15 @@ class RouterManager:
                 priority=9
             ),
 
-            # 视频相关规则
+            # 视频抓取规则
             RoutingRule(
                 pattern=r"(视频|爬取|抓取).*(分析|关键词|内容)",
-                workflow_type=WorkflowType.VIDEO_ANALYSIS,
+                workflow_type=WorkflowType.VIDEO_CRAWL,
                 priority=8
             ),
             RoutingRule(
                 pattern=r"(抖音|快手|小红书|B站).*(视频|内容)",
-                workflow_type=WorkflowType.VIDEO_ANALYSIS,
+                workflow_type=WorkflowType.VIDEO_CRAWL,
                 priority=8
             ),
 
@@ -219,7 +220,7 @@ class CommunicationManager:
             WorkflowType.MAIN: {"max_retries": 3, "timeout": 30},
             WorkflowType.COMPANY_INFO: {"max_retries": 3, "timeout": 60},
             WorkflowType.VIRAL_LEARNING: {"max_retries": 2, "timeout": 45},
-            WorkflowType.VIDEO_ANALYSIS: {"max_retries": 3, "timeout": 90}
+            WorkflowType.VIDEO_CRAWL: {"max_retries": 3, "timeout": 90}
         }
         
     async def execute_workflow(self, workflow: WorkflowConfig, 

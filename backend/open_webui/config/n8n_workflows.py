@@ -12,27 +12,25 @@ class N8NWorkflowType(str, Enum):
     """n8n工作流类型 - 基于实际JSON文件"""
     MAIN = "main"  # 主工作流.json
     COMPANY_INFO = "company_info"  # 公司信息收集及作战地图梳理.json
-    VIRAL_LEARNING = "viral_learning"  # 被动触发爆款学习.json（定时调用）
-    VIDEO_PUBLISH = "video_publish"  # 视频发布工作流
+    VIDEO_CRAWL = "video_crawl"  # 触发爆款抓取工作流
+    VIRAL_LEARNING = "viral_learning"  # 爆款学习工作流
 
 # n8n工作流webhook映射 - 基于实际的n8n工作流
 # 更新为线上工作流地址
 N8N_WORKFLOW_WEBHOOKS = {
-    N8NWorkflowType.MAIN: os.getenv("N8N_MAIN_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/n8n_chat"),
+    N8NWorkflowType.MAIN: os.getenv("N8N_MAIN_WORKFLOW_URL", "https://n8n.hsai.cc/webhook-test/n8n_chat"),
     N8NWorkflowType.COMPANY_INFO: os.getenv("N8N_COMPANY_INFO_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/business_information_get"),
-    N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/keywords2video"),
-    N8NWorkflowType.VIDEO_PUBLISH: os.getenv("N8N_VIDEO_PUBLISH_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/video_publish")
+    N8NWorkflowType.VIDEO_CRAWL: os.getenv("N8N_VIDEO_CRAWL_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/video_crawl"),
+    N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/viral_learning")
 }
 
 # 对话入口类型配置 - 根据入口选择工作流
+# 只保留四组映射：主工作流、公司信息收集工作流、触发爆款抓取工作流、爆款学习工作流
 ENTRY_TYPE_WORKFLOW_MAPPING = {
-    "chat": N8NWorkflowType.MAIN,           # 普通聊天入口 -> 主工作流
-    "general": N8NWorkflowType.MAIN,        # 通用入口 -> 主工作流
-    "default": N8NWorkflowType.MAIN,        # 默认入口 -> 主工作流
-    "company": N8NWorkflowType.COMPANY_INFO,    # 公司信息入口 -> 收集信息工作流
-    "business": N8NWorkflowType.COMPANY_INFO,   # 商业分析入口 -> 收集信息工作流
-    "info_collection": N8NWorkflowType.COMPANY_INFO,  # 信息收集入口 -> 收集信息工作流
-    "video_publish": N8NWorkflowType.VIDEO_PUBLISH  # 视频发布入口 -> 视频发布工作流
+    "chat": N8NWorkflowType.MAIN,              # 普通聊天入口 -> 主工作流
+    "company": N8NWorkflowType.COMPANY_INFO,   # 公司信息入口 -> 公司信息收集工作流
+    "video_crawl": N8NWorkflowType.VIDEO_CRAWL, # 视频抓取入口 -> 触发爆款抓取工作流
+    "viral_learning": N8NWorkflowType.VIRAL_LEARNING  # 爆款学习入口 -> 爆款学习工作流
 }
 
 # 工作流触发关键词配置（保留用于智能路由）
@@ -43,9 +41,11 @@ WORKFLOW_TRIGGER_KEYWORDS = {
     N8NWorkflowType.COMPANY_INFO: [
         "公司", "企业", "信息", "作战", "地图", "竞品", "分析", "调研", "情报", "收集"
     ],
-    N8NWorkflowType.VIRAL_LEARNING: [],  # 不通过关键词触发，仅定时调用
-    N8NWorkflowType.VIDEO_PUBLISH: [
-        "视频", "发布", "上传", "素材", "剪辑", "制作"
+    N8NWorkflowType.VIDEO_CRAWL: [
+        "视频", "抓取", "爬取", "爆款"
+    ],
+    N8NWorkflowType.VIRAL_LEARNING: [
+        "学习", "爆款", "热门", "趋势"
     ]
 }
 
@@ -53,24 +53,24 @@ WORKFLOW_TRIGGER_KEYWORDS = {
 WORKFLOW_TIMEOUTS = {
     N8NWorkflowType.MAIN: 30,
     N8NWorkflowType.COMPANY_INFO: 60,
-    N8NWorkflowType.VIRAL_LEARNING: 45,
-    N8NWorkflowType.VIDEO_PUBLISH: 120
+    N8NWorkflowType.VIDEO_CRAWL: 120,
+    N8NWorkflowType.VIRAL_LEARNING: 45
 }
 
 # N8N工作流超时配置（秒）
 N8N_WORKFLOW_TIMEOUT = {
     N8NWorkflowType.MAIN: 30,
     N8NWorkflowType.COMPANY_INFO: 60,
-    N8NWorkflowType.VIRAL_LEARNING: 45,
-    N8NWorkflowType.VIDEO_PUBLISH: 120
+    N8NWorkflowType.VIDEO_CRAWL: 120,
+    N8NWorkflowType.VIRAL_LEARNING: 45
 }
 
 # 工作流描述
 WORKFLOW_DESCRIPTIONS = {
     N8NWorkflowType.MAIN: "主工作流 - 处理通用对话和任务分发",
     N8NWorkflowType.COMPANY_INFO: "公司信息收集及作战地图梳理 - 收集公司信息并生成作战地图",
-    N8NWorkflowType.VIRAL_LEARNING: "被动触发爆款学习 - 分析爆款内容并学习模式（定时调用）",
-    N8NWorkflowType.VIDEO_PUBLISH: "视频发布工作流 - 处理视频制作和发布任务"
+    N8NWorkflowType.VIDEO_CRAWL: "触发爆款抓取工作流 - 触发视频内容抓取任务",
+    N8NWorkflowType.VIRAL_LEARNING: "爆款学习工作流 - 分析爆款内容并学习模式"
 }
 
 # 爆款学习工作流定时配置
@@ -181,20 +181,15 @@ def get_viral_learning_schedule_config() -> Dict[str, Any]:
 def detect_entry_type(message_data: Dict[str, Any]) -> str:
     """检测对话入口类型"""
     # 从消息数据中提取入口类型
-    entry_type = message_data.get("entry_type", "default")
+    entry_type = message_data.get("entry_type", "chat")
     
     # 如果没有明确的入口类型，尝试从消息内容推断
-    if entry_type == "default":
+    if entry_type == "chat":
         content = message_data.get("content", "").lower()
         
         # 检查是否包含公司信息相关关键词
         company_keywords = ["公司", "企业", "信息", "作战", "地图", "竞品", "分析", "调研"]
         if any(keyword in content for keyword in company_keywords):
             entry_type = "company"
-        
-        # 检查是否包含视频发布相关关键词
-        video_keywords = ["视频", "发布", "上传", "素材", "剪辑", "制作"]
-        if any(keyword in content for keyword in video_keywords):
-            entry_type = "video_publish"
     
     return entry_type

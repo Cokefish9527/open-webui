@@ -83,7 +83,11 @@ def register_hsai_events(sio, emitter):
                     "socket_id": sid
                 }
                 
-                log.info(f"[HSAI统一事件] 通过WOC处理请求，上下文: {context}")
+                # 根据entry_type确定工作流类型
+                from open_webui.config.n8n_workflows import get_workflow_by_entry_type
+                workflow_type = get_workflow_by_entry_type(context["entry_type"])
+                
+                log.info(f"[HSAI统一事件] 通过WOC处理请求，上下文: {context}, 工作流类型: {workflow_type}")
                 
                 # 通过工作流编排中心处理请求
                 # 注意：工作流编排中心内部会通过_notify_socket_event发送相应的事件

@@ -29,7 +29,7 @@ class TestMode(Enum):
     FULL = "full"    # 完整工作流测试
     COMPANY_INFO = "company_info"  # 企业信息收集专项测试
     VIDEO_CREATION = "video_creation"  # 视频创作专项测试
-    VIDEO_ANALYSIS = "video_analysis"  # 视频分析专项测试
+    VIDEO_CRAWL = "video_crawl"  # 视频分析专项测试
     WOC_MANAGEMENT = "woc_management"  # WOC管理功能测试
 
 @dataclass
@@ -321,7 +321,7 @@ class WorkflowTester:
             results["woc_health"] = self.test_woc_health()
             results["video_creation"] = await self.test_video_creation_workflow()
             
-        elif mode == TestMode.VIDEO_ANALYSIS:
+        elif mode == TestMode.VIDEO_CRAWL:
             # 视频分析专项测试
             results["woc_health"] = self.test_woc_health()
             results["video_analysis"] = await self.test_video_analysis_workflow()
