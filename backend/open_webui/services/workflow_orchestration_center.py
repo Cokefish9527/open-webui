@@ -99,6 +99,25 @@ class RouterManager:
         
         log.info(f"开始路由分析，用户输入: {user_input[:50]}...")
 
+        # 检查上下文中是否指定了工作流类型（通过entry_type）
+        entry_type = context.get("entry_type")
+        if entry_type:
+            # 根据entry_type映射到工作流类型
+            from open_webui.config.n8n_workflows import get_workflow_by_entry_type, N8NWorkflowType
+            n8n_workflow_type = get_workflow_by_entry_type(entry_type)
+            
+            # 将N8NWorkflowType转换为WorkflowType
+            workflow_type_mapping = {
+                N8NWorkflowType.MAIN: WorkflowType.MAIN,
+                N8NWorkflowType.COMPANY_INFO: WorkflowType.COMPANY_INFO,
+                N8NWorkflowType.VIDEO_CRAWL: WorkflowType.VIDEO_CRAWL,
+                N8NWorkflowType.VIRAL_LEARNING: WorkflowType.VIRAL_LEARNING
+            }
+            
+            workflow_type = workflow_type_mapping.get(n8n_workflow_type, WorkflowType.MAIN)
+            log.info(f"通过entry_type '{entry_type}' 映射到工作流类型: {workflow_type.value}")
+            return workflow_type
+
         # 按优先级排序规则
         sorted_rules = sorted(self.routing_rules, key=lambda x: x.priority, reverse=True)
 
