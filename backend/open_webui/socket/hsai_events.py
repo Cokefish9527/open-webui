@@ -79,6 +79,7 @@ def register_hsai_events(sio, emitter):
                 # 构建上下文信息
                 context = {
                     "entry_type": data.get("entry_type", "chat"),
+                    "business_name": "HSAI",  # 硬编码为"HSAI"
                     "additional_data": data.get("metadata", {}),
                     "socket_id": sid
                 }
