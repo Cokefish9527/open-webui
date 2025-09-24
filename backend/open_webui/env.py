@@ -86,6 +86,7 @@ else:
 log = logging.getLogger(__name__)
 log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
 
+cuda_error = None
 if "cuda_error" in locals():
     log.exception(cuda_error)
     del cuda_error
@@ -170,9 +171,24 @@ try:
         changelog_content = file.read()
 
 except Exception:
-    changelog_content = (
-        pkgutil.get_data("open_webui", "CHANGELOG_EXTRA.md") or b""
-    ).decode()
+    try:
+        changelog_content = (
+            pkgutil.get_data("open_webui", "CHANGELOG_EXTRA.md") or b""
+        ).decode()
+    except Exception:
+        # 如果CHANGELOG_EXTRA.md不存在，尝试加载CHANGELOG.md
+        try:
+            changelog_path = BASE_DIR / "CHANGELOG.md"
+            with open(str(changelog_path.absolute()), "r", encoding="utf8") as file:
+                changelog_content = file.read()
+        except Exception:
+            try:
+                changelog_content = (
+                    pkgutil.get_data("open_webui", "CHANGELOG.md") or b""
+                ).decode()
+            except Exception:
+                # 如果都不存在，使用默认内容
+                changelog_content = "# Changelog\n\nNo changelog available."
 
 # Convert markdown content to HTML
 html_content = markdown.markdown(changelog_content)
@@ -185,9 +201,16 @@ changelog_json = {}
 
 # Iterate over each version
 for version in soup.find_all("h2"):
-    version_number = version.get_text().strip().split(" - ")[0][1:-1]  # Remove brackets
-    date = version.get_text().strip().split(" - ")[1]
-
+    version_text = version.get_text().strip()
+    version_parts = version_text.split(" - ")
+    version_number = version_parts[0][1:-1]  # Remove brackets
+    
+    # Handle case where date is not present
+    if len(version_parts) > 1:
+        date = version_parts[1]
+    else:
+        date = "Unknown Date"
+    
     version_data = {"date": date}
 
     # Find the next sibling that is a h3 tag (section title)
@@ -247,7 +270,7 @@ if FROM_INIT_PY:
                 shutil.copy2(item, dest)
 
         # Zip the data directory
-        shutil.make_archive(DATA_DIR.parent / "open_webui_data", "zip", DATA_DIR)
+        shutil.make_archive(str(DATA_DIR.parent / "open_webui_data"), "zip", str(DATA_DIR))
 
         # Remove the old data directory
         shutil.rmtree(DATA_DIR)
