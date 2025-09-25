@@ -31,7 +31,7 @@
 ## 三个核心工作流
 
 ### 1. 信息收集工作流
-- **URL**: https://webhook-n8n.hsai.cc/webhook/business_information_get
+- **URL**: https://webhook-n8n.hsai.cc/webhook/business_information_get01
 - **功能**: 用户首次使用时触发，收集用户信息并创建初始项目
 - **流程**: 信息收集 → KPI计算 → 任务拆解 → Redis信号通知
 

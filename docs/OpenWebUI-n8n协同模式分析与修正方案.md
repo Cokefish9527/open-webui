@@ -21,7 +21,7 @@
 ## 🔍 三个核心n8n工作流
 
 ### 1. 信息收集工作流
-- **URL**: https://webhook-n8n.hsai.cc/webhook/business_information_get
+- **URL**: https://webhook-n8n.hsai.cc/webhook/business_information_get01
 - **触发条件**: 用户首次使用产品
 - **主要任务**:
   - 收集用户初始信息（公司、产品、目标等）

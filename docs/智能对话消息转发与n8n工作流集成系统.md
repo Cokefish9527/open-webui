@@ -37,7 +37,7 @@
 ## 工作流集成架构
 
 ### 三个核心n8n工作流
-1. **信息收集工作流**：https://webhook-n8n.hsai.cc/webhook/business_information_get
+1. **信息收集工作流**：https://webhook-n8n.hsai.cc/webhook/business_information_get01
 2. **主对话工作流**：https://webhook-n8n.hsai.cc/webhook/n8n_chat
 3. **爆款学习工作流**：https://webhook-n8n.hsai.cc/webhook/keywords2video
 

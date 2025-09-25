@@ -164,7 +164,7 @@ redis_signal_handler = RedisSignalHandler()
 # config/n8n_workflows.py
 N8N_WORKFLOW_WEBHOOKS = {
     N8NWorkflowType.MAIN: "https://webhook-n8n.hsai.cc/webhook/n8n_chat",
-    N8NWorkflowType.COMPANY_INFO: "https://webhook-n8n.hsai.cc/webhook/business_information_get",
+    N8NWorkflowType.COMPANY_INFO: "https://webhook-n8n.hsai.cc/webhook/business_information_get01",
     N8NWorkflowType.VIRAL_LEARNING: "https://webhook-n8n.hsai.cc/webhook/keywords2video"
 }
 
@@ -367,7 +367,7 @@ ENABLE_SOCKETIO_SUPPORT=True
 
 # n8n工作流URL
 N8N_MAIN_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/n8n_chat
-N8N_COMPANY_INFO_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/business_information_get
+N8N_COMPANY_INFO_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/business_information_get01
 N8N_VIRAL_LEARNING_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/keywords2video
 
 # Redis配置（用于信号机制）

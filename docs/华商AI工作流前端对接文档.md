@@ -3,7 +3,7 @@
 ## 概览
 
 华商AI系统基于n8n工作流引擎，提供三个核心工作流：
-- `business_information_get`：信息收集工作流（https://webhook-n8n.hsai.cc/webhook/business_information_get）
+- `business_information_get`：信息收集工作流（https://webhook-n8n.hsai.cc/webhook/business_information_get01）
 - `n8n_chat`：主对话工作流（https://webhook-n8n.hsai.cc/webhook/n8n_chat）
 - `keywords2video`：爆款学习工作流（https://webhook-n8n.hsai.cc/webhook/keywords2video）
 
@@ -393,7 +393,7 @@ const isInfoCollected = (response) => {
 ```
 
 ### 信息收集工作流接口
-**接口地址**：`https://webhook-n8n.hsai.cc/webhook/business_information_get`  
+**接口地址**：`https://webhook-n8n.hsai.cc/webhook/business_information_get01`  
 **请求方式**：POST
 **任务描述**：用户首次使用产品时触发，进行用户初始信息的收集，根据用户提供的信息创建初始项目，计算KPI并进行初始化的任务拆解
 
