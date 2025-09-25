@@ -59,7 +59,7 @@ class N8NWorkflowManager:
             },
             "公司信息收集.json": {
                 "type": WorkflowType.COMPANY_INFO,
-                "webhook_url": "https://webhook-n8n.hsai.cc/webhook/business_information_get01",
+                "webhook_url": "https://webhook-n8n.hsai.cc/webhook/business_information_get",
                 "keywords": ["公司", "企业", "信息", "作战", "地图", "竞品", "分析", "调研"],
                 "description": "公司信息收集和竞品分析工作流"
             },

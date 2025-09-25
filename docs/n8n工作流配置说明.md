@@ -29,7 +29,7 @@ class N8NWorkflowType(str, Enum):
 # n8n工作流webhook映射 - 根据实际部署更新地址
 N8N_WORKFLOW_WEBHOOKS = {
     N8NWorkflowType.MAIN: os.getenv("N8N_MAIN_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/n8n_chat"),
-    N8NWorkflowType.COMPANY_INFO: os.getenv("N8N_COMPANY_INFO_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/business_information_get01"),
+    N8NWorkflowType.COMPANY_INFO: os.getenv("N8N_COMPANY_INFO_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/business_information_get"),
     N8NWorkflowType.VIRAL_LEARNING: os.getenv("N8N_VIRAL_LEARNING_WORKFLOW_URL", "https://webhook-n8n.hsai.cc/webhook/keywords2video")
 }
 ```
@@ -44,7 +44,7 @@ N8N_WORKFLOW_WEBHOOKS = {
 
 2. **信息收集工作流**
    - 功能: 用户首次使用产品时触发，进行用户初始信息收集，根据用户信息创建初始项目并计算KPI
-   - URL: `https://webhook-n8n.hsai.cc/webhook/business_information_get01`
+   - URL: `https://webhook-n8n.hsai.cc/webhook/business_information_get`
 
 3. **爆款学习工作流**
    - 功能: 主动触发爆款学习，抓取热门视频链接并进行视频下载、脚本拆解、写入爆款库
@@ -59,7 +59,7 @@ N8N_WORKFLOW_WEBHOOKS = {
 | 环境变量 | 默认值 | 说明 |
 |---------|--------|------|
 | `N8N_MAIN_WORKFLOW_URL` | `https://webhook-n8n.hsai.cc/webhook/n8n_chat` | 主对话工作流URL |
-| `N8N_COMPANY_INFO_WORKFLOW_URL` | `https://webhook-n8n.hsai.cc/webhook/business_information_get01` | 信息收集工作流URL |
+| `N8N_COMPANY_INFO_WORKFLOW_URL` | `https://webhook-n8n.hsai.cc/webhook/business_information_get` | 信息收集工作流URL |
 | `N8N_VIRAL_LEARNING_WORKFLOW_URL` | `https://webhook-n8n.hsai.cc/webhook/keywords2video` | 爆款学习工作流URL |
 
 ### 4.2 设置环境变量
@@ -67,14 +67,14 @@ N8N_WORKFLOW_WEBHOOKS = {
 在Windows系统中:
 ```cmd
 set N8N_MAIN_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/n8n_chat
-set N8N_COMPANY_INFO_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/business_information_get01
+set N8N_COMPANY_INFO_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/business_information_get
 set N8N_VIRAL_LEARNING_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/keywords2video
 ```
 
 在Linux/macOS系统中:
 ```bash
 export N8N_MAIN_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/n8n_chat
-export N8N_COMPANY_INFO_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/business_information_get01
+export N8N_COMPANY_INFO_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/business_information_get
 export N8N_VIRAL_LEARNING_WORKFLOW_URL=https://webhook-n8n.hsai.cc/webhook/keywords2video
 ```
 

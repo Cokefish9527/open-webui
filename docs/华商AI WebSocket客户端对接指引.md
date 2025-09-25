@@ -85,8 +85,8 @@ socket.emit('message', {
 
 ### 入口类型说明
 - `chat`: 普通聊天入口 -> 主对话工作流（https://webhook-n8n.hsai.cc/webhook/n8n_chat）
-- `company`: 公司信息入口 -> 信息收集工作流（https://webhook-n8n.hsai.cc/webhook/business_information_get01）
-- `business`: 商业分析入口 -> 信息收集工作流（https://webhook-n8n.hsai.cc/webhook/business_information_get01）
+- `company`: 公司信息入口 -> 信息收集工作流（https://webhook-n8n.hsai.cc/webhook/business_information_get）
+- `business`: 商业分析入口 -> 信息收集工作流（https://webhook-n8n.hsai.cc/webhook/business_information_get）
 - `viral_learning`: 爆款学习入口 -> 爆款学习工作流（https://webhook-n8n.hsai.cc/webhook/keywords2video）
 
 ## 响应格式

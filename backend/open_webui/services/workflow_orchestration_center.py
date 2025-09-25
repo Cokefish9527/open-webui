@@ -45,7 +45,7 @@ class RouterManager:
         self.routing_rules = self._initialize_routing_rules()
         self.workflow_endpoints = {
             WorkflowType.MAIN: "https://n8n.hsai.cc/webhook-test/n8n_chat",
-            WorkflowType.COMPANY_INFO: "https://webhook-n8n.hsai.cc/webhook/business_information_get01",
+            WorkflowType.COMPANY_INFO: "https://webhook-n8n.hsai.cc/webhook/business_information_get",
             WorkflowType.VIDEO_CRAWL: "https://webhook-n8n.hsai.cc/webhook/video_crawl",
             WorkflowType.VIRAL_LEARNING: "https://webhook-n8n.hsai.cc/webhook/viral_learning"
         }
