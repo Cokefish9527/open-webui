@@ -364,7 +364,7 @@ ENABLE_REALTIME_CHAT_SAVE = (
 REDIS_MODE = os.environ.get("REDIS_MODE", "internal")
 
 # 内网Redis配置
-INTERNAL_REDIS_URL = os.environ.get("INTERNAL_REDIS_URL", "")
+INTERNAL_REDIS_URL = os.environ.get("INTERNAL_REDIS_URL", "redis://localhost:6379/0")
 INTERNAL_WEBSOCKET_REDIS_URL = os.environ.get("INTERNAL_WEBSOCKET_REDIS_URL", "")
 
 # 公网Redis配置
