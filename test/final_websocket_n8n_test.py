@@ -27,6 +27,7 @@ class FinalWebSocketN8NTester:
         self.token: Optional[str] = None
         self.user_id: Optional[str] = None
         self.websocket: Any = None
+        self.n8n_test_url = "http://localhost:5678/webhook"
         self.test_results = {
             "connection": False,
             "authentication": False,
@@ -149,16 +150,17 @@ class FinalWebSocketN8NTester:
             return False
             
         try:
-            # 构造HSAI测试消息 - 符合HSAI事件处理器的要求
+            # 构造测试消息
+            import uuid
             test_message = {
-                "type": "chat",  # 必须是"chat"或"workflow_trigger"才能被HSAI处理器识别
-                "content": "测试WebSocket与n8n集成功能",
+                "type": "chat",
+                "content": "测试WebSocket与n8n集成",
                 "user_id": self.user_id,
                 "entry_type": "chat",
-                "session_id": f"test_{int(time.time())}",
-                "workflow_type": "main",
-                "timestamp": datetime.now().isoformat(),
-                "test": True
+                "session_id": f"test_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
+                "timestamp": int(time.time()),
+                "test_mode": True,
+                "n8n_webhook_url": self.n8n_test_url
             }
             
             logger.info("📤 发送测试消息到WebSocket...")

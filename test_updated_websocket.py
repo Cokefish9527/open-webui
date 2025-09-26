@@ -71,47 +71,46 @@ async def test_websocket_workflow():
                 print("  ← 等待连接确认消息超时")
             
             # 3. 发送测试消息
-            test_messages = [
-                {
-                    "type": "chat",
-                    "content": "你好",
-                    "user_id": TEST_USER["id"],
-                    "session_id": f"test_session_{int(time.time())}",
-                    "entry_type": "chat"
-                }
-            ]
+            import uuid
+            test_message = {
+                "type": "chat",
+                "content": "测试WebSocket连接",
+                "user_id": login_result.get("id"),  # 使用登录返回的用户ID
+                "entry_type": "chat",
+                "session_id": f"test_session_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
+                "timestamp": int(time.time())
+            }
             
-            for i, message in enumerate(test_messages, 1):
-                print(f"\n[3/{3+i}] 发送测试消息 {i}: {message['content']}")
+            print(f"\n[3/4] 发送测试消息: {test_message['content']}")
+            
+            # 发送消息
+            await websocket.send(json.dumps(test_message, ensure_ascii=False))
+            print("  → 消息发送成功")
+            
+            # 等待并接收响应
+            try:
+                print("  ← 等待工作流响应...")
+                response = await asyncio.wait_for(websocket.recv(), timeout=30.0)
+                response_data = json.loads(response)
+                print(f"  ← 接收到工作流响应:")
+                print(f"    类型: {response_data.get('messageType', 'N/A')}")
+                print(f"    状态: {response_data.get('status', 'N/A')}")
+                print(f"    内容: {response_data.get('displayText', 'N/A')[:100]}...")
                 
-                # 发送消息
-                await websocket.send(json.dumps(message, ensure_ascii=False))
-                print("  → 消息发送成功")
-                
-                # 等待并接收响应
-                try:
-                    print("  ← 等待工作流响应...")
-                    response = await asyncio.wait_for(websocket.recv(), timeout=30.0)
-                    response_data = json.loads(response)
-                    print(f"  ← 接收到工作流响应:")
-                    print(f"    类型: {response_data.get('messageType', 'N/A')}")
-                    print(f"    状态: {response_data.get('status', 'N/A')}")
-                    print(f"    内容: {response_data.get('displayText', 'N/A')[:100]}...")
-                    
-                    # 检查响应结构是否符合华商AI工作流前端对接规范
-                    required_fields = ['success', 'messageType', 'displayText', 'data', 'status']
-                    missing_fields = [field for field in required_fields if field not in response_data]
-                    if missing_fields:
-                        print(f"    ⚠ 警告: 响应缺少字段 {missing_fields}")
-                    else:
-                        print(f"    ✓ 响应结构符合规范")
+                # 检查响应结构是否符合华商AI工作流前端对接规范
+                required_fields = ['success', 'messageType', 'displayText', 'data', 'status']
+                missing_fields = [field for field in required_fields if field not in response_data]
+                if missing_fields:
+                    print(f"    ⚠ 警告: 响应缺少字段 {missing_fields}")
+                else:
+                    print(f"    ✓ 响应结构符合规范")
                         
-                except asyncio.TimeoutError:
-                    print("  ← 等待响应超时（30秒）")
-                except json.JSONDecodeError as e:
-                    print(f"  ← 响应解析失败: {e}")
-                except Exception as e:
-                    print(f"  ← 接收响应时出错: {e}")
+            except asyncio.TimeoutError:
+                print("  ← 等待响应超时（30秒）")
+            except json.JSONDecodeError as e:
+                print(f"  ← 响应解析失败: {e}")
+            except Exception as e:
+                print(f"  ← 接收响应时出错: {e}")
             
             print("\n测试完成，关闭WebSocket连接")
             

@@ -18,6 +18,7 @@ import logging
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
+import uuid
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -193,7 +194,7 @@ class WorkflowTester:
             "content": "帮我收集和分析阿里巴巴集团的企业信息，包括公司背景、业务结构、竞争对手分析等",
             "user_id": self.user_id,
             "entry_type": "company",
-            "session_id": f"test_company_{int(time.time())}",
+            "session_id": f"test_company_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
             "metadata": {
                 "test_scenario": "company_info_collection",
                 "company_name": "阿里巴巴集团"
@@ -207,15 +208,16 @@ class WorkflowTester:
         logger.info("🎬 开始视频创作工作流测试...")
         
         message_data = {
-            "type": "chat", 
-            "content": "帮我创作一个关于人工智能发展趋势的短视频，包括脚本撰写、关键词优化和发布建议",
+            "type": "chat",
+            "content": "帮我创作一个关于人工智能发展趋势的短视频，时长1分钟左右，风格轻松幽默",
             "user_id": self.user_id,
-            "entry_type": "chat",
-            "session_id": f"test_video_{int(time.time())}",
+            "entry_type": "video",
+            "session_id": f"test_video_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
             "metadata": {
                 "test_scenario": "video_creation",
-                "video_topic": "人工智能发展趋势",
-                "target_platform": "抖音"
+                "video_theme": "人工智能发展趋势",
+                "duration": "1分钟",
+                "style": "轻松幽默"
             }
         }
         
@@ -223,22 +225,39 @@ class WorkflowTester:
     
     async def test_video_analysis_workflow(self) -> bool:
         """测试视频分析工作流"""
-        logger.info("📹 开始视频分析工作流测试...")
+        logger.info("🔍 开始视频分析工作流测试...")
         
         message_data = {
             "type": "chat",
-            "content": "帮我分析最近抖音上关于科技类视频的热门内容和关键词趋势",
+            "content": "分析最近一个月关于新能源汽车的视频内容趋势，生成分析报告",
             "user_id": self.user_id,
-            "entry_type": "chat", 
-            "session_id": f"test_analysis_{int(time.time())}",
+            "entry_type": "analysis",
+            "session_id": f"test_analysis_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
             "metadata": {
                 "test_scenario": "video_analysis",
-                "platform": "抖音",
-                "category": "科技"
+                "analysis_topic": "新能源汽车",
+                "time_range": "最近一个月"
             }
         }
         
         return await self.test_websocket_workflow(message_data, "视频分析")
+    
+    async def test_direct_process_workflow(self) -> bool:
+        """测试直接处理工作流"""
+        logger.info("⚡ 开始直接处理工作流测试...")
+        
+        message_data = {
+            "type": "chat",
+            "content": "直接处理这个请求，不需要额外的分析或创作",
+            "user_id": self.user_id,
+            "entry_type": "direct",
+            "session_id": f"test_direct_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
+            "metadata": {
+                "test_scenario": "direct_process"
+            }
+        }
+        
+        return await self.test_websocket_workflow(message_data, "直接处理")
     
     async def test_workflow_trigger_direct(self) -> bool:
         """测试直接工作流触发"""
@@ -249,7 +268,7 @@ class WorkflowTester:
             "content": "测试主工作流直接触发功能",
             "user_id": self.user_id,
             "workflow_type": "main",
-            "session_id": f"test_direct_{int(time.time())}",
+            "session_id": f"test_direct_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
             "metadata": {
                 "test_scenario": "direct_trigger"
             }

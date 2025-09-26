@@ -193,10 +193,11 @@ class UnifiedSocketIOTester:
         # 2. 简单消息测试
         logger.info("\n[2/4] 简单消息测试")
         self.responses.clear()
+        import uuid
         simple_message = {
             "content": "你好，这是一个测试消息",
             "user_id": TEST_CONFIG["test_user"]["id"],
-            "session_id": f"test_session_{int(time.time())}"
+            "session_id": f"test_session_{uuid.uuid4().hex[:8]}"  # 使用UUID而不是时间戳
         }
         
         simple_test_result = await self.test_hsai_message(simple_message)
@@ -207,7 +208,7 @@ class UnifiedSocketIOTester:
         workflow_message = {
             "content": "请分析这家公司的信息",
             "user_id": TEST_CONFIG["test_user"]["id"],
-            "session_id": f"test_session_{int(time.time())}",
+            "session_id": f"test_session_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
             "workflow_type": "company_info",
             "business_name": "测试公司",
             "metadata": {

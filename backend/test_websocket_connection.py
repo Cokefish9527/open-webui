@@ -87,20 +87,18 @@ class WebSocketConnectionTester:
                     logger.warning("⏰ 等待连接确认消息超时")
                 
                 # 发送测试消息
+                import uuid
                 test_message = {
                     "type": "chat",
-                    "content": "Hello, 这是一个WebSocket连接测试消息",
-                    "user_id": self.user_id,
+                    "content": "测试WebSocket连接",
+                    "user_id": self.user_id,  # 使用self.user_id而不是user_id
                     "entry_type": "chat",
-                    "session_id": f"test_session_{int(time.time())}",
-                    "metadata": {
-                        "test": True,
-                        "timestamp": datetime.now().isoformat() if 'datetime' in globals() else str(int(time.time()))
-                    }
+                    "session_id": f"test_session_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
+                    "timestamp": int(time.time())
                 }
-                
-                logger.info("📤 发送测试消息...")
-                await websocket.send(json.dumps(test_message, ensure_ascii=False))
+                    
+                logger.info(f"📤 发送测试消息: {json.dumps(test_message, ensure_ascii=False)}")
+                await websocket.send(json.dumps(test_message))
                 
                 # 等待响应
                 start_time = time.time()

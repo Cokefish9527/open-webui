@@ -22,6 +22,7 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
 from enum import Enum
 import random
+import uuid
 
 # 配置日志
 logging.basicConfig(
@@ -60,7 +61,7 @@ class TestReport:
     end_time: datetime
     duration: float
     message: str
-    details: Dict[str, Any] = None
+    details: Optional[Dict[str, Any]] = None
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -186,6 +187,19 @@ class EnhancedWorkflowTester:
                 message=f"测试执行异常: {str(e)}",
                 details={"error": str(e)}
             )
+        
+        # 默认返回，确保所有路径都有返回值
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        return TestReport(
+            test_name=test_case.name,
+            result=TestResult.ERROR,
+            start_time=start_time,
+            end_time=end_time,
+            duration=duration,
+            message="未知错误",
+            details={"error": "函数未正确返回"}
+        )
     
     async def login(self) -> bool:
         """用户登录"""
@@ -259,7 +273,7 @@ class EnhancedWorkflowTester:
             "content": scenario.get("content", "").replace("阿里巴巴集团", company),
             "user_id": self.user_id,
             "entry_type": scenario.get("entry_type", "company"),
-            "session_id": f"test_company_{int(time.time())}",
+            "session_id": f"test_company_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
             "metadata": {
                 **scenario.get("metadata", {}),
                 "company_name": company,
@@ -289,7 +303,7 @@ class EnhancedWorkflowTester:
             "content": scenario.get("content", "").replace("人工智能发展趋势", topic),
             "user_id": self.user_id,
             "entry_type": scenario.get("entry_type", "chat"),
-            "session_id": f"test_video_{int(time.time())}",
+            "session_id": f"test_video_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
             "metadata": {
                 **scenario.get("metadata", {}),
                 "video_topic": topic,
@@ -308,25 +322,26 @@ class EnhancedWorkflowTester:
         scenario = self.config.get("test_scenarios", {}).get("video_analysis", {})
         test_data = self.config.get("test_data", {})
         
-        platforms = test_data.get("platforms", ["抖音"])
-        platform = random.choice(platforms)
+        # 随机选择分析主题
+        topics = test_data.get("analysis_topics", ["新能源汽车"])
+        topic = random.choice(topics)
         
         message_data = {
             "type": "chat",
-            "content": scenario.get("content", "").replace("抖音", platform),
+            "content": scenario.get("content", "").replace("新能源汽车", topic),
             "user_id": self.user_id,
-            "entry_type": scenario.get("entry_type", "chat"),
-            "session_id": f"test_analysis_{int(time.time())}",
+            "entry_type": scenario.get("entry_type", "analysis"),
+            "session_id": f"test_analysis_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
             "metadata": {
                 **scenario.get("metadata", {}),
-                "platform": platform,
+                "analysis_topic": topic,
                 "test_timestamp": datetime.now().isoformat()
             }
         }
         
         return await self.test_websocket_workflow(
             message_data,
-            f"视频分析 - {platform}"
+            f"视频分析 - {topic}"
         )
     
     async def test_websocket_workflow(self, message_data: Dict[str, Any], test_name: str) -> bool:

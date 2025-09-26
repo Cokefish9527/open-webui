@@ -74,8 +74,15 @@ def register_hsai_events(sio, emitter):
                 # 直接使用工作流编排中心处理消息
                 from open_webui.services.workflow_orchestration_center import workflow_orchestration_center
                 
-                # 获取或创建会话ID
-                session_id = f"session_{user_id}_{int(__import__('time').time())}"
+                # 直接使用前端传递的会话ID，而不是重新生成
+                session_id = data.get("session_id")
+                if not session_id:
+                    # 如果前端没有传递session_id，则生成一个
+                    import uuid
+                    session_id = f"session_{user_id}_{uuid.uuid4().hex[:8]}"
+                    log.info(f"[HSAI统一事件] 前端未传递session_id，生成新的session_id: {session_id}")
+                else:
+                    log.info(f"[HSAI统一事件] 使用前端传递的session_id: {session_id}")
                 
                 # 构建上下文信息
                 context = {

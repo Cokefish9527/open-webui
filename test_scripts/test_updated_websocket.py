@@ -71,60 +71,62 @@ async def test_websocket_workflow():
                 print("  ← 等待连接确认消息超时")
             
             # 3. 发送测试消息
-            test_messages = [
-                {
-                    "type": "chat",
-                    "content": "你好",
-                    "user_id": TEST_USER["id"],
-                    "session_id": f"test_session_{int(time.time())}",
-                    "entry_type": "chat"
-                }
-            ]
+            import uuid
+            test_message = {
+                "type": "chat",
+                "content": "测试更新后的WebSocket功能",
+                "user_id": TEST_USER["id"],  # 使用测试用户ID
+                "entry_type": "chat",
+                "session_id": f"test_session_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
+                "timestamp": int(time.time())
+            }
             
-            for i, message in enumerate(test_messages, 1):
-                print(f"\n[3/{3+i}] 发送测试消息 {i}: {message['content']}")
+            print(f"\n[3/4] 发送测试消息: {test_message['content']}")
                 
-                # 发送消息
-                await websocket.send(json.dumps(message, ensure_ascii=False))
-                print("  → 消息发送成功")
+            # 发送消息
+            await websocket.send(json.dumps(test_message, ensure_ascii=False))
+            print("  → 消息发送成功")
                 
-                # 等待并接收响应
-                try:
-                    print("  ← 等待工作流响应...")
-                    response = await asyncio.wait_for(websocket.recv(), timeout=30.0)
-                    response_data = json.loads(response)
-                    print(f"  ← 接收到工作流响应:")
-                    print(f"    类型: {response_data.get('messageType', 'N/A')}")
-                    print(f"    状态: {response_data.get('status', 'N/A')}")
-                    print(f"    内容: {response_data.get('displayText', 'N/A')[:100]}...")
+            # 等待并接收响应
+            print("  ← 等待工作流响应...")
+            try:
+                response = await asyncio.wait_for(websocket.recv(), timeout=30.0)
+                response_data = json.loads(response)
+                print(f"  ← 接收到工作流响应:")
+                print(f"    类型: {response_data.get('messageType', 'N/A')}")
+                print(f"    状态: {response_data.get('status', 'N/A')}")
+                print(f"    内容: {response_data.get('displayText', 'N/A')[:100]}...")
                     
-                    # 检查响应结构是否符合华商AI工作流前端对接规范
-                    required_fields = ['success', 'messageType', 'displayText', 'data', 'status']
-                    missing_fields = [field for field in required_fields if field not in response_data]
-                    if missing_fields:
-                        print(f"    ⚠ 警告: 响应缺少字段 {missing_fields}")
-                    else:
-                        print(f"    ✓ 响应结构符合规范")
+                # 检查响应结构是否符合华商AI工作流前端对接规范
+                required_fields = ['success', 'messageType', 'displayText', 'data', 'status']
+                missing_fields = [field for field in required_fields if field not in response_data]
+                if missing_fields:
+                    print(f"    ⚠ 警告: 响应缺少字段 {missing_fields}")
+                else:
+                    print(f"    ✓ 响应结构符合规范")
                         
-                except asyncio.TimeoutError:
-                    print("  ← 等待响应超时（30秒）")
-                except json.JSONDecodeError as e:
-                    print(f"  ← 响应解析失败: {e}")
-                except Exception as e:
-                    print(f"  ← 接收响应时出错: {e}")
+            except asyncio.TimeoutError:
+                print("  ← 等待响应超时（30秒）")
+            except json.JSONDecodeError as e:
+                print(f"  ← 响应解析失败: {e}")
+            except Exception as e:
+                print(f"  ← 接收响应时出错: {e}")
             
             print("\n测试完成，关闭WebSocket连接")
             
-    except websockets.exceptions.InvalidStatusCode as e:
-        print(f"✗ WebSocket连接失败，状态码: {e.status_code}")
-        if e.status_code == 403:
-            print("  可能原因: 认证失败，请检查JWT令牌配置")
-        elif e.status_code == 404:
-            print("  可能原因: WebSocket端点不存在，请检查服务器配置")
     except Exception as e:
-        print(f"✗ WebSocket连接异常: {e}")
-        import traceback
-        traceback.print_exc()
+        # 检查是否为状态码错误
+        status_code = getattr(e, 'status_code', None)
+        if status_code:
+            print(f"✗ WebSocket连接失败，状态码: {status_code}")
+            if status_code == 403:
+                print("  可能原因: 认证失败，请检查JWT令牌配置")
+            elif status_code == 404:
+                print("  可能原因: WebSocket端点不存在，请检查服务器配置")
+        else:
+            print(f"✗ WebSocket连接异常: {e}")
+            import traceback
+            traceback.print_exc()
 
 if __name__ == "__main__":
     print("华商AI WebSocket连接测试 (端口8080)")

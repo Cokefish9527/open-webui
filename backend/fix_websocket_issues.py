@@ -171,14 +171,14 @@ async def test_websocket_fixed():
         async with websockets.connect(ws_url) as websocket:
             print("✅ WebSocket连接成功")
             
-            # 发送测试消息
+            # 构造测试消息
             test_message = {
                 "type": "chat",
-                "content": "Hello, 测试消息",
-                "user_id": user_id,
+                "content": "测试WebSocket连接和消息处理",
+                "user_id": self.user_id,
                 "entry_type": "chat",
-                "session_id": f"test_{int(time.time())}",
-                "metadata": {}
+                "session_id": f"test_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
+                "timestamp": int(time.time())
             }
             
             await websocket.send(json.dumps(test_message))

@@ -125,23 +125,30 @@ class ComprehensiveHSAITest:
             return False
             
         try:
-            # 构造HSAI消息
-            hsai_message = {
-                "type": message_type,
-                "content": f"测试HSAI {message_type} 消息",
+            # 根据消息类型构造不同的内容
+            content = "测试聊天消息内容"
+            entry_type = "chat"
+            if message_type == "workflow_trigger":
+                content = "触发工作流测试"
+                entry_type = "workflow_trigger"
+            
+            # 构造测试消息
+            import uuid
+            test_message = {
+                "type": "chat",
+                "content": content,
                 "user_id": self.user_id,
-                "entry_type": "chat" if message_type == "chat" else "workflow",
-                "session_id": f"test_{message_type}_{int(time.time())}",
-                "workflow_type": "main",
-                "timestamp": datetime.now().isoformat(),
-                "test": True
+                "entry_type": entry_type,
+                "session_id": f"test_{message_type}_{uuid.uuid4().hex[:8]}",  # 使用UUID而不是时间戳
+                "timestamp": int(time.time()),
+                "test_mode": True
             }
             
             logger.info(f"📤 发送HSAI {message_type} 消息...")
             
             # 使用Socket.IO协议格式发送消息
             # 42表示MESSAGE事件，["message", data]是事件名和数据
-            socketio_msg = f'42["message",{json.dumps(hsai_message, ensure_ascii=False)}]'
+            socketio_msg = f'42["message",{json.dumps(test_message, ensure_ascii=False)}]'
             logger.info(f"📤 发送Socket.IO消息: {socketio_msg[:100]}...")
             await self.websocket.send(socketio_msg)
             

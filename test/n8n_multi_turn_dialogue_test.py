@@ -29,7 +29,9 @@ class MultiTurnDialogueTester:
         self.token: Optional[str] = None
         self.user_id: Optional[str] = None
         self.websocket: Any = None
-        self.session_id: str = f"multi_turn_test_{int(time.time())}"
+        # 使用UUID方式构造session_id，而不是时间戳拼接
+        import uuid
+        self.session_id: str = f"multi_turn_test_{uuid.uuid4().hex[:8]}"
         self.message_sequence: List[Dict[str, Any]] = []
         self.test_results = {
             "connection": False,

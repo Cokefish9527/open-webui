@@ -98,25 +98,44 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
 def _find_socket_by_session_id(session_id: str, SESSION_POOL) -> Optional[str]:
     """
     根据session_id查找对应的Socket.IO连接ID
-    通过遍历SESSION_POOL查找匹配的session_id
+    直接使用前端传递的session_id来维持会话
     """
     try:
-        # 遍历SESSION_POOL查找匹配的session_id
-        for sid, session_data in SESSION_POOL.items():
-            # 检查session_data中是否包含session_id字段
-            if isinstance(session_data, dict) and session_data.get("session_id") == session_id:
-                return sid
-                
-        # 如果在SESSION_POOL中没找到，尝试通过用户关联查找
-        # 这种情况适用于session_id是用户会话ID的情况
-        for sid, session_data in SESSION_POOL.items():
-            if isinstance(session_data, dict) and session_data.get("id"):
-                user_id = session_data.get("id")
-                # 检查用户是否有关联的session_id
-                # 这里假设session_id格式为"session_{user_id}_{timestamp}"
-                if session_id.startswith(f"session_{user_id}_"):
+        # 延迟导入Socket.IO相关模块
+        from open_webui.socket.main import SESSION_ID_TO_SID
+        
+        # 首先尝试通过SESSION_ID_TO_SID映射查找
+        if SESSION_ID_TO_SID:
+            if isinstance(SESSION_ID_TO_SID, dict):
+                sid = SESSION_ID_TO_SID.get(session_id)
+                if sid:
+                    log.info(f"通过SESSION_ID_TO_SID找到匹配的Socket.IO连接: {sid} 对应 session_id: {session_id}")
                     return sid
-                    
+            else:
+                # 对于RedisDict，需要特殊处理
+                try:
+                    sid = SESSION_ID_TO_SID.get(session_id)
+                    if hasattr(sid, '__await__'):
+                        # 这是一个异步操作，但在同步函数中无法处理
+                        # 回退到遍历SESSION_POOL的方式
+                        pass
+                    elif sid:
+                        log.info(f"通过SESSION_ID_TO_SID找到匹配的Socket.IO连接: {sid} 对应 session_id: {session_id}")
+                        return sid
+                except:
+                    # 如果无法通过SESSION_ID_TO_SID查找，回退到遍历SESSION_POOL的方式
+                    pass
+        
+        # 如果通过SESSION_ID_TO_SID找不到，回退到遍历SESSION_POOL的方式
+        # 直接遍历SESSION_POOL查找匹配的session_id
+        if hasattr(SESSION_POOL, 'items'):
+            for sid, session_data in SESSION_POOL.items():
+                # 检查session_data中是否包含session_id字段，并且与传入的session_id匹配
+                if isinstance(session_data, dict) and session_data.get("session_id") == session_id:
+                    log.info(f"找到匹配的Socket.IO连接: {sid} 对应 session_id: {session_id}")
+                    return sid
+        
+        # 如果没有找到直接匹配的session_id，记录日志
         log.debug(f"未找到session_id {session_id} 对应的Socket.IO连接")
         return None
         
