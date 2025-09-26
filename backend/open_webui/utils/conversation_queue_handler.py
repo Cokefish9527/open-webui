@@ -32,7 +32,7 @@ def get_redis_client():
 async def handle_conversation_agent_message(message: Dict[str, Any], db_session: Session) -> None:
     """
     处理对话代理消息队列中的消息
-    根据消息的status字段判断是流式传输还是完整消息
+    按照服务端消息结构规范文档重新封装消息并发送给前端
     
     Args:
         message: 从Redis队列中获取的消息数据
@@ -40,7 +40,7 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
     """
     try:
         # 延迟导入Socket.IO相关模块
-        from open_webui.socket.main import SESSION_POOL
+        from open_webui.socket.main import SESSION_POOL, sio
         
         log.info(f"处理对话代理消息: session_id={message.get('session_id')}, status={message.get('status')}")
         log.debug(f"完整消息内容: {message}")
@@ -55,115 +55,45 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
             log.warning("消息缺少session_id字段，无法关联到客户端会话")
             return
             
-        # 根据status字段判断消息类型
-        if status == "RUNNING":
-            # 流式传输消息
-            await _handle_streaming_message(message, session_id, reply_id, operate_id)
-        elif status == "FINISHED":
-            # 完整消息
-            await _handle_complete_message(message, session_id, reply_id, operate_id)
-        else:
-            log.warning(f"未知的消息状态: {status}")
-            # 默认按完整消息处理
-            await _handle_complete_message(message, session_id, reply_id, operate_id)
+        # 查找对应的Socket.IO连接
+        target_sid = _find_socket_by_session_id(session_id, SESSION_POOL)
+        if not target_sid:
+            log.warning(f"未找到session_id {session_id} 对应的Socket.IO连接")
+            return
             
+        # 按照服务端消息结构规范文档重新封装消息
+        # 创建符合前端定义的消息体结构
+        frontend_message = {
+            "type": "hsai_response",
+            "success": True,
+            "execution_id": reply_id or "",
+            "session_id": session_id,
+            "user_id": message.get("user_id", ""),
+            "execution_time": "0.00s",  # 默认值，可根据需要修改
+            "timestamp": message.get("create_ts", 0),
+            "messageType": message.get("content_type", 3),  # 默认为text类型
+            "displayText": "",
+            "data": {},
+            "status": status  # 直接使用原始状态
+        }
+        
+        # 处理内容字段
+        content = message.get("content", {})
+        if isinstance(content, dict):
+            frontend_message["displayText"] = content.get("text", "")
+            frontend_message["data"] = content.get("data", {})
+        elif isinstance(content, str):
+            frontend_message["displayText"] = content
+        
+        # 发送封装后的消息到前端
+        if sio is not None:
+            await sio.emit("hsai_response", frontend_message, to=target_sid)
+            log.info(f"已发送封装后的消息到前端: session_id={session_id}, status={status}")
+        else:
+            log.error("Socket.IO服务器未初始化")
+        
     except Exception as e:
         log.error(f"处理对话代理消息时发生错误: {e}", exc_info=True)
-        raise
-
-async def _handle_streaming_message(message: Dict[str, Any], session_id: str, reply_id: Optional[str], operate_id: Optional[str]) -> None:
-    """
-    处理流式传输消息
-    通过agent_message_chunk事件逐块发送消息内容
-    """
-    try:
-        # 延迟导入Socket.IO相关模块
-        from open_webui.socket.main import sio, SESSION_POOL
-        
-        content = message.get("content", {})
-        text_content = content.get("text", "")
-        
-        log.info(f"处理流式消息: session_id={session_id}, text_length={len(text_content)}")
-        
-        # 查找对应的Socket.IO连接
-        target_sid = _find_socket_by_session_id(session_id, SESSION_POOL)
-        if not target_sid:
-            log.warning(f"未找到session_id {session_id} 对应的Socket.IO连接")
-            return
-            
-        # 如果有文本内容，分块发送
-        if text_content:
-            # 按适当大小分块（例如每块100个字符）
-            chunk_size = 100
-            for i in range(0, len(text_content), chunk_size):
-                chunk_text = text_content[i:i + chunk_size]
-                is_final = (i + chunk_size >= len(text_content))
-                
-                chunk_message = {
-                    "session_id": session_id,
-                    "reply_id": reply_id,
-                    "reply_seq": message.get("reply_seq", 1),
-                    "chunk_text": chunk_text,
-                    "is_final": is_final,
-                    "create_ts": message.get("create_ts")
-                }
-                
-                # 发送消息块
-                await sio.emit("agent_message_chunk", chunk_message, to=target_sid)
-                log.debug(f"发送消息块: session_id={session_id}, chunk_length={len(chunk_text)}")
-                
-                # 短暂休眠以确保客户端能及时处理
-                await asyncio.sleep(0.05)
-                
-        # 发送状态更新
-        status_message = {
-            "session_id": session_id,
-            "reply_id": reply_id,
-            "status": "RUNNING",
-            "message": "消息传输中...",
-            "create_ts": message.get("create_ts")
-        }
-        await sio.emit("agent_message_status", status_message, to=target_sid)
-        log.info(f"流式消息处理完成: session_id={session_id}")
-        
-    except Exception as e:
-        log.error(f"处理流式消息时发生错误: {e}", exc_info=True)
-        raise
-
-async def _handle_complete_message(message: Dict[str, Any], session_id: str, reply_id: Optional[str], operate_id: Optional[str]) -> None:
-    """
-    处理完整消息
-    通过agent_message事件发送完整消息内容
-    """
-    try:
-        # 延迟导入Socket.IO相关模块
-        from open_webui.socket.main import sio, SESSION_POOL
-        
-        log.info(f"处理完整消息: session_id={session_id}")
-        
-        # 查找对应的Socket.IO连接
-        target_sid = _find_socket_by_session_id(session_id, SESSION_POOL)
-        if not target_sid:
-            log.warning(f"未找到session_id {session_id} 对应的Socket.IO连接")
-            return
-            
-        # 发送完整消息
-        await sio.emit("agent_message", message, to=target_sid)
-        log.info(f"完整消息发送完成: session_id={session_id}, reply_id={reply_id}")
-        
-        # 发送状态更新
-        status_message = {
-            "session_id": session_id,
-            "reply_id": reply_id,
-            "status": "FINISHED",
-            "message": "消息传输完成",
-            "create_ts": message.get("create_ts")
-        }
-        await sio.emit("agent_message_status", status_message, to=target_sid)
-        log.info(f"完整消息状态更新发送完成: session_id={session_id}")
-        
-    except Exception as e:
-        log.error(f"处理完整消息时发生错误: {e}", exc_info=True)
         raise
 
 def _find_socket_by_session_id(session_id: str, SESSION_POOL) -> Optional[str]:
