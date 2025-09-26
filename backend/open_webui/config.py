@@ -68,7 +68,7 @@ def run_migrations():
         log.exception(f"Error running migrations: {e}")
 
 
-run_migrations()
+#run_migrations()
 
 
 class Config(Base):
@@ -2141,7 +2141,7 @@ PDF_EXTRACT_IMAGES = PersistentConfig(
 RAG_EMBEDDING_MODEL = PersistentConfig(
     "RAG_EMBEDDING_MODEL",
     "rag.embedding_model",
-    os.environ.get("RAG_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
+    os.environ.get("RAG_EMBEDDING_MODEL", ""),  # 默认不使用sentence-transformers
 )
 log.info(f"Embedding model set: {RAG_EMBEDDING_MODEL.value}")
 

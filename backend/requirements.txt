@@ -59,7 +59,6 @@ elasticsearch==9.0.1
 pinecone==6.0.2
 
 transformers
-sentence-transformers==4.1.0
 accelerate
 colbert-ai==0.2.21
 einops==0.8.1
