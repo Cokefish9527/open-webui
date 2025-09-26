@@ -48,7 +48,8 @@ def register_hsai_events(sio, emitter):
                     "displayText": "欢迎使用华商AI系统！我们致力于为您提供最优质的服务体验。有任何问题都可以随时向我提问。",
                     "timestamp": int(__import__('time').time()),
                     "messageType": "assistant",
-                    "user_id": user_id
+                    "user_id": user_id,
+                    "status": "FINISHED"
                 }
                 
                 await sio.emit("hsai_response", welcome_message, to=sid)
