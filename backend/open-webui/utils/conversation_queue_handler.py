@@ -1,3 +1,16 @@
+"""
+对话消息队列处理器
+处理来自Redis队列的对话代理消息，并重新封装后发送给前端
+"""
+import json
+import logging
+from typing import Dict, Any, Optional
+from sqlalchemy.orm import Session
+
+# 初始化日志记录器
+log = logging.getLogger(__name__)
+
+
 async def handle_conversation_agent_message(message: Dict[str, Any], db_session: Session) -> None:
     """
     处理对话代理消息队列中的消息
@@ -12,13 +25,14 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
         from open_webui.socket.main import SESSION_POOL, sio
         
         log.info(f"开始处理对话代理消息")
-        log.debug(f"原始消息内容: {message}")
+        log.info(f"原始消息内容: {message}")
         
         # 获取消息关键字段
         session_id = message.get("session_id")
         status = message.get("status", "FINISHED")
         reply_id = message.get("reply_id")
         operate_id = message.get("operate_id")
+        user_id = message.get("user_id", "")  # 添加user_id的定义
         
         log.info(f"消息关键字段: session_id={session_id}, status={status}, reply_id={reply_id}")
         
@@ -41,7 +55,7 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
             "success": True,
             "execution_id": reply_id or "",
             "session_id": session_id,
-            "user_id": message.get("user_id", ""),
+            "user_id": user_id or "",
             "execution_time": "0.00s",  # 默认值，可根据需要修改
             "timestamp": message.get("create_ts", 0),
             "messageType": message.get("content_type", 3),  # 默认为text类型
@@ -50,17 +64,26 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
             "status": status  # 直接使用原始状态
         }
         
-        log.debug(f"封装前的消息内容: {frontend_message}")
+        log.info(f"封装前的消息内容: {frontend_message}")
         
-        # 处理内容字段
+        # 处理内容字段 - 按照前后端消息体结构完整填充
         content = message.get("content", {})
         if isinstance(content, dict):
+            # displayText填充redis消息结构的content/text
             frontend_message["displayText"] = content.get("text", "")
+            # data填充redis消息结构的content/data
             frontend_message["data"] = content.get("data", {})
         elif isinstance(content, str):
             frontend_message["displayText"] = content
+            # 如果content是字符串，data字段保持空字典
+            frontend_message["data"] = {}
+        else:
+            # 如果content不是dict也不是str，尝试转换为字符串
+            frontend_message["displayText"] = str(content) if content is not None else ""
+            # data字段保持空字典
+            frontend_message["data"] = {}
         
-        log.debug(f"封装后的消息内容: {frontend_message}")
+        log.info(f"封装后的消息内容: {frontend_message}")
         
         # 发送封装后的消息到前端
         if sio is not None:
@@ -109,3 +132,23 @@ def _find_socket_by_session_id(session_id: str, SESSION_POOL) -> Optional[str]:
     except Exception as e:
         log.error(f"查找Socket.IO连接时发生错误: {e}", exc_info=True)
         return None
+
+
+def register_conversation_queue_handler(redis_queue_listener) -> None:
+    """
+    注册对话消息队列处理器
+    
+    Args:
+        redis_queue_listener: Redis队列监听器实例
+    """
+    try:
+        log.info("注册对话消息队列处理器")
+        # 注册处理器，监听"ai-conversation-agent-message-queue"队列
+        redis_queue_listener.register_handler(
+            "ai-conversation-agent-message-queue", 
+            handle_conversation_agent_message
+        )
+        log.info("对话消息队列处理器注册成功")
+    except Exception as e:
+        log.error(f"注册对话消息队列处理器时发生错误: {e}", exc_info=True)
+        raise

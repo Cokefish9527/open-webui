@@ -105,7 +105,12 @@ def _process_queue_message(signal_name: str, message_data: bytes, db_session: Se
             return False
             
         # 调用处理器
-        handler(message, db_session)
+        if asyncio.iscoroutinefunction(handler):
+            # 如果处理器是异步函数，使用asyncio.run运行
+            asyncio.run(handler(message, db_session))
+        else:
+            # 如果处理器是同步函数，直接调用
+            handler(message, db_session)
             
         log.info(f"队列消息处理成功 [{signal_name}]: {message.get('message_id', 'unknown')}")
         return True
