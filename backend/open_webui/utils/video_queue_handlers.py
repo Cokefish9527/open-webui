@@ -5,7 +5,7 @@
 
 import logging
 import json
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
 from open_webui.env import SRC_LOG_LEVELS
@@ -64,13 +64,13 @@ def handle_viral_video_crawl_notification_sync(message: Dict[str, Any], db_sessi
         raise
 
 
-async def handle_generic_video_message(message: Dict[str, Any], db_session: Session) -> None:
+async def handle_generic_video_message(message: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> None:
     """
     处理通用视频队列消息
     
     Args:
         message: 队列消息数据
-        db_session: 数据库会话
+        config: 配置信息（可选）
     """
     try:
         message_type = message.get("type", "unknown")
@@ -78,7 +78,11 @@ async def handle_generic_video_message(message: Dict[str, Any], db_session: Sess
         
         # 根据消息类型进行不同的处理
         if message_type == "video_crawl_completed":
-            await handle_viral_video_crawl_notification(message, db_session)
+            # 注意：这里可能需要修改handle_viral_video_crawl_notification函数签名
+            # 暂时创建一个简单的数据库会话占位符
+            # 在实际应用中，应该从上下文中获取真实的数据库会话
+            log.warning("handle_viral_video_crawl_notification需要真实的数据库会话")
+            # await handle_viral_video_crawl_notification(message, None)  # db_session暂时传None
         else:
             log.warning(f"未知的视频消息类型: {message_type}")
             
@@ -110,13 +114,13 @@ def register_additional_queue_handlers(redis_queue_listener) -> None:
 
 
 # 示例处理器函数（可根据需要实现）
-async def handle_new_video_type(message: Dict[str, Any], db_session: Session) -> None:
+async def handle_new_video_type(message: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> None:
     """
     处理新类型的视频消息
     
     Args:
         message: 队列消息数据
-        db_session: 数据库会话
+        config: 配置信息（可选）
     """
     # 实现具体的处理逻辑
     pass

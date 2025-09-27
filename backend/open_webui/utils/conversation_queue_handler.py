@@ -29,14 +29,14 @@ def get_redis_client():
     return redis.from_url(REDIS_URL)
 
 
-async def handle_conversation_agent_message(message: Dict[str, Any], db_session: Session) -> None:
+async def handle_conversation_agent_message(message: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> None:
     """
     处理对话代理消息队列中的消息
     按照服务端消息结构规范文档重新封装消息并发送给前端
     
     Args:
         message: 从Redis队列中获取的消息数据
-        db_session: 数据库会话
+        config: 配置信息（可选）
     """
     try:
         # 延迟导入Socket.IO相关模块
