@@ -41,6 +41,8 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
     try:
         # 延迟导入Socket.IO相关模块
         from open_webui.socket.main import SESSION_POOL, USER_POOL, sio
+        # 导入用户模型
+        from open_webui.models.users import Users
         
         log.info(f"处理对话代理消息: session_id={message.get('session_id')}, status={message.get('status')}")
         log.debug(f"完整消息内容: {message}")
@@ -51,6 +53,13 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
         reply_id = message.get("reply_id")
         operate_id = message.get("operate_id")
         user_id = message.get("user_id", "")  # 提取user_id
+        content_type = message.get("content_type", "")
+        
+        # 检查是否是信息收集完成的消息 (blue_image类型且状态为FINISHED)
+        if content_type == "blue_image" and status == "FINISHED" and user_id:
+            log.info(f"检测到信息收集完成消息，更新用户 {user_id} 的信息收集状态")
+            # 更新用户信息收集完成状态
+            Users.update_user_info_collection_status(user_id, True)
         
         if not session_id:
             log.warning("消息缺少session_id字段，无法关联到客户端会话")

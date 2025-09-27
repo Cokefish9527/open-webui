@@ -9,7 +9,7 @@ from open_webui.models.groups import Groups
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Column, String, Text
+from sqlalchemy import BigInteger, Boolean, Column, String, Text
 from sqlalchemy import or_
 
 
@@ -35,6 +35,9 @@ class User(Base):
     api_key = Column(String, nullable=True, unique=True)
     settings = Column(JSONField, nullable=True)
     info = Column(JSONField, nullable=True)
+    
+    # 添加信息收集完成标志位字段
+    info_collection_completed = Column(Boolean, default=False, nullable=False)
 
     oauth_sub = Column(Text, unique=True)
 
@@ -58,6 +61,8 @@ class UserModel(BaseModel):
     api_key: Optional[str] = Field(default=None, description="API密钥")
     settings: Optional[UserSettings] = Field(default=None, description="用户设置")
     info: Optional[dict] = Field(default=None, description="用户信息")
+    # 添加信息收集完成标志位字段
+    info_collection_completed: bool = Field(default=False, description="信息收集是否完成")
     oauth_sub: Optional[str] = Field(default=None, description="OAuth子标识符")
 
     model_config = ConfigDict(from_attributes=True, extra="allow")
@@ -132,6 +137,8 @@ class UsersTable:
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                     "oauth_sub": oauth_sub,
+                    # 新用户默认信息收集未完成
+                    "info_collection_completed": False,
                 }
             )
             result = User(**user.model_dump())
@@ -147,7 +154,9 @@ class UsersTable:
         try:
             with get_db() as db:
                 user = db.query(User).filter_by(id=id).first()
-                return UserModel.model_validate(user)
+                if user:
+                    return UserModel.model_validate(user)
+                return None
         except Exception:
             return None
 
@@ -155,7 +164,9 @@ class UsersTable:
         try:
             with get_db() as db:
                 user = db.query(User).filter_by(api_key=api_key).first()
-                return UserModel.model_validate(user)
+                if user:
+                    return UserModel.model_validate(user)
+                return None
         except Exception:
             return None
 
@@ -163,7 +174,9 @@ class UsersTable:
         try:
             with get_db() as db:
                 user = db.query(User).filter_by(email=email).first()
-                return UserModel.model_validate(user)
+                if user:
+                    return UserModel.model_validate(user)
+                return None
         except Exception:
             return None
 
@@ -171,7 +184,9 @@ class UsersTable:
         try:
             with get_db() as db:
                 user = db.query(User).filter_by(oauth_sub=sub).first()
-                return UserModel.model_validate(user)
+                if user:
+                    return UserModel.model_validate(user)
+                return None
         except Exception:
             return None
 
@@ -240,10 +255,10 @@ class UsersTable:
                 query = query.limit(limit)
 
             users = query.all()
-            return {
-                "users": [UserModel.model_validate(user) for user in users],
-                "total": db.query(User).count(),
-            }
+            return UserListResponse(
+                users=[UserModel.model_validate(user) for user in users],
+                total=db.query(User).count(),
+            )
 
     def get_users_by_user_ids(self, user_ids: List[str]) -> List[UserModel]:
         with get_db() as db:
@@ -254,11 +269,13 @@ class UsersTable:
         with get_db() as db:
             return db.query(User).count()
 
-    def get_first_user(self) -> UserModel:
+    def get_first_user(self) -> Optional[UserModel]:
         try:
             with get_db() as db:
                 user = db.query(User).order_by(User.created_at).first()
-                return UserModel.model_validate(user)
+                if user:
+                    return UserModel.model_validate(user)
+                return None
         except Exception:
             return None
 
@@ -266,15 +283,13 @@ class UsersTable:
         try:
             with get_db() as db:
                 user = db.query(User).filter_by(id=id).first()
-
-                if user.settings is None:
-                    return None
-                else:
+                if user and user.settings is not None:
                     return (
                         user.settings.get("ui", {})
                         .get("notifications", {})
                         .get("webhook_url", None)
                     )
+                return None
         except Exception:
             return None
 
@@ -344,18 +359,21 @@ class UsersTable:
     def update_user_settings_by_id(self, id: str, updated: dict) -> Optional[UserModel]:
         try:
             with get_db() as db:
-                user_settings = db.query(User).filter_by(id=id).first().settings
-
-                if user_settings is None:
-                    user_settings = {}
-
-                user_settings.update(updated)
-
-                db.query(User).filter_by(id=id).update({"settings": user_settings})
-                db.commit()
-
                 user = db.query(User).filter_by(id=id).first()
-                return UserModel.model_validate(user)
+                if user:
+                    user_settings = user.settings
+
+                    if user_settings is None:
+                        user_settings = {}
+
+                    user_settings.update(updated)
+
+                    db.query(User).filter_by(id=id).update({"settings": user_settings})
+                    db.commit()
+
+                    updated_user = db.query(User).filter_by(id=id).first()
+                    return UserModel.model_validate(updated_user)
+                return None
         except Exception:
             return None
 
@@ -391,14 +409,17 @@ class UsersTable:
         try:
             with get_db() as db:
                 user = db.query(User).filter_by(id=id).first()
-                return user.api_key
+                if user:
+                    api_key = user.api_key
+                    return str(api_key) if api_key is not None else None
+                return None
         except Exception:
             return None
 
     def get_valid_user_ids(self, user_ids: List[str]) -> List[str]:
         with get_db() as db:
             users = db.query(User).filter(User.id.in_(user_ids)).all()
-            return [user.id for user in users]
+            return [str(user.id) for user in users]
 
     def get_super_admin_user(self) -> Optional[UserModel]:
         with get_db() as db:
@@ -407,6 +428,30 @@ class UsersTable:
                 return UserModel.model_validate(user)
             else:
                 return None
+
+    def update_user_info_collection_status(self, id: str, completed: bool) -> Optional[UserModel]:
+        """更新用户信息收集完成状态"""
+        try:
+            with get_db() as db:
+                db.query(User).filter_by(id=id).update({"info_collection_completed": completed})
+                db.commit()
+                user = db.query(User).filter_by(id=id).first()
+                if user:
+                    return UserModel.model_validate(user)
+                return None
+        except Exception:
+            return None
+    
+    def is_user_info_collection_completed(self, id: str) -> bool:
+        """检查用户信息收集是否完成"""
+        try:
+            with get_db() as db:
+                user = db.query(User).filter_by(id=id).first()
+                if user:
+                    return bool(user.info_collection_completed)
+                return False
+        except Exception:
+            return False
 
 
 Users = UsersTable()

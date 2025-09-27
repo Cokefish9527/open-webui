@@ -3,6 +3,9 @@ import asyncio
 import json
 from typing import Dict, Any
 
+# 导入用户模型
+from open_webui.models.users import Users
+
 log = logging.getLogger(__name__)
 
 def register_hsai_events(sio, emitter):
@@ -71,6 +74,28 @@ def register_hsai_events(sio, emitter):
             if user_id:
                 log.info(f"[HSAI统一事件] 识别到用户 {user_id} 的消息，使用工作流编排中心处理")
                 
+                # 检查用户信息收集状态，决定使用哪个工作流
+                is_info_collected = Users.is_user_info_collection_completed(user_id)
+                log.info(f"[HSAI统一事件] 用户 {user_id} 信息收集状态: {'已完成' if is_info_collected else '未完成'}")
+                
+                # 构建上下文信息
+                context = {
+                    "entry_type": data.get("entry_type", "chat"),
+                    "business_name": "HSAI",  # 硬编码为"HSAI"
+                    "additional_data": data.get("metadata", {}),
+                    "socket_id": sid
+                }
+                
+                # 根据信息收集状态设置入口类型
+                if not is_info_collected:
+                    # 如果信息未收集完成，强制使用公司信息收集工作流
+                    context["entry_type"] = "company_info"
+                    log.info(f"[HSAI统一事件] 用户信息未收集完成，强制使用公司信息收集工作流")
+                else:
+                    # 如果信息已收集完成，使用主对话工作流
+                    context["entry_type"] = "chat"
+                    log.info(f"[HSAI统一事件] 用户信息已收集完成，使用主对话工作流")
+                
                 # 直接使用工作流编排中心处理消息
                 from open_webui.services.workflow_orchestration_center import workflow_orchestration_center
                 
@@ -83,20 +108,6 @@ def register_hsai_events(sio, emitter):
                     log.info(f"[HSAI统一事件] 前端未传递session_id，生成新的session_id: {session_id}")
                 else:
                     log.info(f"[HSAI统一事件] 使用前端传递的session_id: {session_id}")
-                
-                # 构建上下文信息
-                context = {
-                    "entry_type": data.get("entry_type", "chat"),
-                    "business_name": "HSAI",  # 硬编码为"HSAI"
-                    "additional_data": data.get("metadata", {}),
-                    "socket_id": sid
-                }
-                
-                # 移除重复的工作流类型选择逻辑，让WOC内部处理
-                # 原来的代码：
-                # from open_webui.config.n8n_workflows import get_workflow_by_entry_type
-                # workflow_type = get_workflow_by_entry_type(context["entry_type"])
-                # log.info(f"[HSAI统一事件] 通过WOC处理请求，上下文: {context}, 工作流类型: {workflow_type}")
                 
                 log.info(f"[HSAI统一事件] 通过WOC处理请求，上下文: {context}")
                 
