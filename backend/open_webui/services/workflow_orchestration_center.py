@@ -264,6 +264,20 @@ class WorkflowOrchestrationCenter:
                 progress=10,
                 current_step="开始执行工作流"
             )
+
+            # 4. 通知Socket.IO事件 - 工作流开始
+            await self._notify_socket_event(
+                event_type="workflow_started",
+                data={
+                    "execution_id": execution_id,
+                    "workflow_type": workflow_type.value,
+                    "workflow_name": workflow_type.value,
+                    "user_id": user_id,
+                    "session_id": session_id
+                },
+                status="FINISHED",
+                context=context
+            )
             
             # 4. 记录工作流开始日志（取消发送Socket.IO事件）
             log.info(f"工作流开始执行: execution_id={execution_id}, workflow_type={workflow_type.value}, user_id={user_id}")
@@ -321,6 +335,7 @@ class WorkflowOrchestrationCenter:
                         "user_id": user_id,
                         "session_id": session_id
                     },
+                    status="FAILED",
                     context=context
                 )
             
@@ -346,11 +361,12 @@ class WorkflowOrchestrationCenter:
                         "user_id": user_id,
                         "session_id": session_id
                     },
+                    status="FAILED",
                     context=context
                 )
             return ""
     
-    async def _notify_socket_event(self, event_type: str, data: Dict[str, Any], 
+    async def _notify_socket_event(self, event_type: str, data: Dict[str, Any], status: str = "FINISHED",
                                  context: Optional[Dict[str, Any]] = None):
         """通过Socket.IO发送事件通知"""
         try:
