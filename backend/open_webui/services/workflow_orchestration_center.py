@@ -265,18 +265,8 @@ class WorkflowOrchestrationCenter:
                 current_step="开始执行工作流"
             )
             
-            # 4. 通知Socket.IO事件 - 工作流开始
-            await self._notify_socket_event(
-                event_type="workflow_started",
-                data={
-                    "execution_id": execution_id,
-                    "workflow_type": workflow_type.value,
-                    "workflow_name": workflow_type.value,
-                    "user_id": user_id,
-                    "session_id": session_id
-                },
-                context=context
-            )
+            # 4. 记录工作流开始日志（取消发送Socket.IO事件）
+            log.info(f"工作流开始执行: execution_id={execution_id}, workflow_type={workflow_type.value}, user_id={user_id}")
             
             # 5. 执行工作流
             result = await self.communication_manager.execute_workflow(
@@ -314,20 +304,14 @@ class WorkflowOrchestrationCenter:
                 if execution:
                     execution.result = result
             
-            # 7. 通知Socket.IO事件 - 工作流完成或失败
+            # 7. 记录工作流完成或失败日志（取消发送Socket.IO事件）
             if result.get("success", False):
-                await self._notify_socket_event(
-                    event_type="workflow_completed",
-                    data={
-                        "execution_id": execution_id,
-                        "workflow_type": workflow_type.value,
-                        "result": result,
-                        "user_id": user_id,
-                        "session_id": session_id
-                    },
-                    context=context
-                )
+                log.info(f"工作流执行完成: execution_id={execution_id}, workflow_type={workflow_type.value}, user_id={user_id}")
             else:
+                log.error(f"工作流执行失败: execution_id={execution_id}, workflow_type={workflow_type.value}, user_id={user_id}, error={result.get('error', '未知错误')}")
+            
+            # 8. 只在失败时发送Socket.IO事件
+            if not result.get("success", False):
                 await self._notify_socket_event(
                     event_type="workflow_failed",
                     data={
