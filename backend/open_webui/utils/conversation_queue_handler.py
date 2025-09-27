@@ -40,7 +40,7 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
     """
     try:
         # 延迟导入Socket.IO相关模块
-        from open_webui.socket.main import SESSION_POOL, sio
+        from open_webui.socket.main import SESSION_POOL, USER_POOL, sio
         
         log.info(f"处理对话代理消息: session_id={message.get('session_id')}, status={message.get('status')}")
         log.debug(f"完整消息内容: {message}")
@@ -50,6 +50,7 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
         status = message.get("status", "FINISHED")
         reply_id = message.get("reply_id")
         operate_id = message.get("operate_id")
+        user_id = message.get("user_id", "")  # 提取user_id
         
         if not session_id:
             log.warning("消息缺少session_id字段，无法关联到客户端会话")
@@ -57,9 +58,15 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
             
         # 查找对应的Socket.IO连接
         target_sid = _find_socket_by_session_id(session_id, SESSION_POOL)
+        
+        # 如果通过session_id找不到，尝试使用user_id查找
+        if not target_sid and user_id:
+            log.warning(f"未找到session_id {session_id} 对应的Socket.IO连接，尝试通过user_id {user_id} 查找")
+            target_sid = _find_socket_by_user_id(user_id, USER_POOL, SESSION_POOL)
+            
         if not target_sid:
             # 添加更多调试信息
-            log.warning(f"未找到session_id {session_id} 对应的Socket.IO连接")
+            log.warning(f"未找到session_id {session_id} 或 user_id {user_id} 对应的Socket.IO连接")
             # 记录当前SESSION_POOL中的所有session_id
             try:
                 if hasattr(SESSION_POOL, 'items'):
@@ -81,7 +88,7 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
             "success": True,
             "execution_id": reply_id or "",
             "session_id": session_id,
-            "user_id": message.get("user_id", ""),
+            "user_id": user_id,
             "execution_time": "0.00s",  # 默认值，可根据需要修改
             "timestamp": message.get("create_ts", 0),
             "messageType": message.get("content_type", 3),  # 默认为text类型
@@ -108,6 +115,7 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
     except Exception as e:
         log.error(f"处理对话代理消息时发生错误: {e}", exc_info=True)
         raise
+
 
 def _find_socket_by_session_id(session_id: str, SESSION_POOL) -> Optional[str]:
     """
@@ -173,6 +181,56 @@ def _find_socket_by_session_id(session_id: str, SESSION_POOL) -> Optional[str]:
     except Exception as e:
         log.error(f"查找Socket.IO连接时发生错误: {e}", exc_info=True)
         return None
+
+
+def _find_socket_by_user_id(user_id: str, USER_POOL, SESSION_POOL) -> Optional[str]:
+    """
+    根据user_id查找对应的Socket.IO连接ID
+    通过USER_POOL获取用户的所有连接，然后返回最新的一个
+    
+    Args:
+        user_id: 用户ID
+        USER_POOL: 用户连接池
+        SESSION_POOL: 会话连接池
+        
+    Returns:
+        Optional[str]: 找到的Socket.IO连接ID，未找到返回None
+    """
+    try:
+        log.debug(f"开始查找user_id {user_id} 对应的Socket.IO连接")
+        
+        # 从USER_POOL获取用户的所有连接
+        if isinstance(USER_POOL, dict):
+            user_sids = USER_POOL.get(user_id, [])
+        else:
+            # 对于RedisDict，需要特殊处理
+            user_sids = USER_POOL.get(user_id, [])
+            # 如果是awaitable，需要await
+            if user_sids is not None and hasattr(user_sids, '__await__'):
+                # 在同步函数中无法await，直接返回None
+                log.warning("RedisDict类型在同步函数中无法处理")
+                return None
+            # 确保user_sids是列表类型
+            if not isinstance(user_sids, list):
+                user_sids = []
+                
+        log.debug(f"用户 {user_id} 的所有连接: {user_sids}")
+        
+        # 如果用户有连接，返回最新的一个（列表中的最后一个）
+        if user_sids:
+            # 验证sid是否仍然有效（在SESSION_POOL中存在）
+            for sid in reversed(user_sids):  # 从最新的开始检查
+                if sid in SESSION_POOL:
+                    log.info(f"通过user_id {user_id} 找到匹配的Socket.IO连接: {sid}")
+                    return sid
+                    
+        log.debug(f"未找到user_id {user_id} 对应的Socket.IO连接")
+        return None
+        
+    except Exception as e:
+        log.error(f"通过user_id查找Socket.IO连接时发生错误: {e}", exc_info=True)
+        return None
+
 
 def register_conversation_queue_handler(redis_queue_listener) -> None:
     """
