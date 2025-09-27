@@ -17,7 +17,8 @@ from open_webui.env import SRC_LOG_LEVELS, REDIS_URL
 
 # 配置日志
 log = logging.getLogger(__name__)
-log.setLevel(SRC_LOG_LEVELS.get("CONFIG", logging.INFO))
+# 强制设置日志级别为DEBUG，便于调试
+log.setLevel(logging.DEBUG)
 
 
 def get_redis_client():
@@ -57,7 +58,20 @@ async def handle_conversation_agent_message(message: Dict[str, Any], db_session:
         # 查找对应的Socket.IO连接
         target_sid = _find_socket_by_session_id(session_id, SESSION_POOL)
         if not target_sid:
+            # 添加更多调试信息
             log.warning(f"未找到session_id {session_id} 对应的Socket.IO连接")
+            # 记录当前SESSION_POOL中的所有session_id
+            try:
+                if hasattr(SESSION_POOL, 'items'):
+                    existing_session_ids = []
+                    for sid, session_data in SESSION_POOL.items():
+                        if isinstance(session_data, dict) and session_data.get("session_id"):
+                            existing_session_ids.append(f"{session_data.get('session_id')}->{sid}")
+                    log.debug(f"当前SESSION_POOL中的session_id映射: {existing_session_ids}")
+                else:
+                    log.debug("SESSION_POOL不是dict类型，无法遍历")
+            except Exception as e:
+                log.error(f"记录SESSION_POOL信息时发生错误: {e}")
             return
             
         # 按照服务端消息结构规范文档重新封装消息
@@ -104,36 +118,53 @@ def _find_socket_by_session_id(session_id: str, SESSION_POOL) -> Optional[str]:
         # 延迟导入Socket.IO相关模块
         from open_webui.socket.main import SESSION_ID_TO_SID
         
+        log.debug(f"开始查找session_id {session_id} 对应的Socket.IO连接")
+        
         # 首先尝试通过SESSION_ID_TO_SID映射查找
         if SESSION_ID_TO_SID:
+            log.debug("尝试通过SESSION_ID_TO_SID映射查找")
             if isinstance(SESSION_ID_TO_SID, dict):
                 sid = SESSION_ID_TO_SID.get(session_id)
                 if sid:
                     log.info(f"通过SESSION_ID_TO_SID找到匹配的Socket.IO连接: {sid} 对应 session_id: {session_id}")
                     return sid
+                else:
+                    log.debug(f"SESSION_ID_TO_SID中未找到session_id {session_id}")
             else:
                 # 对于RedisDict，需要特殊处理
                 try:
+                    log.debug("SESSION_ID_TO_SID是RedisDict类型，尝试获取")
                     sid = SESSION_ID_TO_SID.get(session_id)
                     if hasattr(sid, '__await__'):
                         # 这是一个异步操作，但在同步函数中无法处理
                         # 回退到遍历SESSION_POOL的方式
+                        log.debug("SESSION_ID_TO_SID返回异步对象，回退到遍历SESSION_POOL方式")
                         pass
                     elif sid:
                         log.info(f"通过SESSION_ID_TO_SID找到匹配的Socket.IO连接: {sid} 对应 session_id: {session_id}")
                         return sid
-                except:
+                    else:
+                        log.debug(f"SESSION_ID_TO_SID中未找到session_id {session_id}")
+                except Exception as e:
+                    log.error(f"通过SESSION_ID_TO_SID查找时发生异常: {e}")
                     # 如果无法通过SESSION_ID_TO_SID查找，回退到遍历SESSION_POOL的方式
                     pass
         
         # 如果通过SESSION_ID_TO_SID找不到，回退到遍历SESSION_POOL的方式
+        log.debug("回退到遍历SESSION_POOL方式查找")
         # 直接遍历SESSION_POOL查找匹配的session_id
         if hasattr(SESSION_POOL, 'items'):
+            found_count = 0
             for sid, session_data in SESSION_POOL.items():
+                found_count += 1
                 # 检查session_data中是否包含session_id字段，并且与传入的session_id匹配
                 if isinstance(session_data, dict) and session_data.get("session_id") == session_id:
                     log.info(f"找到匹配的Socket.IO连接: {sid} 对应 session_id: {session_id}")
                     return sid
+            
+            log.debug(f"遍历SESSION_POOL完成，共检查了{found_count}个会话，未找到匹配的session_id")
+        else:
+            log.debug("SESSION_POOL没有items方法，无法遍历")
         
         # 如果没有找到直接匹配的session_id，记录日志
         log.debug(f"未找到session_id {session_id} 对应的Socket.IO连接")
