@@ -1,6 +1,6 @@
 {
   "test_session": "multi_turn_test_1757992547",
-  "n8n_endpoint": "https://n8n.hsai.cc/webhook-test/n8n_chat",
+  "n8n_endpoint": "https://webhook-n8n.hsai.cc/webhook/n8n_chat",
   "timestamp": "2025-09-16T11:17:03.364725",
   "message_sequence": [
     {

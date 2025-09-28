@@ -1,6 +1,6 @@
 """
 多轮对话测试脚本
-测试向n8n测试地址（https://n8n.hsai.cc/webhook-test/n8n_chat）发送消息
+测试向n8n测试地址（https://webhook-n8n.hsai.cc/webhook/n8n_chat）发送消息
 记录模拟前端、服务端的收发顺序
 """
 
@@ -25,7 +25,7 @@ class MultiTurnDialogueTester:
     
     def __init__(self):
         self.base_url = "http://localhost:8080"
-        self.n8n_test_url = "https://n8n.hsai.cc/webhook-test/n8n_chat"
+        self.n8n_test_url = "https://webhook-n8n.hsai.cc/webhook/n8n_chat"
         self.token: Optional[str] = None
         self.user_id: Optional[str] = None
         self.websocket: Any = None

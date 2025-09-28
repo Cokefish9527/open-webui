@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  open-webui-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: open-webui-backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend/data:/app/backend/data
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - WEBUI_SECRET_KEY=
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  backend-data:
