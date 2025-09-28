@@ -7,11 +7,13 @@
 ```
 backend/
 ├── Dockerfile              # 后端服务Docker镜像构建文件
+├── Dockerfile.optimized    # 优化版Dockerfile（多阶段构建）
 ├── requirements.txt        # Python依赖包列表
 ├── start.sh                # 启动脚本
 ├── start-docker.sh         # Docker专用启动脚本
 ├── deploy.sh               # 部署脚本
-├── update.sh               # 更新脚本
+├── update.sh               # 完整更新脚本
+├── incremental-update.sh   # 增量更新脚本
 └── open_webui/             # 后端服务源代码
 ```
 
@@ -79,7 +81,7 @@ powershell -ExecutionPolicy Bypass -File backend\deploy.sh
 
 当代码更新后，您需要更新Docker镜像以包含最新的代码更改：
 
-### 手动更新流程
+### 完整更新流程（重新安装依赖）
 
 ```bash
 # 进入项目目录
@@ -98,13 +100,21 @@ docker-compose -f docker-compose.backend.yaml build --no-cache
 docker-compose -f docker-compose.backend.yaml up -d
 ```
 
+### 增量更新流程（仅更新代码，利用缓存）
+
+```bash
+# 使用增量更新脚本（推荐用于频繁代码更新）
+chmod +x backend/incremental-update.sh
+./backend/incremental-update.sh
+```
+
 ### 使用更新脚本（Linux/macOS）
 
 ```bash
 # 设置脚本执行权限（Linux/macOS）
 chmod +x backend/update.sh
 
-# 运行更新脚本
+# 运行完整更新脚本
 ./backend/update.sh
 ```
 
@@ -113,6 +123,26 @@ chmod +x backend/update.sh
 # Windows环境下执行脚本
 powershell -ExecutionPolicy Bypass -File backend\update.sh
 ```
+
+## 优化构建性能
+
+### Docker缓存机制
+
+Dockerfile已优化以充分利用层缓存：
+1. 依赖安装步骤在代码复制之前
+2. 只有当requirements.txt变化时才会重新安装依赖
+3. 代码更改不会影响依赖层缓存
+
+### 多阶段构建
+
+使用`Dockerfile.optimized`可以获得更小的镜像体积：
+```bash
+docker build -t open-webui-backend -f backend/Dockerfile.optimized .
+```
+
+### .dockerignore优化
+
+通过.dockerignore文件排除不必要的文件，减少构建上下文大小。
 
 ## 环境变量
 
