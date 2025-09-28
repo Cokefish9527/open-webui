@@ -78,12 +78,12 @@ def register_hsai_events(sio, emitter):
                 is_info_collected = Users.is_user_info_collection_completed(user_id)
                 log.info(f"[HSAI统一事件] 用户 {user_id} 信息收集状态: {'已完成' if is_info_collected else '未完成'}")
                 
-                # 构建上下文信息
+                # 构建上下文信息，包含socket_id用于后续消息发送
                 context = {
                     "entry_type": data.get("entry_type", "chat"),
                     "business_name": "HSAI",  # 硬编码为"HSAI"
                     "additional_data": data.get("metadata", {}),
-                    "socket_id": sid
+                    "socket_id": sid  # 传递socket_id用于后续消息发送
                 }
                 
                 # 根据信息收集状态设置入口类型
@@ -127,7 +127,7 @@ def register_hsai_events(sio, emitter):
                     "type": "authentication_error",
                     "success": False,
                     "content": "用户身份验证失败",
-                    "timestamp": int(__import__('time').time()),
+                    "timestamp": int(__import__('time').time() * 1000),
                     "messageType": "error",
                     "displayText": "用户身份验证失败"
                 }
@@ -139,7 +139,7 @@ def register_hsai_events(sio, emitter):
                 "type": "processing_error",
                 "success": False,
                 "content": f"消息处理失败: {str(e)}",
-                "timestamp": int(__import__('time').time()),
+                "timestamp": int(__import__('time').time() * 1000),
                 "messageType": "error",
                 "displayText": f"消息处理失败: {str(e)}"
             }
@@ -170,7 +170,7 @@ def register_hsai_events(sio, emitter):
                     "success": True,
                     "user_id": user_id,
                     "system_health": system_health,
-                    "timestamp": int(__import__('time').time()),
+                    "timestamp": int(__import__('time').time() * 1000),
                     "messageType": "assistant",
                     "displayText": "系统状态查询完成"
                 }
@@ -181,7 +181,7 @@ def register_hsai_events(sio, emitter):
                     "type": "authentication_error",
                     "success": False,
                     "content": "身份验证失败",
-                    "timestamp": int(__import__('time').time()),
+                    "timestamp": int(__import__('time').time() * 1000),
                     "messageType": "error",
                     "displayText": "身份验证失败"
                 }
@@ -193,7 +193,7 @@ def register_hsai_events(sio, emitter):
                 "type": "processing_error",
                 "success": False,
                 "content": f"状态查询失败: {str(e)}",
-                "timestamp": int(__import__('time').time()),
+                "timestamp": int(__import__('time').time() * 1000),
                 "messageType": "error",
                 "displayText": f"状态查询失败: {str(e)}"
             }

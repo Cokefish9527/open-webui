@@ -49,6 +49,7 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
         
         # 获取消息关键字段
         session_id = message.get("session_id")
+        socket_id = message.get("socket_id")  # 优先使用socket_id
         status = message.get("status", "FINISHED")
         reply_id = message.get("reply_id")
         operate_id = message.get("operate_id")
@@ -61,21 +62,31 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
             # 更新用户信息收集完成状态
             Users.update_user_info_collection_status(user_id, True)
         
-        if not session_id:
-            log.warning("消息缺少session_id字段，无法关联到客户端会话")
-            return
-            
-        # 查找对应的Socket.IO连接
-        target_sid = _find_socket_by_session_id(session_id, SESSION_POOL)
+        # 查找对应的Socket.IO连接，按照socket_id->session_id->user_id的顺序
+        target_sid = None
         
-        # 如果通过session_id找不到，尝试使用user_id查找
+        # 1. 优先尝试通过socket_id查找
+        if socket_id:
+            log.debug(f"尝试通过socket_id {socket_id} 查找Socket.IO连接")
+            if socket_id in SESSION_POOL:
+                target_sid = socket_id
+                log.info(f"通过socket_id {socket_id} 找到匹配的Socket.IO连接")
+            else:
+                log.warning(f"未找到socket_id {socket_id} 对应的Socket.IO连接")
+        
+        # 2. 如果通过socket_id找不到，尝试通过session_id查找
+        if not target_sid and session_id:
+            log.debug(f"尝试通过session_id {session_id} 查找Socket.IO连接")
+            target_sid = _find_socket_by_session_id(session_id, SESSION_POOL)
+            
+        # 3. 如果通过session_id找不到，尝试使用user_id查找
         if not target_sid and user_id:
             log.warning(f"未找到session_id {session_id} 对应的Socket.IO连接，尝试通过user_id {user_id} 查找")
             target_sid = _find_socket_by_user_id(user_id, USER_POOL, SESSION_POOL)
             
         if not target_sid:
             # 添加更多调试信息
-            log.warning(f"未找到session_id {session_id} 或 user_id {user_id} 对应的Socket.IO连接")
+            log.warning(f"未找到socket_id {socket_id}、session_id {session_id} 或 user_id {user_id} 对应的Socket.IO连接")
             # 记录当前SESSION_POOL中的所有session_id
             try:
                 if hasattr(SESSION_POOL, 'items'):

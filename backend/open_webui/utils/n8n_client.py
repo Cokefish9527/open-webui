@@ -54,11 +54,17 @@ class ExecutionRequest:
             "request_id": str(uuid.uuid4())
         }
         
+        # 添加socket_id（如果存在）
+        if self.additional_data and "socket_id" in self.additional_data:
+            payload["socket_id"] = self.additional_data["socket_id"]
+        
         if self.business_name:
             payload["business_name"] = self.business_name
             
         if self.additional_data:
-            payload.update(self.additional_data)
+            # 添加除了socket_id之外的其他数据
+            additional_payload = {k: v for k, v in self.additional_data.items() if k != "socket_id"}
+            payload.update(additional_payload)
             
         # 直接返回payload，而不是包装在body字段中
         # 这样可以避免n8n工作流中的多层body嵌套问题

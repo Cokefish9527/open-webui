@@ -184,7 +184,7 @@ class CommunicationManager:
                 enabled=True
             )
             
-            # 构建请求数据
+            # 构建请求数据，包含socket_id用于后续消息发送
             request = ExecutionRequest(
                 workflow_id=workflow_type.value,
                 session_id=session_id,
@@ -383,7 +383,7 @@ class WorkflowOrchestrationCenter:
             
             # 构建事件数据
             event_data = {
-                "timestamp": time.time(),
+                "timestamp": int(time.time() * 1000),  # 使用13位时间戳
                 **data
             }
             

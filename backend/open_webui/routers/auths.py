@@ -3,6 +3,7 @@ import uuid
 import time
 import datetime
 import logging
+import asyncio
 from decimal import Decimal
 
 from aiohttp import ClientSession
@@ -519,6 +520,31 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         user = Auths.authenticate_user(form_data.email.lower(), form_data.password)
 
     if user:
+        # 检查是否启用了单点登录(SSO)功能
+        ENABLE_SSO = getattr(request.app.state.config, 'ENABLE_SSO', True)
+        SSO_DISCONNECT_OLD_SESSIONS = getattr(request.app.state.config, 'SSO_DISCONNECT_OLD_SESSIONS', True)
+        
+        if ENABLE_SSO:
+            # 检查用户是否已经有活跃的会话
+            from open_webui.socket.main import USER_POOL
+            if isinstance(USER_POOL, dict):
+                if user.id in USER_POOL and len(USER_POOL[user.id]) > 0:
+                    # 用户已经有活跃会话
+                    if SSO_DISCONNECT_OLD_SESSIONS:
+                        # 断开所有旧会话以允许新登录
+                        from open_webui.socket.main import sio
+                        if sio is not None:
+                            # 断开所有旧会话
+                            old_sids = USER_POOL[user.id]
+                            for old_sid in old_sids:
+                                # 异步断开连接
+                                asyncio.create_task(sio.disconnect(old_sid))
+                            
+                            # 清除用户池中的旧会话
+                            USER_POOL[user.id] = []
+                    else:
+                        # 不断开旧会话，拒绝新登录
+                        raise HTTPException(400, detail="用户已在其他地方登录")
 
         expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
         expires_at = None
