@@ -62,21 +62,17 @@ docker-compose -f docker-compose.backend.yaml ps
 docker-compose -f docker-compose.backend.yaml logs
 ```
 
-### 使用部署脚本运行（Linux/macOS）
+### 使用部署脚本运行
 
 ```bash
-# 设置脚本执行权限（Linux/macOS）
+# 设置脚本执行权限
 chmod +x backend/deploy.sh
 
 # 运行部署脚本（需要在项目根目录执行）
 ./backend/deploy.sh
 ```
 
-在Windows环境下，可以使用PowerShell执行脚本：
-```powershell
-# Windows环境下执行脚本（需要在项目根目录执行）
-powershell -ExecutionPolicy Bypass -File backend\deploy.sh
-```
+注意：请使用`./backend/deploy.sh`而不是`sh ./backend/deploy.sh`来执行脚本，因为脚本使用了bash特定的语法。
 
 ## 更新Docker镜像
 
@@ -137,6 +133,17 @@ docker build -t open-webui-backend -f backend/Dockerfile.optimized .
 - 自动检测项目根目录（git仓库根目录）
 - 在正确的位置执行git操作
 - 切换回backend目录进行Docker操作
+
+### 执行方式
+请使用以下方式执行脚本：
+```bash
+# 正确的执行方式
+chmod +x backend/script-name.sh
+./backend/script-name.sh
+
+# 错误的执行方式（会导致Bad substitution错误）
+sh backend/script-name.sh
+```
 
 ## 环境变量
 
