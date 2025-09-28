@@ -78,7 +78,7 @@ async def get_users(
 ):
     limit = PAGE_ITEM_COUNT
 
-    page = max(1, page)
+    page = max(1, page or 1)  # 修复：处理page为None的情况
     skip = (page - 1) * limit
 
     filter = {}
@@ -90,11 +90,11 @@ async def get_users(
         filter["direction"] = direction
 
     user_data = Users.get_users(filter=filter, skip=skip, limit=limit)
-    users = user_data["users"]
+    users = user_data.users  # 修复：使用属性访问而不是字典访问
     credit_map = {
         credit.user_id: {"credit": "%.4f" % credit.credit}
         for credit in Credits.list_credits_by_user_id(
-            user_ids=(user.id for user in users)
+            user_ids=[user.id for user in users]  # 修复：将生成器转换为列表
         )
     }
     for user in users:
@@ -107,11 +107,11 @@ async def get_all_users(
     user=Depends(get_admin_user),
 ):
     user_data = Users.get_users()
-    users = user_data["users"]
+    users = user_data.users  # 修复：使用属性访问而不是字典访问
     credit_map = {
         credit.user_id: {"credit": "%.4f" % credit.credit}
         for credit in Credits.list_credits_by_user_id(
-            user_ids=(user.id for user in users)
+            user_ids=[user.id for user in users]  # 修复：将生成器转换为列表
         )
     }
     for user in users:
@@ -244,9 +244,11 @@ async def update_user_settings_by_session_user(
     request: Request, form_data: UserSettings, user=Depends(get_verified_user)
 ):
     updated_user_settings = form_data.model_dump()
+    ui_settings = updated_user_settings.get("ui")
     if (
         user.role != "admin"
-        and "toolServers" in updated_user_settings.get("ui").keys()
+        and ui_settings is not None  # 修复：检查ui_settings是否为None
+        and "toolServers" in ui_settings.keys()
         and not has_permission(
             user.id,
             "features.direct_tool_servers",
