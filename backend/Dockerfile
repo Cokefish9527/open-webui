@@ -48,5 +48,5 @@ EXPOSE 8080
 # 健康检查
 HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8080}/health | jq -ne 'input.status == true' || exit 1
 
-# 启动命令
-CMD ["sh", "start.sh"]
+# 直接使用Python命令启动服务
+CMD ["python", "-m", "uvicorn", "open_webui.main:app", "--host", "0.0.0.0", "--port", "8080", "--forwarded-allow-ips", "*", "--workers", "1"]
