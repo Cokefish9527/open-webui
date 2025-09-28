@@ -9,7 +9,9 @@ backend/
 ├── Dockerfile              # 后端服务Docker镜像构建文件
 ├── requirements.txt        # Python依赖包列表
 ├── start.sh                # 启动脚本
+├── start-docker.sh         # Docker专用启动脚本
 ├── deploy.sh               # 部署脚本
+├── update.sh               # 更新脚本
 └── open_webui/             # 后端服务源代码
 ```
 
@@ -73,6 +75,45 @@ chmod +x backend/deploy.sh
 powershell -ExecutionPolicy Bypass -File backend\deploy.sh
 ```
 
+## 更新Docker镜像
+
+当代码更新后，您需要更新Docker镜像以包含最新的代码更改：
+
+### 手动更新流程
+
+```bash
+# 进入项目目录
+cd /path/to/open-webui
+
+# 拉取最新代码
+git pull origin main
+
+# 停止当前运行的容器
+docker-compose -f docker-compose.backend.yaml down
+
+# 重新构建镜像（不使用缓存）
+docker-compose -f docker-compose.backend.yaml build --no-cache
+
+# 启动服务
+docker-compose -f docker-compose.backend.yaml up -d
+```
+
+### 使用更新脚本（Linux/macOS）
+
+```bash
+# 设置脚本执行权限（Linux/macOS）
+chmod +x backend/update.sh
+
+# 运行更新脚本
+./backend/update.sh
+```
+
+在Windows环境下，可以使用PowerShell执行脚本：
+```powershell
+# Windows环境下执行脚本
+powershell -ExecutionPolicy Bypass -File backend\update.sh
+```
+
 ## 环境变量
 
 后端服务支持以下环境变量：
@@ -108,6 +149,8 @@ powershell -ExecutionPolicy Bypass -File backend\deploy.sh
    - 使用HTTPS
 
 5. **资源限制**：根据服务器性能设置适当的内存和CPU限制。
+
+6. **版本管理**：使用标签管理镜像版本，便于回滚和部署。
 
 ## 故障排除
 
