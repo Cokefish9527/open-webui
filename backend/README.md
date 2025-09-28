@@ -14,6 +14,7 @@ backend/
 ├── deploy.sh               # 部署脚本
 ├── update.sh               # 完整更新脚本
 ├── incremental-update.sh   # 增量更新脚本
+├── dev-docker.sh           # 开发环境热更新脚本
 └── open_webui/             # 后端服务源代码
 ```
 
@@ -67,13 +68,13 @@ docker-compose -f docker-compose.backend.yaml logs
 # 设置脚本执行权限（Linux/macOS）
 chmod +x backend/deploy.sh
 
-# 运行部署脚本
+# 运行部署脚本（需要在项目根目录执行）
 ./backend/deploy.sh
 ```
 
 在Windows环境下，可以使用PowerShell执行脚本：
 ```powershell
-# Windows环境下执行脚本
+# Windows环境下执行脚本（需要在项目根目录执行）
 powershell -ExecutionPolicy Bypass -File backend\deploy.sh
 ```
 
@@ -84,20 +85,9 @@ powershell -ExecutionPolicy Bypass -File backend\deploy.sh
 ### 完整更新流程（重新安装依赖）
 
 ```bash
-# 进入项目目录
-cd /path/to/open-webui
-
-# 拉取最新代码
-git pull origin main
-
-# 停止当前运行的容器
-docker-compose -f docker-compose.backend.yaml down
-
-# 重新构建镜像（不使用缓存）
-docker-compose -f docker-compose.backend.yaml build --no-cache
-
-# 启动服务
-docker-compose -f docker-compose.backend.yaml up -d
+# 在项目根目录执行完整更新脚本
+chmod +x backend/update.sh
+./backend/update.sh
 ```
 
 ### 增量更新流程（仅更新代码，利用缓存）
@@ -108,20 +98,12 @@ chmod +x backend/incremental-update.sh
 ./backend/incremental-update.sh
 ```
 
-### 使用更新脚本（Linux/macOS）
+### 开发环境热更新
 
 ```bash
-# 设置脚本执行权限（Linux/macOS）
-chmod +x backend/update.sh
-
-# 运行完整更新脚本
-./backend/update.sh
-```
-
-在Windows环境下，可以使用PowerShell执行脚本：
-```powershell
-# Windows环境下执行脚本
-powershell -ExecutionPolicy Bypass -File backend\update.sh
+# 使用开发环境脚本（支持代码更改自动重启）
+chmod +x backend/dev-docker.sh
+./backend/dev-docker.sh
 ```
 
 ## 优化构建性能
@@ -143,6 +125,18 @@ docker build -t open-webui-backend -f backend/Dockerfile.optimized .
 ### .dockerignore优化
 
 通过.dockerignore文件排除不必要的文件，减少构建上下文大小。
+
+## 脚本使用说明
+
+所有脚本都需要在项目根目录（open-webui目录）下执行，因为：
+1. Git仓库根目录在项目根目录
+2. 脚本会自动处理目录切换
+
+### 脚本目录处理
+所有脚本都已更新以正确处理目录结构：
+- 自动检测项目根目录（git仓库根目录）
+- 在正确的位置执行git操作
+- 切换回backend目录进行Docker操作
 
 ## 环境变量
 

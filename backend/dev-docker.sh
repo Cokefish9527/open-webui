@@ -9,10 +9,25 @@ echo "=== Open-WebUI 后端服务开发环境 ==="
 
 # 获取脚本所在目录
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-PROJECT_DIR=$(dirname "$SCRIPT_DIR")
+# 获取项目根目录（git仓库根目录）
+PROJECT_DIR=$(dirname "$(dirname "$SCRIPT_DIR")")
 
-echo "项目目录: $PROJECT_DIR"
+echo "项目根目录: $PROJECT_DIR"
 cd "$PROJECT_DIR"
+
+# 检查是否为git仓库
+if [ ! -d ".git" ]; then
+    echo "错误: 当前目录不是git仓库根目录"
+    echo "请确保在open-webui项目根目录下运行此脚本"
+    exit 1
+fi
+
+# 拉取最新代码
+echo "拉取最新代码..."
+git pull origin main
+
+# 切换回backend目录
+cd "$SCRIPT_DIR"
 
 # 检查是否已经运行着开发容器
 if docker ps --format '{{.Names}}' | grep -q 'open-webui-backend-dev'; then
@@ -26,7 +41,7 @@ echo "启动开发环境容器..."
 docker run -d \
   --name open-webui-backend-dev \
   -p 8080:8080 \
-  -v "$PROJECT_DIR:/app/backend" \
+  -v "$SCRIPT_DIR:/app/backend" \
   -e PORT=8080 \
   -e HOST=0.0.0.0 \
   open-webui-backend:latest \
