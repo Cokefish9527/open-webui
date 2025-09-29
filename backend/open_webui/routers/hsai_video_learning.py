@@ -57,14 +57,17 @@ async def get_pending_videos(
     try:
         log.info(f"获取待学习视频: page={page}, limit={limit}, status_filter={status_filter}")
         
+        # 确保status_filter不为None
+        status_filter = status_filter or "all"
+        
         # 计算偏移量
         skip = (page - 1) * limit
         
-        # 获取视频总数
-        total_videos = HSAIBusinessGoodVideos.get_total_count()
+        # 获取视频总数（根据状态筛选）
+        total_videos = HSAIBusinessGoodVideos.get_total_count_with_status_filter(status_filter)
         
-        # 获取视频列表
-        videos = HSAIBusinessGoodVideos.get_videos(skip=skip, limit=limit)
+        # 获取视频列表（根据状态筛选）
+        videos = HSAIBusinessGoodVideos.get_videos_with_status_filter(skip=skip, limit=limit, status_filter=status_filter)
         
         # 为每个视频添加学习状态
         videos_with_status = []
@@ -77,21 +80,10 @@ async def get_pending_videos(
             if learning_status:
                 final_status = learning_status.status
             
-            # 如果有筛选条件，检查是否匹配
-            if status_filter != "all":
-                if status_filter == "pending" and final_status != "pending":
-                    continue
-                elif status_filter != "pending" and final_status != status_filter:
-                    continue
-            
             videos_with_status.append(VideoWithStatus(
                 video=video,
                 status=final_status
             ))
-        
-        # 如果有筛选，需要重新计算总数
-        if status_filter != "all":
-            total_videos = len(videos_with_status)
         
         return PaginatedVideosResponse(
             videos=videos_with_status,

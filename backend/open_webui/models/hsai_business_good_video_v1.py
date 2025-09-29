@@ -119,6 +119,79 @@ class HSAIBusinessGoodVideoV1Table:
             videos = db.query(HSAIBusinessGoodVideoV1).offset(skip).limit(limit).all()
             return [HSAIBusinessGoodVideoV1Model.model_validate(video) for video in videos]
     
+    def get_videos_with_status_filter(self, skip: int = 0, limit: int = 50, status_filter: str = "all") -> List[HSAIBusinessGoodVideoV1Model]:
+        """分页获取视频列表，支持按学习状态筛选"""
+        from open_webui.models.hsai_video_learning_status import HSAIVideoLearningStatus
+        
+        with get_postgres_session() as postgres_db:
+            if status_filter == "all":
+                # 不筛选状态，直接分页查询
+                videos = postgres_db.query(HSAIBusinessGoodVideoV1).offset(skip).limit(limit).all()
+                return [HSAIBusinessGoodVideoV1Model.model_validate(video) for video in videos]
+            else:
+                # 需要根据状态筛选
+                with get_db() as sqlite_db:
+                    if status_filter == "pending":
+                        # 待学习状态：没有对应的学习状态记录
+                        # 查询已有学习状态的视频ID
+                        learning_video_ids = sqlite_db.query(HSAIVideoLearningStatus.video_id).all()
+                        learning_video_ids = [v[0] for v in learning_video_ids]
+                        
+                        # 查询待学习的视频（ID不在学习状态表中的视频）
+                        videos = postgres_db.query(HSAIBusinessGoodVideoV1).filter(
+                            ~HSAIBusinessGoodVideoV1.id.in_([int(vid) for vid in learning_video_ids if vid.isdigit()])
+                        ).offset(skip).limit(limit).all()
+                    else:
+                        # 其他状态：learning, learned, abandoned
+                        # 查询具有指定状态的学习记录
+                        status_video_ids = sqlite_db.query(HSAIVideoLearningStatus.video_id).filter(
+                            HSAIVideoLearningStatus.status == status_filter
+                        ).all()
+                        status_video_ids = [v[0] for v in status_video_ids]
+                        
+                        # 查询对应的视频
+                        videos = postgres_db.query(HSAIBusinessGoodVideoV1).filter(
+                            HSAIBusinessGoodVideoV1.id.in_([int(vid) for vid in status_video_ids if vid.isdigit()])
+                        ).offset(skip).limit(limit).all()
+            
+                return [HSAIBusinessGoodVideoV1Model.model_validate(video) for video in videos]
+    
+    def get_total_count_with_status_filter(self, status_filter: str = "all") -> int:
+        """获取按状态筛选后的视频总数"""
+        from open_webui.models.hsai_video_learning_status import HSAIVideoLearningStatus
+        
+        with get_postgres_session() as postgres_db:
+            if status_filter == "all":
+                # 不筛选状态，返回所有视频总数
+                return postgres_db.query(HSAIBusinessGoodVideoV1).count()
+            else:
+                # 需要根据状态筛选
+                with get_db() as sqlite_db:
+                    if status_filter == "pending":
+                        # 待学习状态：没有对应的学习状态记录
+                        # 查询已有学习状态的视频ID
+                        learning_video_ids = sqlite_db.query(HSAIVideoLearningStatus.video_id).all()
+                        learning_video_ids = [v[0] for v in learning_video_ids]
+                        
+                        # 计算待学习的视频数量
+                        total_count = postgres_db.query(HSAIBusinessGoodVideoV1).filter(
+                            ~HSAIBusinessGoodVideoV1.id.in_([int(vid) for vid in learning_video_ids if vid.isdigit()])
+                        ).count()
+                        return total_count
+                    else:
+                        # 其他状态：learning, learned, abandoned
+                        # 查询具有指定状态的学习记录数量
+                        status_video_ids = sqlite_db.query(HSAIVideoLearningStatus.video_id).filter(
+                            HSAIVideoLearningStatus.status == status_filter
+                        ).all()
+                        status_video_ids = [v[0] for v in status_video_ids]
+                        
+                        # 查询对应的视频数量
+                        count = postgres_db.query(HSAIBusinessGoodVideoV1).filter(
+                            HSAIBusinessGoodVideoV1.id.in_([int(vid) for vid in status_video_ids if vid.isdigit()])
+                        ).count()
+                        return count
+    
     def get_video_by_id(self, video_id: int) -> Optional[HSAIBusinessGoodVideoV1Model]:
         """根据ID获取视频"""
         with get_postgres_session() as db:
