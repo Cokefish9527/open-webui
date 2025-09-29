@@ -38,6 +38,9 @@ class User(Base):
     
     # 添加信息收集完成标志位字段
     info_collection_completed = Column(Boolean, default=False, nullable=False)
+    
+    # 添加公司名称字段
+    business_name = Column(String, nullable=True)
 
     oauth_sub = Column(Text, unique=True)
 
@@ -63,6 +66,8 @@ class UserModel(BaseModel):
     info: Optional[dict] = Field(default=None, description="用户信息")
     # 添加信息收集完成标志位字段
     info_collection_completed: bool = Field(default=False, description="信息收集是否完成")
+    # 添加公司名称字段
+    business_name: Optional[str] = Field(default=None, description="公司名称")
     oauth_sub: Optional[str] = Field(default=None, description="OAuth子标识符")
 
     model_config = ConfigDict(from_attributes=True, extra="allow")
@@ -86,6 +91,7 @@ class UserResponse(BaseModel):
     email: str = Field(description="用户邮箱")
     role: str = Field(description="用户角色")
     profile_image_url: str = Field(description="用户头像URL")
+    business_name: Optional[str] = Field(default=None, description="公司名称")
 
 
 class UserNameResponse(BaseModel):
@@ -139,6 +145,8 @@ class UsersTable:
                     "oauth_sub": oauth_sub,
                     # 新用户默认信息收集未完成
                     "info_collection_completed": False,
+                    # 新用户默认business_name为None
+                    "business_name": None,
                 }
             )
             result = User(**user.model_dump())
@@ -434,6 +442,19 @@ class UsersTable:
         try:
             with get_db() as db:
                 db.query(User).filter_by(id=id).update({"info_collection_completed": completed})
+                db.commit()
+                user = db.query(User).filter_by(id=id).first()
+                if user:
+                    return UserModel.model_validate(user)
+                return None
+        except Exception:
+            return None
+    
+    def update_user_business_name_by_id(self, id: str, business_name: str) -> Optional[UserModel]:
+        """更新用户公司名称"""
+        try:
+            with get_db() as db:
+                db.query(User).filter_by(id=id).update({"business_name": business_name})
                 db.commit()
                 user = db.query(User).filter_by(id=id).first()
                 if user:

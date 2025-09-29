@@ -105,8 +105,12 @@ async def start_video_learning(request: StartLearningRequest, user=Depends(get_v
     """开始视频学习，调用n8n工作流进行视频分析"""
     try:
         # 从用户信息中获取business_name
-        business_name = 'HSAI'
-        if hasattr(user, 'info') and user.info and isinstance(user.info, dict):
+        business_name = 'HSAI'  # 默认值
+        # 首先尝试从用户模型的business_name字段获取
+        if hasattr(user, 'business_name') and user.business_name:
+            business_name = user.business_name
+        # 如果没有，则从info字段获取（向后兼容）
+        elif hasattr(user, 'info') and user.info and isinstance(user.info, dict):
             business_name = user.info.get('business_name', 'HSAI')
         log.info(f"从用户信息中获取business_name: {business_name}")
         log.info(f"开始视频学习: video_id={request.video_id}, business_name={business_name}")

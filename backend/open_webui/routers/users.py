@@ -544,3 +544,27 @@ async def delete_user_by_id(user_id: str, user=Depends(get_admin_user)):
         status_code=status.HTTP_403_FORBIDDEN,
         detail=ERROR_MESSAGES.ACTION_PROHIBITED,
     )
+
+
+class UserBusinessNameUpdateForm(BaseModel):
+    business_name: str
+
+
+############################
+# UpdateUserBusinessNameBySessionUser
+############################
+
+
+@router.post("/user/business_name/update", response_model=Optional[UserModel])
+async def update_user_business_name_by_session_user(
+    form_data: UserBusinessNameUpdateForm, user=Depends(get_verified_user)
+):
+    """更新当前用户的公司名称"""
+    user = Users.update_user_business_name_by_id(user.id, form_data.business_name)
+    if user:
+        return user
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
+        )

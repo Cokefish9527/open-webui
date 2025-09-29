@@ -52,6 +52,10 @@ ghcr.io/u8f69/open-webui:<版本号>
 
 完整特性请看更新日志 [CHANGELOG_EXTRA.md](./CHANGELOG_EXTRA.md)
 
+### 用户公司名称字段 (business_name)
+
+系统现在支持为每个用户设置公司名称，该信息将用于WebSocket通信和视频学习等场景中。
+
 ### 积分报表
 
 ![usage panel](./docs/usage_panel.png)

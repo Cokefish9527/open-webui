@@ -74,17 +74,30 @@ def register_hsai_events(sio, emitter):
             if user_id:
                 log.info(f"[HSAI统一事件] 识别到用户 {user_id} 的消息，使用工作流编排中心处理")
                 
-                # 检查用户信息收集状态，决定使用哪个工作流
-                is_info_collected = Users.is_user_info_collection_completed(user_id)
-                log.info(f"[HSAI统一事件] 用户 {user_id} 信息收集状态: {'已完成' if is_info_collected else '未完成'}")
-                
                 # 构建上下文信息，包含socket_id用于后续消息发送
                 context = {
                     "entry_type": data.get("entry_type", "chat"),
-                    "business_name": "HSAI",  # 硬编码为"HSAI"
+                    "business_name": "HSAI",  # 默认值为"HSAI"
                     "additional_data": data.get("metadata", {}),
                     "socket_id": sid  # 传递socket_id用于后续消息发送
                 }
+                
+                # 尝试从用户信息中获取business_name
+                if user_id:
+                    user = Users.get_user_by_id(user_id)
+                    if user and hasattr(user, 'business_name') and user.business_name:
+                        context["business_name"] = user.business_name
+                        log.info(f"[HSAI统一事件] 使用用户设置的business_name: {user.business_name}")
+                    elif user and hasattr(user, 'info') and user.info and isinstance(user.info, dict):
+                        # 如果用户模型中没有business_name，则从info字段中获取
+                        info_business_name = user.info.get('business_name')
+                        if info_business_name:
+                            context["business_name"] = info_business_name
+                            log.info(f"[HSAI统一事件] 使用用户info中的business_name: {info_business_name}")
+                
+                # 检查用户信息收集状态，决定使用哪个工作流
+                is_info_collected = Users.is_user_info_collection_completed(user_id)
+                log.info(f"[HSAI统一事件] 用户 {user_id} 信息收集状态: {'已完成' if is_info_collected else '未完成'}")
                 
                 # 根据信息收集状态设置入口类型
                 if not is_info_collected:
