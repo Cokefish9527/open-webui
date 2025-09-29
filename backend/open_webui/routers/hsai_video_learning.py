@@ -37,7 +37,6 @@ class GetVideosRequest(BaseModel):
 class StartLearningRequest(BaseModel):
     """开始学习请求模型"""
     video_id: int = Field(description="视频ID")
-    business_name: str = Field(description="公司名称")
 
 class StartLearningResponse(BaseModel):
     """开始学习响应模型"""
@@ -110,10 +109,15 @@ async def get_pending_videos(
         )
 
 @router.post("/start-learning", response_model=StartLearningResponse, summary="开始视频学习")
-async def start_video_learning(request: StartLearningRequest):
+async def start_video_learning(request: StartLearningRequest, user=Depends(get_verified_user)):
     """开始视频学习，调用n8n工作流进行视频分析"""
     try:
-        log.info(f"开始视频学习: video_id={request.video_id}, business_name={request.business_name}")
+        # 从用户信息中获取business_name
+        business_name = 'HSAI'
+        if hasattr(user, 'info') and user.info and isinstance(user.info, dict):
+            business_name = user.info.get('business_name', 'HSAI')
+        log.info(f"从用户信息中获取business_name: {business_name}")
+        log.info(f"开始视频学习: video_id={request.video_id}, business_name={business_name}")
         
         # 1. 获取视频数据
         video = HSAIBusinessGoodVideos.get_video_by_id(request.video_id)
@@ -125,7 +129,7 @@ async def start_video_learning(request: StartLearningRequest):
         
         # 2. 检查是否已存在相同business_name和video_id的学习状态记录
         existing_status = HSAIVideoLearningStatuses.get_status_by_business_and_video(
-            request.business_name, str(request.video_id)
+            business_name, str(request.video_id)
         )
         
         if existing_status:
@@ -155,6 +159,10 @@ async def start_video_learning(request: StartLearningRequest):
                 if hasattr(video_dict[field], 'isoformat'):
                     video_dict[field] = video_dict[field].isoformat()
         
+        # 使用businessname字段填充用户的公司名称
+        video_dict['businessname'] = business_name
+        video_dict['user_id'] = user.id
+        
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 webhook_url,
@@ -168,7 +176,7 @@ async def start_video_learning(request: StartLearningRequest):
                 if response.status == 200:
                     # 4. 只有在webhook请求成功时，才向学习状态表新增一条学习中状态的数据
                     status_form = {
-                        "business_name": request.business_name,
+                        "business_name": business_name,
                         "video_id": str(request.video_id),
                         "status": HSAIVideoLearningStatusEnum.LEARNING
                     }
