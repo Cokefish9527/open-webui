@@ -92,7 +92,18 @@ class RedisSignalHandler:
                         # blpop返回的是一个元组 (queue_name, message_data)
                         if isinstance(result, (list, tuple)) and len(result) >= 2:
                             message_data = result[1]  # 第二个元素是消息内容
-                            message = json.loads(message_data.decode('utf-8'))
+                            # 在解析JSON之前，先尝试修复可能存在的格式问题
+                            try:
+                                message = json.loads(message_data.decode('utf-8'))
+                            except json.JSONDecodeError as e:
+                                # 如果JSON解析失败，尝试修复格式问题
+                                log.warning(f"JSON解析失败，尝试修复: {e}")
+                                # 解码消息数据
+                                decoded_data = message_data.decode('utf-8')
+                                # 尝试修复常见的JSON格式问题
+                                fixed_data = self._fix_json_format(decoded_data)
+                                # 再次尝试解析
+                                message = json.loads(fixed_data)
                             
                             # 在新的线程中处理消息，避免阻塞监听
                             handler_thread = threading.Thread(
@@ -103,11 +114,74 @@ class RedisSignalHandler:
                             handler_thread.start()
                         
                 except Exception as e:
-                    log.error(f"监听队列 {queue_name} 时发生错误: {e}")
+                    log.error(f"监听队列 {queue_name} 时发生错误: {e}", exc_info=True)
                     time.sleep(1)  # 短暂休眠后重试
                     
         except Exception as e:
-            log.error(f"监听队列 {queue_name} 失败: {e}")
+            log.error(f"监听队列 {queue_name} 失败: {e}", exc_info=True)
+    
+    def _fix_json_format(self, json_str: str) -> str:
+        """
+        尝试修复JSON格式问题
+        """
+        try:
+            # 先尝试直接解析
+            try:
+                json.loads(json_str)
+                return json_str  # 如果已经可以解析，直接返回
+            except:
+                pass
+            
+            # 尝试使用ast.literal_eval解析Python字典格式（这是最可能的情况）
+            import ast
+            try:
+                # 尝试解析为Python字典
+                data = ast.literal_eval(json_str)
+                # 转换为标准JSON格式
+                return json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+            except Exception as ast_error:
+                log.debug(f"ast.literal_eval解析失败: {ast_error}")
+                pass
+            
+            # 如果ast.literal_eval也失败，尝试更复杂的修复方法
+            try:
+                import re
+                
+                # 创建修复后字符串的副本
+                fixed_str = json_str
+                
+                # 修复1: 处理多行字符串问题
+                # 查找displayText字段中的换行问题
+                display_text_match = re.search(r"'displayText':\s*'([^']*)'", fixed_str)
+                if display_text_match:
+                    display_text = display_text_match.group(1)
+                    # 转义特殊字符
+                    escaped_text = display_text.replace('\\', '\\\\').replace('"', '\\"').replace("\n", "\\n").replace("\r", "\\r")
+                    # 替换原始文本
+                    fixed_str = fixed_str.replace(f"'displayText': '{display_text}'", f'"displayText": "{escaped_text}"')
+                
+                # 修复2: 将单引号替换为双引号（小心处理）
+                # 先处理值部分的单引号
+                fixed_str = re.sub(r":\s*'([^']*)'", r': "\1"', fixed_str)
+                # 处理键部分的单引号
+                fixed_str = re.sub(r"'([^']+)':", r'"\1":', fixed_str)
+                
+                # 尝试解析修复后的字符串
+                json.loads(fixed_str)
+                return fixed_str
+            except Exception as fix_error:
+                log.debug(f"手动修复尝试失败: {fix_error}")
+                pass
+            
+            # 如果以上方法都失败，返回原始字符串（可能会再次失败，但至少记录了错误）
+            log.warning(f"无法修复JSON格式，原始数据长度: {len(json_str)}")
+            # 记录前500个字符用于调试（避免日志过长）
+            log.debug(f"原始数据前500字符: {json_str[:500]}")
+            return json_str
+            
+        except Exception as e:
+            log.error(f"修复JSON格式时发生错误: {e}", exc_info=True)
+            return json_str
     
     def _process_message(self, queue_name: str, message: Dict[str, Any]):
         """处理队列消息"""

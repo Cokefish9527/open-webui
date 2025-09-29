@@ -149,6 +149,8 @@ INSTANCE_ID = os.environ.get("INSTANCE_ID", str(uuid4()))
 # Function to parse each section
 def parse_section(section):
     items = []
+    if section is None:
+        return items
     for li in section.find_all("li"):
         # Extract raw HTML string
         raw_html = str(li)
@@ -219,8 +221,10 @@ for version in soup.find_all("h2"):
     while current and current.name != "h2":
         if current.name == "h3":
             section_title = current.get_text().lower()  # e.g., "added", "fixed"
-            section_items = parse_section(current.find_next_sibling("ul"))
-            version_data[section_title] = section_items
+            next_sibling = current.find_next_sibling("ul")
+            if next_sibling is not None:
+                section_items = parse_section(next_sibling)
+                version_data[section_title] = section_items
 
         # Move to the next element
         current = current.find_next_sibling()
