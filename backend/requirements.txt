@@ -22,8 +22,8 @@ peewee-migrate==1.12.2
 psycopg2-binary==2.9.9
 pgvector==0.4.0
 PyMySQL==1.1.1
-# 降级bcrypt版本以解决兼容性问题
-bcrypt==3.2.0
+# 更新bcrypt版本以解决与chromadb的兼容性问题
+bcrypt==4.2.0
 
 pymongo
 redis>=4.2.0
