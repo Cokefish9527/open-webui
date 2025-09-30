@@ -567,6 +567,10 @@ async def lifespan(app: FastAPI):
     from open_webui.utils.conversation_queue_handler import register_conversation_queue_handler
     register_conversation_queue_handler(redis_signal_handler)
 
+    # 注册视频学习通知队列处理器
+    from open_webui.utils.video_learning_notifier import register_video_learning_queue_handler
+    register_video_learning_queue_handler(redis_signal_handler)
+
     if THREAD_POOL_SIZE and THREAD_POOL_SIZE > 0:
         limiter = anyio.to_thread.current_default_thread_limiter()
         limiter.total_tokens = THREAD_POOL_SIZE
