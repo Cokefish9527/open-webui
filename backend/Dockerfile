@@ -5,7 +5,8 @@ FROM python:3.11-slim-bookworm
 ENV ENV=prod \
     PORT=8080 \
     HOST=0.0.0.0 \
-    PYTHONPATH=/app/backend
+    PYTHONPATH=/app/backend \
+    SKIP_MIGRATIONS=true
 
 # 设置工作目录
 WORKDIR /app/backend
@@ -46,5 +47,5 @@ EXPOSE 8080
 # 健康检查
 HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8080}/health | jq -ne 'input.status == true' || exit 1
 
-# 直接使用Python命令启动服务
+# 使用修改后的启动方式，跳过迁移检查
 CMD ["python", "-m", "uvicorn", "open_webui.main:app", "--host", "0.0.0.0", "--port", "8080", "--forwarded-allow-ips", "*", "--workers", "1"]

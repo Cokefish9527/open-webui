@@ -52,6 +52,11 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 # Function to run the alembic migrations
 def run_migrations():
+    # 检查是否跳过迁移
+    if os.environ.get("SKIP_MIGRATIONS", "false").lower() == "true":
+        log.info("Skipping migrations due to SKIP_MIGRATIONS environment variable")
+        return
+        
     log.info("Running migrations")
     try:
         from alembic import command
@@ -60,7 +65,7 @@ def run_migrations():
         alembic_cfg = Config(OPEN_WEBUI_DIR / "alembic.ini")
 
         # Set the script location dynamically
-        migrations_path = OPEN_WEBUI_DIR / "migrations"
+        migrations_path = OPEN_WEBUI_DIR / "internal" / "migrations"
         alembic_cfg.set_main_option("script_location", str(migrations_path))
 
         command.upgrade(alembic_cfg, "head")
