@@ -1,0 +1,844 @@
+{
+  "name": "5videojson2video_agent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "json"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2496,
+        848
+      ],
+      "id": "45fef468-9449-4150-b9f9-a713417f9c7c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ry2.9gpu.com:33015/webhook/video_hc",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "tts_json",
+              "value": "={{ $json.json.toJsonString().replaceAll('\\n','\\\\n') }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        624
+      ],
+      "id": "64c0bcb8-d9dd-4079-915a-5b81d2d95cce",
+      "name": "合成视频拿到链接"
+    },
+    {
+      "parameters": {
+        "content": "## 发送到gpu机器进行视频合成",
+        "height": 520,
+        "width": 260
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        432
+      ],
+      "id": "dd502e47-6e14-4b51-a429-58174992b459",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d94b2121-a033-4df8-a187-dd791aaab759",
+              "name": "json",
+              "value": "=[\n    {\n        \"text_file_address\": [\n            {\n                \"music\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/music/02.%E6%98%9F%E9%99%85%E7%A9%BF%E8%B6%8A%EF%BC%88Interstellar%20Cornfield%20Chase%EF%BC%89_%5Bcut_37sec%5D.mp3\",\n                \"script\": \"{{ $json.text_file_address }}\",\n                \"shots\": [\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/12.ts\",\n                        \"category\": \"厂房设备\"\n                    },\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/2.ts\",\n                        \"category\": \"制作细节\"\n                    },\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/27.ts\",\n                        \"category\": \"使用效果\"\n                    },\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/4.ts\",\n                        \"category\": \"流水线\"\n                    },\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/7.ts\",\n                        \"category\": \"仓储发货\"\n                    }\n                ]\n            }\n        ],\n        \"video\":{{ $json.data.toJsonString() }}\n    }\n\n]",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -624,
+        624
+      ],
+      "id": "dac5b775-dc85-4d3b-877d-99200175700a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://nls-gateway-cn-shanghai.aliyuncs.com/rest/v1/tts/async",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=\n{\n    \"payload\":{\n        \"tts_request\":{\n            \"voice\":\"Aifan\",\n            \"sample_rate\":16000,\n            \"format\":\"mp3\",\n            \"enable_subtitle\":true,\n            \"text\":\"{{ $('Edit Fields2').item.json.text }}\"\n        }\n    },\n    \"context\":{\n        \"device_id\":\"my_device_id\"\n    },\n    \"header\":{\n        \"appkey\":\"{{ $('Edit Fields2').item.json.appkey }}\",\n        \"token\":\"{{ $json.token }}\"\n    }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1808,
+        592
+      ],
+      "id": "0a415064-aeac-46e7-9ff1-acec3b78fa81",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://nls-gateway-cn-shanghai.aliyuncs.com/rest/v1/tts/async",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "appkey",
+              "value": "={{ $('Edit Fields2').item.json.appkey }}"
+            },
+            {
+              "name": "token",
+              "value": "={{ $('get_tts_token').item.json.token }}"
+            },
+            {
+              "name": "task_id",
+              "value": "={{ $json.data.task_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1584,
+        592
+      ],
+      "id": "45e27e0d-be1d-43dc-8aa7-014cd8f43068",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7a52b86c-7f6f-4d9b-b0c0-92778b7202bc",
+              "leftValue": "={{ $json.error_message }}",
+              "rightValue": "SUCCESS",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1360,
+        512
+      ],
+      "id": "6486e0fd-032c-461c-950a-a71e6d2d52aa",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        688
+      ],
+      "id": "f777835e-3782-4cfa-a495-d9e04a8fe041",
+      "name": "Wait",
+      "webhookId": "9f0b11fe-e60b-4ab5-89d0-e957f4aed052"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3339cb61-bbe6-44e4-b0a4-2b5cb25f1324",
+              "name": "text_file_address",
+              "value": "={{ $('Edit Fields2').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "5c343055-a655-401d-94cb-9031f0c2a077",
+              "name": "audio",
+              "value": "={{ $json.data.audio_address }}",
+              "type": "string"
+            },
+            {
+              "id": "7d593030-68bb-4d00-99d8-2442fe97d811",
+              "name": "data",
+              "value": "={{ $json.data }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -848,
+        624
+      ],
+      "id": "344e2e26-c0d2-4374-805e-ac54e0158982",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79402ead-f862-4d07-a59e-92f4c73989d8",
+              "name": "appkey",
+              "value": "ZQT0omJ1pOFLGrjI",
+              "type": "string"
+            },
+            {
+              "id": "082355f5-f518-4cdb-9e88-61f87676cc00",
+              "name": "text",
+              "value": "={{ $json.output.content.replaceAll('\\n','\\\\n').replaceAll('\"','\\\\\"') }}",
+              "type": "string"
+            },
+            {
+              "id": "6b8703f4-3be3-47d7-8a5a-27f8ef4e3ca5",
+              "name": "tags",
+              "value": "={{ $json.output.tags }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2320,
+        848
+      ],
+      "id": "c2e62c05-436b-43e6-86ef-beae330727c1",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ry2.9gpu.com:33015/webhook/get_tts_token",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2016,
+        592
+      ],
+      "id": "f3722da1-591f-404a-88e9-9375c047c183",
+      "name": "get_tts_token"
+    },
+    {
+      "parameters": {
+        "content": "## 发送到gpu机器进行爆款文案生成语音和字幕，视频合成需要用到",
+        "height": 520,
+        "width": 1140
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        432
+      ],
+      "id": "840cd9fb-1329-4c98-9929-3fc7cf0d01de",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 准备视频合成的素材",
+        "height": 520,
+        "width": 460
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        432
+      ],
+      "id": "9e07273f-be50-4c35-bc7d-0ef63fe7c010",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 识别爆款文案中需要用到的场景",
+        "height": 500,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        992
+      ],
+      "id": "6670ad5f-57ff-4400-af58-54c1c57c1c39",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "# 用户选择的爆款文案\n",
+        "options": {
+          "systemMessage": "=# 目标\n拆解爆款文案对应的场景\n对使用到底场景打上标记\n\n# 输出格式\n{\"场景1\":1,\n\"场景2\":1,\n\"场景3\":1,\n\"场景4\":1,\n\"场景5\":1}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -2016,
+        1120
+      ],
+      "id": "669a4420-b21d-4cb6-bf91-21c84c3d2247",
+      "name": "识别场景"
+    },
+    {
+      "parameters": {
+        "url": "http://oss-service.oss.svc.cluster.local:3322/api/files",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1424,
+        1040
+      ],
+      "id": "637ee3b3-98b0-4c29-b421-56267f71fc98",
+      "name": "oss1"
+    },
+    {
+      "parameters": {
+        "url": "http://oss-service.oss.svc.cluster.local:3322/api/files",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1424,
+        1200
+      ],
+      "id": "633ec1c3-c48a-4b38-bb1a-8a803c5cd9bd",
+      "name": "oss2"
+    },
+    {
+      "parameters": {
+        "url": "http://oss-service.oss.svc.cluster.local:3322/api/files",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1424,
+        1360
+      ],
+      "id": "583ea03a-42c6-4118-835d-9db383dd2df0",
+      "name": "oss3"
+    },
+    {
+      "parameters": {
+        "url": "http://oss-service.oss.svc.cluster.local:3322/api/files",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1424,
+        1520
+      ],
+      "id": "fe57b207-f05a-4f0e-b3a2-49b83fb603e1",
+      "name": "oss4"
+    },
+    {
+      "parameters": {
+        "url": "http://oss-service.oss.svc.cluster.local:3322/api/files",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1424,
+        1712
+      ],
+      "id": "605b1f39-d379-42c5-b290-906719791477",
+      "name": "oss5"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1088,
+        1232
+      ],
+      "id": "ea12620b-0c37-4c73-8422-e8996e4b8e77",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        1264
+      ],
+      "id": "df47e5a7-fff8-4bd3-a3a1-f28831d358f4",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "content": "## 去oss上找出切片",
+        "height": 920,
+        "width": 960
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1680,
+        992
+      ],
+      "id": "3f332054-eb6d-4032-ba37-99fca710951c",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## 设计思路\n- 拿到爆款文案，先转语音和字幕，然后去匹配ts视频片段，然后在gpu服务器上合成\n## 实现功能\n- 对上游的文案素材进行文字转语音和字幕\n- 对爆款素材识别场景，去匹配对应场景文件夹中的素材，提取，供后面合并使用\n- 在后面的合并视频中，使用上游选取好的素材，在gpu服务器上进行合并\n## 实现原理\n- 使用阿里tts完成文字转语音和字幕\n- 使用ai识别文案场景并匹配对应的ts视频片段文件\n- 使用gpu服务器对json文件进行视频合成",
+        "height": 300,
+        "width": 760,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        992
+      ],
+      "id": "0e5401e3-add2-413e-af9e-5ccf26529c3f",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -2048,
+        1360
+      ],
+      "id": "2091815f-e527-42d8-aaba-76dda9185186",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "oigW3KLm0OZq9rWp",
+          "name": "OpenRouter account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "text": "Here’s an easy quick way to tell if furniture is solid wood. Always check the back before you buy it. So this, you can tell is solid wood because this is a solid piece here. It looks like wood in the back, nice grain over here. But look at this one. You see how that’s porous? That is particle board. That is not solid wood.",
+          "product_name": "实木家具",
+          "hashtags": "tag1"
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": "[\n    {\n        \"text_file_address\": [\n            {\n                \"music\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/music/02.%E6%98%9F%E9%99%85%E7%A9%BF%E8%B6%8A%EF%BC%88Interstellar%20Cornfield%20Chase%EF%BC%89_%5Bcut_37sec%5D.mp3\",\n                \"script\": \"怎么辨别实木家具？买前记得翻看背面。背面有完整漂亮的木纹，这才是真材实料的象征。如果看到有多孔的碎屑感，那就要小心了，这很可能不是实木，而是普通的颗粒板。\",\n                \"shots\": [\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/12.ts\",\n                        \"category\": \"厂房设备\"\n                    },\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/2.ts\",\n                        \"category\": \"制作细节\"\n                    },\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/27.ts\",\n                        \"category\": \"使用效果\"\n                    },\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/4.ts\",\n                        \"category\": \"流水线\"\n                    },\n                    {\n                        \"path\": \"https://bucket-xuyiyao-011.oss-cn-shanghai.aliyuncs.com/ts/7.ts\",\n                        \"category\": \"仓储发货\"\n                    }\n                ]\n            }\n        ],\n        \"video\":{\"sentences\":[{\"text\":\"怎么辨别实木家具？\",\"begin_time\":\"0\",\"end_time\":\"1949\"},{\"text\":\"买前记得翻看背面。\",\"begin_time\":\"1949\",\"end_time\":\"3828\"},{\"text\":\"背面有完整漂亮的木纹，这才是真材实料的象征。\",\"begin_time\":\"3828\",\"end_time\":\"8298\"},{\"text\":\"如果看到有多孔的碎屑感，那就要小心了，这很可能不是实木，而是普通的颗粒板。\",\"begin_time\":\"8298\",\"end_time\":\"15061\"}],\"task_id\":\"8505c3fb40f047f0859a87d8e49ac393\",\"audio_address\":\"http://nls-cloud-cn-shanghai.oss-cn-shanghai.aliyuncs.com/jupiter-flow/tmp/8505c3fb40f047f0859a87d8e49ac393.mp3?Expires=1755586849&OSSAccessKeyId=LTAI4G588hXC7P47wauY5e2K&Signature=QMycqCK63yOAQQzBoqQVRqZG8Iw%3D\",\"notify_custom\":null}\n    }\n\n]"
+      }
+    ],
+    "HTTP Request": [
+      {
+        "json": {
+          "status": 200,
+          "data": {
+            "task_id": "8505c3fb40f047f0859a87d8e49ac393"
+          },
+          "error_code": 20000000,
+          "error_message": "SUCCESS",
+          "request_id": "51c8bea84ea34ec8b3b020d96084a442"
+        }
+      }
+    ],
+    "HTTP Request1": [
+      {
+        "json": {
+          "status": 200,
+          "data": {
+            "sentences": [
+              {
+                "text": "怎么辨别实木家具？",
+                "begin_time": "0",
+                "end_time": "1949"
+              },
+              {
+                "text": "买前记得翻看背面。",
+                "begin_time": "1949",
+                "end_time": "3828"
+              },
+              {
+                "text": "背面有完整漂亮的木纹，这才是真材实料的象征。",
+                "begin_time": "3828",
+                "end_time": "8298"
+              },
+              {
+                "text": "如果看到有多孔的碎屑感，那就要小心了，这很可能不是实木，而是普通的颗粒板。",
+                "begin_time": "8298",
+                "end_time": "15061"
+              }
+            ],
+            "task_id": "8505c3fb40f047f0859a87d8e49ac393",
+            "audio_address": "http://nls-cloud-cn-shanghai.oss-cn-shanghai.aliyuncs.com/jupiter-flow/tmp/8505c3fb40f047f0859a87d8e49ac393.mp3?Expires=1755586849&OSSAccessKeyId=LTAI4G588hXC7P47wauY5e2K&Signature=QMycqCK63yOAQQzBoqQVRqZG8Iw%3D",
+            "notify_custom": null
+          },
+          "error_code": 20000000,
+          "error_message": "SUCCESS",
+          "request_id": "377157eaff3a4edd96e5716d90705a4c"
+        }
+      }
+    ],
+    "Edit Fields1": [
+      {
+        "json": {
+          "text_file_address": "怎么辨别实木家具？买前记得翻看背面。背面有完整漂亮的木纹，这才是真材实料的象征。如果看到有多孔的碎屑感，那就要小心了，这很可能不是实木，而是普通的颗粒板。",
+          "audio": "http://nls-cloud-cn-shanghai.oss-cn-shanghai.aliyuncs.com/jupiter-flow/tmp/8505c3fb40f047f0859a87d8e49ac393.mp3?Expires=1755586849&OSSAccessKeyId=LTAI4G588hXC7P47wauY5e2K&Signature=QMycqCK63yOAQQzBoqQVRqZG8Iw%3D",
+          "data": {
+            "sentences": [
+              {
+                "text": "怎么辨别实木家具？",
+                "begin_time": "0",
+                "end_time": "1949"
+              },
+              {
+                "text": "买前记得翻看背面。",
+                "begin_time": "1949",
+                "end_time": "3828"
+              },
+              {
+                "text": "背面有完整漂亮的木纹，这才是真材实料的象征。",
+                "begin_time": "3828",
+                "end_time": "8298"
+              },
+              {
+                "text": "如果看到有多孔的碎屑感，那就要小心了，这很可能不是实木，而是普通的颗粒板。",
+                "begin_time": "8298",
+                "end_time": "15061"
+              }
+            ],
+            "task_id": "8505c3fb40f047f0859a87d8e49ac393",
+            "audio_address": "http://nls-cloud-cn-shanghai.oss-cn-shanghai.aliyuncs.com/jupiter-flow/tmp/8505c3fb40f047f0859a87d8e49ac393.mp3?Expires=1755586849&OSSAccessKeyId=LTAI4G588hXC7P47wauY5e2K&Signature=QMycqCK63yOAQQzBoqQVRqZG8Iw%3D",
+            "notify_custom": null
+          }
+        }
+      }
+    ],
+    "Edit Fields2": [
+      {
+        "json": {
+          "appkey": "ZQT0omJ1pOFLGrjI",
+          "text": "怎么辨别实木家具？买前记得翻看背面。背面有完整漂亮的木纹，这才是真材实料的象征。如果看到有多孔的碎屑感，那就要小心了，这很可能不是实木，而是普通的颗粒板。",
+          "tags": "solidwood#furniture#tips#hacks#shoppingtips"
+        }
+      }
+    ],
+    "get_tts_token": [
+      {
+        "json": {
+          "token": "4e517907e2f24ce2bf6dd425deb9596e"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "合成视频拿到链接": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "get_tts_token",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "识别场景",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_tts_token": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "合成视频拿到链接",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "识别场景": {
+      "main": [
+        [
+          {
+            "node": "oss1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "oss2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "oss3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "oss4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "oss5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "oss1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "oss2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "oss3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "oss4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "oss5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "识别场景",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4b453526-6c9a-4ef8-8b7b-7ed0a8b8bfb5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+  },
+  "id": "zBzSaWt2Bjkuhat6",
+  "tags": []
+}
