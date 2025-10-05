@@ -611,6 +611,7 @@ CREATE TABLE IF NOT EXISTS [hsai_tasks] (
     title VARCHAR NOT NULL,
     description TEXT,
     task_type VARCHAR NOT NULL,
+    task_category VARCHAR,
     status VARCHAR NOT NULL,
     user_id VARCHAR NOT NULL,
     chat_id VARCHAR,
@@ -631,8 +632,11 @@ CREATE TABLE IF NOT EXISTS [hsai_tasks] (
     assignee_id VARCHAR,
     collaborators JSON,
     shared_sessions JSON,
+    project_id VARCHAR REFERENCES hsai_projects(id),
+    prompt_config JSON,
     FOREIGN KEY (workflow_id) REFERENCES hsai_workflows(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    FOREIGN KEY (parent_task_id) REFERENCES hsai_tasks(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    FOREIGN KEY (parent_task_id) REFERENCES hsai_tasks(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    FOREIGN KEY (project_id) REFERENCES hsai_projects(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 CREATE INDEX IF NOT EXISTS ix_hsai_tasks_assignee_id ON [hsai_tasks] (assignee_id);
 CREATE INDEX IF NOT EXISTS ix_hsai_tasks_type ON [hsai_tasks] (task_type);
@@ -650,3 +654,19 @@ CREATE TABLE IF NOT EXISTS [hsai_video_learning_status] (
     created_at TEXT DEFAULT 'CURRENT_TIMESTAMP',
     updated_at TEXT DEFAULT 'CURRENT_TIMESTAMP'
 );
+
+-- 表 hsai_projects 的结构
+CREATE TABLE IF NOT EXISTS [hsai_projects] (
+    id VARCHAR NOT NULL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    description TEXT,
+    business_name VARCHAR NOT NULL,
+    company_info JSON,
+    user_id VARCHAR NOT NULL,
+    status VARCHAR DEFAULT 'active',
+    config JSON,
+    created_at BIGINT,
+    updated_at BIGINT
+);
+CREATE INDEX IF NOT EXISTS ix_hsai_projects_user_id ON [hsai_projects] (user_id);
+CREATE INDEX IF NOT EXISTS ix_hsai_projects_status ON [hsai_projects] (status);
