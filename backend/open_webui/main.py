@@ -90,6 +90,7 @@ from open_webui.routers import (
     hsai_workflows,
     hsai_woc,  # 添加WOC路由导入
     hsai_video_learning,  # 添加视频学习路由导入
+    hsai_projects,  # 添加项目管理路由导入
     # 移除hsai_websocket路由以避免与Socket.IO冲突
     # hsai_websocket,
     # 根据新流程说明，不再需要爆款视频路由
@@ -1251,6 +1252,8 @@ app.include_router(hsai_workflows.router, prefix="/api/v1")
 app.include_router(hsai_video_learning.router, prefix="/api/v1")  # 添加视频学习路由
 # 根据新流程说明，不再需要爆款视频路由
 # app.include_router(hsai_viral_videos.router, prefix="/api/v1")  # 添加爆款视频路由
+app.include_router(hsai_projects.router, prefix="/api/v1")  # 添加项目管理路由
+app.include_router(hsai_projects.router, prefix="/api/v1")  # 添加项目管理路由
 
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)

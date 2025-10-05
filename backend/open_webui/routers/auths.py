@@ -712,6 +712,23 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
 
             credit = Credits.init_credit_by_user_id(user.id)
 
+            # 创建默认项目
+            try:
+                from open_webui.models.hsai_projects import HSAIProjects, HSAIProjectForm
+                default_project_form = HSAIProjectForm(
+                    name=f"{user.name}的默认项目",
+                    description=f"为用户{user.name}创建的默认项目",
+                    business_name=user.business_name or "HSAI",
+                    company_info={"user_id": user.id}
+                )
+                default_project = HSAIProjects.insert_new_project(user.id, default_project_form)
+                if default_project:
+                    log.info(f"为新用户 {user.id} 创建了默认项目 {default_project.id}")
+                else:
+                    log.warning(f"为新用户 {user.id} 创建默认项目失败")
+            except Exception as e:
+                log.error(f"创建默认项目时出错: {e}")
+
             return {
                 "token": token,
                 "token_type": "Bearer",
@@ -823,6 +840,24 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
 
         if user:
             token = create_token(data={"id": user.id})
+            
+            # 创建默认项目
+            try:
+                from open_webui.models.hsai_projects import HSAIProjects, HSAIProjectForm
+                default_project_form = HSAIProjectForm(
+                    name=f"{user.name}的默认项目",
+                    description=f"为用户{user.name}创建的默认项目",
+                    business_name=user.business_name or "HSAI",
+                    company_info={"user_id": user.id}
+                )
+                default_project = HSAIProjects.insert_new_project(user.id, default_project_form)
+                if default_project:
+                    log.info(f"为新用户 {user.id} 创建了默认项目 {default_project.id}")
+                else:
+                    log.warning(f"为新用户 {user.id} 创建默认项目失败")
+            except Exception as e:
+                log.error(f"创建默认项目时出错: {e}")
+            
             return {
                 "token": token,
                 "token_type": "Bearer",

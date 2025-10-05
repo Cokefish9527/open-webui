@@ -56,12 +56,16 @@ class HSAITask(Base):
     
     # 任务类型和状态
     task_type = Column(String, nullable=False)
+    task_category = Column(String, nullable=True)  # 任务分类
     status = Column(String, nullable=False, default=HSAITaskStatus.PENDING)
     
     # 所属用户和会话
     user_id = Column(String, nullable=False)
     assignee_id = Column(String, nullable=True)  # 指派人ID
     chat_id = Column(String, nullable=True)  # 关联的聊天会话ID
+    
+    # 项目关联
+    project_id = Column(String, ForeignKey("hsai_projects.id"), nullable=True)  # 关联的项目ID
     
     # 任务协作相关
     collaborators = Column(JSON, nullable=True)  # 协作者列表 [{"user_id": "...", "role": "...", "joined_at": ...}]
@@ -71,6 +75,7 @@ class HSAITask(Base):
     config = Column(JSON, nullable=True)  # 任务配置参数
     inputs = Column(JSON, nullable=True)  # 输入参数
     outputs = Column(JSON, nullable=True)  # 输出结果
+    prompt_config = Column(JSON, nullable=True)  # 提示词配置
     
     # 工作流相关
     workflow_id = Column(String, ForeignKey("hsai_workflows.id"), nullable=True)
@@ -205,15 +210,18 @@ class HSAITaskModel(BaseModel):
     title: str = Field(description="任务标题")
     description: Optional[str] = Field(default=None, description="任务详细描述")
     task_type: str = Field(description="任务类型")
+    task_category: Optional[str] = Field(default=None, description="任务分类")
     status: str = Field(default=HSAITaskStatus.PENDING, description="任务状态")
     user_id: str = Field(description="用户ID")
     assignee_id: Optional[str] = Field(default=None, description="指派人ID")
     chat_id: Optional[str] = Field(default=None, description="关联的聊天会话ID")
+    project_id: Optional[str] = Field(default=None, description="关联的项目ID")
     collaborators: Optional[List[Dict[str, Any]]] = Field(default=None, description="协作者列表")
     shared_sessions: Optional[List[str]] = Field(default=None, description="共享的会话ID列表")
     config: Optional[dict] = Field(default=None, description="任务配置参数")
     inputs: Optional[dict] = Field(default=None, description="输入参数")
     outputs: Optional[dict] = Field(default=None, description="输出结果")
+    prompt_config: Optional[dict] = Field(default=None, description="提示词配置")
     workflow_id: Optional[str] = Field(default=None, description="工作流ID")
     parent_task_id: Optional[str] = Field(default=None, description="父任务ID")
     progress: int = Field(default=0, description="进度百分比(0-100)")
@@ -280,12 +288,15 @@ class HSAITaskForm(BaseModel):
     title: str
     description: Optional[str] = None
     task_type: str
+    task_category: Optional[str] = None
     assignee_id: Optional[str] = None
     chat_id: Optional[str] = None
+    project_id: Optional[str] = None
     collaborators: Optional[List[Dict[str, Any]]] = None  # 协作者列表
     shared_sessions: Optional[List[str]] = None  # 共享的会话ID列表
     config: Optional[dict] = None
     inputs: Optional[dict] = None
+    prompt_config: Optional[dict] = None
     workflow_id: Optional[str] = None
     parent_task_id: Optional[str] = None
     priority: Optional[int] = 0
@@ -320,13 +331,16 @@ class HSAICardForm(BaseModel):
 class HSAITaskUpdateForm(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    task_category: Optional[str] = None
     status: Optional[str] = None
     assignee_id: Optional[str] = None  # 指派人ID
+    project_id: Optional[str] = None
     collaborators: Optional[List[Dict[str, Any]]] = None  # 协作者列表
     shared_sessions: Optional[List[str]] = None  # 共享的会话ID列表
     config: Optional[dict] = None
     inputs: Optional[dict] = None
     outputs: Optional[dict] = None
+    prompt_config: Optional[dict] = None
     progress: Optional[int] = None
     error_message: Optional[str] = None
     priority: Optional[int] = None
@@ -343,8 +357,10 @@ class HSAITaskResponse(BaseModel):
     title: str = Field(description="任务标题")
     description: Optional[str] = Field(default=None, description="任务详细描述")
     task_type: str = Field(description="任务类型")
+    task_category: Optional[str] = Field(default=None, description="任务分类")
     status: str = Field(description="任务状态")
     assignee_id: Optional[str] = Field(default=None, description="任务指派人ID")
+    project_id: Optional[str] = Field(default=None, description="关联的项目ID")
     progress: int = Field(default=0, description="任务进度百分比 (0-100)")
     priority: int = Field(default=0, description="任务优先级")
     tags: Optional[List[str]] = Field(default=None, description="任务标签列表")
@@ -352,6 +368,7 @@ class HSAITaskResponse(BaseModel):
     completed_at: Optional[int] = Field(default=None, description="任务完成时间戳")
     error_message: Optional[str] = Field(default=None, description="错误信息")
     config: Optional[dict] = Field(default=None, description="任务配置参数")
+    prompt_config: Optional[dict] = Field(default=None, description="提示词配置")
     estimated_duration: Optional[int] = Field(default=None, description="预估耗时(秒)")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
@@ -431,6 +448,7 @@ class HSAITasksTable:
         task_type: Optional[str] = None,
         assignee_id: Optional[str] = None,
         chat_id: Optional[str] = None,
+        project_id: Optional[str] = None,
         limit: int = 20,
         offset: int = 0
     ) -> List[HSAITaskModel]:
@@ -446,6 +464,8 @@ class HSAITasksTable:
                     query = query.filter_by(assignee_id=assignee_id)
                 if chat_id:
                     query = query.filter_by(chat_id=chat_id)
+                if project_id:
+                    query = query.filter_by(project_id=project_id)
                     
                 tasks = query.order_by(
                     HSAITask.priority.desc(),
@@ -463,7 +483,8 @@ class HSAITasksTable:
         status: Optional[str] = None,
         task_type: Optional[str] = None,
         assignee_id: Optional[str] = None,
-        chat_id: Optional[str] = None
+        chat_id: Optional[str] = None,
+        project_id: Optional[str] = None
     ) -> int:
         """获取任务总数"""
         with get_db() as db:
@@ -478,6 +499,8 @@ class HSAITasksTable:
                     query = query.filter_by(assignee_id=assignee_id)
                 if chat_id:
                     query = query.filter_by(chat_id=chat_id)
+                if project_id:
+                    query = query.filter_by(project_id=project_id)
                     
                 return query.count()
             except Exception as e:
