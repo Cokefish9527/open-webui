@@ -67,14 +67,8 @@ class HSAITask(Base):
     # 项目关联
     project_id = Column(String, ForeignKey("hsai_projects.id"), nullable=True)  # 关联的项目ID
     
-    # 任务协作相关
-    collaborators = Column(JSON, nullable=True)  # 协作者列表 [{"user_id": "...", "role": "...", "joined_at": ...}]
-    shared_sessions = Column(JSON, nullable=True)  # 共享的会话ID列表 ["session_id1", "session_id2"]
-    
     # 任务配置和参数
     config = Column(JSON, nullable=True)  # 任务配置参数
-    inputs = Column(JSON, nullable=True)  # 输入参数
-    outputs = Column(JSON, nullable=True)  # 输出结果
     prompt_config = Column(JSON, nullable=True)  # 提示词配置
     
     # 工作流相关
@@ -86,13 +80,8 @@ class HSAITask(Base):
     started_at = Column(BigInteger, nullable=True)
     completed_at = Column(BigInteger, nullable=True)
     
-    # 错误信息
-    error_message = Column(Text, nullable=True)
-    retry_count = Column(BigInteger, default=0)
-    
-    # 优先级和标签
+    # 优先级
     priority = Column(BigInteger, default=0)  # 优先级，数字越大越优先
-    tags = Column(JSON, nullable=True)
     
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
@@ -216,21 +205,14 @@ class HSAITaskModel(BaseModel):
     assignee_id: Optional[str] = Field(default=None, description="指派人ID")
     chat_id: Optional[str] = Field(default=None, description="关联的聊天会话ID")
     project_id: Optional[str] = Field(default=None, description="关联的项目ID")
-    collaborators: Optional[List[Dict[str, Any]]] = Field(default=None, description="协作者列表")
-    shared_sessions: Optional[List[str]] = Field(default=None, description="共享的会话ID列表")
     config: Optional[dict] = Field(default=None, description="任务配置参数")
-    inputs: Optional[dict] = Field(default=None, description="输入参数")
-    outputs: Optional[dict] = Field(default=None, description="输出结果")
     prompt_config: Optional[dict] = Field(default=None, description="提示词配置")
     workflow_id: Optional[str] = Field(default=None, description="工作流ID")
     parent_task_id: Optional[str] = Field(default=None, description="父任务ID")
     progress: int = Field(default=0, description="进度百分比(0-100)")
     started_at: Optional[int] = Field(default=None, description="开始时间戳")
     completed_at: Optional[int] = Field(default=None, description="完成时间戳")
-    error_message: Optional[str] = Field(default=None, description="错误信息")
-    retry_count: int = Field(default=0, description="重试次数")
     priority: int = Field(default=0, description="优先级，数字越大越优先")
-    tags: Optional[List[str]] = Field(default=None, description="标签列表")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -292,15 +274,11 @@ class HSAITaskForm(BaseModel):
     assignee_id: Optional[str] = None
     chat_id: Optional[str] = None
     project_id: Optional[str] = None
-    collaborators: Optional[List[Dict[str, Any]]] = None  # 协作者列表
-    shared_sessions: Optional[List[str]] = None  # 共享的会话ID列表
     config: Optional[dict] = None
-    inputs: Optional[dict] = None
     prompt_config: Optional[dict] = None
     workflow_id: Optional[str] = None
     parent_task_id: Optional[str] = None
     priority: Optional[int] = 0
-    tags: Optional[List[str]] = None
 
 
 class HSAIWorkflowForm(BaseModel):
@@ -335,16 +313,10 @@ class HSAITaskUpdateForm(BaseModel):
     status: Optional[str] = None
     assignee_id: Optional[str] = None  # 指派人ID
     project_id: Optional[str] = None
-    collaborators: Optional[List[Dict[str, Any]]] = None  # 协作者列表
-    shared_sessions: Optional[List[str]] = None  # 共享的会话ID列表
     config: Optional[dict] = None
-    inputs: Optional[dict] = None
-    outputs: Optional[dict] = None
     prompt_config: Optional[dict] = None
     progress: Optional[int] = None
-    error_message: Optional[str] = None
     priority: Optional[int] = None
-    tags: Optional[List[str]] = None
 
 
 ####################
@@ -363,10 +335,8 @@ class HSAITaskResponse(BaseModel):
     project_id: Optional[str] = Field(default=None, description="关联的项目ID")
     progress: int = Field(default=0, description="任务进度百分比 (0-100)")
     priority: int = Field(default=0, description="任务优先级")
-    tags: Optional[List[str]] = Field(default=None, description="任务标签列表")
     started_at: Optional[int] = Field(default=None, description="任务开始时间戳")
     completed_at: Optional[int] = Field(default=None, description="任务完成时间戳")
-    error_message: Optional[str] = Field(default=None, description="错误信息")
     config: Optional[dict] = Field(default=None, description="任务配置参数")
     prompt_config: Optional[dict] = Field(default=None, description="提示词配置")
     estimated_duration: Optional[int] = Field(default=None, description="预估耗时(秒)")
@@ -524,13 +494,13 @@ class HSAITasksTable:
                 if task:
                     for key, value in form_data.model_dump(exclude_unset=True).items():
                         setattr(task, key, value)
-                    task.updated_at = int(time.time())
+                    setattr(task, 'updated_at', int(time.time()))
                     
                     # 自动设置时间戳
-                    if form_data.status == HSAITaskStatus.IN_PROGRESS and not task.started_at:
-                        task.started_at = int(time.time())
+                    if form_data.status == HSAITaskStatus.IN_PROGRESS and not getattr(task, 'started_at'):
+                        setattr(task, 'started_at', int(time.time()))
                     elif form_data.status in [HSAITaskStatus.COMPLETED, HSAITaskStatus.FAILED]:
-                        task.completed_at = int(time.time())
+                        setattr(task, 'completed_at', int(time.time()))
                     
                     db.commit()
                     db.refresh(task)
@@ -546,12 +516,12 @@ class HSAITasksTable:
             try:
                 task = db.get(HSAITask, task_id)
                 if task:
-                    task.progress = max(0, min(100, progress))  # 确保进度在0-100之间
-                    task.updated_at = int(time.time())
+                    setattr(task, 'progress', max(0, min(100, progress)))  # 确保进度在0-100之间
+                    setattr(task, 'updated_at', int(time.time()))
                     
-                    if progress == 100 and task.status != HSAITaskStatus.COMPLETED:
-                        task.status = HSAITaskStatus.COMPLETED
-                        task.completed_at = int(time.time())
+                    if progress == 100 and getattr(task, 'status') != HSAITaskStatus.COMPLETED:
+                        setattr(task, 'status', HSAITaskStatus.COMPLETED)
+                        setattr(task, 'completed_at', int(time.time()))
                     
                     db.commit()
                     return True
@@ -622,7 +592,7 @@ class HSAICardsTable:
                     for key, value in updates.items():
                         if hasattr(card, key):
                             setattr(card, key, value)
-                    card.updated_at = int(time.time())
+                    setattr(card, 'updated_at', int(time.time()))
                     db.commit()
                     db.refresh(card)
                     return HSAICardModel.model_validate(card)
