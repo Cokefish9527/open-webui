@@ -106,6 +106,10 @@ HSAI项目的主业务表：
 - [hsai_tasks_alter_2025-10-05.sql](schema_updates/hsai_tasks_alter_2025-10-05.sql) - 任务表结构修改
 - [hsai_users_alter_2025-10-07.sql](schema_updates/hsai_users_alter_2025-10-07.sql) - 用户表结构扩展
 - [hsai_tasks_remove_unused_fields_2025-10-07.sql](schema_updates/hsai_tasks_remove_unused_fields_2025-10-07.sql) - 移除任务表冗余字段
+- [hsai_companies_create_2025-10-07.sql](schema_updates/hsai_companies_create_2025-10-07.sql) - 公司表创建脚本
+- [hsai_users_alter_add_company_id_2025-10-07.sql](schema_updates/hsai_users_alter_add_company_id_2025-10-07.sql) - 用户表添加公司关联字段
+- [hsai_projects_alter_add_company_id_2025-10-07.sql](schema_updates/hsai_projects_alter_add_company_id_2025-10-07.sql) - 项目表添加公司关联字段
+- [hsai_tasks_alter_add_project_id_and_prompt_config_2025-10-07.sql](schema_updates/hsai_tasks_alter_add_project_id_and_prompt_config_2025-10-07.sql) - 任务表添加项目关联和提示词配置字段
 
 ## 12. 完整数据库初始化脚本
 
