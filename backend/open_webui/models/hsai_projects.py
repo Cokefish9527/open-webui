@@ -7,7 +7,7 @@ from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey
+from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
 log = logging.getLogger(__name__)
@@ -30,6 +30,8 @@ class HSAIProject(Base):
     user_id = Column(String, nullable=False)
     status = Column(String, default="active")
     config = Column(JSON, nullable=True)
+    # 添加公司关联字段
+    company_id = Column(String, ForeignKey("companies.id"), nullable=True)
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
 
@@ -51,6 +53,8 @@ class HSAIProjectModel(BaseModel):
     user_id: str = Field(description="用户ID")
     status: str = Field(default="active", description="项目状态")
     config: Optional[dict] = Field(default=None, description="项目配置")
+    # 添加公司关联字段
+    company_id: Optional[str] = Field(default=None, description="所属公司ID")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -90,6 +94,8 @@ class HSAIProjectResponse(BaseModel):
     company_info: Optional[dict] = Field(default=None, description="企业信息")
     status: str = Field(default="active", description="项目状态")
     config: Optional[dict] = Field(default=None, description="项目配置")
+    # 添加公司关联字段
+    company_id: Optional[str] = Field(default=None, description="所属公司ID")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -197,7 +203,7 @@ class HSAIProjectsTable:
                 if project:
                     for key, value in form_data.model_dump(exclude_unset=True).items():
                         setattr(project, key, value)
-                    project.updated_at = int(time.time())
+                    setattr(project, 'updated_at', int(time.time()))
                     
                     db.commit()
                     db.refresh(project)

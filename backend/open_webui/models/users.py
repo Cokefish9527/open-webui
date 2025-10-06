@@ -9,7 +9,7 @@ from open_webui.models.groups import Groups
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Boolean, Column, String, Text
+from sqlalchemy import BigInteger, Boolean, Column, String, Text, ForeignKey
 from sqlalchemy import or_
 
 
@@ -41,6 +41,9 @@ class User(Base):
     
     # 添加公司名称字段
     business_name = Column(String, nullable=True)
+    
+    # 添加公司关联字段
+    company_id = Column(String, ForeignKey("companies.id"), nullable=True)
 
     oauth_sub = Column(Text, unique=True)
 
@@ -68,6 +71,8 @@ class UserModel(BaseModel):
     info_collection_completed: bool = Field(default=False, description="信息收集是否完成")
     # 添加公司名称字段
     business_name: Optional[str] = Field(default=None, description="公司名称")
+    # 添加公司关联字段
+    company_id: Optional[str] = Field(default=None, description="所属公司ID")
     oauth_sub: Optional[str] = Field(default=None, description="OAuth子标识符")
 
     model_config = ConfigDict(from_attributes=True, extra="allow")
@@ -92,6 +97,7 @@ class UserResponse(BaseModel):
     role: str = Field(description="用户角色")
     profile_image_url: str = Field(description="用户头像URL")
     business_name: Optional[str] = Field(default=None, description="公司名称")
+    company_id: Optional[str] = Field(default=None, description="所属公司ID")
 
 
 class UserNameResponse(BaseModel):
