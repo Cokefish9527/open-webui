@@ -712,9 +712,39 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
 
             credit = Credits.init_credit_by_user_id(user.id)
 
+            # 创建公司
+            try:
+                from open_webui.models.hsai_companies import Companies, CompanyForm
+                company_form = CompanyForm(
+                    name=f"{user.name}的公司",
+                    description=f"为用户{user.name}自动创建的公司"
+                )
+                company = Companies.insert_new_company(user.id, company_form)
+                if company:
+                    # 更新用户关联的公司信息
+                    from open_webui.models.users import Users
+                    Users.update_user_by_id(user.id, {
+                        "company_id": company.id,
+                        "business_name": company.name
+                    })
+                    log.info(f"为新用户 {user.id} 创建了公司 {company.id}")
+                else:
+                    log.warning(f"为新用户 {user.id} 创建公司失败")
+            except Exception as e:
+                log.error(f"创建公司时出错: {e}")
+
             # 创建默认项目
             try:
                 from open_webui.models.hsai_projects import HSAIProjects, HSAIProjectForm
+                # 先获取用户关联的公司ID
+                company_id = None
+                try:
+                    from open_webui.models.users import Users
+                    updated_user = Users.get_user_by_id(user.id)
+                    company_id = updated_user.company_id if updated_user else None
+                except Exception:
+                    pass
+                    
                 default_project_form = HSAIProjectForm(
                     name=f"{user.name}的默认项目",
                     description=f"为用户{user.name}创建的默认项目",
