@@ -712,52 +712,62 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
 
             credit = Credits.init_credit_by_user_id(user.id)
 
-            # 创建公司
+            # 创建公司或绑定到现有公司
+            company = None
             try:
                 from open_webui.models.hsai_companies import Companies, CompanyForm
-                company_form = CompanyForm(
-                    name=f"{user.name}的公司",
-                    description=f"为用户{user.name}自动创建的公司"
-                )
-                company = Companies.insert_new_company(user.id, company_form)
+                
+                # 根据用户名称生成公司名称
+                company_name = f"{user.name}的公司"
+                
+                # 查找是否已存在同名公司
+                existing_company = Companies.get_company_by_name(company_name)
+                
+                if existing_company:
+                    # 如果存在同名公司，则绑定到现有公司
+                    company = existing_company
+                    log.info(f"用户 {user.id} 绑定到现有公司 {company.id}")
+                else:
+                    # 如果不存在同名公司，则创建新公司
+                    company_form = CompanyForm(
+                        name=company_name,
+                        description=f"为用户{user.name}自动创建的公司"
+                    )
+                    company = Companies.insert_new_company(user.id, company_form)
+                    if company:
+                        log.info(f"为新用户 {user.id} 创建了公司 {company.id}")
+                    else:
+                        log.warning(f"为新用户 {user.id} 创建公司失败")
+                        
+                # 更新用户关联的公司信息
                 if company:
-                    # 更新用户关联的公司信息
                     from open_webui.models.users import Users
                     Users.update_user_by_id(user.id, {
                         "company_id": company.id,
                         "business_name": company.name
                     })
-                    log.info(f"为新用户 {user.id} 创建了公司 {company.id}")
-                else:
-                    log.warning(f"为新用户 {user.id} 创建公司失败")
             except Exception as e:
-                log.error(f"创建公司时出错: {e}")
+                log.error(f"创建或绑定公司时出错: {e}")
 
-            # 创建默认项目
-            try:
-                from open_webui.models.hsai_projects import HSAIProjects, HSAIProjectForm
-                # 先获取用户关联的公司ID
-                company_id = None
+            # 只有在创建新公司时才创建默认项目
+            if company and not existing_company:
                 try:
-                    from open_webui.models.users import Users
-                    updated_user = Users.get_user_by_id(user.id)
-                    company_id = updated_user.company_id if updated_user else None
-                except Exception:
-                    pass
-                    
-                default_project_form = HSAIProjectForm(
-                    name=f"{user.name}的默认项目",
-                    description=f"为用户{user.name}创建的默认项目",
-                    business_name=user.business_name or "HSAI",
-                    company_info={"user_id": user.id}
-                )
-                default_project = HSAIProjects.insert_new_project(user.id, default_project_form)
-                if default_project:
-                    log.info(f"为新用户 {user.id} 创建了默认项目 {default_project.id}")
-                else:
-                    log.warning(f"为新用户 {user.id} 创建默认项目失败")
-            except Exception as e:
-                log.error(f"创建默认项目时出错: {e}")
+                    from open_webui.models.hsai_projects import HSAIProjects, HSAIProjectForm
+                    default_project_form = HSAIProjectForm(
+                        name=f"{company.name} - 默认项目",
+                        description=f"为公司{company.name}自动创建的默认项目",
+                        business_name=company.name,
+                        company_info={"user_id": user.id}
+                    )
+                    default_project = HSAIProjects.insert_new_project(user.id, default_project_form)
+                    if default_project:
+                        log.info(f"为公司 {company.id} 创建了默认项目 {default_project.id}")
+                    else:
+                        log.warning(f"为公司 {company.id} 创建默认项目失败")
+                except Exception as e:
+                    log.error(f"创建默认项目时出错: {e}")
+            elif company and existing_company:
+                log.info(f"用户 {user.id} 绑定到现有公司 {company.id}，无需创建默认项目")
 
             return {
                 "token": token,

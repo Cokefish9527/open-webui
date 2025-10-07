@@ -183,6 +183,17 @@ class CompaniesTable:
             except Exception:
                 return None
 
+    def get_company_by_name(self, name: str) -> Optional[CompanyModel]:
+        """
+        根据公司名称查找公司
+        """
+        with get_db() as db:
+            try:
+                company = db.query(Company).filter_by(name=name).first()
+                return CompanyModel.model_validate(company) if company else None
+            except Exception:
+                return None
+
     def update_company_by_id(
         self, company_id: str, form_data: CompanyUpdateForm
     ) -> Optional[CompanyModel]:
