@@ -247,3 +247,23 @@ class RedisSignalHandler:
 
 # 全局Redis信号处理器实例
 redis_signal_handler = RedisSignalHandler()
+
+def initialize_redis_handlers():
+    """初始化所有Redis队列处理器"""
+    try:
+        # 注册对话消息队列处理器
+        from open_webui.utils.conversation_queue_handler import register_conversation_queue_handler
+        register_conversation_queue_handler(redis_signal_handler)
+        
+        # 注册视频学习通知队列处理器
+        from open_webui.utils.video_learning_notifier import register_video_learning_queue_handler
+        register_video_learning_queue_handler(redis_signal_handler)
+        
+        # 注册任务完成信号队列处理器
+        from open_webui.utils.task_completion_handler import register_task_completion_queue_handler
+        register_task_completion_queue_handler(redis_signal_handler)
+        
+        log.info("所有Redis队列处理器注册完成")
+    except Exception as e:
+        log.error(f"注册Redis队列处理器时发生错误: {e}", exc_info=True)
+        raise
