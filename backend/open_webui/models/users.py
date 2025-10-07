@@ -153,6 +153,8 @@ class UsersTable:
                     "info_collection_completed": False,
                     # 新用户默认business_name为None
                     "business_name": None,
+                    # 新用户默认company_id为None
+                    "company_id": None,
                 }
             )
             result = User(**user.model_dump())
