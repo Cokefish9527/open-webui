@@ -32,6 +32,8 @@ class HSAIProject(Base):
     config = Column(JSON, nullable=True)
     # 添加公司关联字段
     company_id = Column(String, ForeignKey("companies.id"), nullable=True)
+    # 添加组织关联字段
+    organization_id = Column(String, ForeignKey("organizations.id"), nullable=True)
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
 
@@ -55,6 +57,8 @@ class HSAIProjectModel(BaseModel):
     config: Optional[dict] = Field(default=None, description="项目配置")
     # 添加公司关联字段
     company_id: Optional[str] = Field(default=None, description="所属公司ID")
+    # 添加组织关联字段
+    organization_id: Optional[str] = Field(default=None, description="所属组织ID")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -70,6 +74,8 @@ class HSAIProjectForm(BaseModel):
     business_name: str
     company_info: Optional[dict] = None
     config: Optional[dict] = None
+    # 添加组织关联字段
+    organization_id: Optional[str] = None
 
 
 class HSAIProjectUpdateForm(BaseModel):
@@ -79,6 +85,8 @@ class HSAIProjectUpdateForm(BaseModel):
     company_info: Optional[dict] = None
     status: Optional[str] = None
     config: Optional[dict] = None
+    # 添加组织关联字段
+    organization_id: Optional[str] = None
 
 
 ####################
@@ -96,6 +104,8 @@ class HSAIProjectResponse(BaseModel):
     config: Optional[dict] = Field(default=None, description="项目配置")
     # 添加公司关联字段
     company_id: Optional[str] = Field(default=None, description="所属公司ID")
+    # 添加组织关联字段
+    organization_id: Optional[str] = Field(default=None, description="所属组织ID")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -150,11 +160,16 @@ class HSAIProjectsTable:
         user_id: str, 
         status: Optional[str] = None,
         limit: int = 20,
-        offset: int = 0
+        offset: int = 0,
+        organization_id: Optional[str] = None
     ) -> List[HSAIProjectModel]:
         with get_db() as db:
             try:
                 query = db.query(HSAIProject).filter_by(user_id=user_id)
+                
+                # 如果指定了组织ID，只返回该组织的项目
+                if organization_id:
+                    query = query.filter_by(organization_id=organization_id)
                 
                 if status:
                     query = query.filter_by(status=status)
@@ -171,12 +186,17 @@ class HSAIProjectsTable:
     def get_projects_count(
         self, 
         user_id: str, 
-        status: Optional[str] = None
+        status: Optional[str] = None,
+        organization_id: Optional[str] = None
     ) -> int:
         """获取项目总数"""
         with get_db() as db:
             try:
                 query = db.query(HSAIProject).filter_by(user_id=user_id)
+                
+                # 如果指定了组织ID，只统计该组织的项目
+                if organization_id:
+                    query = query.filter_by(organization_id=organization_id)
                 
                 if status:
                     query = query.filter_by(status=status)
@@ -186,10 +206,16 @@ class HSAIProjectsTable:
                 log.exception(f"Error counting projects: {e}")
                 return 0
 
-    def get_project_by_id(self, project_id: str) -> Optional[HSAIProjectModel]:
+    def get_project_by_id(self, project_id: str, organization_id: Optional[str] = None) -> Optional[HSAIProjectModel]:
         with get_db() as db:
             try:
-                project = db.get(HSAIProject, project_id)
+                query = db.query(HSAIProject).filter_by(id=project_id)
+                
+                # 如果指定了组织ID，只查找该组织的项目
+                if organization_id:
+                    query = query.filter_by(organization_id=organization_id)
+                
+                project = query.first()
                 return HSAIProjectModel.model_validate(project) if project else None
             except Exception:
                 return None

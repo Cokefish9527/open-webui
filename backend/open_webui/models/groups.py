@@ -11,7 +11,7 @@ from open_webui.models.files import FileMetadataResponse
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Column, String, Text, JSON, func
+from sqlalchemy import BigInteger, Column, String, Text, JSON, func, ForeignKey
 
 
 log = logging.getLogger(__name__)
@@ -37,6 +37,9 @@ class Group(Base):
 
     permissions = Column(JSON, nullable=True)
     user_ids = Column(JSON, nullable=True)
+    
+    # 组织关联字段
+    organization_id = Column(String, ForeignKey("organizations.id"), nullable=True)
 
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
@@ -53,6 +56,8 @@ class GroupModel(BaseModel):
     meta: Optional[dict] = Field(default=None, description="元数据")
     permissions: Optional[dict] = Field(default=None, description="权限设置")
     user_ids: List[str] = Field(default=[], description="用户ID列表")
+    # 组织关联字段
+    organization_id: Optional[str] = Field(default=None, description="所属组织ID")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -72,6 +77,8 @@ class GroupResponse(BaseModel):
     data: Optional[dict] = Field(default=None, description="数据")
     meta: Optional[dict] = Field(default=None, description="元数据")
     user_ids: List[str] = Field(default=[], description="用户ID列表")
+    # 组织关联字段
+    organization_id: Optional[str] = Field(default=None, description="所属组织ID")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -81,6 +88,8 @@ class GroupForm(BaseModel):
     name: str = Field(description="组名称")
     description: str = Field(description="组描述")
     permissions: Optional[dict] = Field(default=None, description="权限设置")
+    # 组织关联字段
+    organization_id: Optional[str] = Field(default=None, description="所属组织ID")
 
 
 class GroupUpdateForm(GroupForm):
@@ -116,26 +125,34 @@ class GroupTable:
             except Exception:
                 return None
 
-    def get_groups(self) -> List[GroupModel]:
+    def get_groups(self, organization_id: Optional[str] = None) -> List[GroupModel]:
         with get_db() as db:
+            query = db.query(Group)
+            
+            # 如果指定了组织ID，只返回该组织的组
+            if organization_id:
+                query = query.filter_by(organization_id=organization_id)
+                
             return [
                 GroupModel.model_validate(group)
-                for group in db.query(Group).order_by(Group.updated_at.desc()).all()
+                for group in query.order_by(Group.updated_at.desc()).all()
             ]
 
-    def get_groups_by_member_id(self, user_id: str) -> List[GroupModel]:
+    def get_groups_by_member_id(self, user_id: str, organization_id: Optional[str] = None) -> List[GroupModel]:
         with get_db() as db:
+            query = db.query(Group).filter(
+                func.json_array_length(Group.user_ids) > 0
+            ).filter(
+                Group.user_ids.cast(String).like(f'%"{user_id}"%')
+            )
+            
+            # 如果指定了组织ID，只返回该组织的组
+            if organization_id:
+                query = query.filter_by(organization_id=organization_id)
+                
             return [
                 GroupModel.model_validate(group)
-                for group in db.query(Group)
-                .filter(
-                    func.json_array_length(Group.user_ids) > 0
-                )  # Ensure array exists
-                .filter(
-                    Group.user_ids.cast(String).like(f'%"{user_id}"%')
-                )  # String-based check
-                .order_by(Group.updated_at.desc())
-                .all()
+                for group in query.order_by(Group.updated_at.desc()).all()
             ]
 
     def get_group_by_id(self, id: str) -> Optional[GroupModel]:
@@ -146,7 +163,7 @@ class GroupTable:
         except Exception:
             return None
 
-    def get_group_user_ids_by_id(self, id: str) -> Optional[str]:
+    def get_group_user_ids_by_id(self, id: str) -> Optional[List[str]]:
         group = self.get_group_by_id(id)
         if group:
             return group.user_ids
@@ -209,11 +226,11 @@ class GroupTable:
                 return False
 
     def create_groups_by_group_names(
-        self, user_id: str, group_names: List[str]
+        self, user_id: str, group_names: List[str], organization_id: Optional[str] = None
     ) -> List[GroupModel]:
 
         # check for existing groups
-        existing_groups = self.get_groups()
+        existing_groups = self.get_groups(organization_id)
         existing_group_names = {group.name for group in existing_groups}
 
         new_groups = []
@@ -226,6 +243,7 @@ class GroupTable:
                         user_id=user_id,
                         name=group_name,
                         description="",
+                        organization_id=organization_id,
                         created_at=int(time.time()),
                         updated_at=int(time.time()),
                     )
@@ -240,14 +258,20 @@ class GroupTable:
                         continue
             return new_groups
 
-    def sync_groups_by_group_names(self, user_id: str, group_names: List[str]) -> bool:
+    def sync_groups_by_group_names(self, user_id: str, group_names: List[str], organization_id: Optional[str] = None) -> bool:
         with get_db() as db:
             try:
-                groups = db.query(Group).filter(Group.name.in_(group_names)).all()
+                query = db.query(Group).filter(Group.name.in_(group_names))
+                
+                # 如果指定了组织ID，只在该组织内查找组
+                if organization_id:
+                    query = query.filter_by(organization_id=organization_id)
+                    
+                groups = query.all()
                 group_ids = [group.id for group in groups]
 
                 # Remove user from groups not in the new list
-                existing_groups = self.get_groups_by_member_id(user_id)
+                existing_groups = self.get_groups_by_member_id(user_id, organization_id)
 
                 for group in existing_groups:
                     if group.id not in group_ids:
