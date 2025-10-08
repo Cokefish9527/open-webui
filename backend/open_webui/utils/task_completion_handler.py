@@ -10,6 +10,8 @@ from typing import Dict, Any, Optional
 
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.models.hsai_tasks import HSAITasks, HSAITaskUpdateForm, HSAITaskStatus
+# 导入Redis队列消息模型
+from open_webui.models.redis_queue_messages import RedisQueueMessages, RedisQueueMessageUpdateForm
 
 # 配置日志
 log = logging.getLogger(__name__)
@@ -54,6 +56,8 @@ async def handle_task_completion_signal(message: Dict[str, Any], config: Optiona
         task = HSAITasks.get_task_by_id(task_id)
         if not task:
             log.error(f"未找到任务: task_id={task_id}")
+            # 更新Redis队列消息状态为失败
+            await _update_queue_message_status(message, "failed", error_message=f"未找到任务: task_id={task_id}")
             return
             
         # 更新任务状态
@@ -70,12 +74,48 @@ async def handle_task_completion_signal(message: Dict[str, Any], config: Optiona
         updated_task = HSAITasks.update_task_by_id(task_id, update_data)
         if updated_task:
             log.info(f"成功更新任务状态: task_id={task_id}, status={HSAITaskStatus.COMPLETED}")
+            # 更新Redis队列消息状态为成功
+            await _update_queue_message_status(message, "completed", execution_result="Task completed successfully")
         else:
             log.error(f"更新任务状态失败: task_id={task_id}")
+            # 更新Redis队列消息状态为失败
+            await _update_queue_message_status(message, "failed", error_message=f"更新任务状态失败: task_id={task_id}")
                 
     except Exception as e:
         log.error(f"处理任务完成信号时发生错误: {e}", exc_info=True)
+        # 更新Redis队列消息状态为失败
+        await _update_queue_message_status(message, "failed", error_message=f"处理任务完成信号时发生错误: {str(e)}")
         raise
+
+
+async def _update_queue_message_status(message: Dict[str, Any], status: str, execution_result: Optional[str] = None, error_message: Optional[str] = None):
+    """
+    更新Redis队列消息状态
+    
+    Args:
+        message: 原始消息数据
+        status: 状态
+        execution_result: 执行结果
+        error_message: 错误信息
+    """
+    try:
+        # 这里需要根据实际情况找到对应的队列消息记录
+        # 由于我们无法直接通过消息内容找到对应的数据库记录，
+        # 在实际实现中，可能需要通过其他方式关联消息和数据库记录
+        
+        # 一种可能的实现方式是通过request_id或其他唯一标识符查找记录
+        # 但这需要在消息中包含足够的信息来关联数据库记录
+        
+        # 暂时记录日志，表示需要实现具体的关联逻辑
+        log.debug(f"需要更新队列消息状态: status={status}, execution_result={execution_result}, error_message={error_message}")
+        log.debug(f"消息内容: {message}")
+        
+        # TODO: 实现具体的数据库记录查找和更新逻辑
+        # 目前只是记录日志，不会实际更新数据库中的记录
+        # 这样可以确保原始数据不会被覆盖
+        
+    except Exception as e:
+        log.error(f"更新队列消息状态时发生错误: {e}", exc_info=True)
 
 
 def register_task_completion_queue_handler(redis_queue_listener) -> None:

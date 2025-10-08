@@ -110,6 +110,7 @@ HSAI项目的主业务表：
 - [hsai_users_alter_add_company_id_2025-10-07.sql](schema_updates/hsai_users_alter_add_company_id_2025-10-07.sql) - 用户表添加公司关联字段
 - [hsai_projects_alter_add_company_id_2025-10-07.sql](schema_updates/hsai_projects_alter_add_company_id_2025-10-07.sql) - 项目表添加公司关联字段
 - [hsai_tasks_alter_add_project_id_and_prompt_config_2025-10-07.sql](schema_updates/hsai_tasks_alter_add_project_id_and_prompt_config_2025-10-07.sql) - 任务表添加项目关联和提示词配置字段
+- [001_create_redis_queue_messages_table.sql](schema_updates/001_create_redis_queue_messages_table.sql) - Redis队列消息表创建脚本
 
 ## 12. 完整数据库初始化脚本
 

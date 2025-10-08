@@ -92,6 +92,30 @@ class RedisSignalHandler:
                         # blpop返回的是一个元组 (queue_name, message_data)
                         if isinstance(result, (list, tuple)) and len(result) >= 2:
                             message_data = result[1]  # 第二个元素是消息内容
+                            
+                            # 在处理消息之前，先将原始数据保存到数据库中
+                            # 确保原始数据不丢失，支持失败重试和历史追溯
+                            try:
+                                from open_webui.models.redis_queue_messages import RedisQueueMessages, RedisQueueMessageForm
+                                
+                                # 创建消息记录表单
+                                # 重要：使用原始消息数据，而不是解析后的数据
+                                raw_message_data = message_data.decode('utf-8') if isinstance(message_data, bytes) else str(message_data)
+                                form_data = RedisQueueMessageForm(
+                                    queue_name=queue_name,
+                                    raw_data=raw_message_data,
+                                    fetched_at=int(time.time())
+                                )
+                                
+                                # 插入到数据库
+                                message_record = RedisQueueMessages.insert_new_message(form_data)
+                                if message_record:
+                                    log.info(f"已记录队列消息到数据库: {message_record.id}")
+                                else:
+                                    log.error(f"记录队列消息到数据库失败: {queue_name}")
+                            except Exception as db_error:
+                                log.error(f"保存队列消息到数据库时出错: {db_error}", exc_info=True)
+                            
                             # 在解析JSON之前，先尝试修复可能存在的格式问题
                             try:
                                 message = json.loads(message_data.decode('utf-8'))
