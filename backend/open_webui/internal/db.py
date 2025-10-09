@@ -37,8 +37,8 @@ class JSONField(types.TypeDecorator):
         if value is not None:
             return json.loads(value)
 
-    def copy(self, **kw: Any) -> Self:
-        return JSONField(self.impl.length)
+    def copy(self, **kw: Any):
+        return JSONField()
 
     def db_value(self, value):
         return json.dumps(value)
@@ -51,7 +51,7 @@ class JSONField(types.TypeDecorator):
 # Workaround to handle the peewee migration
 # This is required to ensure the peewee migration is handled before the alembic migration
 def handle_peewee_migration(DATABASE_URL):
-    # db = None
+    db = None
     try:
         # Replace the postgresql:// with postgres:// to handle the peewee migration
         db = register_connection(DATABASE_URL.replace("postgresql://", "postgres://"))
@@ -69,23 +69,34 @@ def handle_peewee_migration(DATABASE_URL):
             db.close()
 
         # Assert if db connection has been closed
-        assert db.is_closed(), "Database connection is still open."
+        if db:
+            assert db.is_closed(), "Database connection is still open."
 
 
 handle_peewee_migration(DATABASE_URL)
 
 
 SQLALCHEMY_DATABASE_URL = DATABASE_URL
-if "sqlite" in SQLALCHEMY_DATABASE_URL:
+# 更安全地检查数据库类型，避免在PostgreSQL上执行SQLite特定的PRAGMA命令
+if "sqlite" in SQLALCHEMY_DATABASE_URL.lower():
     # 为SQLite添加事件监听器以启用外键约束
     from sqlalchemy import event
     from sqlalchemy.engine import Engine
     
     @event.listens_for(Engine, "connect")
     def set_sqlite_pragma(dbapi_connection, connection_record):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
+        # 更可靠的检查方式：检查连接对象的类型或属性
+        try:
+            # 尝试获取连接的dsn信息来判断数据库类型
+            dsn = str(dbapi_connection)
+            # 确保只在SQLite连接上执行PRAGMA命令
+            if "sqlite" in dsn.lower():
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA foreign_keys=ON")
+                cursor.close()
+        except Exception:
+            # 如果出现任何异常，安全地跳过PRAGMA命令
+            pass
         
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
