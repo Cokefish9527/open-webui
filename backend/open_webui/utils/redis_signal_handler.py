@@ -92,6 +92,30 @@ class RedisSignalHandler:
                         # blpop返回的是一个元组 (queue_name, message_data)
                         if isinstance(result, (list, tuple)) and len(result) >= 2:
                             message_data = result[1]  # 第二个元素是消息内容
+                            
+                            # 在处理消息之前，先将原始数据保存到数据库中
+                            # 确保原始数据不丢失，支持失败重试和历史追溯
+                            try:
+                                from open_webui.models.redis_queue_messages import RedisQueueMessages, RedisQueueMessageForm
+                                
+                                # 创建消息记录表单
+                                # 重要：使用原始消息数据，而不是解析后的数据
+                                raw_message_data = message_data.decode('utf-8') if isinstance(message_data, bytes) else str(message_data)
+                                form_data = RedisQueueMessageForm(
+                                    queue_name=queue_name,
+                                    raw_data=raw_message_data,
+                                    fetched_at=int(time.time())
+                                )
+                                
+                                # 插入到数据库
+                                message_record = RedisQueueMessages.insert_new_message(form_data)
+                                if message_record:
+                                    log.info(f"已记录队列消息到数据库: {message_record.id}")
+                                else:
+                                    log.error(f"记录队列消息到数据库失败: {queue_name}")
+                            except Exception as db_error:
+                                log.error(f"保存队列消息到数据库时出错: {db_error}", exc_info=True)
+                            
                             # 在解析JSON之前，先尝试修复可能存在的格式问题
                             try:
                                 message = json.loads(message_data.decode('utf-8'))
@@ -247,3 +271,23 @@ class RedisSignalHandler:
 
 # 全局Redis信号处理器实例
 redis_signal_handler = RedisSignalHandler()
+
+def initialize_redis_handlers():
+    """初始化所有Redis队列处理器"""
+    try:
+        # 注册对话消息队列处理器
+        from open_webui.utils.conversation_queue_handler import register_conversation_queue_handler
+        register_conversation_queue_handler(redis_signal_handler)
+        
+        # 注册视频学习通知队列处理器
+        from open_webui.utils.video_learning_notifier import register_video_learning_queue_handler
+        register_video_learning_queue_handler(redis_signal_handler)
+        
+        # 注册任务完成信号队列处理器
+        from open_webui.utils.task_completion_handler import register_task_completion_queue_handler
+        register_task_completion_queue_handler(redis_signal_handler)
+        
+        log.info("所有Redis队列处理器注册完成")
+    except Exception as e:
+        log.error(f"注册Redis队列处理器时发生错误: {e}", exc_info=True)
+        raise

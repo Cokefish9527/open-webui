@@ -6,7 +6,7 @@ Write-Host "=== Python 3.11 虚拟环境设置脚本 ===" -ForegroundColor Green
 # 查找 Python 3.11 安装路径
 Write-Host "查找 Python 3.11 安装路径..." -ForegroundColor Yellow
 $pythonPaths = @(
-    "C:\Users\bmkz\AppData\Local\Programs\Python\Python311",
+    "C:\Users\$env:USERNAME\AppData\Local\Programs\Python\Python311",
     "C:\Program Files\Python311",
     "C:\Python311"
 )

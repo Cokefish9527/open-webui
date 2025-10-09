@@ -53,9 +53,24 @@ if exist "%SCRIPT_DIR%venv\Scripts\python.exe" (
         echo - C:\work\open-webui\.venv\Scripts\python.exe
         echo - C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python311\python.exe
         echo - C:\Python311\python.exe
+        echo.
+        echo 或者运行 setup_venv_python311.ps1 脚本创建虚拟环境
         pause
         exit /b 1
     )
+)
+
+:: Check Python version
+echo.
+echo 检查Python版本...
+for /f "tokens=*" %%i in ('"%PYTHON_EXE%" --version 2^>^&1') do set PYTHON_VERSION=%%i
+echo %PYTHON_VERSION%
+echo | findstr /C:"Python 3.11" >nul
+if %ERRORLEVEL% equ 0 (
+    echo Python版本检查通过!
+) else (
+    echo 警告: 推荐使用Python 3.11版本，当前版本可能不兼容
+    echo 请确保已安装Python 3.11.9或运行setup_venv_python311.ps1创建正确的虚拟环境
 )
 
 :: Test Python availability

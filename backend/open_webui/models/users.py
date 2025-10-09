@@ -9,7 +9,7 @@ from open_webui.models.groups import Groups
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Boolean, Column, String, Text
+from sqlalchemy import BigInteger, Boolean, Column, String, Text, ForeignKey
 from sqlalchemy import or_
 
 
@@ -41,6 +41,14 @@ class User(Base):
     
     # 添加公司名称字段
     business_name = Column(String, nullable=True)
+    
+    # 添加公司关联字段
+    company_id = Column(String, ForeignKey("companies.id"), nullable=True)
+    
+    # 多租户权限相关字段
+    organization_id = Column(String, ForeignKey("organizations.id"), nullable=True)
+    is_super_admin = Column(Boolean, default=False)  # 系统管理员标识
+    is_org_admin = Column(Boolean, default=False)    # 组织管理员标识
 
     oauth_sub = Column(Text, unique=True)
 
@@ -68,6 +76,12 @@ class UserModel(BaseModel):
     info_collection_completed: bool = Field(default=False, description="信息收集是否完成")
     # 添加公司名称字段
     business_name: Optional[str] = Field(default=None, description="公司名称")
+    # 添加公司关联字段
+    company_id: Optional[str] = Field(default=None, description="所属公司ID")
+    # 多租户权限相关字段
+    organization_id: Optional[str] = Field(default=None, description="所属组织ID")
+    is_super_admin: bool = Field(default=False, description="是否为系统管理员")
+    is_org_admin: bool = Field(default=False, description="是否为组织管理员")
     oauth_sub: Optional[str] = Field(default=None, description="OAuth子标识符")
 
     model_config = ConfigDict(from_attributes=True, extra="allow")
@@ -92,6 +106,10 @@ class UserResponse(BaseModel):
     role: str = Field(description="用户角色")
     profile_image_url: str = Field(description="用户头像URL")
     business_name: Optional[str] = Field(default=None, description="公司名称")
+    company_id: Optional[str] = Field(default=None, description="所属公司ID")
+    organization_id: Optional[str] = Field(default=None, description="所属组织ID")
+    is_super_admin: bool = Field(default=False, description="是否为系统管理员")
+    is_org_admin: bool = Field(default=False, description="是否为组织管理员")
 
 
 class UserNameResponse(BaseModel):
@@ -130,6 +148,9 @@ class UsersTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
+        organization_id: Optional[str] = None,
+        is_super_admin: bool = False,
+        is_org_admin: bool = False,
     ) -> Optional[UserModel]:
         with get_db() as db:
             user = UserModel(
@@ -147,6 +168,12 @@ class UsersTable:
                     "info_collection_completed": False,
                     # 新用户默认business_name为None
                     "business_name": None,
+                    # 新用户默认company_id为None
+                    "company_id": None,
+                    # 多租户权限相关字段
+                    "organization_id": organization_id,
+                    "is_super_admin": is_super_admin,
+                    "is_org_admin": is_org_admin,
                 }
             )
             result = User(**user.model_dump())
@@ -203,9 +230,14 @@ class UsersTable:
         filter: Optional[dict] = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
+        organization_id: Optional[str] = None,
     ) -> UserListResponse:
         with get_db() as db:
             query = db.query(User)
+            
+            # 如果不是系统管理员，添加组织过滤
+            if organization_id:
+                query = query.filter_by(organization_id=organization_id)
 
             if filter:
                 query_key = filter.get("query")
