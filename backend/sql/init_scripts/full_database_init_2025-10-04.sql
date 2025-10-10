@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS [chat] (
     updated_at DATETIME NOT NULL,
     chat JSON,
     pinned BOOLEAN,
-    meta JSON NOT NULL DEFAULT ''{}'',
+    meta JSON NOT NULL DEFAULT '{}',
     folder_id TEXT
 );
 CREATE UNIQUE INDEX IF NOT EXISTS chat_share_id ON [chat] (share_id);
@@ -86,11 +86,13 @@ CREATE TABLE IF NOT EXISTS [user] (
     info TEXT,
     oauth_sub TEXT,
     info_collection_completed INTEGER DEFAULT '0',
-    business_name TEXT
+    business_name TEXT,
+    company_id VARCHAR(255) REFERENCES companies(id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS user_oauth_sub ON [user] (oauth_sub);
 CREATE UNIQUE INDEX IF NOT EXISTS user_id ON [user] (id);
 CREATE UNIQUE INDEX IF NOT EXISTS user_api_key ON [user] (api_key);
+CREATE INDEX IF NOT EXISTS ix_user_company_id ON [user] (company_id);
 
 -- 表 memory 的结构
 CREATE TABLE IF NOT EXISTS [memory] (
@@ -665,8 +667,55 @@ CREATE TABLE IF NOT EXISTS [hsai_projects] (
     user_id VARCHAR NOT NULL,
     status VARCHAR DEFAULT 'active',
     config JSON,
+    company_id VARCHAR REFERENCES companies(id),
     created_at BIGINT,
     updated_at BIGINT
 );
 CREATE INDEX IF NOT EXISTS ix_hsai_projects_user_id ON [hsai_projects] (user_id);
 CREATE INDEX IF NOT EXISTS ix_hsai_projects_status ON [hsai_projects] (status);
+CREATE INDEX IF NOT EXISTS ix_hsai_projects_company_id ON [hsai_projects] (company_id);
+
+-- 表 companies 的结构
+CREATE TABLE IF NOT EXISTS [companies] (
+    id VARCHAR NOT NULL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    description TEXT,
+    owner_user_id VARCHAR NOT NULL,
+    company_info JSON,
+    status VARCHAR DEFAULT 'active',
+    config JSON,
+    created_at BIGINT,
+    updated_at BIGINT
+);
+CREATE INDEX IF NOT EXISTS ix_companies_owner_user_id ON [companies] (owner_user_id);
+CREATE INDEX IF NOT EXISTS ix_companies_status ON [companies] (status);
+
+-- 表 hsai_business_api_usage_log 的结构
+CREATE TABLE IF NOT EXISTS [hsai_business_api_usage_log] (
+    id BIGINT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    session_id TEXT,
+    service_provider VARCHAR(100) NOT NULL,
+    model_name VARCHAR(100),
+    credits_consumed NUMERIC(12, 6) NOT NULL DEFAULT 0,
+    consumed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_user_id ON [hsai_business_api_usage_log] (user_id);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_session_id ON [hsai_business_api_usage_log] (session_id);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_service_provider ON [hsai_business_api_usage_log] (service_provider);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_consumed_at ON [hsai_business_api_usage_log] (consumed_at);
+
+-- 表 billing_config 的结构
+CREATE TABLE IF NOT EXISTS [billing_config] (
+    id VARCHAR NOT NULL PRIMARY KEY,
+    config_type VARCHAR NOT NULL,
+    config_key VARCHAR NOT NULL,
+    config_value JSON NOT NULL,
+    description TEXT,
+    is_active VARCHAR DEFAULT '1',
+    created_at BIGINT,
+    updated_at BIGINT
+);
+CREATE INDEX IF NOT EXISTS ix_billing_config_type ON [billing_config] (config_type);
+CREATE INDEX IF NOT EXISTS ix_billing_config_key ON [billing_config] (config_key);
+CREATE INDEX IF NOT EXISTS ix_billing_config_active ON [billing_config] (is_active);

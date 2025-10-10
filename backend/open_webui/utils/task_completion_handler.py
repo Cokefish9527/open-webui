@@ -12,6 +12,8 @@ from open_webui.env import SRC_LOG_LEVELS
 from open_webui.models.hsai_tasks import HSAITasks, HSAITaskUpdateForm, HSAITaskStatus
 # 导入Redis队列消息模型
 from open_webui.models.redis_queue_messages import RedisQueueMessages, RedisQueueMessageUpdateForm
+# 导入计费服务
+from open_webui.services.billing_service import billing_service
 
 # 配置日志
 log = logging.getLogger(__name__)
@@ -80,6 +82,13 @@ async def handle_task_completion_signal(message: Dict[str, Any], config: Optiona
             log.error(f"更新任务状态失败: task_id={task_id}")
             # 更新Redis队列消息状态为失败
             await _update_queue_message_status(message, "failed", error_message=f"更新任务状态失败: task_id={task_id}")
+            
+        # 新增计费逻辑
+        try:
+            # 调用计费服务处理任务完成信号
+            billing_service.handle_task_completion_with_billing(message)
+        except Exception as e:
+            log.error(f"计费处理失败: {e}")
                 
     except Exception as e:
         log.error(f"处理任务完成信号时发生错误: {e}", exc_info=True)
