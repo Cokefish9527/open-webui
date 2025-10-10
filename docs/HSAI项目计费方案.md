@@ -42,16 +42,16 @@
 
 为避免Redis连接不稳定导致的计费风险，采用数据库进行计费统计：
 
-1. **API调用记录**：在n8n工作流的每次API调用之后，在数据库中记录一次用户的API调用，记录用户ID、API服务商、调用次数、请求ID(request_id)等信息，便于工作流返回之后使用请求ID索引当前请求产生的计费信息，减少数据库请求的时间
+1. **API调用记录**：在n8n工作流的每次API调用之后，在数据库中记录一次用户的API调用，记录用户ID、API服务商、调用次数、会话ID(session_id)等信息，便于工作流返回之后使用会话ID索引当前请求产生的计费信息，减少数据库请求的时间
 2. **实时余额检查**：credit记录在公司信息中，用户每次使用付费功能时，通过查询公司的credit余量确认是否可以使用，同一个公司的用户共享公司的credit
-3. **计费计算**：在每次工作流执行完成返回时，读取数据表根据返回结构的request_id查找本次请求产生了多少消耗
+3. **计费计算**：在每次工作流执行完成返回时，读取数据表根据返回结构的session_id查找本次请求产生了多少消耗
 4. **余额更新**：根据调用次数乘上换算credit来计算用户的积分使用情况，更新公司表的credit余量
 
 #### 3.2.2 计费记录与统计
 
 在数据库中建立完整的计费记录与统计机制：
 
-1. **API调用记录**：记录每次API调用的详细信息，包括用户ID、API服务商、调用时间、调用次数、请求ID等，便于后续通过请求ID快速索引计费信息
+1. **API调用记录**：记录每次API调用的详细信息，包括用户ID、API服务商、调用时间、调用次数、会话ID等，便于后续通过会话ID快速索引计费信息
 2. **计费日志**：记录每次计费的详细信息，包括资源消耗、费用计算过程等
 3. **公司余额跟踪**：实时跟踪每个公司的credit余量变化，确保余额准确性。同一个公司的所有用户共享该公司的credit余额，当任一用户使用付费功能时，都会影响整个公司的余额
 4. **统计报表**：提供计费统计报表，展示用户消费情况和系统收入情况
@@ -120,11 +120,11 @@ sequenceDiagram
         S->>W: 启动n8n工作流
         W->>A: 调用第三方API服务
         A->>A: 执行具体业务逻辑
-        A->>D: 记录API调用详情(含request_id)
+        A->>D: 记录API调用详情(含session_id)
         D-->>A: 确认记录成功
         A-->>W: 返回API调用结果
         W->>W: 完成工作流执行
-        W->>S: 发送工作流完成信号(含request_id)
+        W->>S: 发送工作流完成信号(含session_id)
         S->>S: 计算资源消耗费用
         S->>D: 更新公司credit余额
         D-->>S: 返回更新结果
@@ -200,8 +200,8 @@ async def handle_task_completion_signal_with_billing(message: Dict[str, Any], co
     # 新增计费逻辑
     try:
         # 获取任务信息
-        task_id = message.get("request_id")
-        task = HSAITasks.get_task_by_id(task_id)
+        session_id = message.get("session_id")
+        task = HSAITasks.get_task_by_session_id(session_id)
 
         if task:
             # 记录API调用到hsai_business_api_usage_log表
@@ -225,7 +225,7 @@ async def handle_task_completion_signal_with_billing(message: Dict[str, Any], co
                 company_id=task.company_id,
                 amount=-cost,
                 detail={
-                    "task_id": task_id,
+                    "session_id": session_id,
                     "resource_type": "api_call",
                     "amount": float(cost)
                 }
@@ -382,9 +382,6 @@ class BillingConfigService:
 
 - 计费服务与主业务分离，避免计费异常影响主业务
 - 实现计费失败的重试机制
-- 建立计费服务的监控和告警机制
-- 采用数据库持久化存储，避免Redis连接不稳定导致的数据丢失
-
 ## 7. 总结
 
 本计费方案通过基于资源消耗的计费模式，有效解决了HSAI项目面临的计费挑战。该方案不依赖于直接的token消耗数据，而是通过系统资源的使用情况来计算费用。通过采用数据库而非Redis进行关键计费记录，避免了Redis连接丢失导致的计费风险，同时通过在公司表中实时记录credit余量，确保了余额检查的准确性。调用次数与credit换算的数据库配置设计，方便了后台随时调整计费策略，提升了系统的灵活性和可维护性。
