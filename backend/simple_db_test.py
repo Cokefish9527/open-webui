@@ -187,9 +187,9 @@ class SimpleDBTest:
             # 插入任务
             cursor = self.conn.cursor()
             cursor.execute("""
-                INSERT INTO hsai_tasks (id, title, description, task_type, status, user_id, project_id, task_category, priority, progress, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (task_id, title, description, task_type, status, self.user_id, self.project_id, "main", 10, 0, int(time.time()), int(time.time())))
+                INSERT INTO hsai_tasks (id, title, description, task_type, status, user_id, project_id, task_category, priority, progress, retry_count, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (task_id, title, description, task_type, status, self.user_id, self.project_id, "main", 10, 0, 0, int(time.time()), int(time.time())))
             
             self.conn.commit()
             self.task_id = task_id

@@ -6,7 +6,7 @@ from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Column, String, Text, Boolean, DateTime, BigInteger
+from sqlalchemy import BigInteger, Column, String, Text, Boolean, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.pool import QueuePool, NullPool
@@ -23,11 +23,15 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 # 创建PostgreSQL数据库引擎
 POSTGRES_DATABASE_URL = "postgresql://hsai:c5agLR)ah28vnA3+%Yyn@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/n8n_workflow"
 
-# 创建PostgreSQL引擎
+# 创建PostgreSQL引擎，确保不执行SQLite特有的PRAGMA命令
 postgres_engine = create_engine(
     POSTGRES_DATABASE_URL,
     pool_pre_ping=True,
-    poolclass=NullPool
+    poolclass=NullPool,
+    # 确保不执行SQLite特有的PRAGMA命令
+    connect_args={
+        "options": "-c statement_timeout=60000"  # 设置语句超时为60秒
+    }
 )
 
 # 创建PostgreSQL会话
