@@ -57,6 +57,47 @@
 4. **统计报表**：提供计费统计报表，展示用户消费情况和系统收入情况
 5. **余额提醒**：当公司积分余额不足时，及时提醒充值
 
+##### 计费记录表结构
+
+计费记录存储在`hsai_business_api_usage_log`表中，表结构如下：
+
+```sql
+CREATE TABLE public.hsai_business_api_usage_log (
+    id BIGSERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL, 
+    session_id TEXT, 
+    service_provider VARCHAR(100) NOT NULL, 
+    model_name VARCHAR(100), 
+    credits_consumed NUMERIC(12, 6) NOT NULL DEFAULT 0, 
+    consumed_at TIMESTAMPTZ NOT NULL DEFAULT NOW() 
+);
+```
+
+该表包含以下字段：
+
+- `id`：主键，自增序列
+- `user_id`：用户ID，不能为空
+- `session_id`：会话ID，可为空
+- `service_provider`：服务提供商，最大长度100字符，不能为空
+- `model_name`：模型名称，最大长度100字符，可为空
+- `credits_consumed`：消耗的积分数量，数值类型(12,6)，默认值为0
+- `consumed_at`：消耗时间，时间戳类型，默认值为当前时间
+
+API调用记录数据模型定义如下：
+
+```python
+class APIUsageLog(Base):
+    __tablename__ = "hsai_business_api_usage_log"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(Text, nullable=False)
+    session_id = Column(Text)
+    service_provider = Column(String(100), nullable=False)
+    model_name = Column(String(100))
+    credits_consumed = Column(Numeric(12, 6), nullable=False, default=0)
+    consumed_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
+```
+
 ### 3.3 技术实现细节
 
 ### 3.3.0 用户使用付费功能时序图
@@ -163,13 +204,14 @@ async def handle_task_completion_signal_with_billing(message: Dict[str, Any], co
         task = HSAITasks.get_task_by_id(task_id)
 
         if task:
-            # 记录API调用
+            # 记录API调用到hsai_business_api_usage_log表
             api_usage_service.record_api_call(
                 user_id=task.user_id,
-                task_id=task_id,
-                workflow_type=message.get("operate_id"),
-                request_id=task_id,  # 使用task_id作为request_id
-                call_details=message.get("content", {})
+                session_id=task.session_id,  # 使用任务的会话ID
+                service_provider=message.get("service_provider", "unknown"),
+                model_name=message.get("model_name"),
+                credits_consumed=Decimal(message.get("credits_consumed", 0)),
+                consumed_at=datetime.now(timezone.utc)
             )
 
             # 计算费用（仅基于资源消耗）
@@ -190,6 +232,52 @@ async def handle_task_completion_signal_with_billing(message: Dict[str, Any], co
             )
     except Exception as e:
         log.error(f"计费处理失败: {e}")
+```
+
+API调用记录数据模型定义如下：
+
+```python
+class APIUsageLog(Base):
+    __tablename__ = "hsai_business_api_usage_log"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(Text, nullable=False)
+    session_id = Column(Text)
+    service_provider = Column(String(100), nullable=False)
+    model_name = Column(String(100))
+    credits_consumed = Column(Numeric(12, 6), nullable=False, default=0)
+    consumed_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
+```
+
+API调用记录函数定义如下：
+
+```python
+class APIUsageService:
+    @staticmethod
+    def record_api_call(user_id: str, session_id: str, service_provider: str, 
+                       model_name: str, credits_consumed: Decimal, 
+                       consumed_at: datetime) -> bool:
+        """记录API调用到hsai_business_api_usage_log表"""
+        try:
+            # 创建API调用记录
+            api_log = APIUsageLog(
+                user_id=user_id,
+                session_id=session_id,
+                service_provider=service_provider,
+                model_name=model_name,
+                credits_consumed=credits_consumed,
+                consumed_at=consumed_at
+            )
+
+            # 保存到数据库
+            db.add(api_log)
+            db.commit()
+
+            return True
+        except Exception as e:
+            db.rollback()
+            log.error(f"记录API调用失败: {e}")
+            return False
 ```
 
 #### 3.3.3 数据库计费配置管理
