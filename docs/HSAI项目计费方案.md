@@ -18,8 +18,10 @@
 
 对系统资源的使用情况进行计费：
 
-- **存储资源**：按存储空间大小和时间收费
-- **第三方服务调用**：按调用次数或数据量收费
+- **存储资源**：按存储空间大小和时间收费（默认2积分/GB/月）
+- **第三方API调用**：按调用次数收费（默认0.1积分/次）
+
+> 注：单价配置存储在数据库中，可通过后台管理系统随时调整
 
 ## 3. 具体实施方案
 
@@ -62,26 +64,30 @@
 计费记录存储在`hsai_business_api_usage_log`表中，表结构如下：
 
 ```sql
-CREATE TABLE public.hsai_business_api_usage_log (
-    id BIGSERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL, 
-    session_id TEXT, 
-    service_provider VARCHAR(100) NOT NULL, 
-    model_name VARCHAR(100), 
-    credits_consumed NUMERIC(12, 6) NOT NULL DEFAULT 0, 
-    consumed_at TIMESTAMPTZ NOT NULL DEFAULT NOW() 
+CREATE TABLE IF NOT EXISTS [hsai_business_api_usage_log] (
+    id BIGINT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    session_id TEXT,
+    service_provider VARCHAR(100) NOT NULL,
+    model_name VARCHAR(100),
+    credits_consumed NUMERIC(12, 6) NOT NULL DEFAULT 0,
+    consumed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_user_id ON [hsai_business_api_usage_log] (user_id);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_session_id ON [hsai_business_api_usage_log] (session_id);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_service_provider ON [hsai_business_api_usage_log] (service_provider);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_consumed_at ON [hsai_business_api_usage_log] (consumed_at);
 ```
 
 该表包含以下字段：
 
-- `id`：主键，自增序列
+- `id`：主键
 - `user_id`：用户ID，不能为空
 - `session_id`：会话ID，可为空
 - `service_provider`：服务提供商，最大长度100字符，不能为空
 - `model_name`：模型名称，最大长度100字符，可为空
 - `credits_consumed`：消耗的积分数量，数值类型(12,6)，默认值为0
-- `consumed_at`：消耗时间，时间戳类型，默认值为当前时间
+- `consumed_at`：消耗时间，默认值为当前时间
 
 API调用记录数据模型定义如下：
 
@@ -141,50 +147,133 @@ sequenceDiagram
 
 ```python
 class BillingService:
+    """计费服务类"""
+
+    def __init__(self):
+        self.billing_configs = BillingConfigs
+        self.api_usage_logs = APIUsageLogs
+        self.hsai_tasks = HSAITasks
+        self.companies = Companies
+        self.credits = Credits
+
     def calculate_resource_cost(self, resource_type: str, usage: dict) -> Decimal:
         """计算资源使用费用"""
         # 从数据库配置中获取计费比率
-        rate = billing_config_service.get_billing_rate("resource", resource_type)
+        rate = self.billing_configs.get_billing_rate("resource", resource_type)
         # 根据具体资源类型和使用量计算费用
         return self._calculate_cost_by_rate(rate, usage)
 
     def _calculate_cost_by_rate(self, rate: Decimal, data: dict) -> Decimal:
         """根据费率和数据计算费用"""
-        # 具体计算逻辑根据数据结构实现
-        pass
+        # 默认按调用次数计算
+        count = data.get("count", 0)
+        return rate * Decimal(str(count))
 
     def update_company_credit(self, company_id: str, amount: Decimal, detail: dict) -> bool:
         """更新公司积分余额"""
-        # 使用数据库事务确保一致性
-        with get_db() as db:
-            try:
-                company = db.query(Company).filter_by(id=company_id).first()
-                if company:
-                    # 检查余额是否足够
-                    if amount < 0 and company.credit + amount < 0:
-                        raise InsufficientCreditError("公司积分余额不足")
-
-                    # 更新余额
-                    company.credit = company.credit + amount
-                    company.updated_at = int(time.time())
-
-                    # 记录日志
-                    credit_log = CreditLog(
-                        id=str(uuid.uuid4()),
-                        company_id=company_id,
-                        amount=amount,
-                        detail=detail,
-                        created_at=int(time.time())
-                    )
-                    db.add(credit_log)
-
-                    db.commit()
-                    return True
+        try:
+            company = self.companies.get_company_by_id(company_id)
+            if not company:
+                log.error(f"公司不存在: company_id={company_id}")
                 return False
-            except Exception as e:
-                db.rollback()
-                log.error(f"更新公司积分余额失败: {e}")
-                return False
+
+            # 获取公司所有用户中第一个用户作为积分操作的用户
+            # 在实际实现中，可能需要更复杂的逻辑来确定使用哪个用户
+            # 这里简化处理，使用公司负责人的用户ID
+            user_id = company.owner_user_id
+
+            # 更新用户积分余额
+            result = self.credits.add_credit_by_user_id(
+                form_data=AddCreditForm(
+                    user_id=user_id,
+                    amount=amount,
+                    detail=SetCreditFormDetail(**detail)
+                )
+            )
+
+            return result is not None
+        except Exception as e:
+            log.error(f"更新公司积分余额失败: {e}")
+            return False
+
+    def record_api_call(self, user_id: str, session_id: str, service_provider: str, 
+                       model_name: Optional[str], credits_consumed: Decimal, 
+                       consumed_at: time.struct_time) -> bool:
+        """记录API调用到hsai_business_api_usage_log表"""
+        try:
+            # 创建API调用记录
+            api_log_form = APIUsageLogForm(
+                user_id=user_id,
+                session_id=session_id,
+                service_provider=service_provider,
+                model_name=model_name,
+                credits_consumed=credits_consumed
+            )
+
+            result = self.api_usage_logs.insert_new_log(api_log_form)
+            return result is not None
+        except Exception as e:
+            log.error(f"记录API调用失败: {e}")
+            return False
+
+    def handle_task_completion_with_billing(self, message: Dict[str, Any]) -> None:
+        """处理任务完成信号并触发计费"""
+        try:
+            # 获取任务信息
+            session_id = message.get("session_id")
+            if not session_id:
+                log.warning("消息中缺少session_id")
+                return
+
+            # 根据session_id查找任务
+            # 注意：在实际实现中，可能需要通过其他方式关联session_id和任务
+            # 这里假设任务ID等于session_id或可以通过session_id找到任务
+            task = None
+            # 尝试直接通过session_id查找任务
+            # 这需要在HSAITasks中实现相应的方法
+
+            # 如果找不到任务，记录警告并返回
+            if not task:
+                log.warning(f"未找到与session_id关联的任务: session_id={session_id}")
+                return
+
+            # 记录API调用到hsai_business_api_usage_log表
+            # 注意：这里需要从message中提取相关信息
+            service_provider = message.get("service_provider", "unknown")
+            model_name = message.get("model_name")
+            credits_consumed = Decimal(str(message.get("credits_consumed", 0)))
+
+            self.record_api_call(
+                user_id=task.user_id,
+                session_id=task.session_id or session_id,  # 使用任务的会话ID或消息中的session_id
+                service_provider=service_provider,
+                model_name=model_name,
+                credits_consumed=credits_consumed,
+                consumed_at=time.localtime()
+            )
+
+            # 计算费用（仅基于资源消耗）
+            # 这里需要根据实际的资源使用情况计算费用
+            # 示例：计算API调用费用
+            api_calls = message.get("content", {}).get("api_calls", 0)
+            cost = self.calculate_resource_cost("api_call", {"count": api_calls})
+
+            # 更新公司credit余量
+            if hasattr(task, 'company_id') and task.company_id:
+                self.update_company_credit(
+                    company_id=task.company_id,
+                    amount=-cost,  # 负值表示消耗积分
+                    detail={
+                        "session_id": session_id,
+                        "resource_type": "api_call",
+                        "amount": float(cost)
+                    }
+                )
+            else:
+                log.warning(f"任务没有关联公司: task_id={getattr(task, 'id', 'unknown')}")
+
+        except Exception as e:
+            log.error(f"计费处理失败: {e}")
 ```
 
 #### 3.3.2 数据库计费处理器
@@ -192,66 +281,10 @@ class BillingService:
 创建独立的数据库计费处理器，处理工作流完成后的计费逻辑：
 
 ```python
-async def handle_task_completion_signal_with_billing(message: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> None:
-    """处理任务完成信号并触发计费"""
-    # 原有任务完成处理逻辑
-    await handle_task_completion_signal(message, config)
+# 在实际实现中，计费处理逻辑集成在BillingService类中
+# 通过handle_task_completion_with_billing方法处理任务完成信号并触发计费
 
-    # 新增计费逻辑
-    try:
-        # 获取任务信息
-        session_id = message.get("session_id")
-        task = HSAITasks.get_task_by_session_id(session_id)
-
-        if task:
-            # 记录API调用到hsai_business_api_usage_log表
-            api_usage_service.record_api_call(
-                user_id=task.user_id,
-                session_id=task.session_id,  # 使用任务的会话ID
-                service_provider=message.get("service_provider", "unknown"),
-                model_name=message.get("model_name"),
-                credits_consumed=Decimal(message.get("credits_consumed", 0)),
-                consumed_at=datetime.now(timezone.utc)
-            )
-
-            # 计算费用（仅基于资源消耗）
-            # 这里需要根据实际的资源使用情况计算费用
-            # 示例：计算API调用费用
-            api_calls = message.get("content", {}).get("api_calls", 0)
-            cost = billing_service.calculate_resource_cost("api_call", {"count": api_calls})
-
-            # 更新公司credit余量
-            company_service.update_company_credit(
-                company_id=task.company_id,
-                amount=-cost,
-                detail={
-                    "session_id": session_id,
-                    "resource_type": "api_call",
-                    "amount": float(cost)
-                }
-            )
-    except Exception as e:
-        log.error(f"计费处理失败: {e}")
-```
-
-API调用记录数据模型定义如下：
-
-```python
-class APIUsageLog(Base):
-    __tablename__ = "hsai_business_api_usage_log"
-
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    user_id = Column(Text, nullable=False)
-    session_id = Column(Text)
-    service_provider = Column(String(100), nullable=False)
-    model_name = Column(String(100))
-    credits_consumed = Column(Numeric(12, 6), nullable=False, default=0)
-    consumed_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
-```
-
-API调用记录函数定义如下：
-
-```python
+# API调用记录函数定义如下：
 class APIUsageService:
     @staticmethod
     def record_api_call(user_id: str, session_id: str, service_provider: str, 
@@ -294,7 +327,7 @@ class BillingConfig(Base):
     config_key = Column(String, nullable=False)   # 配置键名
     config_value = Column(JSON, nullable=False)   # 配置值
     description = Column(Text)                    # 配置描述
-    is_active = Column(Boolean, default=True)     # 是否启用
+    is_active = Column(String, default="1")      # 是否启用
     created_at = Column(BigInteger)
     updated_at = Column(BigInteger)
 
@@ -305,12 +338,16 @@ class BillingConfigService:
         config = db.query(BillingConfig).filter_by(
             config_type=config_type, 
             config_key=config_key, 
-            is_active=True
+            is_active="1"
         ).first()
 
         if config:
-            return Decimal(config.config_value.get("rate", 0))
-        return Decimal(0)
+            rate_str = config.config_value.get("rate", "0")
+            try:
+                return Decimal(rate_str)
+            except:
+                return Decimal("0")
+        return Decimal("0")
 
     def update_billing_rate(self, config_type: str, config_key: str, rate: Decimal, description: str = ""):
         """更新计费比率"""
@@ -336,6 +373,146 @@ class BillingConfigService:
             db.add(config)
 
         db.commit()
+```
+
+### 3.4 计费API接口
+
+提供RESTful API接口用于管理计费配置和查询使用记录：
+
+#### 3.4.1 计费配置管理接口
+
+```python
+# 获取计费配置列表
+@router.get("/billing/configs")
+async def get_billing_configs(
+    config_type: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    ps: int = Query(20, ge=1, le=100),
+    pi: int = Query(1, ge=1),
+    user=Depends(get_admin_user)
+):
+    pass
+
+# 创建计费配置
+@router.post("/billing/configs")
+async def create_billing_config(
+    form_data: BillingConfigForm,
+    user=Depends(get_admin_user)
+):
+    pass
+
+# 更新计费配置
+@router.put("/billing/configs/{config_id}")
+async def update_billing_config(
+    config_id: str,
+    form_data: BillingConfigUpdateForm,
+    user=Depends(get_admin_user)
+):
+    pass
+```
+
+#### 3.4.2 API使用记录接口
+
+```python
+# 获取API使用记录列表
+@router.get("/billing/usage-logs")
+async def get_api_usage_logs(
+    user_id: Optional[str] = None,
+    ps: int = Query(20, ge=1, le=100),
+    pi: int = Query(1, ge=1),
+    user=Depends(get_verified_user)
+):
+    pass
+
+# 根据会话ID获取API使用记录
+@router.get("/billing/usage-logs/session/{session_id}")
+async def get_api_usage_logs_by_session(
+    session_id: str,
+    user=Depends(get_verified_user)
+):
+    pass
+
+# 根据会话ID获取总消耗积分
+@router.get("/billing/usage-logs/session/{session_id}/total")
+async def get_total_credits_consumed_by_session(
+    session_id: str,
+    user=Depends(get_verified_user)
+):
+    pass
+```
+
+## 4. 数据库表结构变更
+
+### 4.1 新增表结构
+
+#### 4.1.1 计费配置表 (billing_config)
+
+```sql
+-- 计费配置表结构
+CREATE TABLE IF NOT EXISTS [billing_config] (
+    id VARCHAR NOT NULL PRIMARY KEY,
+    config_type VARCHAR NOT NULL,
+    config_key VARCHAR NOT NULL,
+    config_value JSON NOT NULL,
+    description TEXT,
+    is_active VARCHAR DEFAULT '1',
+    created_at BIGINT,
+    updated_at BIGINT
+);
+CREATE INDEX IF NOT EXISTS ix_billing_config_type ON [billing_config] (config_type);
+CREATE INDEX IF NOT EXISTS ix_billing_config_key ON [billing_config] (config_key);
+CREATE INDEX IF NOT EXISTS ix_billing_config_active ON [billing_config] (is_active);
+```
+
+#### 4.1.2 API使用记录表 (hsai_business_api_usage_log)
+
+```sql
+-- HSAI API使用记录表结构
+CREATE TABLE IF NOT EXISTS [hsai_business_api_usage_log] (
+    id BIGINT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    session_id TEXT,
+    service_provider VARCHAR(100) NOT NULL,
+    model_name VARCHAR(100),
+    credits_consumed NUMERIC(12, 6) NOT NULL DEFAULT 0,
+    consumed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_user_id ON [hsai_business_api_usage_log] (user_id);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_session_id ON [hsai_business_api_usage_log] (session_id);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_service_provider ON [hsai_business_api_usage_log] (service_provider);
+CREATE INDEX IF NOT EXISTS ix_hsai_business_api_usage_log_consumed_at ON [hsai_business_api_usage_log] (consumed_at);
+```
+
+### 4.2 现有表结构扩展
+
+#### 4.2.1 用户表扩展
+
+为`user`表添加公司关联字段：
+
+```sql
+ALTER TABLE user 
+ADD COLUMN company_id VARCHAR(255) REFERENCES companies(id);
+```
+
+#### 4.2.2 项目表扩展
+
+为`hsai_projects`表添加公司关联字段：
+
+```sql
+ALTER TABLE hsai_projects 
+ADD COLUMN company_id VARCHAR(255) REFERENCES companies(id);
+```
+
+#### 4.2.3 任务表扩展
+
+为`hsai_tasks`表添加项目关联字段和提示词配置字段：
+
+```sql
+ALTER TABLE hsai_tasks 
+ADD COLUMN project_id VARCHAR(255) REFERENCES hsai_projects(id);
+
+ALTER TABLE hsai_tasks 
+ADD COLUMN prompt_config JSON;
 ```
 
 ## 5. 实施计划
@@ -382,6 +559,7 @@ class BillingConfigService:
 
 - 计费服务与主业务分离，避免计费异常影响主业务
 - 实现计费失败的重试机制
+
 ## 7. 总结
 
 本计费方案通过基于资源消耗的计费模式，有效解决了HSAI项目面临的计费挑战。该方案不依赖于直接的token消耗数据，而是通过系统资源的使用情况来计算费用。通过采用数据库而非Redis进行关键计费记录，避免了Redis连接丢失导致的计费风险，同时通过在公司表中实时记录credit余量，确保了余额检查的准确性。调用次数与credit换算的数据库配置设计，方便了后台随时调整计费策略，提升了系统的灵活性和可维护性。
