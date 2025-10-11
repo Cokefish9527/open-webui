@@ -200,7 +200,15 @@ def reformat_for_frontend(message: Dict[str, Any]) -> Dict[str, Any]:
             if content_data is not None and isinstance(content_data, dict) and content_data:
                 frontend_message["data"] = content_data
             else:
-                frontend_message["data"] = {}
+                # 兼容补丁：如果content.data没有内容，尝试从json根节点查找是否有data节点
+                # 注意：这是为了处理工作流返回结构错误的临时兼容补丁
+                root_data = message.get("data")
+                if root_data is not None and isinstance(root_data, dict) and root_data:
+                    frontend_message["data"] = root_data
+                    # 记录使用了兼容补丁
+                    log.warning("使用了兼容补丁：从根节点获取data字段，因为content.data为空或不存在")
+                else:
+                    frontend_message["data"] = {}
         elif isinstance(content, str):
             # 如果content是字符串，直接使用
             frontend_message["displayText"] = content
