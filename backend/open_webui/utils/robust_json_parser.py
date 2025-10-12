@@ -33,17 +33,25 @@ def robust_json_parse(json_str: Union[str, bytes]) -> Optional[Dict[str, Any]]:
             log.debug(f"直接解析失败: {e}")
             pass
         
-        # 2. 尝试修复常见的JSON格式问题
-        fixed_json = _fix_common_json_issues(json_str)
+        # 2. 预处理：处理额外数据和未转义字符
+        preprocessed_json = _preprocess_json_string(json_str)
+        try:
+            return json.loads(preprocessed_json)
+        except json.JSONDecodeError as e:
+            log.debug(f"预处理后解析失败: {e}")
+            pass
+        
+        # 3. 尝试修复常见的JSON格式问题
+        fixed_json = _fix_common_json_issues(preprocessed_json)
         try:
             return json.loads(fixed_json)
         except json.JSONDecodeError as e:
             log.debug(f"修复后解析失败: {e}")
             pass
         
-        # 3. 尝试使用ast.literal_eval解析Python字典格式
+        # 4. 尝试使用ast.literal_eval解析Python字典格式
         try:
-            data = ast.literal_eval(json_str)
+            data = ast.literal_eval(preprocessed_json)
             if isinstance(data, dict):
                 # 转换为标准JSON格式
                 return json.loads(json.dumps(data, ensure_ascii=False))
@@ -51,8 +59,8 @@ def robust_json_parse(json_str: Union[str, bytes]) -> Optional[Dict[str, Any]]:
             log.debug(f"ast.literal_eval解析失败: {e}")
             pass
         
-        # 4. 最后的修复尝试
-        final_fixed = _final_json_fix_attempt(json_str)
+        # 5. 最后的修复尝试
+        final_fixed = _final_json_fix_attempt(preprocessed_json)
         try:
             return json.loads(final_fixed)
         except json.JSONDecodeError as e:
@@ -63,6 +71,156 @@ def robust_json_parse(json_str: Union[str, bytes]) -> Optional[Dict[str, Any]]:
     except Exception as e:
         log.error(f"解析JSON时发生未知错误: {e}", exc_info=True)
         return None
+
+def _preprocess_json_string(json_str: str) -> str:
+    """
+    预处理JSON字符串，处理额外数据和未转义字符问题
+    
+    Args:
+        json_str: 原始JSON字符串
+        
+    Returns:
+        预处理后的JSON字符串
+    """
+    try:
+        # 创建预处理后字符串的副本
+        processed_str = json_str
+        
+        # 1. 处理额外数据问题 - 如果字符串包含多个JSON对象，只保留第一个完整的对象
+        # 查找第一个完整的JSON对象
+        processed_str = _extract_first_json_object(processed_str)
+        
+        # 2. 处理未转义的控制字符 - 统一替换成空格
+        processed_str = _replace_unescaped_control_chars(processed_str)
+        
+        # 3. 处理其他可能导致解析失败的字符
+        processed_str = _sanitize_json_string(processed_str)
+        
+        return processed_str
+    except Exception as e:
+        log.error(f"预处理JSON字符串时发生错误: {e}", exc_info=True)
+        return json_str
+
+def _extract_first_json_object(json_str: str) -> str:
+    """
+    提取第一个完整的JSON对象，处理额外数据问题
+    
+    Args:
+        json_str: 可能包含额外数据的JSON字符串
+        
+    Returns:
+        第一个完整的JSON对象字符串
+    """
+    try:
+        # 查找第一个完整的JSON对象
+        # 从第一个{开始，找到匹配的}
+        start = json_str.find('{')
+        if start == -1:
+            return json_str
+        
+        brace_count = 0
+        in_string = False
+        escape_next = False
+        
+        for i in range(start, len(json_str)):
+            char = json_str[i]
+            
+            # 处理转义字符
+            if escape_next:
+                escape_next = False
+                continue
+            
+            if char == '\\':
+                escape_next = True
+                continue
+            
+            # 处理字符串边界
+            if char == '"' and not escape_next:
+                in_string = not in_string
+                continue
+            
+            # 只有在字符串外才计算大括号
+            if not in_string:
+                if char == '{':
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
+                    # 找到第一个完整对象的结束位置
+                    if brace_count == 0:
+                        return json_str[start:i+1]
+        
+        # 如果没有找到完整的对象，返回原字符串
+        return json_str
+    except Exception as e:
+        log.error(f"提取第一个JSON对象时发生错误: {e}", exc_info=True)
+        return json_str
+
+def _replace_unescaped_control_chars(json_str: str) -> str:
+    """
+    替换未转义的控制字符为空格
+    
+    Args:
+        json_str: JSON字符串
+        
+    Returns:
+        处理后的字符串
+    """
+    try:
+        # 创建处理后字符串的副本
+        result = json_str
+        
+        # 在字符串值内部保留换行符和制表符，但在其他地方替换控制字符为空格
+        # 使用正则表达式匹配JSON字符串值
+        def replace_control_chars_in_non_string(match):
+            value = match.group(0)
+            # 替换控制字符为空格，但保留常见的转义字符
+            sanitized = ''.join(
+                char if ord(char) >= 32 or char in ['\n', '\r', '\t'] 
+                else ' ' 
+                for char in value
+            )
+            return sanitized
+        
+        # 匹配非字符串值中的内容（即大括号、方括号、冒号、逗号之外的内容）
+        # 这里我们采用更简单的方法，只替换字符串值之外的控制字符
+        result = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', ' ', result)
+        
+        return result
+    except Exception as e:
+        log.error(f"替换未转义控制字符时发生错误: {e}", exc_info=True)
+        return json_str
+
+def _sanitize_json_string(json_str: str) -> str:
+    """
+    清理JSON字符串中的其他问题
+    
+    Args:
+        json_str: JSON字符串
+        
+    Returns:
+        清理后的字符串
+    """
+    try:
+        # 创建清理后字符串的副本
+        result = json_str
+        
+        # 1. 移除字符串末尾的额外内容（如果有的话）
+        # 查找最后一个}的位置，移除其后的内容
+        last_brace = result.rfind('}')
+        if last_brace != -1 and last_brace < len(result) - 1:
+            # 检查}后是否是有效的JSON结束
+            remaining = result[last_brace + 1:].strip()
+            if remaining and not remaining.startswith(',') and not remaining.startswith(']'):
+                result = result[:last_brace + 1]
+        
+        # 2. 处理可能的BOM标记
+        if result.startswith('\ufeff'):
+            result = result[1:]
+        
+        return result
+    except Exception as e:
+        log.error(f"清理JSON字符串时发生错误: {e}", exc_info=True)
+        return json_str
 
 def _fix_common_json_issues(json_str: str) -> str:
     """
@@ -102,10 +260,6 @@ def _fix_common_json_issues(json_str: str) -> str:
         fixed_str = re.sub(r'(\w+|"[^"]+")\s*:\s*"([^"]*?)"(?=\s*[},])', escape_json_value, fixed_str)
         
         return fixed_str
-    except Exception as e:
-        log.error(f"修复常见JSON问题时发生错误: {e}", exc_info=True)
-        return json_str
-
     except Exception as e:
         log.error(f"修复常见JSON问题时发生错误: {e}", exc_info=True)
         return json_str
@@ -192,8 +346,28 @@ def reformat_for_frontend(message: Dict[str, Any]) -> Dict[str, Any]:
         # displayText从content.text获取
         # data字段完全赋值为content.data的内容
         content = message.get("content", {})
+        
+        # 处理特殊情况：根节点有content字段但为空，而根节点的data字段中有content
+        if isinstance(content, dict) and not content and "data" in message:
+            root_data = message.get("data", {})
+            if isinstance(root_data, dict) and "content" in root_data:
+                # 这种情况下，使用根节点data中的content
+                frontend_message["displayText"] = root_data.get("content", "")
+                # 获取根节点data中除了content之外的其他字段作为data字段
+                other_fields = {k: v for k, v in root_data.items() if k != "content"}
+                if other_fields:
+                    frontend_message["data"] = other_fields
+                return frontend_message
+        
+        # 正常处理流程
         if isinstance(content, dict):
             frontend_message["displayText"] = content.get("text", "")
+            # 如果content.text为空，但根节点data.content有内容，则使用根节点data.content
+            if not frontend_message["displayText"] and "data" in message:
+                root_data = message.get("data", {})
+                if isinstance(root_data, dict) and "content" in root_data:
+                    frontend_message["displayText"] = root_data.get("content", "")
+            
             # data字段完全赋值为content.data的内容
             # 如果content.data不存在或者是空结构，则返回给前端的结构中，data直接置空
             content_data = content.get("data")
@@ -204,15 +378,28 @@ def reformat_for_frontend(message: Dict[str, Any]) -> Dict[str, Any]:
                 # 注意：这是为了处理工作流返回结构错误的临时兼容补丁
                 root_data = message.get("data")
                 if root_data is not None and isinstance(root_data, dict) and root_data:
-                    frontend_message["data"] = root_data
-                    # 记录使用了兼容补丁
-                    log.warning("使用了兼容补丁：从根节点获取data字段，因为content.data为空或不存在")
+                    # 检查root_data是否包含除了content之外的其他字段
+                    other_fields = {k: v for k, v in root_data.items() if k != "content"}
+                    if other_fields:
+                        frontend_message["data"] = other_fields
+                        # 记录使用了兼容补丁
+                        log.warning("使用了兼容补丁：从根节点获取data字段，因为content.data为空或不存在")
                 else:
                     frontend_message["data"] = {}
         elif isinstance(content, str):
             # 如果content是字符串，直接使用
             frontend_message["displayText"] = content
             frontend_message["data"] = {}
+        elif not content and "data" in message:
+            # 特殊情况处理：content为空，但根节点有data字段
+            root_data = message.get("data", {})
+            if isinstance(root_data, dict) and "content" in root_data:
+                frontend_message["displayText"] = root_data.get("content", "")
+                # 获取根节点data中除了content之外的其他字段
+                other_fields = {k: v for k, v in root_data.items() if k != "content"}
+                if other_fields:
+                    frontend_message["data"] = other_fields
+                    log.warning("使用了兼容补丁：从根节点data.content获取文本内容")
         
         return frontend_message
     except Exception as e:
