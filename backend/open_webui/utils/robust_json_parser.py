@@ -342,64 +342,107 @@ def reformat_for_frontend(message: Dict[str, Any]) -> Dict[str, Any]:
             "status": message.get("status", "FINISHED")  # 直接使用原始状态
         }
         
+        # 记录原始消息结构信息
+        log.debug(f"原始消息结构 - 是否包含content字段: {'content' in message}, 是否包含data字段: {'data' in message}")
+        
         # 根据用户要求，从content字段提取displayText和data
         # displayText从content.text获取
         # data字段完全赋值为content.data的内容
         content = message.get("content", {})
         
+        # 记录content字段信息
+        log.debug(f"Content字段类型: {type(content)}, 内容: {content if isinstance(content, (str, dict)) and len(str(content)) < 200 else '[内容过长]'}")
+        
         # 处理特殊情况：根节点有content字段但为空，而根节点的data字段中有content
         if isinstance(content, dict) and not content and "data" in message:
             root_data = message.get("data", {})
+            log.debug(f"检测到特殊情况：content为空但data字段存在，data字段类型: {type(root_data)}")
             if isinstance(root_data, dict) and "content" in root_data:
                 # 这种情况下，使用根节点data中的content
-                frontend_message["displayText"] = root_data.get("content", "")
+                display_text = root_data.get("content", "")
+                frontend_message["displayText"] = display_text
+                log.info(f"使用兼容机制：从根节点data.content获取文本内容，长度: {len(display_text)}")
                 # 获取根节点data中除了content之外的其他字段作为data字段
                 other_fields = {k: v for k, v in root_data.items() if k != "content"}
                 if other_fields:
                     frontend_message["data"] = other_fields
+                    log.info(f"从根节点data中提取其他字段作为data，字段数: {len(other_fields)}")
                 return frontend_message
         
         # 正常处理流程
         if isinstance(content, dict):
-            frontend_message["displayText"] = content.get("text", "")
+            display_text = content.get("text", "")
+            frontend_message["displayText"] = display_text
+            log.debug(f"从content.text获取displayText，长度: {len(display_text)}")
+            
             # 如果content.text为空，但根节点data.content有内容，则使用根节点data.content
             if not frontend_message["displayText"] and "data" in message:
                 root_data = message.get("data", {})
                 if isinstance(root_data, dict) and "content" in root_data:
-                    frontend_message["displayText"] = root_data.get("content", "")
+                    display_text = root_data.get("content", "")
+                    frontend_message["displayText"] = display_text
+                    log.info(f"补充机制：从根节点data.content获取文本内容，长度: {len(display_text)}")
             
             # data字段完全赋值为content.data的内容
             # 如果content.data不存在或者是空结构，则返回给前端的结构中，data直接置空
             content_data = content.get("data")
+            log.debug(f"Content.data字段类型: {type(content_data)}, 是否存在: {content_data is not None}")
             if content_data is not None and isinstance(content_data, dict) and content_data:
                 frontend_message["data"] = content_data
+                log.info(f"从content.data获取data字段，字段数: {len(content_data)}")
+            elif content_data is not None and isinstance(content_data, str) and content_data:
+                # 处理content.data是字符串的情况
+                try:
+                    # 尝试解析字符串为JSON对象
+                    parsed_data = json.loads(content_data)
+                    if isinstance(parsed_data, dict):
+                        frontend_message["data"] = parsed_data
+                        log.info(f"从content.data字符串解析JSON获取data字段，字段数: {len(parsed_data)}")
+                    else:
+                        # 如果解析结果不是字典，将其作为文本内容处理
+                        frontend_message["data"] = {"content": content_data}
+                        log.info("从content.data字符串获取文本内容")
+                except json.JSONDecodeError:
+                    # 如果无法解析为JSON，将其作为普通文本处理
+                    frontend_message["data"] = {"content": content_data}
+                    log.info("从content.data字符串获取文本内容（非JSON格式）")
             else:
                 # 兼容补丁：如果content.data没有内容，尝试从json根节点查找是否有data节点
                 # 注意：这是为了处理工作流返回结构错误的临时兼容补丁
                 root_data = message.get("data")
+                log.debug(f"Content.data为空，检查根节点data字段，类型: {type(root_data)}")
                 if root_data is not None and isinstance(root_data, dict) and root_data:
                     # 检查root_data是否包含除了content之外的其他字段
                     other_fields = {k: v for k, v in root_data.items() if k != "content"}
+                    log.debug(f"根节点data中除content外的字段数: {len(other_fields)}")
                     if other_fields:
                         frontend_message["data"] = other_fields
                         # 记录使用了兼容补丁
                         log.warning("使用了兼容补丁：从根节点获取data字段，因为content.data为空或不存在")
                 else:
                     frontend_message["data"] = {}
+                    log.debug("content.data和根节点data均为空，data字段置空")
         elif isinstance(content, str):
             # 如果content是字符串，直接使用
             frontend_message["displayText"] = content
             frontend_message["data"] = {}
+            log.info(f"Content为字符串，直接使用，长度: {len(content)}")
         elif not content and "data" in message:
             # 特殊情况处理：content为空，但根节点有data字段
             root_data = message.get("data", {})
+            log.debug(f"Content为空但根节点有data字段，data字段类型: {type(root_data)}")
             if isinstance(root_data, dict) and "content" in root_data:
-                frontend_message["displayText"] = root_data.get("content", "")
+                display_text = root_data.get("content", "")
+                frontend_message["displayText"] = display_text
+                log.info(f"特殊机制：从根节点data.content获取文本内容，长度: {len(display_text)}")
                 # 获取根节点data中除了content之外的其他字段
                 other_fields = {k: v for k, v in root_data.items() if k != "content"}
                 if other_fields:
                     frontend_message["data"] = other_fields
-                    log.warning("使用了兼容补丁：从根节点data.content获取文本内容")
+                    log.info(f"从根节点data中提取其他字段作为data，字段数: {len(other_fields)}")
+        
+        # 记录最终封装结果
+        log.info(f"消息封装完成 - displayText长度: {len(frontend_message.get('displayText', ''))}, data字段数: {len(frontend_message.get('data', {}))}")
         
         return frontend_message
     except Exception as e:

@@ -2,6 +2,7 @@ import json
 import logging
 import sys
 from typing import TYPE_CHECKING
+from pathlib import Path
 
 from loguru import logger
 
@@ -10,7 +11,13 @@ from open_webui.env import (
     AUDIT_LOG_LEVEL,
     AUDIT_LOGS_FILE_PATH,
     GLOBAL_LOG_LEVEL,
+    DATA_DIR,
 )
+
+# 确保日志目录存在
+log_dir = Path(DATA_DIR) / "logs"
+log_dir.mkdir(exist_ok=True)
+APP_LOG_FILE_PATH = log_dir / "app.log"
 
 
 if TYPE_CHECKING:
@@ -98,13 +105,14 @@ def start_logger():
 
     A console (stdout) handler for general log messages (excluding those marked as auditable).
     An optional file handler for audit logs if audit logging is enabled.
-    Additionally, this function reconfigures Python’s standard logging to route through Loguru and adjusts logging levels for Uvicorn.
+    Additionally, this function reconfigures Python's standard logging to route through Loguru and adjusts logging levels for Uvicorn.
 
     Parameters:
     enable_audit_logging (bool): Determines whether audit-specific log entries should be recorded to file.
     """
     logger.remove()
 
+    # 控制台日志输出
     logger.add(
         sys.stdout,
         level=GLOBAL_LOG_LEVEL,
@@ -112,6 +120,18 @@ def start_logger():
         filter=lambda record: "auditable" not in record["extra"],
     )
 
+    # 普通应用日志文件输出（包含所有级别的日志）
+    logger.add(
+        APP_LOG_FILE_PATH,
+        level="DEBUG",
+        rotation="100 MB",
+        retention="30 days",
+        compression="zip",
+        format=stdout_format,
+        filter=lambda record: "auditable" not in record["extra"],
+    )
+
+    # 审计日志文件输出
     if AUDIT_LOG_LEVEL != "NONE":
         try:
             logger.add(
@@ -138,3 +158,4 @@ def start_logger():
         uvicorn_logger.handlers = [InterceptHandler()]
 
     logger.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
+    logger.info(f"App log file path: {APP_LOG_FILE_PATH}")

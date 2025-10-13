@@ -14,6 +14,7 @@ from open_webui.env import SRC_LOG_LEVELS, REDIS_URL
 # from open_webui.socket.main import sio, SESSION_POOL, USER_POOL
 # 延迟导入，在函数内部导入Redis客户端
 # from open_webui.utils.redis_queue_listener import get_redis_client
+from open_webui.utils.robust_json_parser import robust_json_parse, reformat_for_frontend
 
 # 配置日志
 log = logging.getLogger(__name__)
@@ -101,29 +102,8 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
                 log.error(f"记录SESSION_POOL信息时发生错误: {e}")
             return
             
-        # 按照服务端消息结构规范文档重新封装消息
-        # 创建符合前端定义的消息体结构
-        frontend_message = {
-            "type": "hsai_response",
-            "success": True,
-            "execution_id": reply_id or "",
-            "session_id": session_id,
-            "user_id": user_id,
-            "execution_time": "0.00s",  # 默认值，可根据需要修改
-            "timestamp": message.get("create_ts", 0),
-            "messageType": message.get("content_type", 3),  # 默认为text类型
-            "displayText": "",
-            "data": {},
-            "status": status  # 直接使用原始状态
-        }
-        
-        # 处理内容字段
-        content = message.get("content", {})
-        if isinstance(content, dict):
-            frontend_message["displayText"] = content.get("text", "")
-            frontend_message["data"] = content.get("data", {})
-        elif isinstance(content, str):
-            frontend_message["displayText"] = content
+        # 使用robust_json_parser中的reformat_for_frontend函数重新封装消息
+        frontend_message = reformat_for_frontend(message)
         
         # 发送封装后的消息到前端
         if sio is not None:
