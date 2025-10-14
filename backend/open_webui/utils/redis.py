@@ -33,10 +33,11 @@ def get_redis_connection(
                 username=redis_config["username"],
                 password=redis_config["password"],
                 decode_responses=decode_responses,
+                socket_timeout=5,  # 添加socket超时设置
             )
             return sentinel.master_for(redis_config["service"])
         elif redis_url:
-            return redis.from_url(redis_url, decode_responses=decode_responses)
+            return redis.from_url(redis_url, decode_responses=decode_responses, socket_timeout=5)
         else:
             return None
     else:
@@ -51,10 +52,12 @@ def get_redis_connection(
                 username=redis_config["username"],
                 password=redis_config["password"],
                 decode_responses=decode_responses,
+                socket_timeout=5,  # 添加socket超时设置
             )
             return sentinel.master_for(redis_config["service"])
         elif redis_url:
-            return redis.Redis.from_url(redis_url, decode_responses=decode_responses)
+            # 为Redis连接添加超时设置
+            return redis.Redis.from_url(redis_url, decode_responses=decode_responses, socket_timeout=5)
         else:
             return None
 

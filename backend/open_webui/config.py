@@ -250,16 +250,37 @@ class AppConfig:
         # If Redis is available, check for an updated value
         if self._redis:
             redis_key = f"open-webui:config:{key}"
-            redis_value = self._redis.get(redis_key)
+            redis_value = None
+            try:
+                # 使用 socket timeout 参数设置超时，避免长时间阻塞
+                redis_value = self._redis.get(redis_key)
+            except Exception as e:
+                # 检查是否是超时错误
+                if "Timeout" in str(e):
+                    log.error(f"Timeout reading from Redis for key {redis_key}: {e}")
+                else:
+                    log.error(f"Error reading from Redis for key {redis_key}: {e}")
+                # 出现错误时使用默认值，不中断应用
+                redis_value = None
 
             if redis_value is not None:
                 try:
-                    decoded_value = json.loads(redis_value)
+                    # 确保redis_value是字符串类型
+                    if isinstance(redis_value, bytes):
+                        redis_value = redis_value.decode('utf-8')
+                    
+                    if isinstance(redis_value, str):
+                        try:
+                            decoded_value = json.loads(redis_value)
 
-                    # Update the in-memory value if different
-                    if self._state[key].value != decoded_value:
-                        self._state[key].value = decoded_value
-                        log.info(f"Updated {key} from Redis: {decoded_value}")
+                            # Update the in-memory value if different
+                            if self._state[key].value != decoded_value:
+                                self._state[key].value = decoded_value
+                                log.info(f"Updated {key} from Redis: {decoded_value}")
+                        except json.JSONDecodeError:
+                            log.error(f"Invalid JSON format in Redis for {key}: {redis_value}")
+                    else:
+                        log.warning(f"Unexpected type for Redis value of key {key}: {type(redis_value)}")
 
                 except json.JSONDecodeError:
                     log.error(f"Invalid JSON format in Redis for {key}: {redis_value}")
