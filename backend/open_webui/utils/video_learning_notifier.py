@@ -59,12 +59,12 @@ async def handle_video_learning_notification(message: Dict[str, Any], config: Op
             if existing_status:
                 # 更新现有记录
                 update_data = {
-                    "status": learning_status,
+                    "status": learning_status.value,  # 转换枚举为字符串
                     "updated_at": int(time.time())
                 }
                 updated_status = HSAIVideoLearningStatuses.update_status(existing_status.id, update_data)
                 if updated_status:
-                    log.info(f"成功更新视频学习状态: video_id={video_id}, status={learning_status}")
+                    log.info(f"成功更新视频学习状态: video_id={video_id}, status={learning_status.value}")
                 else:
                     log.error(f"更新视频学习状态失败: video_id={video_id}")
             else:
@@ -72,11 +72,11 @@ async def handle_video_learning_notification(message: Dict[str, Any], config: Op
                 status_form = {
                     "business_name": business_name,
                     "video_id": str(video_id),
-                    "status": learning_status
+                    "status": learning_status.value  # 转换枚举为字符串
                 }
                 new_status = HSAIVideoLearningStatuses.insert_new_status(status_form)
                 if new_status:
-                    log.info(f"成功创建视频学习状态记录: video_id={video_id}, status={learning_status}")
+                    log.info(f"成功创建视频学习状态记录: video_id={video_id}, status={learning_status.value}")
                 else:
                     log.error(f"创建视频学习状态记录失败: video_id={video_id}")
         else:
@@ -119,7 +119,7 @@ async def handle_video_learning_notification(message: Dict[str, Any], config: Op
                     "business_name": business_name,
                     "video_id": str(video_id),
                     "from_status": original_status,
-                    "to_status": HSAIVideoLearningStatusEnum.LEARNED if status == "success" else "pending",
+                    "to_status": HSAIVideoLearningStatusEnum.LEARNED.value if status == "success" else "pending",
                     "change_reason": f"视频学习任务完成，结果: {status}",
                     "changed_by": "system"
                 }
