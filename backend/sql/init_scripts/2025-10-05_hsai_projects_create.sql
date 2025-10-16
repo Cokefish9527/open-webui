@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS [hsai_projects] (
     user_id VARCHAR NOT NULL,
     status VARCHAR DEFAULT 'active',
     config JSON,
+    company_id VARCHAR(255) REFERENCES companies(id),
     created_at BIGINT,
     updated_at BIGINT
 );

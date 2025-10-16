@@ -63,6 +63,39 @@ cd c:\work\open-webui
 python tool/listen_to_queue.py
 ```
 
+### 5. check_db_structure.py
+**功能**: 检查数据库表结构
+**用途**:
+- 查看SQLite数据库中表的结构信息
+- 显示各表的列名、数据类型和约束条件
+**使用方法**:
+```bash
+cd c:\work\open-webui
+python tool/check_db_structure.py
+```
+
+### 6. test_database_connection.py
+**功能**: 测试PostgreSQL数据库连接
+**用途**:
+- 验证PostgreSQL数据库连接配置是否正确
+- 显示数据库版本信息和关键表的记录数
+**使用方法**:
+```bash
+cd c:\work\open-webui
+python tool/test_database_connection.py
+```
+
+### 7. test_db_simple.py
+**功能**: 简单测试PostgreSQL数据库连接
+**用途**:
+- 快速验证PostgreSQL数据库连接
+- 显示连接成功或失败信息
+**使用方法**:
+```bash
+cd c:\work\open-webui
+python tool/test_db_simple.py
+```
+
 ## 添加新脚本的规范
 
 1. 所有脚本应具有明确的功能描述和使用说明

@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS [hsai_tasks] (
     assignee_id VARCHAR,
     collaborators JSON,
     shared_sessions JSON,
+    project_id VARCHAR REFERENCES hsai_projects(id),
+    prompt_config JSON,
     FOREIGN KEY (workflow_id) REFERENCES hsai_workflows(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
     FOREIGN KEY (parent_task_id) REFERENCES hsai_tasks(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
