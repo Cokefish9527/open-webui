@@ -220,6 +220,48 @@ class HSAIProjectsTable:
             except Exception:
                 return None
 
+    def get_projects_by_company_id(
+        self, 
+        company_id: str, 
+        status: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0
+    ) -> List[HSAIProjectModel]:
+        """根据公司ID获取项目列表"""
+        with get_db() as db:
+            try:
+                query = db.query(HSAIProject).filter_by(company_id=company_id)
+                
+                if status:
+                    query = query.filter_by(status=status)
+                    
+                projects = query.order_by(
+                    HSAIProject.updated_at.desc()
+                ).limit(limit).offset(offset).all()
+                
+                return [HSAIProjectModel.model_validate(project) for project in projects]
+            except Exception as e:
+                log.exception(f"Error getting projects by company id: {e}")
+                return []
+
+    def get_projects_count_by_company_id(
+        self, 
+        company_id: str, 
+        status: Optional[str] = None
+    ) -> int:
+        """根据公司ID获取项目总数"""
+        with get_db() as db:
+            try:
+                query = db.query(HSAIProject).filter_by(company_id=company_id)
+                
+                if status:
+                    query = query.filter_by(status=status)
+                    
+                return query.count()
+            except Exception as e:
+                log.exception(f"Error counting projects by company id: {e}")
+                return 0
+
     def update_project_by_id(
         self, project_id: str, form_data: HSAIProjectUpdateForm
     ) -> Optional[HSAIProjectModel]:
