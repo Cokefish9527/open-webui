@@ -1,4 +1,4 @@
-"""
+﻿"""
 任务完成信号处理器
 处理来自n8n工作流的任务完成信号，通过Redis队列更新任务状态
 """
@@ -99,34 +99,46 @@ async def handle_task_completion_signal(message: Dict[str, Any], config: Optiona
 
 async def _update_queue_message_status(message: Dict[str, Any], status: str, execution_result: Optional[str] = None, error_message: Optional[str] = None):
     """
-    更新Redis队列消息状态
-    
-    Args:
-        message: 原始消息数据
-        status: 状态
-        execution_result: 执行结果
-        error_message: 错误信息
+    更新Redis队列消息状态（基于 correlation_id / request_id / reply_id 关联）。
     """
     try:
-        # 这里需要根据实际情况找到对应的队列消息记录
-        # 由于我们无法直接通过消息内容找到对应的数据库记录，
-        # 在实际实现中，可能需要通过其他方式关联消息和数据库记录
-        
-        # 一种可能的实现方式是通过request_id或其他唯一标识符查找记录
-        # 但这需要在消息中包含足够的信息来关联数据库记录
-        
-        # 暂时记录日志，表示需要实现具体的关联逻辑
-        log.debug(f"需要更新队列消息状态: status={status}, execution_result={execution_result}, error_message={error_message}")
-        log.debug(f"消息内容: {message}")
-        
-        # TODO: 实现具体的数据库记录查找和更新逻辑
-        # 目前只是记录日志，不会实际更新数据库中的记录
-        # 这样可以确保原始数据不会被覆盖
-        
+        from open_webui.models.redis_queue_messages import (
+            RedisQueueMessages,
+            RedisQueueMessageUpdateForm,
+        )
+
+        # 关联ID优先级：correlation_id > request_id > reply_id > id/message_id
+        correlation_id = (
+            message.get("correlation_id")
+            or message.get("request_id")
+            or message.get("reply_id")
+            or message.get("id")
+            or message.get("message_id")
+        )
+
+        if not correlation_id:
+            log.debug("消息缺少 correlation_id/request_id/reply_id，跳过队列消息状态更新")
+            return
+
+        record = RedisQueueMessages.get_message_by_correlation_id(correlation_id)
+        if not record:
+            log.debug(f"未找到 correlation_id={correlation_id} 对应的消息记录，可能尚未入库或由其他链路处理")
+            return
+
+        update_form = RedisQueueMessageUpdateForm(
+            status=status,
+            execution_result=execution_result,
+            error_message=error_message,
+            last_executed_at=int(__import__('time').time())
+        )
+        updated = RedisQueueMessages.update_message_by_id(record.id, update_form)
+        if updated:
+            log.info(f"已更新队列消息状态：correlation_id={correlation_id}, status={status}")
+        else:
+            log.error(f"更新队列消息状态失败：correlation_id={correlation_id}")
+
     except Exception as e:
         log.error(f"更新队列消息状态时发生错误: {e}", exc_info=True)
-
-
 def register_task_completion_queue_handler(redis_queue_listener) -> None:
     """
     注册任务完成信号队列处理器

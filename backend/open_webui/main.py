@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import asyncio
 import json
 import logging
@@ -557,6 +557,13 @@ async def lifespan(app: FastAPI):
     # 初始化工作流编排中心
     from open_webui.services.workflow_orchestration_center import workflow_orchestration_center
     await workflow_orchestration_center.initialize()
+    # （可选）启动每日调度器：爆款学习/循环任务派发（受 ENV 配置控制）
+    try:
+        from open_webui.utils.viral_learning_scheduler import ViralLearningScheduler
+        app.state.viral_learning_scheduler = ViralLearningScheduler()
+        await app.state.viral_learning_scheduler.start()
+    except Exception as e:
+        log.error(f"Viral learning scheduler start failed: {e}")
 
     # 启动Redis信号处理器
     from open_webui.utils.redis_signal_handler import redis_signal_handler
@@ -593,6 +600,12 @@ async def lifespan(app: FastAPI):
 
     if hasattr(app.state, "redis_task_command_listener"):
         app.state.redis_task_command_listener.cancel()
+    # 停止每日调度器
+    try:
+        if hasattr(app.state, "viral_learning_scheduler") and app.state.viral_learning_scheduler:
+            await app.state.viral_learning_scheduler.stop()
+    except Exception as e:
+        log.error(f"Viral learning scheduler stop failed: {e}")
 
 
 app = FastAPI(

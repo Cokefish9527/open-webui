@@ -1,4 +1,4 @@
-"""
+﻿"""
 对话消息队列处理器
 处理来自n8n工作流的对话消息，通过Socket.IO通知客户端
 """
@@ -62,6 +62,13 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
             log.info(f"检测到信息收集完成消息，更新用户 {user_id} 的信息收集状态")
             # 更新用户信息收集完成状态
             Users.update_user_info_collection_status(user_id, True)
+            # 触发一次企业/默认项目/主线任务的幂等补种
+            try:
+                from open_webui.services.onboarding_orchestrator import ensure_company_project_and_main_tasks
+                summary = ensure_company_project_and_main_tasks(user_id)
+                log.info(f"Onboarding orchestrator summary: {summary}")
+            except Exception as e:
+                log.error(f"执行 Onboarding Orchestrator 时发生错误: {e}")
         
         # 查找对应的Socket.IO连接，按照socket_id->session_id->user_id的顺序
         target_sid = None

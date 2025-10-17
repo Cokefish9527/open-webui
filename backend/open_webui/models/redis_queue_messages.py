@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import time
 import uuid
 from typing import Optional, List
@@ -23,6 +23,7 @@ class RedisQueueMessage(Base):
 
     id = Column(String, primary_key=True)
     queue_name = Column(String, nullable=False)  # Redis队列名称
+    correlation_id = Column(String, nullable=True)  # 关联ID（request_id/reply_id）
     raw_data = Column(Text, nullable=False)      # 获取到的原始数据
     fetched_at = Column(BigInteger, nullable=False)  # 获取时间
     execution_result = Column(Text, nullable=True)   # 执行结果
@@ -45,6 +46,7 @@ class RedisQueueMessageModel(BaseModel):
 
     id: str = Field(description="消息唯一标识符")
     queue_name: str = Field(description="Redis队列名称")
+    correlation_id: Optional[str] = Field(default=None, description="关联ID（request_id/reply_id）")
     raw_data: str = Field(description="获取到的原始数据")
     fetched_at: int = Field(description="获取时间")
     execution_result: Optional[str] = Field(default=None, description="执行结果")
@@ -70,6 +72,7 @@ class RedisQueueMessageForm(BaseModel):
     last_executed_at: Optional[int] = None
     status: Optional[str] = "pending"
     retry_count: Optional[int] = 0
+    correlation_id: Optional[str] = None
 
 
 class RedisQueueMessageUpdateForm(BaseModel):
@@ -88,6 +91,7 @@ class RedisQueueMessageUpdateForm(BaseModel):
 class RedisQueueMessageResponse(BaseModel):
     id: str = Field(description="消息唯一标识符")
     queue_name: str = Field(description="Redis队列名称")
+    correlation_id: Optional[str] = Field(default=None, description="关联ID（request_id/reply_id）")
     raw_data: str = Field(description="获取到的原始数据")
     fetched_at: int = Field(description="获取时间")
     execution_result: Optional[str] = Field(default=None, description="执行结果")
@@ -151,6 +155,17 @@ class RedisQueueMessagesTable:
         with get_db() as db:
             try:
                 message = db.get(RedisQueueMessage, message_id)
+                return RedisQueueMessageModel.model_validate(message) if message else None
+            except Exception:
+                return None
+
+    def get_message_by_correlation_id(self, correlation_id: str) -> Optional[RedisQueueMessageModel]:
+        """根据 correlation_id 获取消息记录"""
+        if not correlation_id:
+            return None
+        with get_db() as db:
+            try:
+                message = db.query(RedisQueueMessage).filter_by(correlation_id=correlation_id).order_by(RedisQueueMessage.created_at.desc()).first()
                 return RedisQueueMessageModel.model_validate(message) if message else None
             except Exception:
                 return None

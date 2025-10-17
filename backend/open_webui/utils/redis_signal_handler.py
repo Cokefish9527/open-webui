@@ -104,10 +104,28 @@ class RedisSignalHandler:
                                 # 创建消息记录表单
                                 # 重要：使用原始消息数据，而不是解析后的数据
                                 raw_message_data = message_data.decode('utf-8') if isinstance(message_data, bytes) else str(message_data)
+                                # 尝试从原始消息中解析 correlation_id（request_id/reply_id 的统一追踪ID）
+                                parsed_json = None
+                                try:
+                                    parsed_json = robust_json_parse(raw_message_data)
+                                except Exception:
+                                    parsed_json = None
+
+                                correlation_id = None
+                                if isinstance(parsed_json, dict):
+                                    correlation_id = (
+                                        parsed_json.get("correlation_id")
+                                        or parsed_json.get("request_id")
+                                        or parsed_json.get("reply_id")
+                                        or parsed_json.get("id")
+                                        or parsed_json.get("message_id")
+                                    )
+
                                 form_data = RedisQueueMessageForm(
                                     queue_name=queue_name,
                                     raw_data=raw_message_data,
-                                    fetched_at=int(time.time())
+                                    fetched_at=int(time.time()),
+                                    correlation_id=correlation_id
                                 )
                                 
                                 # 插入到数据库
