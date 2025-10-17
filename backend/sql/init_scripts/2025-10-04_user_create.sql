@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS [user] (
     info TEXT,
     oauth_sub TEXT,
     info_collection_completed INTEGER DEFAULT '0',
-    business_name TEXT
+    business_name TEXT,
+    company_id VARCHAR(255) REFERENCES companies(id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS user_oauth_sub ON [user] (oauth_sub);
 CREATE UNIQUE INDEX IF NOT EXISTS user_id ON [user] (id);
