@@ -53,7 +53,11 @@ class RouterManager:
         """根据用户输入和上下文路由到合适的工作流"""
         entry_type = context.get("entry_type", "chat")
         
-        # 首先根据entry_type路由
+        # 首先检查消息中是否包含"战略"关键词，如果包含则路由到信息收集工作流
+        if "战略" in user_input:
+            return N8NWorkflowType.COMPANY_INFO
+        
+        # 根据entry_type路由
         if entry_type in ["company", "company_info"]:
             return N8NWorkflowType.COMPANY_INFO
         elif entry_type in ["video_crawl", "video_analysis"]:
