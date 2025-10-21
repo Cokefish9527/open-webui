@@ -1,13 +1,13 @@
 # HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
 > 一等公民 · 与主干代码保持持续一致（UTF-8）
 
-更新时间：2025-10-17（与 main 同步）
+更新时间：2025-10-21（与 main 同步）
 
 ## 项目概述
 
 HSAI 后台管理系统采用 FastAPI + Pydantic + SQLAlchemy 实现，统一以 `/api/v1` 为后端 API 前缀。业务核心域包括：公司（companies）、项目（hsai_projects）与任务（hsai_tasks）。所有接口默认要求鉴权（Bearer JWT 或 `sk-` 前缀 API Key，受端点白名单限制）。
 
-数据库默认连接托管的 PostgreSQL（RDS），通过 `.env` 与 `backend/.env` 中的 `DATABASE_URL`、可选的 `DATABASE_SCHEMA` 管理；`backend/sql/migrate_sqlite_to_postgresql_final.py` 提供 SQLite→PostgreSQL 的迁移与重放脚本，支持 dry-run、批量大小、跳过 TRUNCATE/序列校准等参数。
+数据库默认连接托管的 PostgreSQL（RDS），通过 .env 与 ackend/.env 中的 DATABASE_URL、可选 DATABASE_SCHEMA 管理；ackend/sql/postgresql_init_from_sqlite.sql 提供 SQLite → PostgreSQL 的全量初始化脚本（含结构与数据），执行前请先备份目标库。
 
 ## 架构设计
 
@@ -248,16 +248,16 @@ flowchart TB
    ```bash
    pg_dump "postgresql://<user>:<password>@<host>:5432/Owen_ai" --format=custom --file=backup_before_pg_switch.dump
    ```
-2. **预演（Dry-Run）**：确认表清单与预计行数
-   ```bash
-   python backend/sql/migrate_sqlite_to_postgresql_final.py --dry-run
+2. **预演（Dry-Run）**：建议在本地或测试库创建临时实例，先执行初始化脚本验证兼容性与耗时，再进行正式重置。
    ```
-3. **执行迁移**：脚本会依次 `TRUNCATE … RESTART IDENTITY CASCADE`、暂时关闭外键、批量导入、重置序列
-   ```bash
-   python backend/sql/migrate_sqlite_to_postgresql_final.py --yes
-   ```
-   - 常用参数：`--skip-truncate`、`--skip-sequence-reset`、`--tables`/`--exclude-tables`、`--batch-size 500`。
-   - 2025-10-21：PostgreSQL 已补齐 `user.organization_id`、`user.is_super_admin`、`user.is_org_admin`、`user.credit_balance` 与 `"group".organization_id` 列，脚本会自动写入这些字段，避免再次丢失。
+3. **执行初始化脚本**：通过新导出的 PostgreSQL 初始化脚本重建库结构与数据。
+   - `backend/sql/sqlite_dump_raw.sql`：原始 SQLite 全量导出文件，仅作留档。
+   - `backend/sql/postgresql_init_from_sqlite.sql`：已按 PostgreSQL 语法整理，可在空库上直接执行。
+   - 建议命令：
+     ```bash
+     psql "$DATABASE_URL" -f backend/sql/postgresql_init_from_sqlite.sql
+     ```
+     执行前务必完成备份，执行后核对关键表行数与序列值。
 4. **验收**：对比 companies/auth/user/hsai_projects/hsai_tasks 等核心表行数，抽查 JSON/时间戳字段；启动 `/api/v1/hsai/projects` 与 `/api/v1/hsai/tasks` 读写冒烟。
 5. **回滚**：若迁移失败，使用步骤 1 的备份恢复，将 `.env` 改回 SQLite URL；必要时重新导入 PostgreSQL。
 
@@ -273,8 +273,25 @@ flowchart TB
   - 背景：SQLite 在并发写入、权限隔离和连接池管理方面受限；阿里云 RDS PostgreSQL 已启用，需要统一迁移并同步历史字段。
   - 变更：统一 `.env`、`backend/.env`、Windows 启动脚本的 `DATABASE_URL`；重写迁移脚本支持批量迁移、序列校准；在 PostgreSQL 中新增 `user.organization_id`、`user.is_super_admin`、`user.is_org_admin`、`user.credit_balance` 与 `"group".organization_id` 列；WIKI 与 Mermaid 图更新为 PostgreSQL 架构。
   - 影响：运行环境需开放 PostgreSQL 网络权限；SQLite 工具脚本转为只读；迁移脚本会覆盖所有表并重置序列。
-  - 验证：依次执行 `python backend/sql/migrate_sqlite_to_postgresql_final.py --dry-run` 与 `--yes`，核对核心表行数与 `pg_get_serial_sequence` 结果，启动核心 API 冒烟。
+  - 验证：在测试库执行 `psql "$DATABASE_URL" -f backend/sql/postgresql_init_from_sqlite.sql`，核对关键表行数与 `pg_get_serial_sequence` 结果后再切换生产。
   - 回滚：使用 `pg_dump` 备份恢复；将 `DATABASE_URL` 改回 SQLite；必要时重新导入 PostgreSQL 数据。
+
+- FIX-2025-10-21-Function-Boolean：`function.is_active`/`is_global` 与 ORM 布尔定义统一
+  - 根因：SQLite 初始化脚本遗留 `INTEGER`，在 PostgreSQL 中与 SQLAlchemy 的 `BOOLEAN` 定义冲突。
+  - 修复：`backend/sql/postgresql_init_from_sqlite.sql` 已将列类型调整为 BOOLEAN 并写入显式布尔值；执行脚本即可完成历史数据重建。
+  - 验证：在目标库运行初始化脚本后，于 psql 执行 `\d "function"` 与 `SELECT COUNT(*) FROM function WHERE is_active;`，确认类型与查询正常。
+  - 回滚：如需恢复旧结构，可重新导入 SQLite 备份或手动执行 `ALTER TABLE` 将列改回整型（不推荐）。
+
+- FIX-2025-10-21-VideoLearning-Timestamps：`hsai_video_learning_status` 时间字段与模型对齐
+  - 根因：SQLite 导出使用 TIMESTAMP/TEXT，ORM 期望 BIGINT Unix 秒。
+  - 修复：`backend/sql/postgresql_init_from_sqlite.sql` 已统一以 BIGINT 存储时间戳，并在导入过程中写入整数值。
+  - 验证：执行脚本后，通过 `\d "hsai_video_learning_status"` 与 `SELECT created_at FROM hsai_video_learning_status LIMIT 1;` 检查列类型与样例数据。
+  - 回滚：重新导入 SQLite 备份或手工 `to_timestamp` 转换，谨慎使用。
+
+- OPS-2025-10-21-No-Peewee-Migration：停用自动迁移，改为手工 SQL 管控
+  - 决策：移除 `backend/open_webui/internal/db.py` 中的 Peewee Router 调用，彻底依赖手工初始化脚本。
+  - 影响：版本演进需维护 `backend/sql/postgresql_init_from_sqlite.sql`，并在 PR 中提供执行步骤；旧版 `internal/migrations` 仅作为历史参考。
+  - 验证：应用启动时不再访问 Peewee 迁移目录；数据库结构取决于人工执行的 SQL。
 
 - ADR-2025-10-17-003：WIKI 与代码对齐（从 Flask/Blueprint 文档迁移到 FastAPI/Router）
   - 背景：历史文档描述了 `/system/*` 路由与 Jinja 模板，但当前工程为 FastAPI REST API（`/api/v1`）。
@@ -315,6 +332,8 @@ flowchart TB
 - Removed：过时的 Flask/Blueprint 与 `/system/*` 模板描述。
 
 ### [2025-10-21]
-- Added：`backend/sql/migrate_sqlite_to_postgresql_final.py` 支持按环境参数、批量插入、序列校准与 dry-run。
-- Changed：`DATABASE_URL` 默认指向 PostgreSQL，并同步更新 `.env`、`backend/.env`、Windows 启动脚本及文档说明；PostgreSQL 新增 `user`/`"group"` 缺失列，与 SQLite 结构对齐。
-- Fixed：迁移脚本自动重置 PostgreSQL 序列，避免新增记录主键冲突。
+- Added：新增 `backend/sql/postgresql_init_from_sqlite.sql`（及 `backend/sql/sqlite_dump_raw.sql` 存档）作为 SQLite → PostgreSQL 的全量初始化脚本。
+- Changed：`DATABASE_URL` 默认指向 PostgreSQL，并同步更新 `.env`、`backend/.env`、Windows 启动脚本及文档说明；初始化脚本对 `user`、`"group"` 等新增列保持一致。
+- Fixed：初始化脚本在导入阶段会重置关键序列，避免后续插入冲突。
+- Fixed：`function` 与 `hsai_video_learning_status` 相关列在初始化脚本中已按 BOOLEAN/BIGINT 正确建模，解决运行时类型冲突。
+- Removed：启动流程不再执行 Peewee Router，数据库结构完全由 SQL 脚本人工维护。

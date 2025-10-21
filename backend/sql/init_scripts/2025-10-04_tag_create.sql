@@ -1,7 +1,0 @@
--- 表 tag 的结构
-CREATE TABLE IF NOT EXISTS [tag] (
-    id VARCHAR(255) NOT NULL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    user_id VARCHAR(255) NOT NULL,
-    meta JSON
-);
