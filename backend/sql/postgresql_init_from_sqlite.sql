@@ -168,7 +168,19 @@ CREATE TABLE "folder" (
 	updated_at BIGINT NOT NULL, 
 	PRIMARY KEY (id, user_id)
 );
-CREATE TABLE "function" ("id" TEXT NOT NULL, "user_id" TEXT NOT NULL, "name" TEXT NOT NULL, "type" TEXT NOT NULL, "content" TEXT NOT NULL, "meta" TEXT NOT NULL, "created_at" INTEGER NOT NULL, "updated_at" INTEGER NOT NULL, "valves" TEXT, "is_active" INTEGER NOT NULL, "is_global" INTEGER NOT NULL);
+CREATE TABLE "function" (
+	id TEXT NOT NULL,
+	user_id TEXT NOT NULL,
+	name TEXT NOT NULL,
+	type TEXT NOT NULL,
+	content TEXT NOT NULL,
+	meta JSON NOT NULL,
+	created_at BIGINT NOT NULL,
+	updated_at BIGINT NOT NULL,
+	valves JSON,
+	is_active BOOLEAN NOT NULL,
+	is_global BOOLEAN NOT NULL
+);
 CREATE TABLE "group" (
 	id TEXT NOT NULL, 
 	user_id TEXT, 

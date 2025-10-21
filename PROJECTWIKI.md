@@ -305,12 +305,23 @@ flowchart TB
   - ��֤��Dry-run ģʽ������ Ping RDS ���ӡ�֮����� `python scripts/sqlite_to_postgres_sync.py --dry-run` �� `python scripts/sqlite_to_postgres_sync.py --backup-dir backups/db` ִ�����ɹ������������ܶȼ�����count() �ԱȺ���索�������У�顣
   - �ع���ʹ�� report ��¼��备��·���������µ��� `.dump` �� `pg_restore` ��������ȫ�����лָ����ִ�еڶ���ʱ��ѡ������ `--strict` ȷ�����д�����ֶ�ȫ��
 
-- FIX-2025-10-21-Function-Boolean：`function.is_active`/`is_global` 与 ORM 布尔定义统一
-  - 根因：SQLite 初始化脚本遗留 `INTEGER`，在 PostgreSQL 中与 SQLAlchemy 的 `BOOLEAN` 定义冲突。
-  - 修复：`backend/sql/postgresql_init_from_sqlite.sql` 已将列类型调整为 BOOLEAN 并写入显式布尔值；执行脚本即可完成历史数据重建。
-  - 验证：在目标库运行初始化脚本后，于 psql 执行 `\d "function"` 与 `SELECT COUNT(*) FROM function WHERE is_active;`，确认类型与查询正常。
-  - 回滚：如需恢复旧结构，可重新导入 SQLite 备份或手动执行 `ALTER TABLE` 将列改回整型（不推荐）。
 
+- FIX-2025-10-21-Function-Boolean：`function.is_active`/`is_global` ORM 布尔定义统一
+  - 根因：SQLite 初始化脚本遗留 `INTEGER`，在 PostgreSQL 中与 SQLAlchemy 的 `BOOLEAN` 定义冲突。
+  - 脚本调整：`backend/sql/postgresql_init_from_sqlite.sql` 现将 `meta`/`valves` 列定义为 JSON，`created_at`/`updated_at` 改为 BIGINT，并将 `is_active`/`is_global` 改为 BOOLEAN，全面与 ORM 模型保持一致。
+  - 现网修复：若目标库已创建，可执行以下 SQL 进行就地转换：
+    ```sql
+    ALTER TABLE function
+      ALTER COLUMN meta TYPE JSON USING meta::json,
+      ALTER COLUMN valves TYPE JSON USING CASE WHEN valves IS NULL OR valves = '' THEN NULL ELSE valves::json END,
+      ALTER COLUMN created_at TYPE BIGINT USING created_at::bigint,
+      ALTER COLUMN updated_at TYPE BIGINT USING updated_at::bigint,
+      ALTER COLUMN is_active TYPE BOOLEAN USING (is_active::bigint <> 0),
+      ALTER COLUMN is_global TYPE BOOLEAN USING (is_global::bigint <> 0);
+    ```
+    若历史数据存在空字符串，可先批量更新为空值再执行转换；如需使用 JSONB，可将目标类型替换为 JSONB 并相应修改 `USING` 子句。
+  - 验证：在目标库运行 `\d "function"` 与 `SELECT is_active, pg_typeof(is_active) FROM function LIMIT 5;`，确认列类型正确，应用启动不再报错。
+  - 回滚：如需恢复旧结构，可重新导入 SQLite 备份或手动执行逆向 `ALTER TABLE` 将列改回整型/文本（不推荐）。
 - FIX-2025-10-21-VideoLearning-Timestamps：`hsai_video_learning_status` 时间字段与模型对齐
   - 根因：SQLite 导出使用 TIMESTAMP/TEXT，ORM 期望 BIGINT Unix 秒。
   - 修复：`backend/sql/postgresql_init_from_sqlite.sql` 已统一以 BIGINT 存储时间戳，并在导入过程中写入整数值。
@@ -356,10 +367,11 @@ flowchart TB
 
 ## 变更日志（Keep a Changelog）
 
-### [Unreleased]
-- Changed：对齐为 FastAPI 架构与 `/api/v1` 端点；补齐 HSAI 核心域 API（ADR-2025-10-17-003）。
-- Removed：过时的 Flask/Blueprint 与 `/system/*` 模板描述。
 
+### [Unreleased]
+- Changed：对齐为 FastAPI 架构 `/api/v1` 端点；补齐 HSAI 核心 API（ADR-2025-10-17-003）。
+- Removed：过时的 Flask/Blueprint `/system/*` 模板描述。
+- Fixed：更新 PostgreSQL 初始化脚本 `function` 表列类型，与 ORM 保持一致并消除布尔比较错误（参见 FIX-2025-10-21-Function-Boolean）。
 ### [2025-10-21]
 - Added��`scripts/sqlite_to_postgres_sync.py` �� SQLite -> PostgreSQL ͬ���ű��������ɱ��� Markdown ���桢Batch/Backup/Strict ѡ�
 - Added��WIKI ��运维/ADR/E2E SOP �����и���，������ͬ���ű�ʹ��·����ļ��ԱȽű����ع��淶��
