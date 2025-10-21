@@ -6,7 +6,7 @@ from datetime import datetime
 import time
 
 # SQLite数据库路径
-SQLITE_DB_PATH = 'd:/Work/hsch/open-webui/backend/data/webui.db'
+SQLITE_DB_PATH = 'C:/work/open-webui/backend/data/webui.db'
 
 # PostgreSQL数据库连接配置
 PG_HOST = "pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com"
