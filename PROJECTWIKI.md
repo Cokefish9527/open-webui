@@ -15,11 +15,11 @@ HSAI 后台管理系统采用 FastAPI + Pydantic + SQLAlchemy 实现，统一以
 ```mermaid
 flowchart LR
   Client[Client / Frontend] -->|HTTP JSON| API[FastAPI App]
-  API --> AUTH[utils/auth.py\n鉴权/令牌/角色]
+  API --> AUTH[utils/auth.py\n��Ȩ/����/��ɫ]
   subgraph Routers
-    RC[routers/hsai_companies.py\n公司]
-    RP[routers/hsai_projects.py\n项目]
-    RT[routers/hsai_tasks.py\n任务]
+    RC[routers/hsai_companies.py\n��˾]
+    RP[routers/hsai_projects.py\n��Ŀ]
+    RT[routers/hsai_tasks.py\n����]
   end
   API --> RC
   API --> RP
@@ -34,13 +34,21 @@ flowchart LR
   RT --> MT
   subgraph Infra
     DB[(SQLAlchemy / PostgreSQL)]
-    REDIS[(Redis 信号/队列)]
+    REDIS[(Redis �ź�/����)]
+  end
+  subgraph Migration
+    SQLITE[(SQLite backend/data/webui.db)]
+    SYNC[scripts/sqlite_to_postgres_sync.py\nDB Sync]
+    REPORT[(migration_report_*.md)]
   end
   MC --> DB
   MP --> DB
   MT --> DB
-  API --> QH[utils/conversation_queue_handler.py\n队列处理/事件]
+  API --> QH[utils/conversation_queue_handler.py\n���д���/�¼�]
   QH --> REDIS
+  SQLITE --> SYNC
+  SYNC --> DB
+  SYNC --> REPORT
 ```
 
 节点与代码路径映射（节选）：
@@ -52,6 +60,9 @@ flowchart LR
 - 项目模型：`backend/open_webui/models/hsai_projects.py:1`
 - 任务模型：`backend/open_webui/models/hsai_tasks.py:1`
 - 鉴权与当前用户：`backend/open_webui/utils/auth.py:210`
+- SQLite 数据库文件：`backend/data/webui.db`
+- 同步脚本：`scripts/sqlite_to_postgres_sync.py`
+- 迁移报告产物：`migration_report_*.md`（脚本执行后生成）
 
 ### 关键流程（创建项目自动生成主线任务）
 ```mermaid
@@ -243,25 +254,37 @@ flowchart TB
 - `MIGRATION_BATCH_SIZE`（可选）：迁移脚本的批插入大小，默认 1000。
 - 依赖：`psycopg2` 作为 PostgreSQL 驱动，随 `requirements.txt` 安装。
 
-### SQLite → PostgreSQL 迁移 SOP
-1. **备份**：在 RDS 上执行逻辑备份，例如
+### SQLite -> PostgreSQL ͬ���ű� SOP
+1. **��������**��Ϊ������ `.env` ��ϵͳ����������������`POSTGRES_HOST/PORT/DB/USER/PASSWORD` ��ѡ�� `DATABASE_URL`�����Ƽ���ͬʱ���� `DATABASE_SCHEMA` (Ĭ�� public)���ڵ��ڱ��ݱ��棬ָ�� `--backup-dir` Ǩ��ǰ���� SQLite `.dump` �� PostgreSQL `pg_dump`��
+2. **Dry-Run У��**��
    ```bash
-   pg_dump "postgresql://<user>:<password>@<host>:5432/Owen_ai" --format=custom --file=backup_before_pg_switch.dump
+   POSTGRES_HOST=<host> POSTGRES_PORT=5432 POSTGRES_DB=Owen_ai \
+   POSTGRES_USER=hsai POSTGRES_PASSWORD=**** \
+   python scripts/sqlite_to_postgres_sync.py --dry-run --verbose --sqlite-path backend/data/webui.db
    ```
-2. **预演（Dry-Run）**：建议在本地或测试库创建临时实例，先执行初始化脚本验证兼容性与耗时，再进行正式重置。
+   Dry-run ģʽ��ֻ�����������������ƣ��� PostgreSQL ����ת��ʵִ�С�WIKI �ᱣ����ɫǨ�ƽű��Ϣ��
+3. **ʵ��Ǩ��**��ȷ�� Dry-run û���������󣬽���ʵִ�У�Ĭ������ `recreate` ģʽ��DROP ������ͬ������
+   ```bash
+   POSTGRES_HOST=<host> POSTGRES_PORT=5432 POSTGRES_DB=Owen_ai \
+   POSTGRES_USER=hsai POSTGRES_PASSWORD=**** \
+   python scripts/sqlite_to_postgres_sync.py --batch-size 2000 --backup-dir backups/db --report-dir .
    ```
-3. **执行初始化脚本**：通过新导出的 PostgreSQL 初始化脚本重建库结构与数据。
-   - `backend/sql/sqlite_dump_raw.sql`：原始 SQLite 全量导出文件，仅作留档。
-   - `backend/sql/postgresql_init_from_sqlite.sql`：已按 PostgreSQL 语法整理，可在空库上直接执行。
-   - 建议命令：
-     ```bash
-     psql "$DATABASE_URL" -f backend/sql/postgresql_init_from_sqlite.sql
-     ```
-     执行前务必完成备份，执行后核对关键表行数与序列值。
-4. **验收**：对比 companies/auth/user/hsai_projects/hsai_tasks 等核心表行数，抽查 JSON/时间戳字段；启动 `/api/v1/hsai/projects` 与 `/api/v1/hsai/tasks` 读写冒烟。
-5. **回滚**：若迁移失败，使用步骤 1 的备份恢复，将 `.env` 改回 SQLite URL；必要时重新导入 PostgreSQL。
-
-
+   - ���ݶ�ȡ�� SQLite `backend/data/webui.db`
+   - ���ݷ���：PostgreSQL `Owen_ai`�� schema ע���� `--schema` ��������
+   - �ű�����������Դ������Boolean/Timestamp/JSON �ֶκ͹ؼ������С�
+4. **�����鿴**��ִ����ɺ�Ĭ��Ҫ���ɵ� `migration_report_<timestamp>.md` ���ڸ�Ŀ¼����������������Ϣ�����鿴��صĲ鿴������ָ����
+   - �����������С����ر��Ӽ�¼����ڴ������/������־
+   - �ű����Զ�����索��/ΨһԼ����ǰ��Ľ�ɫ״̬��
+5. **�ع����Ի���**��
+   - ����`--backup-dir` ���������ԭ�� SQLite �� PostgreSQL ���ݱ��棻
+   - �ع��某�������� `TRUNCATE TABLE "<schema>"."<table>" CASCADE;` ����Ŀ���б��ٷ���ͬ����
+   - ʹ�� `--strict` ѡ�������Ƚ���Ǩ��ʱ���ף�������ⷢ����Ӱ�췢���ԭ�мƻ��
+6. **����֤����ű�**��Ǩ��֮����ִ��
+   ```bash
+   sqlite3 backend/data/webui.db "SELECT COUNT(*) FROM <table>;"
+   psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM "<table>";"
+   ```
+   �ԱȾ���ͳ�ƣ�״̬������������ WIKI Ǩ�Ʊ����¾���
 ### 监控与运维要点
 - PostgreSQL 连接池参数由 `DATABASE_POOL_*` 环境变量控制（见 `open_webui/internal/db.py`），默认 NullPool，生产环境建议显式配置。
 - `session_replication_role` 在迁移期间切换为 `replica`；若迁移异常退出，请确认已手动恢复为 `origin`。
@@ -275,6 +298,12 @@ flowchart TB
   - 影响：运行环境需开放 PostgreSQL 网络权限；SQLite 工具脚本转为只读；迁移脚本会覆盖所有表并重置序列。
   - 验证：在测试库执行 `psql "$DATABASE_URL" -f backend/sql/postgresql_init_from_sqlite.sql`，核对关键表行数与 `pg_get_serial_sequence` 结果后再切换生产。
   - 回滚：使用 `pg_dump` 备份恢复；将 `DATABASE_URL` 改回 SQLite；必要时重新导入 PostgreSQL 数据。
+- ADR-2025-10-21-004��SQLite -> PostgreSQL ͬ���ű�（`scripts/sqlite_to_postgres_sync.py`）
+  - ������������ܹ�һ����ʼ���ű�ͨ�� DROP/CREATE �ḻ����΢�ӡ��ű���ҵ���Ǩ���ڼ�Ҫ�Աȱ���������JSON/BOOLEAN/TIMESTAMP ����������
+  - ������ƶ��� Python ִ���ű��������� SQLite �йأ�ͳһ�� `sqlalchemy` ������֧�֣���ѡ������ PostgreSQL �������ڼ��������Խ������Ӧ�ó���
+  - Ӱ�죺���� WIKI ������ɢ�ű���ظģ�ʹ�� CLI ������һ�ֶ�ѡ������ PS �� CI ����ͨ��，�����ٷ��� 10 ����ʵʱ������；Ǩ��ǰ���Զ�����备��，Ǩ����ɺŷ��� Markdown ������¼
+  - ��֤��Dry-run ģʽ������ Ping RDS ���ӡ�֮����� `python scripts/sqlite_to_postgres_sync.py --dry-run` �� `python scripts/sqlite_to_postgres_sync.py --backup-dir backups/db` ִ�����ɹ������������ܶȼ�����count() �ԱȺ���索�������У�顣
+  - �ع���ʹ�� report ��¼��备��·���������µ��� `.dump` �� `pg_restore` ��������ȫ�����лָ����ִ�еڶ���ʱ��ѡ������ `--strict` ȷ�����д�����ֶ�ȫ��
 
 - FIX-2025-10-21-Function-Boolean：`function.is_active`/`is_global` 与 ORM 布尔定义统一
   - 根因：SQLite 初始化脚本遗留 `INTEGER`，在 PostgreSQL 中与 SQLAlchemy 的 `BOOLEAN` 定义冲突。
@@ -332,6 +361,8 @@ flowchart TB
 - Removed：过时的 Flask/Blueprint 与 `/system/*` 模板描述。
 
 ### [2025-10-21]
+- Added��`scripts/sqlite_to_postgres_sync.py` �� SQLite -> PostgreSQL ͬ���ű��������ɱ��� Markdown ���桢Batch/Backup/Strict ѡ�
+- Added��WIKI ��运维/ADR/E2E SOP �����и���，������ͬ���ű�ʹ��·����ļ��ԱȽű����ع��淶��
 - Added：新增 `backend/sql/postgresql_init_from_sqlite.sql`（及 `backend/sql/sqlite_dump_raw.sql` 存档）作为 SQLite → PostgreSQL 的全量初始化脚本。
 - Changed：`DATABASE_URL` 默认指向 PostgreSQL，并同步更新 `.env`、`backend/.env`、Windows 启动脚本及文档说明；初始化脚本对 `user`、`"group"` 等新增列保持一致。
 - Fixed：初始化脚本在导入阶段会重置关键序列，避免后续插入冲突。
