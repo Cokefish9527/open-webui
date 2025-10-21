@@ -328,11 +328,24 @@ flowchart TB
   - 验证：执行脚本后，通过 `\d "hsai_video_learning_status"` 与 `SELECT created_at FROM hsai_video_learning_status LIMIT 1;` 检查列类型与样例数据。
   - 回滚：重新导入 SQLite 备份或手工 `to_timestamp` 转换，谨慎使用。
 
+
 - OPS-2025-10-21-No-Peewee-Migration：停用自动迁移，改为手工 SQL 管控
   - 决策：移除 `backend/open_webui/internal/db.py` 中的 Peewee Router 调用，彻底依赖手工初始化脚本。
   - 影响：版本演进需维护 `backend/sql/postgresql_init_from_sqlite.sql`，并在 PR 中提供执行步骤；旧版 `internal/migrations` 仅作为历史参考。
   - 验证：应用启动时不再访问 Peewee 迁移目录；数据库结构取决于人工执行的 SQL。
 
+- OPS-2025-10-21-Reset-Default-Passwords：批量重置默认密码
+  - 背景：PostgreSQL 切换后多账号口令不一致，运维期望统一默认密码以便重新分发。
+  - 脚本：新增 `scripts/reset_all_passwords.py`，复用 `open_webui.utils.auth.get_password_hash` 生成 bcrypt 哈希，并通过 SQLAlchemy 更新 `auth` 全量记录。
+  - 操作：设置 `DATABASE_URL`（指向目标实例，必要时可用 `RESET_PASSWORD_DEFAULT` 覆盖默认口令），执行 `backend/venv/Scripts/python.exe scripts/reset_all_passwords.py`。
+  - 验证：`SELECT email, password FROM auth` 后使用 `passlib` 校验 `hsai1234` 返回 `True`；登录接口 `POST /api/v1/auths/signin` 需成功。
+  - 测试工具：`websocket-test.html`（`DEFAULT_LOGIN_CREDENTIALS`）与 `tool/test_websocket_connection.py` 默认使用 `saiter2306001@163.com / hsai1234`，若重置口令需同步更新上述脚本避免自动登录 401。
+  - 诊断：`tool/login_diagnose.py` 可模拟前端请求并比对 `verify_password`、`Auths.authenticate_user` 结果，输出真实哈希以确认登录失败是否由凭据漂移引起；若缺失 `user` 行，可用 `scripts/ensure_user_from_auth.py --email xxx` 补齐。
+  - 风险：统一密码仅用于临时运维，需尽快要求用户自行修改；执行脚本前应备份数据库并在低峰时段操作。
+- FIX-2025-10-21-User-Timestamps：PostgreSQL `user` 表将 `created_at/updated_at/last_active_at` 存储为 `TIMESTAMP`，导致 `Users.get_user_by_email()` 返回 `None`。
+  - 根因：`UserModel` 仍按 BigInt（Unix 时间戳）验证，Pydantic 在模型校验阶段抛错并被原函数吞掉，最终引发登录接口 400。
+  - 修复：`backend/open_webui/models/users.py:model_validate` 新增统一归一逻辑（将 `datetime` → `int`），兼容混合数据，入参既可为 SQLAlchemy 对象也可为字典。
+  - 工具：新增 `tool/show_user_rows.py` 查看指定邮箱的 `user` 行；`scripts/ensure_user_from_auth.py` 支持从 `auth` 表回填缺失的用户元数据。
 - ADR-2025-10-17-003：WIKI 与代码对齐（从 Flask/Blueprint 文档迁移到 FastAPI/Router）
   - 背景：历史文档描述了 `/system/*` 路由与 Jinja 模板，但当前工程为 FastAPI REST API（`/api/v1`）。
   - 变更：重写架构/流程/数据模型与 API 手册，删除过时 Blueprint 叙述；补齐分页与鉴权约定。
@@ -369,6 +382,7 @@ flowchart TB
 
 
 ### [Unreleased]
+- Security：新增 `scripts/reset_all_passwords.py` 支持批量重置 `auth` 密码；PostgreSQL 实例统一默认口令为 `hsai1234`，执行后需督促用户修改个人密码。
 - Changed：对齐为 FastAPI 架构 `/api/v1` 端点；补齐 HSAI 核心 API（ADR-2025-10-17-003）。
 - Removed：过时的 Flask/Blueprint `/system/*` 模板描述。
 - Fixed：更新 PostgreSQL 初始化脚本 `function` 表列类型，与 ORM 保持一致并消除布尔比较错误（参见 FIX-2025-10-21-Function-Boolean）。

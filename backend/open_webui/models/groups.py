@@ -140,20 +140,22 @@ class GroupTable:
 
     def get_groups_by_member_id(self, user_id: str, organization_id: Optional[str] = None) -> List[GroupModel]:
         with get_db() as db:
-            query = db.query(Group).filter(
-                func.json_array_length(Group.user_ids) > 0
-            ).filter(
-                Group.user_ids.cast(String).like(f'%"{user_id}"%')
-            )
-            
-            # 如果指定了组织ID，只返回该组织的组
+            query = db.query(Group).filter(Group.user_ids.isnot(None))
+
             if organization_id:
                 query = query.filter_by(organization_id=organization_id)
-                
-            return [
-                GroupModel.model_validate(group)
-                for group in query.order_by(Group.updated_at.desc()).all()
-            ]
+
+            groups: List[GroupModel] = []
+            for group in query.order_by(Group.updated_at.desc()).all():
+                try:
+                    group_model = GroupModel.model_validate(group)
+                except Exception:
+                    continue
+
+                if group_model.user_ids and user_id in group_model.user_ids:
+                    groups.append(group_model)
+
+            return groups
 
     def get_group_by_id(self, id: str) -> Optional[GroupModel]:
         try:

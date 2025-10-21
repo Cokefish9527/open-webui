@@ -70,6 +70,31 @@ class CreditModel(BaseModel):
     updated_at: int = Field(default_factory=lambda: int(time.time()))
     created_at: int = Field(default_factory=lambda: int(time.time()))
 
+    @classmethod
+    def _to_epoch(cls, value):
+        from datetime import datetime
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        return value
+
+    @classmethod
+    def model_validate(cls, value, *args, **kwargs):
+        if value is None:
+            return super().model_validate(value, *args, **kwargs)
+        if isinstance(value, dict):
+            data = dict(value)
+        else:
+            data = {
+                "id": getattr(value, "id", None),
+                "user_id": getattr(value, "user_id", None),
+                "credit": getattr(value, "credit", None),
+                "updated_at": getattr(value, "updated_at", None),
+                "created_at": getattr(value, "created_at", None),
+            }
+        data["updated_at"] = cls._to_epoch(data.get("updated_at"))
+        data["created_at"] = cls._to_epoch(data.get("created_at"))
+        return super().model_validate(data, *args, **kwargs)
+
 
 class CreditLogModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)

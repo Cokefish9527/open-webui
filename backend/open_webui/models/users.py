@@ -1,5 +1,6 @@
 import time
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
+from datetime import datetime
 
 from open_webui.internal.db import Base, JSONField, get_db
 
@@ -85,6 +86,47 @@ class UserModel(BaseModel):
     oauth_sub: Optional[str] = Field(default=None, description="OAuth子标识符")
 
     model_config = ConfigDict(from_attributes=True, extra="allow")
+
+    @classmethod
+    def _to_epoch(cls, value: Any) -> Any:
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+        return value
+
+    @classmethod
+    def _coerce_source(cls, value: Any) -> Dict[str, Any]:
+        if isinstance(value, dict):
+            data = dict(value)
+        else:
+            attr_names = [
+                "id",
+                "name",
+                "email",
+                "role",
+                "profile_image_url",
+                "last_active_at",
+                "updated_at",
+                "created_at",
+                "api_key",
+                "settings",
+                "info",
+                "info_collection_completed",
+                "business_name",
+                "company_id",
+                "organization_id",
+                "is_super_admin",
+                "is_org_admin",
+                "oauth_sub",
+            ]
+            data = {key: getattr(value, key, None) for key in attr_names}
+        for key in ("last_active_at", "updated_at", "created_at"):
+            data[key] = cls._to_epoch(data.get(key))
+        return data
+
+    @classmethod
+    def model_validate(cls, value, *args, **kwargs):
+        coerced = cls._coerce_source(value)
+        return super().model_validate(coerced, *args, **kwargs)
 
 
 ####################

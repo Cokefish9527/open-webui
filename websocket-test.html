@@ -402,6 +402,11 @@
     </div>
 
     <script>
+        const DEFAULT_LOGIN_CREDENTIALS = Object.freeze({
+            email: "saiter2306001@163.com",
+            password: "hsai1234"
+        });
+
         class SocketIOClient {
             constructor() {
                 this.socket = null;
@@ -413,11 +418,8 @@
                 this.displayedMessages = []; // 存储已显示的消息类型
                 this.currentMessageCount = 0; // 当前显示的消息数量
                 
-                // 预设的登录凭据
-                this.loginCredentials = {
-                    email: "saiter2306@163.com",
-                    password: "123456"
-                };
+                // 预设的登录凭据（保持与 auth 表默认管理员一致）
+                this.loginCredentials = { ...DEFAULT_LOGIN_CREDENTIALS };
                 
                 // 获取DOM元素
                 this.userIdInput = document.getElementById('userId');
