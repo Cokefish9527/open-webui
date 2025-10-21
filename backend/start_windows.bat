@@ -91,9 +91,7 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 echo 配置环境变量...
 set "PYTHONPATH=%CD%;%PYTHONPATH%"
 set "DATA_DIR=%CD%\data"
-:: 修复Windows系统上的SQLite数据库URL格式
-set "DATABASE_URL=sqlite:///%CD:\=/%/data/webui.db"
-set "DATABASE_URL=%DATABASE_URL:\=/%"
+set "DATABASE_URL=postgresql://hsai:c5agLR^%29ah28vnA3+^%25Yyn@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/Owen_ai"
 echo 设置PYTHONPATH: %CD%
 echo 设置DATA_DIR: %DATA_DIR%
 echo 设置DATABASE_URL: %DATABASE_URL%

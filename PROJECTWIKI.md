@@ -7,6 +7,8 @@
 
 HSAI 后台管理系统采用 FastAPI + Pydantic + SQLAlchemy 实现，统一以 `/api/v1` 为后端 API 前缀。业务核心域包括：公司（companies）、项目（hsai_projects）与任务（hsai_tasks）。所有接口默认要求鉴权（Bearer JWT 或 `sk-` 前缀 API Key，受端点白名单限制）。
 
+数据库默认连接托管的 PostgreSQL（RDS），通过 `.env` 与 `backend/.env` 中的 `DATABASE_URL`、可选的 `DATABASE_SCHEMA` 管理；`backend/sql/migrate_sqlite_to_postgresql_final.py` 提供 SQLite→PostgreSQL 的迁移与重放脚本，支持 dry-run、批量大小、跳过 TRUNCATE/序列校准等参数。
+
 ## 架构设计
 
 ### 总览图
@@ -31,7 +33,7 @@ flowchart LR
   RP --> MP
   RT --> MT
   subgraph Infra
-    DB[(SQLAlchemy / SQLite)]
+    DB[(SQLAlchemy / PostgreSQL)]
     REDIS[(Redis 信号/队列)]
   end
   MC --> DB
@@ -233,7 +235,46 @@ flowchart TB
   API --> AUTH[Auth/JWT/APIKey]
 ```
 
+## 运维
+
+### 数据库配置（PostgreSQL）
+- `DATABASE_URL`：根目录 `.env` 与 `backend/.env` 的主配置项，指向阿里云 RDS PostgreSQL；Windows 批处理脚本 `backend/start_windows.bat` 与 `backend/start_with_env.py` 会在未设置时注入同一 URL。
+- `DATABASE_SCHEMA`（可选）：默认 `public`。如需多租户/逻辑隔离，可在 `.env` 中声明并同步更新 Alembic/脚本参数。
+- `MIGRATION_BATCH_SIZE`（可选）：迁移脚本的批插入大小，默认 1000。
+- 依赖：`psycopg2` 作为 PostgreSQL 驱动，随 `requirements.txt` 安装。
+
+### SQLite → PostgreSQL 迁移 SOP
+1. **备份**：在 RDS 上执行逻辑备份，例如
+   ```bash
+   pg_dump "postgresql://<user>:<password>@<host>:5432/Owen_ai" --format=custom --file=backup_before_pg_switch.dump
+   ```
+2. **预演（Dry-Run）**：确认表清单与预计行数
+   ```bash
+   python backend/sql/migrate_sqlite_to_postgresql_final.py --dry-run
+   ```
+3. **执行迁移**：脚本会依次 `TRUNCATE … RESTART IDENTITY CASCADE`、暂时关闭外键、批量导入、重置序列
+   ```bash
+   python backend/sql/migrate_sqlite_to_postgresql_final.py --yes
+   ```
+   - 常用参数：`--skip-truncate`、`--skip-sequence-reset`、`--tables`/`--exclude-tables`、`--batch-size 500`。
+   - 2025-10-21：PostgreSQL 已补齐 `user.organization_id`、`user.is_super_admin`、`user.is_org_admin`、`user.credit_balance` 与 `"group".organization_id` 列，脚本会自动写入这些字段，避免再次丢失。
+4. **验收**：对比 companies/auth/user/hsai_projects/hsai_tasks 等核心表行数，抽查 JSON/时间戳字段；启动 `/api/v1/hsai/projects` 与 `/api/v1/hsai/tasks` 读写冒烟。
+5. **回滚**：若迁移失败，使用步骤 1 的备份恢复，将 `.env` 改回 SQLite URL；必要时重新导入 PostgreSQL。
+
+
+### 监控与运维要点
+- PostgreSQL 连接池参数由 `DATABASE_POOL_*` 环境变量控制（见 `open_webui/internal/db.py`），默认 NullPool，生产环境建议显式配置。
+- `session_replication_role` 在迁移期间切换为 `replica`；若迁移异常退出，请确认已手动恢复为 `origin`。
+- 保留 `backend/data/webui.db` 仅用于旧数据分析脚本；后续脚本应通过 SQLAlchemy/psycopg2 直接访问 PostgreSQL。
+
 ## 设计决策 & 技术债务/缺陷复盘
+
+- ADR-2025-10-21-001：核心数据库切换至 PostgreSQL 并补齐用户/组织结构
+  - 背景：SQLite 在并发写入、权限隔离和连接池管理方面受限；阿里云 RDS PostgreSQL 已启用，需要统一迁移并同步历史字段。
+  - 变更：统一 `.env`、`backend/.env`、Windows 启动脚本的 `DATABASE_URL`；重写迁移脚本支持批量迁移、序列校准；在 PostgreSQL 中新增 `user.organization_id`、`user.is_super_admin`、`user.is_org_admin`、`user.credit_balance` 与 `"group".organization_id` 列；WIKI 与 Mermaid 图更新为 PostgreSQL 架构。
+  - 影响：运行环境需开放 PostgreSQL 网络权限；SQLite 工具脚本转为只读；迁移脚本会覆盖所有表并重置序列。
+  - 验证：依次执行 `python backend/sql/migrate_sqlite_to_postgresql_final.py --dry-run` 与 `--yes`，核对核心表行数与 `pg_get_serial_sequence` 结果，启动核心 API 冒烟。
+  - 回滚：使用 `pg_dump` 备份恢复；将 `DATABASE_URL` 改回 SQLite；必要时重新导入 PostgreSQL 数据。
 
 - ADR-2025-10-17-003：WIKI 与代码对齐（从 Flask/Blueprint 文档迁移到 FastAPI/Router）
   - 背景：历史文档描述了 `/system/*` 路由与 Jinja 模板，但当前工程为 FastAPI REST API（`/api/v1`）。
@@ -273,3 +314,7 @@ flowchart TB
 - Changed：对齐为 FastAPI 架构与 `/api/v1` 端点；补齐 HSAI 核心域 API（ADR-2025-10-17-003）。
 - Removed：过时的 Flask/Blueprint 与 `/system/*` 模板描述。
 
+### [2025-10-21]
+- Added：`backend/sql/migrate_sqlite_to_postgresql_final.py` 支持按环境参数、批量插入、序列校准与 dry-run。
+- Changed：`DATABASE_URL` 默认指向 PostgreSQL，并同步更新 `.env`、`backend/.env`、Windows 启动脚本及文档说明；PostgreSQL 新增 `user`/`"group"` 缺失列，与 SQLite 结构对齐。
+- Fixed：迁移脚本自动重置 PostgreSQL 序列，避免新增记录主键冲突。
