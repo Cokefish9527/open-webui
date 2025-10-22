@@ -7,9 +7,14 @@ from enum import Enum
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
+
+from ._timestamp_utils import (
+    normalize_optional_timestamp,
+    normalize_required_timestamp,
+)
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -217,6 +222,27 @@ class HSAITaskModel(BaseModel):
     updated_at: int = Field(description="更新时间戳")
 
 
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_required_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
+
+    @field_validator("started_at", "completed_at", mode="before")
+    @classmethod
+    def validate_optional_timestamps(cls, value):
+        if value is None:
+            return None
+        try:
+            return normalize_optional_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid optional timestamp value: {exc}") from exc
+
 class HSAIWorkflowModel(BaseModel):
     """HSAI工作流模型"""
     model_config = ConfigDict(from_attributes=True)
@@ -235,6 +261,27 @@ class HSAIWorkflowModel(BaseModel):
     tags: Optional[List[str]] = Field(default=None, description="标签列表")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
+
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_workflow_required_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
+
+    @field_validator("last_executed_at", mode="before")
+    @classmethod
+    def validate_workflow_optional_timestamp(cls, value):
+        if value is None:
+            return None
+        try:
+            return normalize_optional_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid optional timestamp value: {exc}") from exc
 
 
 class HSAICardModel(BaseModel):
@@ -259,6 +306,17 @@ class HSAICardModel(BaseModel):
     sort_order: int = Field(default=0, description="排序和显示")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
+
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_card_required_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
 
 
 ####################

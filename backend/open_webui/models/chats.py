@@ -8,10 +8,12 @@ from open_webui.internal.db import Base, get_db
 from open_webui.models.tags import TagModel, Tag, Tags
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Boolean, Column, String, Text, JSON
 from sqlalchemy import or_, func, select, and_, text
 from sqlalchemy.sql import exists
+
+from ._timestamp_utils import normalize_required_timestamp
 
 ####################
 # Chat DB Schema
@@ -56,6 +58,17 @@ class ChatModel(BaseModel):
     pinned: Optional[bool] = Field(default=False, description="是否置顶")
     meta: dict = Field(default={}, description="元数据")
     folder_id: Optional[str] = Field(default=None, description="文件夹ID")
+
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_required_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
 
 
 ####################

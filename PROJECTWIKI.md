@@ -1,4 +1,4 @@
-# HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
+﻿# HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
 > 一等公民 · 与主干代码保持持续一致（UTF-8）
 
 更新时间：2025-10-22（与 main 同步）
@@ -337,6 +337,12 @@ flowchart TB
   - 验证：`python -m compileall backend/open_webui/models/{hsai_materials.py,hsai_video_learning_status.py,_timestamp_utils.py}` 通过；重启后上述接口返回非空数据且日志无 `type=int_type`；可在 SQL 执行 `SELECT created_at FROM hsai_materials LIMIT 1;`，确认接口 JSON 与数据库秒级值一致。
   - 回滚：删除 `_timestamp_utils.py` 引用并移除新增 `field_validator` 即可恢复旧行为（会重新暴露 Pydantic 报错）；必要时保留问题样本用于进一步诊断数据源。
 
+- FIX-2025-10-22-HSAI-Timestamp-Expansion：任务/聊天及公共模型时间戳归一化
+  - 背景：2025-10-22 早间 `/api/v1/hsai/tasks/*`、`/api/v1/hsai/dashboard/recent-activities` 等接口继续返回 `ValidationError(type=int_type)`；`BillingConfigModel`、`GroupModel`、`ToolModel` 等通用模型同样存在 `datetime` → `int` 漂移风险。
+  - 修复：在 `backend/open_webui/models/{hsai_tasks.py,chats.py,hsai_companies.py,hsai_projects.py,hsai_video_learning_log.py,hsai_viral_videos.py,billing_config.py,credits.py,feedbacks.py,functions.py,groups.py,organizations.py,redis_queue_messages.py,tools.py}` 引入 `_timestamp_utils.py` 的 `normalize_required_timestamp/normalize_optional_timestamp` 校验器；新增 `tool/check_timestamp_consistency.py` 自动化扫描缺失归一化的模型。
+  - 验证：`python -m compileall backend/open_webui/models`；`python tool/check_timestamp_consistency.py` 应输出 “All inspected models …”；可在服务启动后执行 `python tool/test_hsai_endpoints.py --base-url http://localhost:8080/api/v1 --token <Bearer>`，逐一确认 HSAI GET 接口 2xx。
+  - 影响：所有引用上述模型的路由现在接受 `int|float|datetime|ISO 字符串` 输入；若下游仍依赖毫秒精度需自行扩展 `_timestamp_utils`；新测试脚本默认检查分页参数 `pi`/`ps`，如需更多端点可扩展 `DEFAULT_ENDPOINTS`。
+  - 回滚：移除新增的 `field_validator` 装饰器并删除 `_timestamp_utils` 引用即可恢复旧行为（会重新触发 Pydantic 报错）；测试脚本可自行清理。
 - OPS-2025-10-21-No-Peewee-Migration：停用自动迁移，改为手工 SQL 管控
   - 决策：移除 `backend/open_webui/internal/db.py` 中的 Peewee Router 调用，彻底依赖手工初始化脚本。
   - 影响：版本演进需维护 `backend/sql/postgresql_init_from_sqlite.sql`，并在 PR 中提供执行步骤；旧版 `internal/migrations` 仅作为历史参考。
@@ -402,3 +408,4 @@ flowchart TB
 - Fixed：初始化脚本在导入阶段会重置关键序列，避免后续插入冲突。
 - Fixed：`function` 与 `hsai_video_learning_status` 相关列在初始化脚本中已按 BOOLEAN/BIGINT 正确建模，解决运行时类型冲突。
 - Removed：启动流程不再执行 Peewee Router，数据库结构完全由 SQL 脚本人工维护。
+

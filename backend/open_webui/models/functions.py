@@ -7,8 +7,9 @@ from typing import Optional, List
 from open_webui.internal.db import Base, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Boolean, Column, Text, String, JSON
+from ._timestamp_utils import normalize_required_timestamp
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -53,6 +54,17 @@ class FunctionModel(BaseModel):
     is_global: bool = Field(default=False, description="是否全局可用")
     updated_at: int = Field(description="更新时间戳")
     created_at: int = Field(description="创建时间戳")
+
+    @field_validator("updated_at", "created_at", mode="before")
+    @classmethod
+    def validate_required_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
+
 
     model_config = ConfigDict(from_attributes=True)
 

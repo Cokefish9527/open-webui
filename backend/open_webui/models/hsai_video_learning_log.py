@@ -5,8 +5,10 @@ from typing import Optional, List
 from open_webui.internal.db import Base, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Integer, Text
+
+from ._timestamp_utils import normalize_required_timestamp
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -53,6 +55,17 @@ class HSAIVideoLearningLogModel(BaseModel):
     # Timestamps
     created_at: int = Field(description="Creation timestamp")
     updated_at: int = Field(description="Update timestamp")
+
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_required_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
 
 
 class HSAIVideoLearningLogForm(BaseModel):

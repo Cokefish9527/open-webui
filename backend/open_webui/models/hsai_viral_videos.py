@@ -7,8 +7,13 @@ from enum import Enum
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON, Boolean, Integer
+
+from ._timestamp_utils import (
+    normalize_optional_timestamp,
+    normalize_required_timestamp,
+)
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -91,6 +96,27 @@ class HSAIViralVideoModel(BaseModel):
     updated_at: int = Field(description="更新时间戳")
     processed_at: Optional[int] = Field(default=None, description="处理时间")
     learned_at: Optional[int] = Field(default=None, description="学习时间")
+
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_required_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
+
+    @field_validator("processed_at", "learned_at", mode="before")
+    @classmethod
+    def validate_optional_timestamps(cls, value):
+        if value is None:
+            return None
+        try:
+            return normalize_optional_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid optional timestamp value: {exc}") from exc
 
 
 class HSAIViralVideosTable:

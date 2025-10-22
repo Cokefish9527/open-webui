@@ -5,8 +5,9 @@ from typing import Optional
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.models.users import Users, UserResponse
 from open_webui.env import SRC_LOG_LEVELS
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON
+from ._timestamp_utils import normalize_required_timestamp
 
 from open_webui.utils.access_control import has_access
 
@@ -69,6 +70,17 @@ class ToolModel(BaseModel):
     access_control: Optional[dict] = Field(default=None, description="访问控制设置")
     updated_at: int = Field(description="更新时间戳")
     created_at: int = Field(description="创建时间戳")
+
+    @field_validator("updated_at", "created_at", mode="before")
+    @classmethod
+    def validate_required_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
+
 
     model_config = ConfigDict(from_attributes=True)
 

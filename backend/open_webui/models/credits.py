@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import List, Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import JSON, BigInteger, Column, Numeric, String
 
 import importlib.util
@@ -17,6 +17,7 @@ config_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(config_module)
 CREDIT_EXCHANGE_RATIO = config_module.CREDIT_EXCHANGE_RATIO
 from open_webui.internal.db import Base, get_db
+from ._timestamp_utils import normalize_required_timestamp
 
 
 ####################
@@ -103,6 +104,17 @@ class CreditLogModel(BaseModel):
     credit: Decimal = Field(default_factory=lambda: Decimal("0"))
     detail: dict = Field(default_factory=lambda: {})
     created_at: int = Field(default_factory=lambda: int(time.time()))
+
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def validate_credit_log_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
 
 
 class CreditLogUsage(BaseModel):
