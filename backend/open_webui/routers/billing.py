@@ -243,7 +243,7 @@ async def get_api_usage_logs(
         offset = (pi - 1) * ps
         
         # 如果不是管理员用户，只能查看自己的记录
-        target_user_id = user_id if user_id and await get_admin_user(user) else user.id
+        target_user_id = user_id if user_id and get_admin_user(user) else user.id
         
         logs = APIUsageLogs.get_logs_by_user_id(
             user_id=target_user_id,
@@ -329,7 +329,7 @@ async def get_api_usage_logs_by_session(
             if first_log.user_id != user.id:
                 # 检查是否是管理员
                 try:
-                    await get_admin_user(user)
+                    get_admin_user(user)
                 except:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
@@ -363,7 +363,7 @@ async def get_total_credits_consumed_by_session(
             if first_log.user_id != user.id:
                 # 检查是否是管理员
                 try:
-                    await get_admin_user(user)
+                    get_admin_user(user)
                 except:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,

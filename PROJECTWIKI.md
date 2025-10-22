@@ -306,6 +306,11 @@ flowchart TB
   - �ع���ʹ�� report ��¼��备��·���������µ��� `.dump` �� `pg_restore` ��������ȫ�����лָ����ִ�еڶ���ʱ��ѡ������ `--strict` ȷ�����д�����ֶ�ȫ��
 
 
+- FIX-2025-10-22-Billing-AdminAwait?`get_admin_user` ???????????????? `await` ?? TypeError?
+  - ??????`GET /api/v1/billing/billing/usage-logs`?`GET /api/v1/billing/billing/usage-logs/session/{session_id}`?`GET /api/v1/billing/billing/usage-logs/session/{session_id}/total`????? `backend/open_webui/routers/billing.py:246`?`backend/open_webui/routers/billing.py:332`?`backend/open_webui/routers/billing.py:366`?
+  - ????? `await`??????? `get_admin_user(user)` ???????????????????????
+  - ???`python -m compileall backend/open_webui/routers/billing.py`?
+
 - FIX-2025-10-21-Function-Boolean：`function.is_active`/`is_global` ORM 布尔定义统一
   - 根因：SQLite 初始化脚本遗留 `INTEGER`，在 PostgreSQL 中与 SQLAlchemy 的 `BOOLEAN` 定义冲突。
   - 脚本调整：`backend/sql/postgresql_init_from_sqlite.sql` 现将 `meta`/`valves` 列定义为 JSON，`created_at`/`updated_at` 改为 BIGINT，并将 `is_active`/`is_global` 改为 BOOLEAN，全面与 ORM 模型保持一致。
