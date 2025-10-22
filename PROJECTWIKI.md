@@ -1,7 +1,7 @@
 # HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
 > 一等公民 · 与主干代码保持持续一致（UTF-8）
 
-更新时间：2025-10-21（与 main 同步）
+更新时间：2025-10-22（与 main 同步）
 
 ## 项目概述
 
@@ -328,6 +328,14 @@ flowchart TB
   - 验证：执行脚本后，通过 `\d "hsai_video_learning_status"` 与 `SELECT created_at FROM hsai_video_learning_status LIMIT 1;` 检查列类型与样例数据。
   - 回滚：重新导入 SQLite 备份或手工 `to_timestamp` 转换，谨慎使用。
 
+
+- FIX-2025-10-22-HSAI-Timestamp-Normalization：素材库/视频学习时间戳归一化
+  - 背景：PostgreSQL 同步后部分表字段实际存储 `timestamp`，而 ORM/Pydantic 仍按 Unix 秒整型定义，2025-10-21 起素材与视频学习接口频繁 500。
+  - 根因：`HSAIMaterialFolderModel`、`HSAIMaterialModel`、`HSAIMaterialTagModel`、`HSAIMaterialCategoryModel`、`HSAIFileOperationLogModel` 与 `HSAIVideoLearningStatusModel` 的 `created_at`/`updated_at` 等字段直接校验 SQLAlchemy `datetime`，触发 `ValidationError(type=int_type)`。
+  - 修复：新增 `backend/open_webui/models/_timestamp_utils.py`，统一 `normalize_required_timestamp`/`normalize_optional_timestamp`；在上述模型引入 `@field_validator`，支持 `int|float|datetime|ISO 字符串` 输入并下沉为秒级 Unix 时间戳。
+  - 影响：`/api/v1/hsai/materials/`、`/api/v1/hsai/material-folders/`、`/api/v1/hsai/video-learning/videos` 恢复 200 响应；后续含时间戳的模型需复用该工具，避免重复编写转换逻辑。
+  - 验证：`python -m compileall backend/open_webui/models/{hsai_materials.py,hsai_video_learning_status.py,_timestamp_utils.py}` 通过；重启后上述接口返回非空数据且日志无 `type=int_type`；可在 SQL 执行 `SELECT created_at FROM hsai_materials LIMIT 1;`，确认接口 JSON 与数据库秒级值一致。
+  - 回滚：删除 `_timestamp_utils.py` 引用并移除新增 `field_validator` 即可恢复旧行为（会重新暴露 Pydantic 报错）；必要时保留问题样本用于进一步诊断数据源。
 
 - OPS-2025-10-21-No-Peewee-Migration：停用自动迁移，改为手工 SQL 管控
   - 决策：移除 `backend/open_webui/internal/db.py` 中的 Peewee Router 调用，彻底依赖手工初始化脚本。

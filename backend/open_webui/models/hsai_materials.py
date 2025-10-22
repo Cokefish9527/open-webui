@@ -11,6 +11,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean, Integer
 from sqlalchemy.orm import relationship
 
+from ._timestamp_utils import (
+    normalize_optional_timestamp,
+    normalize_required_timestamp,
+)
+
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
@@ -187,6 +192,16 @@ class HSAIMaterialFolderModel(BaseModel):
             return None
         return v
 
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_required_timestamps(cls, value):
+        if value is None:
+            raise ValueError("Timestamp value cannot be None")
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
+
 
 class HSAIMaterialModel(BaseModel):
     """HSAI素材文件模型"""
@@ -223,6 +238,24 @@ class HSAIMaterialModel(BaseModel):
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_material_required_timestamps(cls, value):
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
+
+    @field_validator("last_used_at", "deleted_at", mode="before")
+    @classmethod
+    def validate_material_optional_timestamps(cls, value):
+        if value is None:
+            return None
+        try:
+            return normalize_optional_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid optional timestamp value: {exc}") from exc
+
 
 class HSAIMaterialTagModel(BaseModel):
     """HSAI素材标签模型"""
@@ -237,6 +270,14 @@ class HSAIMaterialTagModel(BaseModel):
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_tag_timestamps(cls, value):
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
+
 
 class HSAIMaterialCategoryModel(BaseModel):
     """HSAI素材分类模型"""
@@ -250,6 +291,14 @@ class HSAIMaterialCategoryModel(BaseModel):
     is_active: bool = Field(default=True, description="是否启用")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_category_timestamps(cls, value):
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
 
 
 class HSAIFileOperationLogModel(BaseModel):
@@ -267,6 +316,14 @@ class HSAIFileOperationLogModel(BaseModel):
     enterprise_id: Optional[str] = Field(default=None, description="企业ID")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
+
+    @field_validator("operation_time", "created_at", "updated_at", mode="before")
+    @classmethod
+    def validate_file_operation_timestamps(cls, value):
+        try:
+            return normalize_required_timestamp(value)
+        except ValueError as exc:
+            raise ValueError(f"Invalid timestamp value: {exc}") from exc
 
 
 ####################
