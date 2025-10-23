@@ -1,11 +1,11 @@
 import time
 import uuid
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import JSON, BigInteger, Column, Numeric, String
+from sqlalchemy import JSON, BigInteger, Column, Numeric, String, ForeignKey
 
 import importlib.util
 import os
@@ -18,6 +18,8 @@ spec.loader.exec_module(config_module)
 CREDIT_EXCHANGE_RATIO = config_module.CREDIT_EXCHANGE_RATIO
 from open_webui.internal.db import Base, get_db
 from ._timestamp_utils import normalize_required_timestamp
+from .hsai_companies import Companies
+from .users import Users
 
 
 ####################
@@ -30,6 +32,7 @@ class Credit(Base):
 
     id = Column(String, primary_key=True)
     user_id = Column(String, unique=True, nullable=False)
+    company_id = Column(String, ForeignKey("companies.id"), nullable=True, index=True)
     credit = Column(Numeric(precision=24, scale=12))
 
     updated_at = Column(BigInteger)
@@ -41,6 +44,7 @@ class CreditLog(Base):
 
     id = Column(String, primary_key=True)
     user_id = Column(String, index=True, nullable=False)
+    company_id = Column(String, ForeignKey("companies.id"), index=True, nullable=True)
     credit = Column(Numeric(precision=24, scale=12))
     detail = Column(JSON, nullable=True)
 
@@ -67,6 +71,7 @@ class CreditModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     user_id: str
+    company_id: Optional[str] = None
     credit: Decimal = Field(default_factory=lambda: Decimal("0"))
     updated_at: int = Field(default_factory=lambda: int(time.time()))
     created_at: int = Field(default_factory=lambda: int(time.time()))
@@ -88,6 +93,7 @@ class CreditModel(BaseModel):
             data = {
                 "id": getattr(value, "id", None),
                 "user_id": getattr(value, "user_id", None),
+                "company_id": getattr(value, "company_id", None),
                 "credit": getattr(value, "credit", None),
                 "updated_at": getattr(value, "updated_at", None),
                 "created_at": getattr(value, "created_at", None),
@@ -101,6 +107,7 @@ class CreditLogModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     user_id: str
+     company_id: Optional[str] = None
     credit: Decimal = Field(default_factory=lambda: Decimal("0"))
     detail: dict = Field(default_factory=lambda: {})
     created_at: int = Field(default_factory=lambda: int(time.time()))
@@ -162,12 +169,14 @@ class SetCreditFormDetail(BaseModel):
 
 class AddCreditForm(BaseModel):
     user_id: str
+    company_id: Optional[str] = None
     amount: Decimal
     detail: SetCreditFormDetail
 
 
 class SetCreditForm(BaseModel):
     user_id: str
+    company_id: Optional[str] = None
     credit: Decimal
     detail: SetCreditFormDetail
 
@@ -187,12 +196,44 @@ class TradeTicketModel(BaseModel):
 
 
 class CreditsTable:
-    def insert_new_credit(self, user_id: str) -> Optional[CreditModel]:
+    def _resolve_credit_owner(
+        self, user_id: Optional[str] = None, company_id: Optional[str] = None
+    ) -> Tuple[str, Optional[str]]:
+        resolved_user_id = user_id
+        resolved_company_id = company_id
+
+        if resolved_company_id is None and resolved_user_id:
+            user = Users.get_user_by_id(resolved_user_id)
+            if user and getattr(user, "company_id", None):
+                resolved_company_id = user.company_id
+                resolved_user_id = user.id
+
+        if resolved_company_id:
+            company = Companies.get_company_by_id(resolved_company_id)
+            if company and getattr(company, "owner_user_id", None):
+                resolved_user_id = company.owner_user_id
+                resolved_company_id = company.id
+
+        if resolved_user_id is None:
+            raise HTTPException(
+                status_code=400, detail="Unable to resolve company credit owner"
+            )
+
+        return resolved_user_id, resolved_company_id
+
+    def insert_new_credit(
+        self, user_id: str, company_id: Optional[str] = None
+    ) -> Optional[CreditModel]:
         from open_webui.config import CREDIT_DEFAULT_CREDIT
 
         try:
+            resolved_user_id, resolved_company_id = self._resolve_credit_owner(
+                user_id=user_id, company_id=company_id
+            )
             credit_model = CreditModel(
-                user_id=user_id, credit=Decimal(CREDIT_DEFAULT_CREDIT.value)
+                user_id=resolved_user_id,
+                company_id=resolved_company_id,
+                credit=Decimal(CREDIT_DEFAULT_CREDIT.value),
             )
             with get_db() as db:
                 result = Credit(**credit_model.model_dump())
@@ -205,18 +246,65 @@ class CreditsTable:
         except Exception:
             return None
 
-    def init_credit_by_user_id(self, user_id: str) -> CreditModel:
-        credit_model = self.get_credit_by_user_id(
-            user_id=user_id
-        ) or self.insert_new_credit(user_id=user_id)
+    def init_credit(
+        self, user_id: Optional[str], company_id: Optional[str]
+    ) -> CreditModel:
+        resolved_user_id, resolved_company_id = self._resolve_credit_owner(
+            user_id=user_id, company_id=company_id
+        )
+        credit_model: Optional[CreditModel]
+        if resolved_company_id:
+            credit_model = self.get_credit_by_company_id(resolved_company_id)
+        else:
+            credit_model = self.get_credit_by_user_id(resolved_user_id)
+
+        if credit_model is None:
+            credit_model = self.insert_new_credit(
+                user_id=resolved_user_id, company_id=resolved_company_id
+            )
+
         if credit_model is not None:
             return credit_model
+
         raise HTTPException(status_code=500, detail="credit initialize failed")
 
+    def init_credit_by_user_id(self, user_id: str) -> CreditModel:
+        return self.init_credit(user_id=user_id, company_id=None)
+
+    def init_credit_by_company_id(
+        self, company_id: str, fallback_user_id: Optional[str] = None
+    ) -> CreditModel:
+        return self.init_credit(user_id=fallback_user_id, company_id=company_id)
+
     def get_credit_by_user_id(self, user_id: str) -> Optional[CreditModel]:
+        resolved_user_id, resolved_company_id = self._resolve_credit_owner(
+            user_id=user_id
+        )
+        if resolved_company_id:
+            credit = self.get_credit_by_company_id(resolved_company_id)
+            if credit:
+                return credit
         try:
             with get_db() as db:
-                credit = db.query(Credit).filter(Credit.user_id == user_id).first()
+                credit = (
+                    db.query(Credit)
+                    .filter(Credit.user_id == resolved_user_id)
+                    .first()
+                )
+                return CreditModel.model_validate(credit)
+        except Exception:
+            return None
+
+    def get_credit_by_company_id(self, company_id: Optional[str]) -> Optional[CreditModel]:
+        if not company_id:
+            return None
+        try:
+            with get_db() as db:
+                credit = (
+                    db.query(Credit)
+                    .filter(Credit.company_id == company_id)
+                    .first()
+                )
                 return CreditModel.model_validate(credit)
         except Exception:
             return None
@@ -230,31 +318,42 @@ class CreditsTable:
             return []
 
     def set_credit_by_user_id(self, form_data: SetCreditForm) -> CreditModel:
-        credit_model = self.init_credit_by_user_id(user_id=form_data.user_id)
+        credit_model = self.init_credit(
+            user_id=form_data.user_id, company_id=form_data.company_id
+        )
         log = CreditLogModel(
-            user_id=form_data.user_id,
+            user_id=credit_model.user_id,
+            company_id=credit_model.company_id,
             credit=form_data.credit,
             detail=form_data.detail.model_dump(),
         )
         with get_db() as db:
             db.add(CreditLog(**log.model_dump()))
-            db.query(Credit).filter(Credit.user_id == credit_model.user_id).update(
-                {"credit": form_data.credit, "updated_at": int(time.time())},
+            db.query(Credit).filter(Credit.id == credit_model.id).update(
+                {
+                    "credit": form_data.credit,
+                    "updated_at": int(time.time()),
+                },
                 synchronize_session=False,
             )
             db.commit()
-        return self.get_credit_by_user_id(user_id=form_data.user_id)
+        return self.init_credit(
+            user_id=credit_model.user_id, company_id=credit_model.company_id
+        )
 
     def add_credit_by_user_id(self, form_data: AddCreditForm) -> Optional[CreditModel]:
-        credit_model = self.init_credit_by_user_id(user_id=form_data.user_id)
+        credit_model = self.init_credit(
+            user_id=form_data.user_id, company_id=form_data.company_id
+        )
         log = CreditLogModel(
-            user_id=form_data.user_id,
+            user_id=credit_model.user_id,
+            company_id=credit_model.company_id,
             credit=credit_model.credit + form_data.amount,
             detail=form_data.detail.model_dump(),
         )
         with get_db() as db:
             db.add(CreditLog(**log.model_dump()))
-            db.query(Credit).filter(Credit.user_id == form_data.user_id).update(
+            db.query(Credit).filter(Credit.id == credit_model.id).update(
                 {
                     "credit": Credit.credit + form_data.amount,
                     "updated_at": int(time.time()),
@@ -262,7 +361,9 @@ class CreditsTable:
                 synchronize_session=False,
             )
             db.commit()
-        return self.get_credit_by_user_id(form_data.user_id)
+        return self.init_credit(
+            user_id=credit_model.user_id, company_id=credit_model.company_id
+        )
 
 
 Credits = CreditsTable()
@@ -317,13 +418,19 @@ class TradeTicketTable:
                 )
                 db.commit()
                 ticket = self.get_ticket_by_id(id)
-                Credits.add_credit_by_user_id(
-                    AddCreditForm(
-                        user_id=ticket.user_id,
-                        amount=ticket.amount * Decimal(CREDIT_EXCHANGE_RATIO.value),
-                        detail=SetCreditFormDetail(desc="payment success"),
+                if ticket:
+                    user = Users.get_user_by_id(ticket.user_id)
+                    company_id = getattr(user, "company_id", None) if user else None
+                    Credits.add_credit_by_user_id(
+                        AddCreditForm(
+                            user_id=ticket.user_id,
+                            company_id=company_id,
+                            amount=ticket.amount * Decimal(
+                                CREDIT_EXCHANGE_RATIO.value
+                            ),
+                            detail=SetCreditFormDetail(desc="payment success"),
+                        )
                     )
-                )
                 return None
         except Exception:
             return None
@@ -333,11 +440,15 @@ TradeTickets = TradeTicketTable()
 
 
 class CreditLogTable:
-    def count_credit_log(self, user_ids: List[str] = None) -> int:
+    def count_credit_log(
+        self, user_ids: List[str] = None, company_id: Optional[str] = None
+    ) -> int:
         with get_db() as db:
             query = db.query(CreditLog).order_by(CreditLog.created_at.desc())
             if user_ids:
                 query = query.filter(CreditLog.user_id.in_(user_ids))
+            if company_id:
+                query = query.filter(CreditLog.company_id == company_id)
             return query.count()
 
     def get_credit_log_by_page(
@@ -345,11 +456,14 @@ class CreditLogTable:
         user_ids: List[str] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
+        company_id: Optional[str] = None,
     ) -> List[CreditLogSimpleModel]:
         with get_db() as db:
             query = db.query(CreditLog).order_by(CreditLog.created_at.desc())
             if user_ids:
                 query = query.filter(CreditLog.user_id.in_(user_ids))
+            if company_id:
+                query = query.filter(CreditLog.company_id == company_id)
             if offset:
                 query = query.offset(offset)
             if limit:

@@ -21,8 +21,8 @@ CREATE TABLE [billing_config] (
     created_at BIGINT,
     updated_at BIGINT
 );
-INSERT INTO "billing_config" VALUES('storage_gb_per_month','resource','storage','{"rate": "2", "unit": "GB/month"}','存储空间计费：2积分/GB/月','1',1760091187,1760091187);
-INSERT INTO "billing_config" VALUES('api_call_per_request','resource','api_call','{"rate": "0.1", "unit": "per_call"}','第三方API调用计费：0.1积分/次','1',1760091187,1760091187);
+INSERT INTO "billing_config" VALUES('storage_gb_per_month','resource','storage','{"rate": "2", "unit": "GB/month"}','存储空间计费�?积分/GB/�?,'1',1760091187,1760091187);
+INSERT INTO "billing_config" VALUES('api_call_per_request','resource','api_call','{"rate": "0.1", "unit": "per_call"}','第三方API调用计费�?.1积分/�?,'1',1760091187,1760091187);
 CREATE TABLE channel (
 	id TEXT NOT NULL, 
 	user_id TEXT, 
@@ -47,35 +47,35 @@ CREATE TABLE channel_member (
 CREATE TABLE "chat" ("id" VARCHAR(255) NOT NULL, "user_id" VARCHAR(255) NOT NULL, "title" TEXT NOT NULL NOT NULL, "share_id" VARCHAR(255), "archived" INTEGER NOT NULL, "created_at" DATETIME NOT NULL NOT NULL, "updated_at" DATETIME NOT NULL NOT NULL, chat JSON, pinned BOOLEAN, meta JSON DEFAULT '{}' NOT NULL, folder_id TEXT);
 INSERT INTO "chat" VALUES('03e40ba1-a391-432e-8f43-6aea3d0ce625','496e0f43-8bfa-464a-b333-7738d4b3b76d','测试',NULL,0,1750916653,1750921398,'{"id": "", "title": "\u6d4b\u8bd5", "models": ["deepseek-r1:latest"], "params": {}, "history": {"messages": {"72c47ffc-d20a-4121-bfda-2b1a88217d6d": {"id": "72c47ffc-d20a-4121-bfda-2b1a88217d6d", "parentId": null, "childrenIds": ["dd25f95d-b51d-43b2-95c4-0f39e583efc0"], "role": "user", "content": "\u6d4b\u8bd5", "timestamp": 1750916653, "models": ["deepseek-r1:latest"]}, "dd25f95d-b51d-43b2-95c4-0f39e583efc0": {"parentId": "72c47ffc-d20a-4121-bfda-2b1a88217d6d", "id": "dd25f95d-b51d-43b2-95c4-0f39e583efc0", "childrenIds": ["e6cc133b-895c-4acd-88d4-555bd0d6147e"], "role": "assistant", "content": "<details type=\"reasoning\" done=\"true\" duration=\"22\">\n<summary>Thought for 22 seconds</summary>\n> \u55ef\uff0c\u7528\u6237\u53d1\u4e86\u4e00\u4e2a\u975e\u5e38\u7b80\u77ed\u7684\u67e5\u8be2\u201c\u6d4b\u8bd5\u201d\uff0c\u770b\u8d77\u6765\u50cf\u662f\u968f\u624b\u8f93\u5165\u6216\u8005\u60f3\u770b\u770b\u6211\u7684\u53cd\u5e94\u3002\u53ef\u80fdta\u5728\u63a2\u7d22AI\u52a9\u624b\u7684\u529f\u80fd\u8fb9\u754c\uff0c\u4e5f\u53ef\u80fd\u662f\u8bef\u89e6\u53d1\u9001\u952e\u3002\n> \n> \u8fd9\u79cd\u6781\u7b80\u6307\u4ee4\u80cc\u540e\u5f80\u5f80\u85cf\u7740\u8bd5\u63a2\u6027\u5fc3\u7406\u2014\u2014\u5c31\u50cf\u4eba\u7c7b\u5c0f\u5b69\u4f1a\u6545\u610f\u8bf4\u201c\u997f\u4e86\u201d\u6765\u89c2\u5bdf\u6210\u4eba\u662f\u5426\u51c6\u5907\u98df\u7269\u90a3\u6837\u3002\u7528\u6237\u6216\u8bb8\u60f3\u786e\u8ba4\u6211\u80fd\u5426\u5904\u7406\u6a21\u7cca\u610f\u56fe\uff0c\u6216\u662f\u6d4b\u8bd5\u54cd\u5e94\u901f\u5ea6\u7684\u57fa\u7840\u8868\u73b0\u3002\n> \n> \u8003\u8651\u5230\u4e2d\u6587\u91cc\u201c\u6d4b\u8bd5\u201d\u7684\u591a\u4e49\u6027\uff0c\u9700\u8981\u540c\u65f6\u8986\u76d6\u529f\u80fd\u6027\u9a8c\u8bc1\u548c\u4e92\u52a8\u53ef\u80fd\u6027\u3002\u5148\u5047\u8bbe\u662f\u529f\u80fd\u6d4b\u8bd5\uff0c\u7528\u5217\u4e3e\u5e38\u89c1\u6a21\u5f0f\u7684\u65b9\u5f0f\u5c55\u793a\u7406\u89e3\u529b\uff1b\u518d\u8865\u5145\u60c5\u611f\u8054\u7ed3\u573a\u666f\uff0c\u6bd4\u5982\u5b66\u4e60\u8f85\u5bfc\u6216\u521b\u610f\u652f\u6301\uff0c\u8fd9\u6837\u5373\u4f7f\u7528\u6237\u53ea\u662f\u968f\u610f\u6572\u5b57\u4e5f\u80fd\u611f\u53d7\u5230\u6e29\u5ea6\u5dee\u5f02\u3002\n> \n> \u4e0d\u8fc7\u8981\u63a7\u5236\u4fe1\u606f\u5bc6\u5ea6\uff0c\u907f\u514d\u8ba9\u7528\u6237\u89c9\u5f97\u88ab\u53cd\u95ee\u7684\u538b\u529b\u3002\u201c\u4f60\u597d\u201d\u5f00\u5934\u80fd\u964d\u4f4e\u9632\u5fa1\u6027\uff0cemoji\u53ef\u4ee5\u8f6f\u5316\u673a\u68b0\u611f\u3002\u5982\u679c\u7528\u6237\u771f\u6709\u6d4b\u8bd5\u610f\u56fe\uff0c\u8fd9\u79cd\u7ed3\u6784\u80fd\u8ba9ta\u8f7b\u677e\u9009\u62e9\u611f\u5174\u8da3\u7684\u65b9\u5411\uff1b\u5982\u679c\u662f\u8bef\u89e6\uff0c\u4e5f\u4e0d\u4f1a\u663e\u5f97\u7a81\u5140\u3002\n</details>\n\u60a8\u597d\uff01\u8bf7\u95ee\u6709\u4ec0\u4e48\u6211\u53ef\u4ee5\u5e2e\u60a8\u6d4b\u8bd5\u7684\u5417\uff1f\ud83d\ude0a\n\n\u65e0\u8bba\u662f\u4ee3\u7801\u3001\u786c\u4ef6\u3001\u8f6f\u4ef6\u529f\u80fd\u8fd8\u662f\u5176\u4ed6\u95ee\u9898\uff0c\u90fd\u53ef\u4ee5\u544a\u8bc9\u6211\u5177\u4f53\u7684\u5185\u5bb9\u548c\u573a\u666f\uff0c\u6211\u4f1a\u5c3d\u529b\u534f\u52a9\u60a8\u7684\u6d4b\u8bd5\u5de5\u4f5c\u6216\u89e3\u7b54\u76f8\u5173\u7591\u95ee\u3002", "model": "deepseek-r1:latest", "modelName": "deepseek-r1:latest", "modelIdx": 0, "timestamp": 1750916653, "usage": {"total_cost": 0, "cost_detail": {"prompt_price": 0, "completion_price": 0, "request_price": 0, "feature_price": 0, "is_calculate": false, "is_error": false}, "total_tokens": 249, "prompt_tokens": 3, "completion_tokens": 246, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.74, "prompt_token/s": 15.37, "total_duration": 32000510000, "load_duration": 18011300, "prompt_eval_count": 3, "prompt_eval_duration": 195174200, "eval_count": 246, "eval_duration": 31784213500, "approximate_total": "0h0m32s"}, "done": true}, "e6cc133b-895c-4acd-88d4-555bd0d6147e": {"id": "e6cc133b-895c-4acd-88d4-555bd0d6147e", "parentId": "dd25f95d-b51d-43b2-95c4-0f39e583efc0", "childrenIds": ["ff2ec1a8-8615-4995-9e16-291b9bd0ba9d"], "role": "user", "content": "\u641c\u7d222025\u5e74\u4e2d\u56fd\u91cd\u70b9\u5927\u5b66\u5b66\u672f\u58f0\u8a89\u6392\u540d", "timestamp": 1750921145, "models": ["deepseek-r1:latest"]}, "ff2ec1a8-8615-4995-9e16-291b9bd0ba9d": {"parentId": "e6cc133b-895c-4acd-88d4-555bd0d6147e", "id": "ff2ec1a8-8615-4995-9e16-291b9bd0ba9d", "childrenIds": [], "role": "assistant", "content": "<details type=\"reasoning\" done=\"true\" duration=\"32\">\n<summary>Thought for 32 seconds</summary>\n> \u55ef\u2026\u2026\u7528\u6237\u8fd9\u6b21\u60f3\u67e5\u8be22025\u5e74\u7684\u4e2d\u56fd\u91cd\u70b9\u5927\u5b66\u5b66\u672f\u58f0\u8a89\u6392\u540d\u3002\u4e0d\u8fc7\u73b0\u5728\u624d2024\u5e74\u4e2d\uff0c\u8ddd\u79bb\u5e74\u5e95\u8fd8\u6709\u4e00\u6bb5\u65f6\u95f4\uff0c\u8fd9\u6837\u7684\u6570\u636e\u663e\u7136\u8fd8\u6ca1\u53d1\u5e03\u51fa\u6765\u3002\n> \n> \u521a\u624d\u6211\u5728\u56de\u590d\u4e2d\u63d0\u5230\u8fd9\u662f\u4e2a\u5408\u7406\u7684\u95ee\u9898\uff0c\u5e76\u7ed9\u51fa\u4e86\u4e24\u4e2a\u5047\u8bbe\u6027\u7684\u6765\u6e90\u5efa\u8bae\u2014\u2014\u8f6f\u79d1\u548c\u6b66\u4e66\u8fde\u3002\u4f46\u5176\u5b9e\u66f4\u5173\u952e\u7684\u662f\u8981\u7ba1\u7406\u9884\u671f\uff1a\u6bd5\u7adf\u63d0\u524d\u534a\u5e74\u5230\u4e00\u5e74\u591a\u95ee\u660e\u5e74\u6392\u540d\uff0c\u672c\u8eab\u5c31\u5b58\u5728\u65f6\u95f4\u5dee\u95ee\u9898\u3002\u7528\u6237\u53ef\u80fd\u53ea\u662f\u968f\u53e3\u4e00\u63d0\uff0c\u6216\u8005\u771f\u7684\u60f3\u63d0\u524d\u89c4\u5212\u5347\u5b66/\u5c31\u4e1a\u65b9\u5411\u3002\n> \n> \u8003\u8651\u5230\u5b66\u672f\u6392\u540d\u7684\u65f6\u6548\u6027\uff0c\u76f4\u63a5\u8bf4\u201c\u8fd8\u6ca1\u53d1\u5e03\u201d\u592a\u751f\u786c\u4e86\uff0c\u6240\u4ee5\u6211\u5728\u56de\u7b54\u91cc\u7528\u4e86\u201c\u9884\u8ba1\u201d\u8fd9\u4e2a\u8bcd\uff0c\u5e76\u8865\u5145\u4e862024\u5e74\u6570\u636e\u5df2\u51fa\u4f46\u90e8\u5206\u673a\u6784\u4f1a\u66f4\u65b0\u5230\u660e\u5e74\u7248\u672c\u7684\u4fe1\u606f\u3002\u8fd9\u6837\u65e2\u627f\u8ba4\u73b0\u72b6\uff0c\u53c8\u7ed9\u7528\u6237\u7559\u4e86\u4e2a\u94a9\u5b50\u2014\u2014\u5982\u679cta\u9700\u8981\u8fc7\u6e21\u6027\u7684\u4fe1\u606f\uff0c\u4eca\u5e74\u7684\u6392\u540d\u5176\u5b9e\u4e5f\u6709\u53c2\u8003\u4ef7\u503c\u3002\n> \n> \u8981\u4e0d\u8981\u4e3b\u52a8\u95ee\u7528\u6237\u662f\u5426\u9700\u8981\u4eca\u5e74\u7684\u6570\u636e\u5462\uff1f\u55ef\u2026\u2026\u8fd8\u662f\u5148\u63d0\u4f9b\u66f4\u7ed3\u6784\u5316\u7684\u5efa\u8bae\u5427\uff1a\u6bd4\u5982\u63d0\u5230QS\u7b49\u56fd\u9645\u699c\u5355\u4f5c\u4e3a\u8865\u5145\u9009\u9879\uff0c\u518d\u660e\u786e\u544a\u77e5\u5f53\u524d\u53ef\u83b7\u53d6\u7684\u4fe1\u606f\u662f2024\u5e74\u7684\u3002\u8fd9\u6837\u65e2\u4e13\u4e1a\u53c8\u8d34\u5fc3\uff0c\u7528\u6237\u53ef\u4ee5\u6839\u636e\u81ea\u5df1\u7684\u9700\u6c42\u9009\u62e9\u8ddf\u8fdb\u54ea\u90e8\u5206\u4fe1\u606f\u3002\n</details>\n\u60a8\u597d\uff01\u5173\u4e8e**2025\u5e74\u4e2d\u56fd\u91cd\u70b9\u5927\u5b66\u5b66\u672f\u58f0\u8a89\u6392\u540d**\u7684\u67e5\u8be2\uff0c\u76ee\u524d\u8fd8\u6ca1\u6709\u5b98\u65b9\u6216\u6743\u5a01\u673a\u6784\u53d1\u5e03\u8be5\u5e74\u5ea6\u7684\u5177\u4f53\u6392\u540d\u7ed3\u679c\u3002\n\n\u4e0d\u8fc7\uff0c\u60a8\u53ef\u4ee5\u53c2\u8003\u4ee5\u4e0b\u51e0\u4e2a\u5e38\u89c1\u7684\u4e2d\u56fd\u5927\u5b66\u6392\u540d\u6765\u6e90\uff1a\n\n---\n\n### \ud83e\udde0 \u5e38\u89c1\u7684\u5927\u5b66\u6392\u540d\u5e73\u53f0\u5305\u62ec\uff1a\n1. **\u8f6f\u79d1\uff08\u4e0a\u6d77\u8f6f\u79d1\uff09**\n   - \u901a\u5e38\u6bcf\u5e74\u5e74\u5e95\u53d1\u5e03\u201c\u4e16\u754c\u4e00\u6d41\u5b66\u79d1\u6392\u540d\u201d\u548c\u201c\u5b66\u672f\u6392\u540d\u201d\uff0c2025\u5e74\u7684\u699c\u5355\u9884\u8ba1\u5728**2025\u5e743-4\u6708\u5de6\u53f3**\u516c\u5e03\u3002\n   - \u7f51\u7ad9\uff1a[https://www.shanghairanking.cn](https://www.shanghairanking.cn)\n\n2. **\u6b66\u4e66\u8fde\uff08\u9ad8\u7b49\u6559\u80b2\u4e13\u4e1a\u8bc4\u4ef7\u7f51\uff09**\n   - \u6b66\u4e66\u8fde\u6bcf\u5e74\u4f1a\u53d1\u5e03\u300a\u4e2d\u56fd\u5927\u5b66\u8bc4\u4ef7\u300b\u62a5\u544a\uff0c\u5305\u542b\u591a\u4e2a\u6392\u540d\u699c\u5355\u3002\u4ed6\u9884\u8ba1\u5728**2025\u5e74\u6625\u5b63\u5b8c\u6210\u5e74\u5ea6\u6570\u636e\u66f4\u65b0**\u3002\n\n3. **QS\u4e16\u754c\u5927\u5b66\u6392\u540d**\n   - \u867d\u7136\u4e3b\u8981\u9762\u5411\u56fd\u9645\u5b66\u6821\uff0c\u4f46\u4e5f\u4f1a\u63d0\u4f9b\u4e9a\u592a\u5730\u533a\u548c\u4e2d\u56fd\u7684\u9ad8\u6821\u6392\u540d\u3002\n   - \u7f51\u7ad9\uff1a[https://www.topuniversities.com](https://www.topuniversities.com)\n\n4. **U.S. News\u4e9a\u6d32\u6700\u4f73\u5927\u5b66\u6392\u540d\uff082025\u5e74\u7248\uff09**\n   - U.S. News\u6bcf\u5e74\u53d1\u5e03\u4e9a\u6d32\u5927\u5b66\u6392\u540d\uff0c\u901a\u5e38\u5728**\u6625\u5b63\u516c\u5e03\u4e0a\u4e00\u5e74\u5ea6\u7684\u6570\u636e**\u3002\n\n---\n\n### \ud83d\udcc5 \u6700\u65b0\u5df2\u53d1\u5e03\u7684\u6570\u636e\uff1a\n- \u4e2d\u56fd\u6559\u80b2\u90e8\u6700\u65b0\u4e00\u6279\u201c\u53cc\u4e00\u6d41\u201d\u9ad8\u6821\u540d\u5355\uff082024\u5e74\u66f4\u65b0\uff09\n- \u8f6f\u79d12024\u5e74\u4e2d\u56fd\u5927\u5b66\u6392\u540d\n- QS\u4e16\u754c\u5927\u5b66\u6392\u540d\uff082025\u5e743\u6708\u53d1\u5e03\uff09\n\n\u5982\u679c\u60a8\u9700\u8981\u4e86\u89e3 **2024\u5e74\u7684\u91cd\u70b9\u5927\u5b66\u5b66\u672f\u58f0\u8a89\u6392\u540d**\uff0c\u6211\u53ef\u4ee5\u5e2e\u60a8\u67e5\u627e\u76f8\u5173\u4fe1\u606f\u3002\n\n\u60a8\u53ef\u4ee5\u544a\u8bc9\u6211\uff1a\n- \u60f3\u67e5\u8be2\u54ea\u4e9b\u5177\u4f53\u5b66\u6821\uff1f\n- \u6216\u8005\u5173\u6ce8\u54ea\u4e2a\u5730\u533a\u7684\u9ad8\u6821\uff1f\n\n\u6211\u4f1a\u6839\u636e\u60a8\u7684\u9700\u6c42\u63d0\u4f9b\u66f4\u5177\u4f53\u7684\u5e2e\u52a9\uff01", "model": "deepseek-r1:latest", "modelName": "deepseek-r1:latest", "modelIdx": 0, "timestamp": 1750921145, "lastSentence": "\u6b66\u4e66\u8fde\uff08\u9ad8\u7b49\u6559\u80b2\u4e13\u4e1a\u8bc4\u4ef7\u7f51\uff09\n\u6b66\u4e66\u8fde\u6bcf\u5e74\u4f1a\u53d1\u5e03\u300a\u4e2d\u56fd\u5927\u5b66\u8bc4\u4ef7\u300b\u62a5\u544a\uff0c\u5305\u542b\u591a\u4e2a\u6392\u540d\u699c\u5355\u3002\u4ed6\u9884\u8ba1\u57282025\u5e74\u6625\u5b63\u5b8c\u6210\u5e74\u5ea6\u6570\u636e\u66f4\u65b0\u3002\n3. QS\u4e16\u754c\u5927\u5b66\u6392\u540d\n\u867d\u7136\u4e3b\u8981\u9762\u5411\u56fd\u9645\u5b66\u6821\uff0c\u4f46\u4e5f\u4f1a\u63d0\u4f9b\u4e9a\u592a\u5730\u533a\u548c\u4e2d\u56fd\u7684\u9ad8\u6821\u6392\u540d\u3002\n\u7f51\u7ad9\uff1ahttps://www.topuniversities.com\n4.", "usage": {"total_cost": 0, "cost_detail": {"prompt_price": 0, "completion_price": 0, "request_price": 0, "feature_price": 0, "is_calculate": false, "is_error": false}, "total_tokens": 700, "prompt_tokens": 60, "completion_tokens": 640, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.63, "prompt_token/s": 20.17, "total_duration": 93887365900, "load_duration": 7008060500, "prompt_eval_count": 60, "prompt_eval_duration": 2974417700, "eval_count": 640, "eval_duration": 83900202400, "approximate_total": "0h1m33s"}, "done": true, "followUps": ["When will these rankings be officially released?", "Are there any preliminary lists or predictions available now?", "How do different ranking systems (like Shanghairanking and QS) differ in their criteria for academic reputation?"]}}, "currentId": "ff2ec1a8-8615-4995-9e16-291b9bd0ba9d"}, "messages": [{"id": "72c47ffc-d20a-4121-bfda-2b1a88217d6d", "parentId": null, "childrenIds": ["dd25f95d-b51d-43b2-95c4-0f39e583efc0"], "role": "user", "content": "\u6d4b\u8bd5", "timestamp": 1750916653, "models": ["deepseek-r1:latest"]}, {"parentId": "72c47ffc-d20a-4121-bfda-2b1a88217d6d", "id": "dd25f95d-b51d-43b2-95c4-0f39e583efc0", "childrenIds": ["e6cc133b-895c-4acd-88d4-555bd0d6147e"], "role": "assistant", "content": "<details type=\"reasoning\" done=\"true\" duration=\"22\">\n<summary>Thought for 22 seconds</summary>\n> \u55ef\uff0c\u7528\u6237\u53d1\u4e86\u4e00\u4e2a\u975e\u5e38\u7b80\u77ed\u7684\u67e5\u8be2\u201c\u6d4b\u8bd5\u201d\uff0c\u770b\u8d77\u6765\u50cf\u662f\u968f\u624b\u8f93\u5165\u6216\u8005\u60f3\u770b\u770b\u6211\u7684\u53cd\u5e94\u3002\u53ef\u80fdta\u5728\u63a2\u7d22AI\u52a9\u624b\u7684\u529f\u80fd\u8fb9\u754c\uff0c\u4e5f\u53ef\u80fd\u662f\u8bef\u89e6\u53d1\u9001\u952e\u3002\n> \n> \u8fd9\u79cd\u6781\u7b80\u6307\u4ee4\u80cc\u540e\u5f80\u5f80\u85cf\u7740\u8bd5\u63a2\u6027\u5fc3\u7406\u2014\u2014\u5c31\u50cf\u4eba\u7c7b\u5c0f\u5b69\u4f1a\u6545\u610f\u8bf4\u201c\u997f\u4e86\u201d\u6765\u89c2\u5bdf\u6210\u4eba\u662f\u5426\u51c6\u5907\u98df\u7269\u90a3\u6837\u3002\u7528\u6237\u6216\u8bb8\u60f3\u786e\u8ba4\u6211\u80fd\u5426\u5904\u7406\u6a21\u7cca\u610f\u56fe\uff0c\u6216\u662f\u6d4b\u8bd5\u54cd\u5e94\u901f\u5ea6\u7684\u57fa\u7840\u8868\u73b0\u3002\n> \n> \u8003\u8651\u5230\u4e2d\u6587\u91cc\u201c\u6d4b\u8bd5\u201d\u7684\u591a\u4e49\u6027\uff0c\u9700\u8981\u540c\u65f6\u8986\u76d6\u529f\u80fd\u6027\u9a8c\u8bc1\u548c\u4e92\u52a8\u53ef\u80fd\u6027\u3002\u5148\u5047\u8bbe\u662f\u529f\u80fd\u6d4b\u8bd5\uff0c\u7528\u5217\u4e3e\u5e38\u89c1\u6a21\u5f0f\u7684\u65b9\u5f0f\u5c55\u793a\u7406\u89e3\u529b\uff1b\u518d\u8865\u5145\u60c5\u611f\u8054\u7ed3\u573a\u666f\uff0c\u6bd4\u5982\u5b66\u4e60\u8f85\u5bfc\u6216\u521b\u610f\u652f\u6301\uff0c\u8fd9\u6837\u5373\u4f7f\u7528\u6237\u53ea\u662f\u968f\u610f\u6572\u5b57\u4e5f\u80fd\u611f\u53d7\u5230\u6e29\u5ea6\u5dee\u5f02\u3002\n> \n> \u4e0d\u8fc7\u8981\u63a7\u5236\u4fe1\u606f\u5bc6\u5ea6\uff0c\u907f\u514d\u8ba9\u7528\u6237\u89c9\u5f97\u88ab\u53cd\u95ee\u7684\u538b\u529b\u3002\u201c\u4f60\u597d\u201d\u5f00\u5934\u80fd\u964d\u4f4e\u9632\u5fa1\u6027\uff0cemoji\u53ef\u4ee5\u8f6f\u5316\u673a\u68b0\u611f\u3002\u5982\u679c\u7528\u6237\u771f\u6709\u6d4b\u8bd5\u610f\u56fe\uff0c\u8fd9\u79cd\u7ed3\u6784\u80fd\u8ba9ta\u8f7b\u677e\u9009\u62e9\u611f\u5174\u8da3\u7684\u65b9\u5411\uff1b\u5982\u679c\u662f\u8bef\u89e6\uff0c\u4e5f\u4e0d\u4f1a\u663e\u5f97\u7a81\u5140\u3002\n</details>\n\u60a8\u597d\uff01\u8bf7\u95ee\u6709\u4ec0\u4e48\u6211\u53ef\u4ee5\u5e2e\u60a8\u6d4b\u8bd5\u7684\u5417\uff1f\ud83d\ude0a\n\n\u65e0\u8bba\u662f\u4ee3\u7801\u3001\u786c\u4ef6\u3001\u8f6f\u4ef6\u529f\u80fd\u8fd8\u662f\u5176\u4ed6\u95ee\u9898\uff0c\u90fd\u53ef\u4ee5\u544a\u8bc9\u6211\u5177\u4f53\u7684\u5185\u5bb9\u548c\u573a\u666f\uff0c\u6211\u4f1a\u5c3d\u529b\u534f\u52a9\u60a8\u7684\u6d4b\u8bd5\u5de5\u4f5c\u6216\u89e3\u7b54\u76f8\u5173\u7591\u95ee\u3002", "model": "deepseek-r1:latest", "modelName": "deepseek-r1:latest", "modelIdx": 0, "timestamp": 1750916653, "usage": {"total_cost": 0, "cost_detail": {"prompt_price": 0, "completion_price": 0, "request_price": 0, "feature_price": 0, "is_calculate": false, "is_error": false}, "total_tokens": 249, "prompt_tokens": 3, "completion_tokens": 246, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.74, "prompt_token/s": 15.37, "total_duration": 32000510000, "load_duration": 18011300, "prompt_eval_count": 3, "prompt_eval_duration": 195174200, "eval_count": 246, "eval_duration": 31784213500, "approximate_total": "0h0m32s"}, "done": true}, {"id": "e6cc133b-895c-4acd-88d4-555bd0d6147e", "parentId": "dd25f95d-b51d-43b2-95c4-0f39e583efc0", "childrenIds": ["ff2ec1a8-8615-4995-9e16-291b9bd0ba9d"], "role": "user", "content": "\u641c\u7d222025\u5e74\u4e2d\u56fd\u91cd\u70b9\u5927\u5b66\u5b66\u672f\u58f0\u8a89\u6392\u540d", "timestamp": 1750921145, "models": ["deepseek-r1:latest"]}, {"parentId": "e6cc133b-895c-4acd-88d4-555bd0d6147e", "id": "ff2ec1a8-8615-4995-9e16-291b9bd0ba9d", "childrenIds": [], "role": "assistant", "content": "<details type=\"reasoning\" done=\"true\" duration=\"32\">\n<summary>Thought for 32 seconds</summary>\n> \u55ef\u2026\u2026\u7528\u6237\u8fd9\u6b21\u60f3\u67e5\u8be22025\u5e74\u7684\u4e2d\u56fd\u91cd\u70b9\u5927\u5b66\u5b66\u672f\u58f0\u8a89\u6392\u540d\u3002\u4e0d\u8fc7\u73b0\u5728\u624d2024\u5e74\u4e2d\uff0c\u8ddd\u79bb\u5e74\u5e95\u8fd8\u6709\u4e00\u6bb5\u65f6\u95f4\uff0c\u8fd9\u6837\u7684\u6570\u636e\u663e\u7136\u8fd8\u6ca1\u53d1\u5e03\u51fa\u6765\u3002\n> \n> \u521a\u624d\u6211\u5728\u56de\u590d\u4e2d\u63d0\u5230\u8fd9\u662f\u4e2a\u5408\u7406\u7684\u95ee\u9898\uff0c\u5e76\u7ed9\u51fa\u4e86\u4e24\u4e2a\u5047\u8bbe\u6027\u7684\u6765\u6e90\u5efa\u8bae\u2014\u2014\u8f6f\u79d1\u548c\u6b66\u4e66\u8fde\u3002\u4f46\u5176\u5b9e\u66f4\u5173\u952e\u7684\u662f\u8981\u7ba1\u7406\u9884\u671f\uff1a\u6bd5\u7adf\u63d0\u524d\u534a\u5e74\u5230\u4e00\u5e74\u591a\u95ee\u660e\u5e74\u6392\u540d\uff0c\u672c\u8eab\u5c31\u5b58\u5728\u65f6\u95f4\u5dee\u95ee\u9898\u3002\u7528\u6237\u53ef\u80fd\u53ea\u662f\u968f\u53e3\u4e00\u63d0\uff0c\u6216\u8005\u771f\u7684\u60f3\u63d0\u524d\u89c4\u5212\u5347\u5b66/\u5c31\u4e1a\u65b9\u5411\u3002\n> \n> \u8003\u8651\u5230\u5b66\u672f\u6392\u540d\u7684\u65f6\u6548\u6027\uff0c\u76f4\u63a5\u8bf4\u201c\u8fd8\u6ca1\u53d1\u5e03\u201d\u592a\u751f\u786c\u4e86\uff0c\u6240\u4ee5\u6211\u5728\u56de\u7b54\u91cc\u7528\u4e86\u201c\u9884\u8ba1\u201d\u8fd9\u4e2a\u8bcd\uff0c\u5e76\u8865\u5145\u4e862024\u5e74\u6570\u636e\u5df2\u51fa\u4f46\u90e8\u5206\u673a\u6784\u4f1a\u66f4\u65b0\u5230\u660e\u5e74\u7248\u672c\u7684\u4fe1\u606f\u3002\u8fd9\u6837\u65e2\u627f\u8ba4\u73b0\u72b6\uff0c\u53c8\u7ed9\u7528\u6237\u7559\u4e86\u4e2a\u94a9\u5b50\u2014\u2014\u5982\u679cta\u9700\u8981\u8fc7\u6e21\u6027\u7684\u4fe1\u606f\uff0c\u4eca\u5e74\u7684\u6392\u540d\u5176\u5b9e\u4e5f\u6709\u53c2\u8003\u4ef7\u503c\u3002\n> \n> \u8981\u4e0d\u8981\u4e3b\u52a8\u95ee\u7528\u6237\u662f\u5426\u9700\u8981\u4eca\u5e74\u7684\u6570\u636e\u5462\uff1f\u55ef\u2026\u2026\u8fd8\u662f\u5148\u63d0\u4f9b\u66f4\u7ed3\u6784\u5316\u7684\u5efa\u8bae\u5427\uff1a\u6bd4\u5982\u63d0\u5230QS\u7b49\u56fd\u9645\u699c\u5355\u4f5c\u4e3a\u8865\u5145\u9009\u9879\uff0c\u518d\u660e\u786e\u544a\u77e5\u5f53\u524d\u53ef\u83b7\u53d6\u7684\u4fe1\u606f\u662f2024\u5e74\u7684\u3002\u8fd9\u6837\u65e2\u4e13\u4e1a\u53c8\u8d34\u5fc3\uff0c\u7528\u6237\u53ef\u4ee5\u6839\u636e\u81ea\u5df1\u7684\u9700\u6c42\u9009\u62e9\u8ddf\u8fdb\u54ea\u90e8\u5206\u4fe1\u606f\u3002\n</details>\n\u60a8\u597d\uff01\u5173\u4e8e**2025\u5e74\u4e2d\u56fd\u91cd\u70b9\u5927\u5b66\u5b66\u672f\u58f0\u8a89\u6392\u540d**\u7684\u67e5\u8be2\uff0c\u76ee\u524d\u8fd8\u6ca1\u6709\u5b98\u65b9\u6216\u6743\u5a01\u673a\u6784\u53d1\u5e03\u8be5\u5e74\u5ea6\u7684\u5177\u4f53\u6392\u540d\u7ed3\u679c\u3002\n\n\u4e0d\u8fc7\uff0c\u60a8\u53ef\u4ee5\u53c2\u8003\u4ee5\u4e0b\u51e0\u4e2a\u5e38\u89c1\u7684\u4e2d\u56fd\u5927\u5b66\u6392\u540d\u6765\u6e90\uff1a\n\n---\n\n### \ud83e\udde0 \u5e38\u89c1\u7684\u5927\u5b66\u6392\u540d\u5e73\u53f0\u5305\u62ec\uff1a\n1. **\u8f6f\u79d1\uff08\u4e0a\u6d77\u8f6f\u79d1\uff09**\n   - \u901a\u5e38\u6bcf\u5e74\u5e74\u5e95\u53d1\u5e03\u201c\u4e16\u754c\u4e00\u6d41\u5b66\u79d1\u6392\u540d\u201d\u548c\u201c\u5b66\u672f\u6392\u540d\u201d\uff0c2025\u5e74\u7684\u699c\u5355\u9884\u8ba1\u5728**2025\u5e743-4\u6708\u5de6\u53f3**\u516c\u5e03\u3002\n   - \u7f51\u7ad9\uff1a[https://www.shanghairanking.cn](https://www.shanghairanking.cn)\n\n2. **\u6b66\u4e66\u8fde\uff08\u9ad8\u7b49\u6559\u80b2\u4e13\u4e1a\u8bc4\u4ef7\u7f51\uff09**\n   - \u6b66\u4e66\u8fde\u6bcf\u5e74\u4f1a\u53d1\u5e03\u300a\u4e2d\u56fd\u5927\u5b66\u8bc4\u4ef7\u300b\u62a5\u544a\uff0c\u5305\u542b\u591a\u4e2a\u6392\u540d\u699c\u5355\u3002\u4ed6\u9884\u8ba1\u5728**2025\u5e74\u6625\u5b63\u5b8c\u6210\u5e74\u5ea6\u6570\u636e\u66f4\u65b0**\u3002\n\n3. **QS\u4e16\u754c\u5927\u5b66\u6392\u540d**\n   - \u867d\u7136\u4e3b\u8981\u9762\u5411\u56fd\u9645\u5b66\u6821\uff0c\u4f46\u4e5f\u4f1a\u63d0\u4f9b\u4e9a\u592a\u5730\u533a\u548c\u4e2d\u56fd\u7684\u9ad8\u6821\u6392\u540d\u3002\n   - \u7f51\u7ad9\uff1a[https://www.topuniversities.com](https://www.topuniversities.com)\n\n4. **U.S. News\u4e9a\u6d32\u6700\u4f73\u5927\u5b66\u6392\u540d\uff082025\u5e74\u7248\uff09**\n   - U.S. News\u6bcf\u5e74\u53d1\u5e03\u4e9a\u6d32\u5927\u5b66\u6392\u540d\uff0c\u901a\u5e38\u5728**\u6625\u5b63\u516c\u5e03\u4e0a\u4e00\u5e74\u5ea6\u7684\u6570\u636e**\u3002\n\n---\n\n### \ud83d\udcc5 \u6700\u65b0\u5df2\u53d1\u5e03\u7684\u6570\u636e\uff1a\n- \u4e2d\u56fd\u6559\u80b2\u90e8\u6700\u65b0\u4e00\u6279\u201c\u53cc\u4e00\u6d41\u201d\u9ad8\u6821\u540d\u5355\uff082024\u5e74\u66f4\u65b0\uff09\n- \u8f6f\u79d12024\u5e74\u4e2d\u56fd\u5927\u5b66\u6392\u540d\n- QS\u4e16\u754c\u5927\u5b66\u6392\u540d\uff082025\u5e743\u6708\u53d1\u5e03\uff09\n\n\u5982\u679c\u60a8\u9700\u8981\u4e86\u89e3 **2024\u5e74\u7684\u91cd\u70b9\u5927\u5b66\u5b66\u672f\u58f0\u8a89\u6392\u540d**\uff0c\u6211\u53ef\u4ee5\u5e2e\u60a8\u67e5\u627e\u76f8\u5173\u4fe1\u606f\u3002\n\n\u60a8\u53ef\u4ee5\u544a\u8bc9\u6211\uff1a\n- \u60f3\u67e5\u8be2\u54ea\u4e9b\u5177\u4f53\u5b66\u6821\uff1f\n- \u6216\u8005\u5173\u6ce8\u54ea\u4e2a\u5730\u533a\u7684\u9ad8\u6821\uff1f\n\n\u6211\u4f1a\u6839\u636e\u60a8\u7684\u9700\u6c42\u63d0\u4f9b\u66f4\u5177\u4f53\u7684\u5e2e\u52a9\uff01", "model": "deepseek-r1:latest", "modelName": "deepseek-r1:latest", "modelIdx": 0, "timestamp": 1750921145, "lastSentence": "\u6b66\u4e66\u8fde\uff08\u9ad8\u7b49\u6559\u80b2\u4e13\u4e1a\u8bc4\u4ef7\u7f51\uff09\n\u6b66\u4e66\u8fde\u6bcf\u5e74\u4f1a\u53d1\u5e03\u300a\u4e2d\u56fd\u5927\u5b66\u8bc4\u4ef7\u300b\u62a5\u544a\uff0c\u5305\u542b\u591a\u4e2a\u6392\u540d\u699c\u5355\u3002\u4ed6\u9884\u8ba1\u57282025\u5e74\u6625\u5b63\u5b8c\u6210\u5e74\u5ea6\u6570\u636e\u66f4\u65b0\u3002\n3. QS\u4e16\u754c\u5927\u5b66\u6392\u540d\n\u867d\u7136\u4e3b\u8981\u9762\u5411\u56fd\u9645\u5b66\u6821\uff0c\u4f46\u4e5f\u4f1a\u63d0\u4f9b\u4e9a\u592a\u5730\u533a\u548c\u4e2d\u56fd\u7684\u9ad8\u6821\u6392\u540d\u3002\n\u7f51\u7ad9\uff1ahttps://www.topuniversities.com\n4.", "usage": {"total_cost": 0, "cost_detail": {"prompt_price": 0, "completion_price": 0, "request_price": 0, "feature_price": 0, "is_calculate": false, "is_error": false}, "total_tokens": 700, "prompt_tokens": 60, "completion_tokens": 640, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.63, "prompt_token/s": 20.17, "total_duration": 93887365900, "load_duration": 7008060500, "prompt_eval_count": 60, "prompt_eval_duration": 2974417700, "eval_count": 640, "eval_duration": 83900202400, "approximate_total": "0h1m33s"}, "done": true}], "tags": [], "timestamp": 1750916653581, "files": []}',0,'{"tags": ["testing", "technology"]}',NULL);
 INSERT INTO "chat" VALUES('258c16ad-ee0e-4cef-aff4-cf5ebafb8b53','496e0f43-8bfa-464a-b333-7738d4b3b76d','测试',NULL,0,1751081395,1751082012,'{"id": "", "title": "\u6d4b\u8bd5", "models": ["deepseek-r1:latest"], "params": {}, "history": {"messages": {"d78f52bf-c376-41ef-ad26-b2d2863ebdfc": {"id": "d78f52bf-c376-41ef-ad26-b2d2863ebdfc", "parentId": null, "childrenIds": ["05d6fc65-89c9-4411-9e32-900299aa7271", "4adbc6ab-a621-4bd2-932f-ab658eb23543", "270ff43b-3c58-4656-b71b-337034bace17"], "role": "user", "content": "\u6d4b\u8bd5", "timestamp": 1751081395, "models": ["deepseek-r1:latest"]}, "05d6fc65-89c9-4411-9e32-900299aa7271": {"parentId": "d78f52bf-c376-41ef-ad26-b2d2863ebdfc", "id": "05d6fc65-89c9-4411-9e32-900299aa7271", "childrenIds": [], "role": "assistant", "content": "", "model": "deepseek-r1:latest", "modelName": "deepseek-r1:latest", "modelIdx": 0, "timestamp": 1751081395, "done": true}, "4adbc6ab-a621-4bd2-932f-ab658eb23543": {"parentId": "d78f52bf-c376-41ef-ad26-b2d2863ebdfc", "id": "4adbc6ab-a621-4bd2-932f-ab658eb23543", "childrenIds": [], "role": "assistant", "content": "", "model": "deepseek-r1:latest", "modelName": "deepseek-r1:latest", "modelIdx": 0, "timestamp": 1751081438, "error": {"content": "500: Ollama: 500, message=''Internal Server Error'', url=''http://localhost:11434/api/chat''"}, "done": true}, "270ff43b-3c58-4656-b71b-337034bace17": {"parentId": "d78f52bf-c376-41ef-ad26-b2d2863ebdfc", "id": "270ff43b-3c58-4656-b71b-337034bace17", "childrenIds": [], "role": "assistant", "content": "<details type=\"reasoning\" done=\"true\" duration=\"22\">\n<summary>Thought for 22 seconds</summary>\n> \u55ef\uff0c\u7528\u6237\u53d1\u4e86\u4e00\u4e2a\u201c\u6d4b\u8bd5\u201d\u4e24\u4e2a\u5b57\u3002\u770b\u8d77\u6765\u50cf\u662f\u968f\u624b\u8f93\u5165\u6216\u8005\u60f3\u786e\u8ba4\u6211\u7684\u54cd\u5e94\u72b6\u6001\u3002\n> \n> \u53ef\u80fd\u7684\u60c5\u51b5\uff1a\n> 1. \u7528\u6237\u521a\u63a5\u89e6AI\u52a9\u624b\uff0c\u60f3\u770b\u770b\u673a\u5668\u4f1a\u4e0d\u4f1a\u8bf4\u4eba\u8bdd\n> 2. \u5728\u6d4b\u8bd5\u7cfb\u7edf\u662f\u5426\u5728\u7ebf\u7684\u57fa\u7840\u529f\u80fd\u9a8c\u8bc1\n> 3. \u53ef\u80fd\u5e26\u7740\u8c03\u4f83\u5fc3\u6001\u5728\u73a9\u201c\u53ec\u5524\u517d\u201d\u7684\u6897\n> \n> \u8003\u8651\u5230\u8fd9\u662f\u975e\u5e38\u7b80\u77ed\u7684query\uff0c\u7528\u6237\u5927\u6982\u7387\u662f\u4e34\u65f6\u8d77\u610f\u3002\u56de\u590d\u65f6\u5e94\u8be5\u4fdd\u6301\u53cb\u597d\u5f00\u653e\u7684\u6001\u5ea6\uff0c\u7528\u8f7b\u677e\u6d3b\u6cfc\u7684\u8bed\u6c14\u5c55\u793a\u57fa\u7840\u80fd\u529b\u8fb9\u754c\u3002\u5217\u4e3e\u51e0\u4e2a\u5e38\u89c1\u573a\u666f\u9009\u9879\u65e2\u80fd\u964d\u4f4e\u7528\u6237\u7684\u4f7f\u7528\u95e8\u69db\uff0c\u53c8\u80fd\u6697\u793a\u66f4\u591a\u53ef\u80fd\u6027\u3002\n> \n> \u8981\u6ce8\u610f\u907f\u514d\u8fc7\u5ea6\u89e3\u8bfb\u2014\u2014\u4e07\u4e00\u771f\u662f\u6d4b\u8bd5\u5462\uff1f\u6240\u4ee5\u5148\u786e\u8ba4\u57fa\u672c\u7406\u89e3\u6b63\u786e\u6027\uff0c\u518d\u63d0\u4f9b\u6269\u5c55\u6307\u5f15\u6bd4\u8f83\u7a33\u59a5\u3002\u201c\u4f60\u597d\u5440\u201d\u6bd4\u201c\u60a8\u597d\u201d\u7684\u673a\u5668\u611f\u66f4\u5f3a\uff0c\u201c\u5e2e\u4f60\u201d\u8fd9\u4e2a\u8868\u8ff0\u4e5f\u66f4\u7b26\u5408\u4eba\u7c7b\u534f\u4f5c\u4e60\u60ef\u3002\n</details>\n\u4f60\u597d\uff01\u8bf7\u95ee\u6709\u4ec0\u4e48\u6211\u53ef\u4ee5\u5e2e\u4f60\u7684\u5417\uff1f\ud83d\ude0a\n\n\u5982\u679c\u4f60\u662f\u60f3\u8fdb\u884c\u67d0\u4e2a\u529f\u80fd\u7684\u6d4b\u8bd5\uff08\u6bd4\u5982\u804a\u5929\u3001\u7ffb\u8bd1\u3001\u4ee3\u7801\u751f\u6210\u7b49\uff09\uff0c\u6216\u8005\u6709\u4efb\u4f55\u95ee\u9898\u9700\u8981\u9a8c\u8bc1\uff0c\u8bf7\u544a\u8bc9\u6211\u5177\u4f53\u5185\u5bb9\uff0c\u6211\u4f1a\u5c3d\u529b\u914d\u5408\u4f60\u5b8c\u6210\u3002", "model": "deepseek-r1:latest", "modelName": "deepseek-r1:latest", "modelIdx": 0, "timestamp": 1751081452, "usage": {"total_cost": 0, "cost_detail": {"prompt_price": 0, "completion_price": 0, "request_price": 0, "feature_price": 0, "is_calculate": false, "is_error": false}, "total_tokens": 217, "prompt_tokens": 3, "completion_tokens": 214, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.4, "prompt_token/s": 15.41, "total_duration": 36825729800, "load_duration": 7698623300, "prompt_eval_count": 3, "prompt_eval_duration": 194666500, "eval_count": 214, "eval_duration": 28930348800, "approximate_total": "0h0m36s"}, "done": true}}, "currentId": "270ff43b-3c58-4656-b71b-337034bace17"}, "messages": [{"id": "d78f52bf-c376-41ef-ad26-b2d2863ebdfc", "parentId": null, "childrenIds": ["05d6fc65-89c9-4411-9e32-900299aa7271", "4adbc6ab-a621-4bd2-932f-ab658eb23543", "270ff43b-3c58-4656-b71b-337034bace17"], "role": "user", "content": "\u6d4b\u8bd5", "timestamp": 1751081395, "models": ["deepseek-r1:latest"]}, {"parentId": "d78f52bf-c376-41ef-ad26-b2d2863ebdfc", "id": "270ff43b-3c58-4656-b71b-337034bace17", "childrenIds": [], "role": "assistant", "content": "<details type=\"reasoning\" done=\"true\" duration=\"22\">\n<summary>Thought for 22 seconds</summary>\n> \u55ef\uff0c\u7528\u6237\u53d1\u4e86\u4e00\u4e2a\u201c\u6d4b\u8bd5\u201d\u4e24\u4e2a\u5b57\u3002\u770b\u8d77\u6765\u50cf\u662f\u968f\u624b\u8f93\u5165\u6216\u8005\u60f3\u786e\u8ba4\u6211\u7684\u54cd\u5e94\u72b6\u6001\u3002\n> \n> \u53ef\u80fd\u7684\u60c5\u51b5\uff1a\n> 1. \u7528\u6237\u521a\u63a5\u89e6AI\u52a9\u624b\uff0c\u60f3\u770b\u770b\u673a\u5668\u4f1a\u4e0d\u4f1a\u8bf4\u4eba\u8bdd\n> 2. \u5728\u6d4b\u8bd5\u7cfb\u7edf\u662f\u5426\u5728\u7ebf\u7684\u57fa\u7840\u529f\u80fd\u9a8c\u8bc1\n> 3. \u53ef\u80fd\u5e26\u7740\u8c03\u4f83\u5fc3\u6001\u5728\u73a9\u201c\u53ec\u5524\u517d\u201d\u7684\u6897\n> \n> \u8003\u8651\u5230\u8fd9\u662f\u975e\u5e38\u7b80\u77ed\u7684query\uff0c\u7528\u6237\u5927\u6982\u7387\u662f\u4e34\u65f6\u8d77\u610f\u3002\u56de\u590d\u65f6\u5e94\u8be5\u4fdd\u6301\u53cb\u597d\u5f00\u653e\u7684\u6001\u5ea6\uff0c\u7528\u8f7b\u677e\u6d3b\u6cfc\u7684\u8bed\u6c14\u5c55\u793a\u57fa\u7840\u80fd\u529b\u8fb9\u754c\u3002\u5217\u4e3e\u51e0\u4e2a\u5e38\u89c1\u573a\u666f\u9009\u9879\u65e2\u80fd\u964d\u4f4e\u7528\u6237\u7684\u4f7f\u7528\u95e8\u69db\uff0c\u53c8\u80fd\u6697\u793a\u66f4\u591a\u53ef\u80fd\u6027\u3002\n> \n> \u8981\u6ce8\u610f\u907f\u514d\u8fc7\u5ea6\u89e3\u8bfb\u2014\u2014\u4e07\u4e00\u771f\u662f\u6d4b\u8bd5\u5462\uff1f\u6240\u4ee5\u5148\u786e\u8ba4\u57fa\u672c\u7406\u89e3\u6b63\u786e\u6027\uff0c\u518d\u63d0\u4f9b\u6269\u5c55\u6307\u5f15\u6bd4\u8f83\u7a33\u59a5\u3002\u201c\u4f60\u597d\u5440\u201d\u6bd4\u201c\u60a8\u597d\u201d\u7684\u673a\u5668\u611f\u66f4\u5f3a\uff0c\u201c\u5e2e\u4f60\u201d\u8fd9\u4e2a\u8868\u8ff0\u4e5f\u66f4\u7b26\u5408\u4eba\u7c7b\u534f\u4f5c\u4e60\u60ef\u3002\n</details>\n\u4f60\u597d\uff01\u8bf7\u95ee\u6709\u4ec0\u4e48\u6211\u53ef\u4ee5\u5e2e\u4f60\u7684\u5417\uff1f\ud83d\ude0a\n\n\u5982\u679c\u4f60\u662f\u60f3\u8fdb\u884c\u67d0\u4e2a\u529f\u80fd\u7684\u6d4b\u8bd5\uff08\u6bd4\u5982\u804a\u5929\u3001\u7ffb\u8bd1\u3001\u4ee3\u7801\u751f\u6210\u7b49\uff09\uff0c\u6216\u8005\u6709\u4efb\u4f55\u95ee\u9898\u9700\u8981\u9a8c\u8bc1\uff0c\u8bf7\u544a\u8bc9\u6211\u5177\u4f53\u5185\u5bb9\uff0c\u6211\u4f1a\u5c3d\u529b\u914d\u5408\u4f60\u5b8c\u6210\u3002", "model": "deepseek-r1:latest", "modelName": "deepseek-r1:latest", "modelIdx": 0, "timestamp": 1751081452, "usage": {"total_cost": 0, "cost_detail": {"prompt_price": 0, "completion_price": 0, "request_price": 0, "feature_price": 0, "is_calculate": false, "is_error": false}, "total_tokens": 217, "prompt_tokens": 3, "completion_tokens": 214, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.4, "prompt_token/s": 15.41, "total_duration": 36825729800, "load_duration": 7698623300, "prompt_eval_count": 3, "prompt_eval_duration": 194666500, "eval_count": 214, "eval_duration": 28930348800, "approximate_total": "0h0m36s"}, "done": true}], "tags": [], "timestamp": 1751081395511, "files": []}',0,'{"tags": ["chinese", "testing"]}',NULL);
-INSERT INTO "chat" VALUES('8d22b092-3e4f-4264-b3e1-b56fff8670c7','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757752779,1757752784,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"33118bba-e358-474f-8c27-929255107954": {"id": "33118bba-e358-474f-8c27-929255107954", "parentId": null, "childrenIds": ["30a31bbe-22ca-406f-911c-9cd5869c94c8"], "role": "user", "timestamp": 1757752779, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "a10925d0-9cc1-4501-a8c9-b4beea00405d", "metadata": {"timestamp": 1757752779, "client_version": ""}}, "30a31bbe-22ca-406f-911c-9cd5869c94c8": {"parentId": "33118bba-e358-474f-8c27-929255107954", "id": "30a31bbe-22ca-406f-911c-9cd5869c94c8", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757752779}}, "currentId": "30a31bbe-22ca-406f-911c-9cd5869c94c8"}, "messages": [{"id": "33118bba-e358-474f-8c27-929255107954", "parentId": null, "childrenIds": ["30a31bbe-22ca-406f-911c-9cd5869c94c8"], "role": "user", "timestamp": 1757752779, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "a10925d0-9cc1-4501-a8c9-b4beea00405d", "metadata": {"timestamp": 1757752779, "client_version": ""}}, {"parentId": "33118bba-e358-474f-8c27-929255107954", "id": "30a31bbe-22ca-406f-911c-9cd5869c94c8", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757752779}], "tags": [], "timestamp": 1757752779607, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('060da5e7-82fb-4b94-9dce-666850262a95','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757991762,1757991762,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"8e79672c-021e-4ed7-8b22-ee6360071b7f": {"id": "8e79672c-021e-4ed7-8b22-ee6360071b7f", "parentId": null, "childrenIds": ["37b7beee-a996-4586-af02-d7ccd35ce80a"], "role": "user", "timestamp": 1757991761, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "9b329162-ec54-4a35-a502-836cffd2abdf", "metadata": {"timestamp": 1757991761, "client_version": ""}}, "37b7beee-a996-4586-af02-d7ccd35ce80a": {"parentId": "8e79672c-021e-4ed7-8b22-ee6360071b7f", "id": "37b7beee-a996-4586-af02-d7ccd35ce80a", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757991761}}, "currentId": "37b7beee-a996-4586-af02-d7ccd35ce80a"}, "messages": [{"id": "8e79672c-021e-4ed7-8b22-ee6360071b7f", "parentId": null, "childrenIds": ["37b7beee-a996-4586-af02-d7ccd35ce80a"], "role": "user", "timestamp": 1757991761, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "9b329162-ec54-4a35-a502-836cffd2abdf", "metadata": {"timestamp": 1757991761, "client_version": ""}}, {"parentId": "8e79672c-021e-4ed7-8b22-ee6360071b7f", "id": "37b7beee-a996-4586-af02-d7ccd35ce80a", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757991761}], "tags": [], "timestamp": 1757991761736, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('4e688d46-02f5-435d-b3ea-fbf29363aefc','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757991854,1757991854,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"70d2212c-3891-4660-bc94-8a2f8bdec160": {"id": "70d2212c-3891-4660-bc94-8a2f8bdec160", "parentId": null, "childrenIds": ["90933534-c0f8-42dc-8b2b-bdb2816ba6d0"], "role": "user", "timestamp": 1757991853, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "60702237-06f6-4c94-a633-d36b75b8aa8b", "metadata": {"timestamp": 1757991853, "client_version": ""}}, "90933534-c0f8-42dc-8b2b-bdb2816ba6d0": {"parentId": "70d2212c-3891-4660-bc94-8a2f8bdec160", "id": "90933534-c0f8-42dc-8b2b-bdb2816ba6d0", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757991853}}, "currentId": "90933534-c0f8-42dc-8b2b-bdb2816ba6d0"}, "messages": [{"id": "70d2212c-3891-4660-bc94-8a2f8bdec160", "parentId": null, "childrenIds": ["90933534-c0f8-42dc-8b2b-bdb2816ba6d0"], "role": "user", "timestamp": 1757991853, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "60702237-06f6-4c94-a633-d36b75b8aa8b", "metadata": {"timestamp": 1757991853, "client_version": ""}}, {"parentId": "70d2212c-3891-4660-bc94-8a2f8bdec160", "id": "90933534-c0f8-42dc-8b2b-bdb2816ba6d0", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757991853}], "tags": [], "timestamp": 1757991853279, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('b2ab20c2-e6da-4278-87b9-7192538c6569','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757992175,1757992175,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"764a6f53-b801-412f-adbc-7b5b140cb517": {"id": "764a6f53-b801-412f-adbc-7b5b140cb517", "parentId": null, "childrenIds": ["30048f60-2ec9-4966-b103-454d72ecaf3a"], "role": "user", "timestamp": 1757992174, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "55044783-b969-49f4-abb4-56e42283a73a", "metadata": {"timestamp": 1757992174, "client_version": ""}}, "30048f60-2ec9-4966-b103-454d72ecaf3a": {"parentId": "764a6f53-b801-412f-adbc-7b5b140cb517", "id": "30048f60-2ec9-4966-b103-454d72ecaf3a", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992174}}, "currentId": "30048f60-2ec9-4966-b103-454d72ecaf3a"}, "messages": [{"id": "764a6f53-b801-412f-adbc-7b5b140cb517", "parentId": null, "childrenIds": ["30048f60-2ec9-4966-b103-454d72ecaf3a"], "role": "user", "timestamp": 1757992174, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "55044783-b969-49f4-abb4-56e42283a73a", "metadata": {"timestamp": 1757992174, "client_version": ""}}, {"parentId": "764a6f53-b801-412f-adbc-7b5b140cb517", "id": "30048f60-2ec9-4966-b103-454d72ecaf3a", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992174}], "tags": [], "timestamp": 1757992174204, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('98d74504-6c1f-4b70-bbac-ae0947f59103','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757992289,1757992289,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"af803aa8-cf5b-42a4-b06f-422bdc9594d0": {"id": "af803aa8-cf5b-42a4-b06f-422bdc9594d0", "parentId": null, "childrenIds": ["34064b56-1cd6-4031-bab5-cb75678d61c0"], "role": "user", "timestamp": 1757992288, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "3971f743-d479-4ef1-a6f6-a8a37b2677bb", "metadata": {"timestamp": 1757992288, "client_version": ""}}, "34064b56-1cd6-4031-bab5-cb75678d61c0": {"parentId": "af803aa8-cf5b-42a4-b06f-422bdc9594d0", "id": "34064b56-1cd6-4031-bab5-cb75678d61c0", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992288}}, "currentId": "34064b56-1cd6-4031-bab5-cb75678d61c0"}, "messages": [{"id": "af803aa8-cf5b-42a4-b06f-422bdc9594d0", "parentId": null, "childrenIds": ["34064b56-1cd6-4031-bab5-cb75678d61c0"], "role": "user", "timestamp": 1757992288, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "3971f743-d479-4ef1-a6f6-a8a37b2677bb", "metadata": {"timestamp": 1757992288, "client_version": ""}}, {"parentId": "af803aa8-cf5b-42a4-b06f-422bdc9594d0", "id": "34064b56-1cd6-4031-bab5-cb75678d61c0", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992288}], "tags": [], "timestamp": 1757992288126, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('c2ec634c-6e34-4a0b-87b1-562fc0c7281f','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757992688,1757992688,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"4e11aa10-8bd9-4988-bdff-b6b6a4602f75": {"id": "4e11aa10-8bd9-4988-bdff-b6b6a4602f75", "parentId": null, "childrenIds": ["bd85a527-2798-4b36-a4d4-1dbc38e2f936"], "role": "user", "timestamp": 1757992686, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "68256c5f-7a47-414b-9726-9584456dc5af", "metadata": {"timestamp": 1757992686, "client_version": ""}}, "bd85a527-2798-4b36-a4d4-1dbc38e2f936": {"parentId": "4e11aa10-8bd9-4988-bdff-b6b6a4602f75", "id": "bd85a527-2798-4b36-a4d4-1dbc38e2f936", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992686}}, "currentId": "bd85a527-2798-4b36-a4d4-1dbc38e2f936"}, "messages": [{"id": "4e11aa10-8bd9-4988-bdff-b6b6a4602f75", "parentId": null, "childrenIds": ["bd85a527-2798-4b36-a4d4-1dbc38e2f936"], "role": "user", "timestamp": 1757992686, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "68256c5f-7a47-414b-9726-9584456dc5af", "metadata": {"timestamp": 1757992686, "client_version": ""}}, {"parentId": "4e11aa10-8bd9-4988-bdff-b6b6a4602f75", "id": "bd85a527-2798-4b36-a4d4-1dbc38e2f936", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992686}], "tags": [], "timestamp": 1757992686962, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('c6ae48c0-6830-4568-94f5-3943d1333a1e','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757992731,1757992732,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"d00f9107-37f1-4270-a060-ec41e716b506": {"id": "d00f9107-37f1-4270-a060-ec41e716b506", "parentId": null, "childrenIds": ["c40cab5a-b455-4b3e-8af1-5fa3309cfb1e"], "role": "user", "timestamp": 1757992730, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "3afa5c61-77f5-4982-9adf-bd92d38fff8b", "metadata": {"timestamp": 1757992730, "client_version": ""}}, "c40cab5a-b455-4b3e-8af1-5fa3309cfb1e": {"parentId": "d00f9107-37f1-4270-a060-ec41e716b506", "id": "c40cab5a-b455-4b3e-8af1-5fa3309cfb1e", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992730}}, "currentId": "c40cab5a-b455-4b3e-8af1-5fa3309cfb1e"}, "messages": [{"id": "d00f9107-37f1-4270-a060-ec41e716b506", "parentId": null, "childrenIds": ["c40cab5a-b455-4b3e-8af1-5fa3309cfb1e"], "role": "user", "timestamp": 1757992730, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "3afa5c61-77f5-4982-9adf-bd92d38fff8b", "metadata": {"timestamp": 1757992730, "client_version": ""}}, {"parentId": "d00f9107-37f1-4270-a060-ec41e716b506", "id": "c40cab5a-b455-4b3e-8af1-5fa3309cfb1e", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992730}], "tags": [], "timestamp": 1757992730868, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('3f83416a-9b7f-48a8-9fb9-a327f073bab9','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757992762,1757992762,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"fed23f67-c2ef-429e-8b71-6933025009d6": {"id": "fed23f67-c2ef-429e-8b71-6933025009d6", "parentId": null, "childrenIds": ["ffe513e8-d5bf-401f-aabc-4705d1bb9b17"], "role": "user", "timestamp": 1757992760, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "c525341d-22a5-4f30-b3dd-1a55a1dca023", "metadata": {"timestamp": 1757992760, "client_version": ""}}, "ffe513e8-d5bf-401f-aabc-4705d1bb9b17": {"parentId": "fed23f67-c2ef-429e-8b71-6933025009d6", "id": "ffe513e8-d5bf-401f-aabc-4705d1bb9b17", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992760}}, "currentId": "ffe513e8-d5bf-401f-aabc-4705d1bb9b17"}, "messages": [{"id": "fed23f67-c2ef-429e-8b71-6933025009d6", "parentId": null, "childrenIds": ["ffe513e8-d5bf-401f-aabc-4705d1bb9b17"], "role": "user", "timestamp": 1757992760, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "c525341d-22a5-4f30-b3dd-1a55a1dca023", "metadata": {"timestamp": 1757992760, "client_version": ""}}, {"parentId": "fed23f67-c2ef-429e-8b71-6933025009d6", "id": "ffe513e8-d5bf-401f-aabc-4705d1bb9b17", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992760}], "tags": [], "timestamp": 1757992760970, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('45c4dbd0-0ca2-4305-8efe-07910690cee0','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757992869,1757992869,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"2b9e591f-d0f6-4681-ac71-f71ea8335d48": {"id": "2b9e591f-d0f6-4681-ac71-f71ea8335d48", "parentId": null, "childrenIds": ["184f4d44-057d-43e0-b9e0-e93f4815ea21"], "role": "user", "timestamp": 1757992868, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "19275209-a509-44b7-823c-1b1c9a906b2d", "metadata": {"timestamp": 1757992868, "client_version": ""}}, "184f4d44-057d-43e0-b9e0-e93f4815ea21": {"parentId": "2b9e591f-d0f6-4681-ac71-f71ea8335d48", "id": "184f4d44-057d-43e0-b9e0-e93f4815ea21", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992868}}, "currentId": "184f4d44-057d-43e0-b9e0-e93f4815ea21"}, "messages": [{"id": "2b9e591f-d0f6-4681-ac71-f71ea8335d48", "parentId": null, "childrenIds": ["184f4d44-057d-43e0-b9e0-e93f4815ea21"], "role": "user", "timestamp": 1757992868, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "19275209-a509-44b7-823c-1b1c9a906b2d", "metadata": {"timestamp": 1757992868, "client_version": ""}}, {"parentId": "2b9e591f-d0f6-4681-ac71-f71ea8335d48", "id": "184f4d44-057d-43e0-b9e0-e93f4815ea21", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992868}], "tags": [], "timestamp": 1757992868473, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('8a20e959-ab4e-441c-99ab-113fd61bd731','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757993180,1757993181,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"cfacd975-9712-4bbc-8c6e-1398c2fe6810": {"id": "cfacd975-9712-4bbc-8c6e-1398c2fe6810", "parentId": null, "childrenIds": ["a20c7e1b-18ae-4627-bb35-f93b7e815f95"], "role": "user", "timestamp": 1757993179, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "7e669bea-a1d4-4551-8624-fe82d6060350", "metadata": {"timestamp": 1757993179, "client_version": ""}}, "a20c7e1b-18ae-4627-bb35-f93b7e815f95": {"parentId": "cfacd975-9712-4bbc-8c6e-1398c2fe6810", "id": "a20c7e1b-18ae-4627-bb35-f93b7e815f95", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993179}}, "currentId": "a20c7e1b-18ae-4627-bb35-f93b7e815f95"}, "messages": [{"id": "cfacd975-9712-4bbc-8c6e-1398c2fe6810", "parentId": null, "childrenIds": ["a20c7e1b-18ae-4627-bb35-f93b7e815f95"], "role": "user", "timestamp": 1757993179, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "7e669bea-a1d4-4551-8624-fe82d6060350", "metadata": {"timestamp": 1757993179, "client_version": ""}}, {"parentId": "cfacd975-9712-4bbc-8c6e-1398c2fe6810", "id": "a20c7e1b-18ae-4627-bb35-f93b7e815f95", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993179}], "tags": [], "timestamp": 1757993179843, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('a02bbdfb-0dec-46eb-a1a0-7fac9f2fcdb5','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757993323,1757993323,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"006e740d-bc82-42db-a7d3-39ca65627814": {"id": "006e740d-bc82-42db-a7d3-39ca65627814", "parentId": null, "childrenIds": ["d234e745-f4d9-4243-be44-c3860ea525a9"], "role": "user", "timestamp": 1757993322, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "e3352bf2-e476-4d53-8d1a-598b9dfd85f5", "metadata": {"timestamp": 1757993322, "client_version": ""}}, "d234e745-f4d9-4243-be44-c3860ea525a9": {"parentId": "006e740d-bc82-42db-a7d3-39ca65627814", "id": "d234e745-f4d9-4243-be44-c3860ea525a9", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993322}}, "currentId": "d234e745-f4d9-4243-be44-c3860ea525a9"}, "messages": [{"id": "006e740d-bc82-42db-a7d3-39ca65627814", "parentId": null, "childrenIds": ["d234e745-f4d9-4243-be44-c3860ea525a9"], "role": "user", "timestamp": 1757993322, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "e3352bf2-e476-4d53-8d1a-598b9dfd85f5", "metadata": {"timestamp": 1757993322, "client_version": ""}}, {"parentId": "006e740d-bc82-42db-a7d3-39ca65627814", "id": "d234e745-f4d9-4243-be44-c3860ea525a9", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993322}], "tags": [], "timestamp": 1757993322671, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('7a4455ec-81de-437d-b8c5-fead3487d64b','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757993667,1757993667,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"3aba0088-7135-4262-8778-791b33f2160b": {"id": "3aba0088-7135-4262-8778-791b33f2160b", "parentId": null, "childrenIds": ["9b688f65-f296-46ef-b77d-0e818fdcaf7b"], "role": "user", "timestamp": 1757993662, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "e10f6b61-1891-40fd-83b6-f42b1c883f96", "metadata": {"timestamp": 1757993662, "client_version": ""}}, "9b688f65-f296-46ef-b77d-0e818fdcaf7b": {"parentId": "3aba0088-7135-4262-8778-791b33f2160b", "id": "9b688f65-f296-46ef-b77d-0e818fdcaf7b", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993666}}, "currentId": "9b688f65-f296-46ef-b77d-0e818fdcaf7b"}, "messages": [{"id": "3aba0088-7135-4262-8778-791b33f2160b", "parentId": null, "childrenIds": ["9b688f65-f296-46ef-b77d-0e818fdcaf7b"], "role": "user", "timestamp": 1757993662, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "e10f6b61-1891-40fd-83b6-f42b1c883f96", "metadata": {"timestamp": 1757993662, "client_version": ""}}, {"parentId": "3aba0088-7135-4262-8778-791b33f2160b", "id": "9b688f65-f296-46ef-b77d-0e818fdcaf7b", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993666}], "tags": [], "timestamp": 1757993666047, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('6264c30d-68a7-4d1c-90c2-32a5a47e4e5b','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1757993706,1757993707,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"5485846d-6242-4cef-94f7-5cbe6443ea8e": {"id": "5485846d-6242-4cef-94f7-5cbe6443ea8e", "parentId": null, "childrenIds": ["f73fea05-6603-4788-a22f-956fd46b6f0b"], "role": "user", "timestamp": 1757993703, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "d4eca09c-3d6c-479b-80c3-42c361423ab1", "metadata": {"timestamp": 1757993703, "client_version": ""}}, "f73fea05-6603-4788-a22f-956fd46b6f0b": {"parentId": "5485846d-6242-4cef-94f7-5cbe6443ea8e", "id": "f73fea05-6603-4788-a22f-956fd46b6f0b", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993705}}, "currentId": "f73fea05-6603-4788-a22f-956fd46b6f0b"}, "messages": [{"id": "5485846d-6242-4cef-94f7-5cbe6443ea8e", "parentId": null, "childrenIds": ["f73fea05-6603-4788-a22f-956fd46b6f0b"], "role": "user", "timestamp": 1757993703, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "d4eca09c-3d6c-479b-80c3-42c361423ab1", "metadata": {"timestamp": 1757993703, "client_version": ""}}, {"parentId": "5485846d-6242-4cef-94f7-5cbe6443ea8e", "id": "f73fea05-6603-4788-a22f-956fd46b6f0b", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993705}], "tags": [], "timestamp": 1757993705866, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('a9255467-6494-4ec8-9c04-08eee3973d90','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758354252,1758354252,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93": {"id": "8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93", "parentId": null, "childrenIds": ["83f1c6c1-917d-4847-bc25-6aeda94b1752"], "role": "user", "timestamp": 1758354241, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "f4c4ece1-b65e-45eb-850c-42380a54652e", "metadata": {"timestamp": 1758354241, "client_version": ""}}, "83f1c6c1-917d-4847-bc25-6aeda94b1752": {"parentId": "8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93", "id": "83f1c6c1-917d-4847-bc25-6aeda94b1752", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354251}}, "currentId": "83f1c6c1-917d-4847-bc25-6aeda94b1752"}, "messages": [{"id": "8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93", "parentId": null, "childrenIds": ["83f1c6c1-917d-4847-bc25-6aeda94b1752"], "role": "user", "timestamp": 1758354241, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "f4c4ece1-b65e-45eb-850c-42380a54652e", "metadata": {"timestamp": 1758354241, "client_version": ""}}, {"parentId": "8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93", "id": "83f1c6c1-917d-4847-bc25-6aeda94b1752", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354251}], "tags": [], "timestamp": 1758354251964, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('0cdbae10-2dad-40ba-8c70-3401e00796b6','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758354422,1758354426,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"0b4cbe5b-5348-4560-a574-bfe2e881909d": {"id": "0b4cbe5b-5348-4560-a574-bfe2e881909d", "parentId": null, "childrenIds": ["cb5d2998-eb17-4cbd-a6db-5c764d314f74"], "role": "user", "timestamp": 1758354393, "content": "\u4e0d\u4e0d\u4e0d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "d80e0f48-b438-4791-ae38-a2c988865b29", "metadata": {"timestamp": 1758354393, "client_version": ""}}, "cb5d2998-eb17-4cbd-a6db-5c764d314f74": {"parentId": "0b4cbe5b-5348-4560-a574-bfe2e881909d", "id": "cb5d2998-eb17-4cbd-a6db-5c764d314f74", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354416}}, "currentId": "cb5d2998-eb17-4cbd-a6db-5c764d314f74"}, "messages": [{"id": "0b4cbe5b-5348-4560-a574-bfe2e881909d", "parentId": null, "childrenIds": ["cb5d2998-eb17-4cbd-a6db-5c764d314f74"], "role": "user", "timestamp": 1758354393, "content": "\u4e0d\u4e0d\u4e0d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "d80e0f48-b438-4791-ae38-a2c988865b29", "metadata": {"timestamp": 1758354393, "client_version": ""}}, {"parentId": "0b4cbe5b-5348-4560-a574-bfe2e881909d", "id": "cb5d2998-eb17-4cbd-a6db-5c764d314f74", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354416}], "tags": [], "timestamp": 1758354421552, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('38d00b0a-4b9e-47f8-ad8e-7a331bf9f8a2','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758354491,1758354506,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"d1f6c67d-5ab8-42d6-afeb-52678e3acfdc": {"id": "d1f6c67d-5ab8-42d6-afeb-52678e3acfdc", "parentId": null, "childrenIds": ["87d3a007-7d91-45f8-8702-69db85b7c6c4"], "role": "user", "timestamp": 1758354469, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "b1d38120-944c-49f4-8bb1-a3a04739dab3", "metadata": {"timestamp": 1758354469, "client_version": ""}}, "87d3a007-7d91-45f8-8702-69db85b7c6c4": {"parentId": "d1f6c67d-5ab8-42d6-afeb-52678e3acfdc", "id": "87d3a007-7d91-45f8-8702-69db85b7c6c4", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354480}}, "currentId": "87d3a007-7d91-45f8-8702-69db85b7c6c4"}, "messages": [{"id": "d1f6c67d-5ab8-42d6-afeb-52678e3acfdc", "parentId": null, "childrenIds": ["87d3a007-7d91-45f8-8702-69db85b7c6c4"], "role": "user", "timestamp": 1758354469, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "b1d38120-944c-49f4-8bb1-a3a04739dab3", "metadata": {"timestamp": 1758354469, "client_version": ""}}, {"parentId": "d1f6c67d-5ab8-42d6-afeb-52678e3acfdc", "id": "87d3a007-7d91-45f8-8702-69db85b7c6c4", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354480}], "tags": [], "timestamp": 1758354490736, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('254b5166-3ddd-4e5e-8f9e-c2016264847d','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758355007,1758355007,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"b3e2d724-c6b8-45cc-8417-2477d1a71ec3": {"parentId": "", "id": "b3e2d724-c6b8-45cc-8417-2477d1a71ec3", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355006}, "d0aac0c6-16bd-4285-b7fb-d6a8a593099d": {"id": "d0aac0c6-16bd-4285-b7fb-d6a8a593099d", "parentId": null, "childrenIds": ["6a2b281b-5fac-421d-86ff-0f80a07f693f"], "role": "user", "timestamp": 1758355006, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "65dff556-dd8d-48da-a7c2-2dcf31fb3e37", "metadata": {"timestamp": 1758355006, "client_version": ""}}, "6a2b281b-5fac-421d-86ff-0f80a07f693f": {"parentId": "d0aac0c6-16bd-4285-b7fb-d6a8a593099d", "id": "6a2b281b-5fac-421d-86ff-0f80a07f693f", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355006}}, "currentId": "6a2b281b-5fac-421d-86ff-0f80a07f693f"}, "messages": [{"id": "d0aac0c6-16bd-4285-b7fb-d6a8a593099d", "parentId": null, "childrenIds": ["6a2b281b-5fac-421d-86ff-0f80a07f693f"], "role": "user", "timestamp": 1758355006, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "65dff556-dd8d-48da-a7c2-2dcf31fb3e37", "metadata": {"timestamp": 1758355006, "client_version": ""}}, {"parentId": "d0aac0c6-16bd-4285-b7fb-d6a8a593099d", "id": "6a2b281b-5fac-421d-86ff-0f80a07f693f", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355006}], "tags": [], "timestamp": 1758355006578, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('210534cf-a622-46b3-8a6e-03fd0758f36e','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758355044,1758355044,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"9a657a70-04a3-4f64-b635-d1556476d75e": {"parentId": "", "id": "9a657a70-04a3-4f64-b635-d1556476d75e", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355043}, "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8": {"id": "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8", "parentId": null, "childrenIds": ["b0b0f99d-e9cf-4c9d-a99c-206ec885c653"], "role": "user", "timestamp": 1758355043, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "83a16f0d-f9f5-48d0-9278-09924b60c3d7", "metadata": {"timestamp": 1758355043, "client_version": ""}}, "b0b0f99d-e9cf-4c9d-a99c-206ec885c653": {"parentId": "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8", "id": "b0b0f99d-e9cf-4c9d-a99c-206ec885c653", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355043}}, "currentId": "b0b0f99d-e9cf-4c9d-a99c-206ec885c653"}, "messages": [{"id": "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8", "parentId": null, "childrenIds": ["b0b0f99d-e9cf-4c9d-a99c-206ec885c653"], "role": "user", "timestamp": 1758355043, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "83a16f0d-f9f5-48d0-9278-09924b60c3d7", "metadata": {"timestamp": 1758355043, "client_version": ""}}, {"parentId": "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8", "id": "b0b0f99d-e9cf-4c9d-a99c-206ec885c653", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355043}], "tags": [], "timestamp": 1758355043564, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('e63bd882-64d3-4f62-9225-00ad48e8db29','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758355078,1758355078,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"a61ff54c-b9b0-438a-a301-3607fd4a4388": {"parentId": "", "id": "a61ff54c-b9b0-438a-a301-3607fd4a4388", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355075}, "667a3a9f-5f65-4dcc-bb32-09df66025343": {"id": "667a3a9f-5f65-4dcc-bb32-09df66025343", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758355075, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "a025c636-0fb6-4014-8d3a-1ddd39d17d57", "metadata": {"timestamp": 1758355075, "client_version": ""}}}, "currentId": "667a3a9f-5f65-4dcc-bb32-09df66025343"}, "messages": [{"id": "667a3a9f-5f65-4dcc-bb32-09df66025343", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758355075, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "a025c636-0fb6-4014-8d3a-1ddd39d17d57", "metadata": {"timestamp": 1758355075, "client_version": ""}}], "tags": [], "timestamp": 1758355077397}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('aeba205e-8c43-463b-a149-0bbbe2675662','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758355187,1758355188,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"068941d1-49f4-4b89-b043-3ebe6261aaba": {"parentId": "", "id": "068941d1-49f4-4b89-b043-3ebe6261aaba", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355187}, "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0": {"id": "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0", "parentId": null, "childrenIds": ["2c203750-01c4-4252-8557-25fd0514fd11"], "role": "user", "timestamp": 1758355187, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "34cf88c1-ce82-4d42-a1a0-0e3dc114b9b2", "metadata": {"timestamp": 1758355187, "client_version": ""}}, "2c203750-01c4-4252-8557-25fd0514fd11": {"parentId": "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0", "id": "2c203750-01c4-4252-8557-25fd0514fd11", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355187}}, "currentId": "2c203750-01c4-4252-8557-25fd0514fd11"}, "messages": [{"id": "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0", "parentId": null, "childrenIds": ["2c203750-01c4-4252-8557-25fd0514fd11"], "role": "user", "timestamp": 1758355187, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "34cf88c1-ce82-4d42-a1a0-0e3dc114b9b2", "metadata": {"timestamp": 1758355187, "client_version": ""}}, {"parentId": "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0", "id": "2c203750-01c4-4252-8557-25fd0514fd11", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355187}], "tags": [], "timestamp": 1758355187292, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('e01fb250-d0b2-4416-a110-067fe20340e3','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758355256,1758355265,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"ef048080-097e-4338-b111-b9ad01c22b52": {"parentId": "", "id": "ef048080-097e-4338-b111-b9ad01c22b52", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355234}, "9d740457-33e3-45f0-bb79-6bab8c95227e": {"id": "9d740457-33e3-45f0-bb79-6bab8c95227e", "parentId": null, "childrenIds": ["d1a98106-6701-4336-8604-64c3306bdc7d"], "role": "user", "timestamp": 1758355248, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "c761df98-1dd6-40a6-8562-f23820079a30", "metadata": {"timestamp": 1758355248, "client_version": ""}}, "d1a98106-6701-4336-8604-64c3306bdc7d": {"parentId": "9d740457-33e3-45f0-bb79-6bab8c95227e", "id": "d1a98106-6701-4336-8604-64c3306bdc7d", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355255}}, "currentId": "d1a98106-6701-4336-8604-64c3306bdc7d"}, "messages": [{"id": "9d740457-33e3-45f0-bb79-6bab8c95227e", "parentId": null, "childrenIds": ["d1a98106-6701-4336-8604-64c3306bdc7d"], "role": "user", "timestamp": 1758355248, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "c761df98-1dd6-40a6-8562-f23820079a30", "metadata": {"timestamp": 1758355248, "client_version": ""}}, {"parentId": "9d740457-33e3-45f0-bb79-6bab8c95227e", "id": "d1a98106-6701-4336-8604-64c3306bdc7d", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355255}], "tags": [], "timestamp": 1758355255533, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('a9ba5bc0-503a-4ddf-8eec-63d2d9cbf1b8','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758355332,1758355332,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"c26aac4a-87a8-4ba6-b5f0-9000a0a67307": {"parentId": "", "id": "c26aac4a-87a8-4ba6-b5f0-9000a0a67307", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355329}, "ec569b44-10b0-42bb-9467-c8bf588fc52e": {"id": "ec569b44-10b0-42bb-9467-c8bf588fc52e", "parentId": null, "childrenIds": ["0580ff50-d377-4a44-9ec9-4682ceef7964"], "role": "user", "timestamp": 1758355329, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "caffbd33-ee8b-498e-a010-a5601c91ba98", "metadata": {"timestamp": 1758355329, "client_version": ""}}, "0580ff50-d377-4a44-9ec9-4682ceef7964": {"parentId": "ec569b44-10b0-42bb-9467-c8bf588fc52e", "id": "0580ff50-d377-4a44-9ec9-4682ceef7964", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355332}}, "currentId": "0580ff50-d377-4a44-9ec9-4682ceef7964"}, "messages": [{"id": "ec569b44-10b0-42bb-9467-c8bf588fc52e", "parentId": null, "childrenIds": ["0580ff50-d377-4a44-9ec9-4682ceef7964"], "role": "user", "timestamp": 1758355329, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "caffbd33-ee8b-498e-a010-a5601c91ba98", "metadata": {"timestamp": 1758355329, "client_version": ""}}, {"parentId": "ec569b44-10b0-42bb-9467-c8bf588fc52e", "id": "0580ff50-d377-4a44-9ec9-4682ceef7964", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355332}], "tags": [], "timestamp": 1758355332105, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('46106920-6af2-4588-9b8c-85321ade053c','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758355578,1758355578,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"08538a3d-4858-4750-8e22-6c5390ff03e6": {"parentId": "", "id": "08538a3d-4858-4750-8e22-6c5390ff03e6", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355577}, "3ecef7ec-ec7d-4b20-9181-a75311ba120e": {"id": "3ecef7ec-ec7d-4b20-9181-a75311ba120e", "parentId": null, "childrenIds": ["91ac2fad-f817-457f-ab6d-99b5dfac0aab"], "role": "user", "timestamp": 1758355577, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "66373955-9d0a-43a6-afa4-c1d6e9eab995", "metadata": {"timestamp": 1758355577, "client_version": ""}}, "91ac2fad-f817-457f-ab6d-99b5dfac0aab": {"parentId": "3ecef7ec-ec7d-4b20-9181-a75311ba120e", "id": "91ac2fad-f817-457f-ab6d-99b5dfac0aab", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355577}}, "currentId": "91ac2fad-f817-457f-ab6d-99b5dfac0aab"}, "messages": [{"id": "3ecef7ec-ec7d-4b20-9181-a75311ba120e", "parentId": null, "childrenIds": ["91ac2fad-f817-457f-ab6d-99b5dfac0aab"], "role": "user", "timestamp": 1758355577, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "66373955-9d0a-43a6-afa4-c1d6e9eab995", "metadata": {"timestamp": 1758355577, "client_version": ""}}, {"parentId": "3ecef7ec-ec7d-4b20-9181-a75311ba120e", "id": "91ac2fad-f817-457f-ab6d-99b5dfac0aab", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355577}], "tags": [], "timestamp": 1758355577925, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('1261ed91-4c0b-425d-9ec3-ffd977bbf88c','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758355595,1758355595,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"e1706221-b6c8-452f-821a-2dea012ff732": {"parentId": "", "id": "e1706221-b6c8-452f-821a-2dea012ff732", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355595}, "8c700b3c-10ab-4b30-b270-a78291b8e822": {"id": "8c700b3c-10ab-4b30-b270-a78291b8e822", "parentId": null, "childrenIds": ["380e6cbd-d5b6-4847-8730-7d990e67a208"], "role": "user", "timestamp": 1758355595, "content": "\u4f60\u54c8", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "2c663a08-d045-4584-922c-f7691bc120b0", "metadata": {"timestamp": 1758355595, "client_version": ""}}, "380e6cbd-d5b6-4847-8730-7d990e67a208": {"parentId": "8c700b3c-10ab-4b30-b270-a78291b8e822", "id": "380e6cbd-d5b6-4847-8730-7d990e67a208", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355595}}, "currentId": "380e6cbd-d5b6-4847-8730-7d990e67a208"}, "messages": [{"id": "8c700b3c-10ab-4b30-b270-a78291b8e822", "parentId": null, "childrenIds": ["380e6cbd-d5b6-4847-8730-7d990e67a208"], "role": "user", "timestamp": 1758355595, "content": "\u4f60\u54c8", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "2c663a08-d045-4584-922c-f7691bc120b0", "metadata": {"timestamp": 1758355595, "client_version": ""}}, {"parentId": "8c700b3c-10ab-4b30-b270-a78291b8e822", "id": "380e6cbd-d5b6-4847-8730-7d990e67a208", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355595}], "tags": [], "timestamp": 1758355595160, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('42286399-d557-4700-aebb-ec6928be72c1','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758355665,1758355686,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"ee6d72d6-b1f0-4e91-88b6-c5929d208f39": {"parentId": "", "id": "ee6d72d6-b1f0-4e91-88b6-c5929d208f39", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355661}, "1a845eda-5384-45d1-a9d1-e49fc73821b6": {"id": "1a845eda-5384-45d1-a9d1-e49fc73821b6", "parentId": null, "childrenIds": ["40d1ee99-7773-453c-a400-e623c89c61cc"], "role": "user", "timestamp": 1758355661, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "b4aeaaed-3fca-4ffc-86dc-1a02a4ceeaf8", "metadata": {"timestamp": 1758355661, "client_version": ""}}, "40d1ee99-7773-453c-a400-e623c89c61cc": {"parentId": "1a845eda-5384-45d1-a9d1-e49fc73821b6", "id": "40d1ee99-7773-453c-a400-e623c89c61cc", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355664}}, "currentId": "40d1ee99-7773-453c-a400-e623c89c61cc"}, "messages": [{"id": "1a845eda-5384-45d1-a9d1-e49fc73821b6", "parentId": null, "childrenIds": ["40d1ee99-7773-453c-a400-e623c89c61cc"], "role": "user", "timestamp": 1758355661, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "b4aeaaed-3fca-4ffc-86dc-1a02a4ceeaf8", "metadata": {"timestamp": 1758355661, "client_version": ""}}, {"parentId": "1a845eda-5384-45d1-a9d1-e49fc73821b6", "id": "40d1ee99-7773-453c-a400-e623c89c61cc", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355664}], "tags": [], "timestamp": 1758355664571, "files": []}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('8faad1b6-2089-437e-bc6b-c1bb0285e252','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758811998,1758811998,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"02d92e57-56b3-4ec1-801d-82d8aac4c2bc": {"id": "02d92e57-56b3-4ec1-801d-82d8aac4c2bc", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758811999, "content": "\u4ecevv", "type": "chat", "workflow_type": "main", "enter_type": "", "task_id": "", "session_id": "e40a5a6e-9e6d-4e2a-b00e-beb07d275397", "metadata": {"timestamp": 1758811999, "client_version": ""}}}, "currentId": "02d92e57-56b3-4ec1-801d-82d8aac4c2bc"}, "messages": [{"id": "02d92e57-56b3-4ec1-801d-82d8aac4c2bc", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758811999, "content": "\u4ecevv", "type": "chat", "workflow_type": "main", "enter_type": "", "task_id": "", "session_id": "e40a5a6e-9e6d-4e2a-b00e-beb07d275397", "metadata": {"timestamp": 1758811999, "client_version": ""}}], "tags": [], "timestamp": 1758811999577}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('71443de5-0647-4b9a-b08c-58f3aeddd8dd','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对话',NULL,0,1758812162,1758812162,'{"id": "8faad1b6-2089-437e-bc6b-c1bb0285e252", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"c830b54b-e006-4cc7-a1ed-5ece0f6e1e42": {"id": "c830b54b-e006-4cc7-a1ed-5ece0f6e1e42", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758812163, "content": "AS\u963f\u8428A", "type": "chat", "workflow_type": "main", "enter_type": "", "task_id": "", "session_id": "695e8584-f34e-46a3-b4a2-15e0fe6fb248", "metadata": {"timestamp": 1758812163, "client_version": ""}}}, "currentId": "c830b54b-e006-4cc7-a1ed-5ece0f6e1e42"}, "messages": [{"id": "c830b54b-e006-4cc7-a1ed-5ece0f6e1e42", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758812163, "content": "AS\u963f\u8428A", "type": "chat", "workflow_type": "main", "enter_type": "", "task_id": "", "session_id": "695e8584-f34e-46a3-b4a2-15e0fe6fb248", "metadata": {"timestamp": 1758812163, "client_version": ""}}], "tags": [], "timestamp": 1758812163705}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('3e376b70-5820-40c0-ad66-cd2b088a4ba5','99646252-83fb-4e9a-bb8a-d6bc647c1da7','新对话',NULL,0,1758967669,1758967669,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"337c7110-0c52-45dd-b546-f8652e3e5ed9": {"id": "337c7110-0c52-45dd-b546-f8652e3e5ed9", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758967668, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "entry_type": "chat", "task_id": "", "session_id": "07b74443-e85c-488b-8461-bf33b3e2245d", "metadata": {"timestamp": 1758967668, "client_version": ""}}}, "currentId": "337c7110-0c52-45dd-b546-f8652e3e5ed9"}, "messages": [{"id": "337c7110-0c52-45dd-b546-f8652e3e5ed9", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758967668, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "entry_type": "chat", "task_id": "", "session_id": "07b74443-e85c-488b-8461-bf33b3e2245d", "metadata": {"timestamp": 1758967668, "client_version": ""}}], "tags": [], "timestamp": 1758967668549}',0,'{}',NULL);
-INSERT INTO "chat" VALUES('dade63b5-e661-4c3a-8f1e-8477772ecc4a','99646252-83fb-4e9a-bb8a-d6bc647c1da7','新对话',NULL,0,1758967729,1758967729,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"7a5a0275-9c0e-4f0f-ab5e-ea378152e3a2": {"id": "7a5a0275-9c0e-4f0f-ab5e-ea378152e3a2", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758967728, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "entry_type": "chat", "task_id": "", "session_id": "2bed5475-271a-4acd-a4f0-2be06c57c6ee", "metadata": {"timestamp": 1758967728, "client_version": ""}}}, "currentId": "7a5a0275-9c0e-4f0f-ab5e-ea378152e3a2"}, "messages": [{"id": "7a5a0275-9c0e-4f0f-ab5e-ea378152e3a2", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758967728, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "entry_type": "chat", "task_id": "", "session_id": "2bed5475-271a-4acd-a4f0-2be06c57c6ee", "metadata": {"timestamp": 1758967728, "client_version": ""}}], "tags": [], "timestamp": 1758967728606}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('8d22b092-3e4f-4264-b3e1-b56fff8670c7','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757752779,1757752784,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"33118bba-e358-474f-8c27-929255107954": {"id": "33118bba-e358-474f-8c27-929255107954", "parentId": null, "childrenIds": ["30a31bbe-22ca-406f-911c-9cd5869c94c8"], "role": "user", "timestamp": 1757752779, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "a10925d0-9cc1-4501-a8c9-b4beea00405d", "metadata": {"timestamp": 1757752779, "client_version": ""}}, "30a31bbe-22ca-406f-911c-9cd5869c94c8": {"parentId": "33118bba-e358-474f-8c27-929255107954", "id": "30a31bbe-22ca-406f-911c-9cd5869c94c8", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757752779}}, "currentId": "30a31bbe-22ca-406f-911c-9cd5869c94c8"}, "messages": [{"id": "33118bba-e358-474f-8c27-929255107954", "parentId": null, "childrenIds": ["30a31bbe-22ca-406f-911c-9cd5869c94c8"], "role": "user", "timestamp": 1757752779, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "a10925d0-9cc1-4501-a8c9-b4beea00405d", "metadata": {"timestamp": 1757752779, "client_version": ""}}, {"parentId": "33118bba-e358-474f-8c27-929255107954", "id": "30a31bbe-22ca-406f-911c-9cd5869c94c8", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757752779}], "tags": [], "timestamp": 1757752779607, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('060da5e7-82fb-4b94-9dce-666850262a95','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757991762,1757991762,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"8e79672c-021e-4ed7-8b22-ee6360071b7f": {"id": "8e79672c-021e-4ed7-8b22-ee6360071b7f", "parentId": null, "childrenIds": ["37b7beee-a996-4586-af02-d7ccd35ce80a"], "role": "user", "timestamp": 1757991761, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "9b329162-ec54-4a35-a502-836cffd2abdf", "metadata": {"timestamp": 1757991761, "client_version": ""}}, "37b7beee-a996-4586-af02-d7ccd35ce80a": {"parentId": "8e79672c-021e-4ed7-8b22-ee6360071b7f", "id": "37b7beee-a996-4586-af02-d7ccd35ce80a", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757991761}}, "currentId": "37b7beee-a996-4586-af02-d7ccd35ce80a"}, "messages": [{"id": "8e79672c-021e-4ed7-8b22-ee6360071b7f", "parentId": null, "childrenIds": ["37b7beee-a996-4586-af02-d7ccd35ce80a"], "role": "user", "timestamp": 1757991761, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "9b329162-ec54-4a35-a502-836cffd2abdf", "metadata": {"timestamp": 1757991761, "client_version": ""}}, {"parentId": "8e79672c-021e-4ed7-8b22-ee6360071b7f", "id": "37b7beee-a996-4586-af02-d7ccd35ce80a", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757991761}], "tags": [], "timestamp": 1757991761736, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('4e688d46-02f5-435d-b3ea-fbf29363aefc','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757991854,1757991854,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"70d2212c-3891-4660-bc94-8a2f8bdec160": {"id": "70d2212c-3891-4660-bc94-8a2f8bdec160", "parentId": null, "childrenIds": ["90933534-c0f8-42dc-8b2b-bdb2816ba6d0"], "role": "user", "timestamp": 1757991853, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "60702237-06f6-4c94-a633-d36b75b8aa8b", "metadata": {"timestamp": 1757991853, "client_version": ""}}, "90933534-c0f8-42dc-8b2b-bdb2816ba6d0": {"parentId": "70d2212c-3891-4660-bc94-8a2f8bdec160", "id": "90933534-c0f8-42dc-8b2b-bdb2816ba6d0", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757991853}}, "currentId": "90933534-c0f8-42dc-8b2b-bdb2816ba6d0"}, "messages": [{"id": "70d2212c-3891-4660-bc94-8a2f8bdec160", "parentId": null, "childrenIds": ["90933534-c0f8-42dc-8b2b-bdb2816ba6d0"], "role": "user", "timestamp": 1757991853, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "60702237-06f6-4c94-a633-d36b75b8aa8b", "metadata": {"timestamp": 1757991853, "client_version": ""}}, {"parentId": "70d2212c-3891-4660-bc94-8a2f8bdec160", "id": "90933534-c0f8-42dc-8b2b-bdb2816ba6d0", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757991853}], "tags": [], "timestamp": 1757991853279, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('b2ab20c2-e6da-4278-87b9-7192538c6569','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757992175,1757992175,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"764a6f53-b801-412f-adbc-7b5b140cb517": {"id": "764a6f53-b801-412f-adbc-7b5b140cb517", "parentId": null, "childrenIds": ["30048f60-2ec9-4966-b103-454d72ecaf3a"], "role": "user", "timestamp": 1757992174, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "55044783-b969-49f4-abb4-56e42283a73a", "metadata": {"timestamp": 1757992174, "client_version": ""}}, "30048f60-2ec9-4966-b103-454d72ecaf3a": {"parentId": "764a6f53-b801-412f-adbc-7b5b140cb517", "id": "30048f60-2ec9-4966-b103-454d72ecaf3a", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992174}}, "currentId": "30048f60-2ec9-4966-b103-454d72ecaf3a"}, "messages": [{"id": "764a6f53-b801-412f-adbc-7b5b140cb517", "parentId": null, "childrenIds": ["30048f60-2ec9-4966-b103-454d72ecaf3a"], "role": "user", "timestamp": 1757992174, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "55044783-b969-49f4-abb4-56e42283a73a", "metadata": {"timestamp": 1757992174, "client_version": ""}}, {"parentId": "764a6f53-b801-412f-adbc-7b5b140cb517", "id": "30048f60-2ec9-4966-b103-454d72ecaf3a", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992174}], "tags": [], "timestamp": 1757992174204, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('98d74504-6c1f-4b70-bbac-ae0947f59103','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757992289,1757992289,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"af803aa8-cf5b-42a4-b06f-422bdc9594d0": {"id": "af803aa8-cf5b-42a4-b06f-422bdc9594d0", "parentId": null, "childrenIds": ["34064b56-1cd6-4031-bab5-cb75678d61c0"], "role": "user", "timestamp": 1757992288, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "3971f743-d479-4ef1-a6f6-a8a37b2677bb", "metadata": {"timestamp": 1757992288, "client_version": ""}}, "34064b56-1cd6-4031-bab5-cb75678d61c0": {"parentId": "af803aa8-cf5b-42a4-b06f-422bdc9594d0", "id": "34064b56-1cd6-4031-bab5-cb75678d61c0", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992288}}, "currentId": "34064b56-1cd6-4031-bab5-cb75678d61c0"}, "messages": [{"id": "af803aa8-cf5b-42a4-b06f-422bdc9594d0", "parentId": null, "childrenIds": ["34064b56-1cd6-4031-bab5-cb75678d61c0"], "role": "user", "timestamp": 1757992288, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "3971f743-d479-4ef1-a6f6-a8a37b2677bb", "metadata": {"timestamp": 1757992288, "client_version": ""}}, {"parentId": "af803aa8-cf5b-42a4-b06f-422bdc9594d0", "id": "34064b56-1cd6-4031-bab5-cb75678d61c0", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992288}], "tags": [], "timestamp": 1757992288126, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('c2ec634c-6e34-4a0b-87b1-562fc0c7281f','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757992688,1757992688,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"4e11aa10-8bd9-4988-bdff-b6b6a4602f75": {"id": "4e11aa10-8bd9-4988-bdff-b6b6a4602f75", "parentId": null, "childrenIds": ["bd85a527-2798-4b36-a4d4-1dbc38e2f936"], "role": "user", "timestamp": 1757992686, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "68256c5f-7a47-414b-9726-9584456dc5af", "metadata": {"timestamp": 1757992686, "client_version": ""}}, "bd85a527-2798-4b36-a4d4-1dbc38e2f936": {"parentId": "4e11aa10-8bd9-4988-bdff-b6b6a4602f75", "id": "bd85a527-2798-4b36-a4d4-1dbc38e2f936", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992686}}, "currentId": "bd85a527-2798-4b36-a4d4-1dbc38e2f936"}, "messages": [{"id": "4e11aa10-8bd9-4988-bdff-b6b6a4602f75", "parentId": null, "childrenIds": ["bd85a527-2798-4b36-a4d4-1dbc38e2f936"], "role": "user", "timestamp": 1757992686, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "68256c5f-7a47-414b-9726-9584456dc5af", "metadata": {"timestamp": 1757992686, "client_version": ""}}, {"parentId": "4e11aa10-8bd9-4988-bdff-b6b6a4602f75", "id": "bd85a527-2798-4b36-a4d4-1dbc38e2f936", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992686}], "tags": [], "timestamp": 1757992686962, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('c6ae48c0-6830-4568-94f5-3943d1333a1e','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757992731,1757992732,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"d00f9107-37f1-4270-a060-ec41e716b506": {"id": "d00f9107-37f1-4270-a060-ec41e716b506", "parentId": null, "childrenIds": ["c40cab5a-b455-4b3e-8af1-5fa3309cfb1e"], "role": "user", "timestamp": 1757992730, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "3afa5c61-77f5-4982-9adf-bd92d38fff8b", "metadata": {"timestamp": 1757992730, "client_version": ""}}, "c40cab5a-b455-4b3e-8af1-5fa3309cfb1e": {"parentId": "d00f9107-37f1-4270-a060-ec41e716b506", "id": "c40cab5a-b455-4b3e-8af1-5fa3309cfb1e", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992730}}, "currentId": "c40cab5a-b455-4b3e-8af1-5fa3309cfb1e"}, "messages": [{"id": "d00f9107-37f1-4270-a060-ec41e716b506", "parentId": null, "childrenIds": ["c40cab5a-b455-4b3e-8af1-5fa3309cfb1e"], "role": "user", "timestamp": 1757992730, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "3afa5c61-77f5-4982-9adf-bd92d38fff8b", "metadata": {"timestamp": 1757992730, "client_version": ""}}, {"parentId": "d00f9107-37f1-4270-a060-ec41e716b506", "id": "c40cab5a-b455-4b3e-8af1-5fa3309cfb1e", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992730}], "tags": [], "timestamp": 1757992730868, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('3f83416a-9b7f-48a8-9fb9-a327f073bab9','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757992762,1757992762,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"fed23f67-c2ef-429e-8b71-6933025009d6": {"id": "fed23f67-c2ef-429e-8b71-6933025009d6", "parentId": null, "childrenIds": ["ffe513e8-d5bf-401f-aabc-4705d1bb9b17"], "role": "user", "timestamp": 1757992760, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "c525341d-22a5-4f30-b3dd-1a55a1dca023", "metadata": {"timestamp": 1757992760, "client_version": ""}}, "ffe513e8-d5bf-401f-aabc-4705d1bb9b17": {"parentId": "fed23f67-c2ef-429e-8b71-6933025009d6", "id": "ffe513e8-d5bf-401f-aabc-4705d1bb9b17", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992760}}, "currentId": "ffe513e8-d5bf-401f-aabc-4705d1bb9b17"}, "messages": [{"id": "fed23f67-c2ef-429e-8b71-6933025009d6", "parentId": null, "childrenIds": ["ffe513e8-d5bf-401f-aabc-4705d1bb9b17"], "role": "user", "timestamp": 1757992760, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "c525341d-22a5-4f30-b3dd-1a55a1dca023", "metadata": {"timestamp": 1757992760, "client_version": ""}}, {"parentId": "fed23f67-c2ef-429e-8b71-6933025009d6", "id": "ffe513e8-d5bf-401f-aabc-4705d1bb9b17", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992760}], "tags": [], "timestamp": 1757992760970, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('45c4dbd0-0ca2-4305-8efe-07910690cee0','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757992869,1757992869,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"2b9e591f-d0f6-4681-ac71-f71ea8335d48": {"id": "2b9e591f-d0f6-4681-ac71-f71ea8335d48", "parentId": null, "childrenIds": ["184f4d44-057d-43e0-b9e0-e93f4815ea21"], "role": "user", "timestamp": 1757992868, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "19275209-a509-44b7-823c-1b1c9a906b2d", "metadata": {"timestamp": 1757992868, "client_version": ""}}, "184f4d44-057d-43e0-b9e0-e93f4815ea21": {"parentId": "2b9e591f-d0f6-4681-ac71-f71ea8335d48", "id": "184f4d44-057d-43e0-b9e0-e93f4815ea21", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992868}}, "currentId": "184f4d44-057d-43e0-b9e0-e93f4815ea21"}, "messages": [{"id": "2b9e591f-d0f6-4681-ac71-f71ea8335d48", "parentId": null, "childrenIds": ["184f4d44-057d-43e0-b9e0-e93f4815ea21"], "role": "user", "timestamp": 1757992868, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "19275209-a509-44b7-823c-1b1c9a906b2d", "metadata": {"timestamp": 1757992868, "client_version": ""}}, {"parentId": "2b9e591f-d0f6-4681-ac71-f71ea8335d48", "id": "184f4d44-057d-43e0-b9e0-e93f4815ea21", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757992868}], "tags": [], "timestamp": 1757992868473, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('8a20e959-ab4e-441c-99ab-113fd61bd731','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757993180,1757993181,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"cfacd975-9712-4bbc-8c6e-1398c2fe6810": {"id": "cfacd975-9712-4bbc-8c6e-1398c2fe6810", "parentId": null, "childrenIds": ["a20c7e1b-18ae-4627-bb35-f93b7e815f95"], "role": "user", "timestamp": 1757993179, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "7e669bea-a1d4-4551-8624-fe82d6060350", "metadata": {"timestamp": 1757993179, "client_version": ""}}, "a20c7e1b-18ae-4627-bb35-f93b7e815f95": {"parentId": "cfacd975-9712-4bbc-8c6e-1398c2fe6810", "id": "a20c7e1b-18ae-4627-bb35-f93b7e815f95", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993179}}, "currentId": "a20c7e1b-18ae-4627-bb35-f93b7e815f95"}, "messages": [{"id": "cfacd975-9712-4bbc-8c6e-1398c2fe6810", "parentId": null, "childrenIds": ["a20c7e1b-18ae-4627-bb35-f93b7e815f95"], "role": "user", "timestamp": 1757993179, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "7e669bea-a1d4-4551-8624-fe82d6060350", "metadata": {"timestamp": 1757993179, "client_version": ""}}, {"parentId": "cfacd975-9712-4bbc-8c6e-1398c2fe6810", "id": "a20c7e1b-18ae-4627-bb35-f93b7e815f95", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993179}], "tags": [], "timestamp": 1757993179843, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('a02bbdfb-0dec-46eb-a1a0-7fac9f2fcdb5','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757993323,1757993323,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"006e740d-bc82-42db-a7d3-39ca65627814": {"id": "006e740d-bc82-42db-a7d3-39ca65627814", "parentId": null, "childrenIds": ["d234e745-f4d9-4243-be44-c3860ea525a9"], "role": "user", "timestamp": 1757993322, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "e3352bf2-e476-4d53-8d1a-598b9dfd85f5", "metadata": {"timestamp": 1757993322, "client_version": ""}}, "d234e745-f4d9-4243-be44-c3860ea525a9": {"parentId": "006e740d-bc82-42db-a7d3-39ca65627814", "id": "d234e745-f4d9-4243-be44-c3860ea525a9", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993322}}, "currentId": "d234e745-f4d9-4243-be44-c3860ea525a9"}, "messages": [{"id": "006e740d-bc82-42db-a7d3-39ca65627814", "parentId": null, "childrenIds": ["d234e745-f4d9-4243-be44-c3860ea525a9"], "role": "user", "timestamp": 1757993322, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "", "task_id": "", "session_id": "e3352bf2-e476-4d53-8d1a-598b9dfd85f5", "metadata": {"timestamp": 1757993322, "client_version": ""}}, {"parentId": "006e740d-bc82-42db-a7d3-39ca65627814", "id": "d234e745-f4d9-4243-be44-c3860ea525a9", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993322}], "tags": [], "timestamp": 1757993322671, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('7a4455ec-81de-437d-b8c5-fead3487d64b','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757993667,1757993667,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"3aba0088-7135-4262-8778-791b33f2160b": {"id": "3aba0088-7135-4262-8778-791b33f2160b", "parentId": null, "childrenIds": ["9b688f65-f296-46ef-b77d-0e818fdcaf7b"], "role": "user", "timestamp": 1757993662, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "e10f6b61-1891-40fd-83b6-f42b1c883f96", "metadata": {"timestamp": 1757993662, "client_version": ""}}, "9b688f65-f296-46ef-b77d-0e818fdcaf7b": {"parentId": "3aba0088-7135-4262-8778-791b33f2160b", "id": "9b688f65-f296-46ef-b77d-0e818fdcaf7b", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993666}}, "currentId": "9b688f65-f296-46ef-b77d-0e818fdcaf7b"}, "messages": [{"id": "3aba0088-7135-4262-8778-791b33f2160b", "parentId": null, "childrenIds": ["9b688f65-f296-46ef-b77d-0e818fdcaf7b"], "role": "user", "timestamp": 1757993662, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "e10f6b61-1891-40fd-83b6-f42b1c883f96", "metadata": {"timestamp": 1757993662, "client_version": ""}}, {"parentId": "3aba0088-7135-4262-8778-791b33f2160b", "id": "9b688f65-f296-46ef-b77d-0e818fdcaf7b", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993666}], "tags": [], "timestamp": 1757993666047, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('6264c30d-68a7-4d1c-90c2-32a5a47e4e5b','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1757993706,1757993707,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"5485846d-6242-4cef-94f7-5cbe6443ea8e": {"id": "5485846d-6242-4cef-94f7-5cbe6443ea8e", "parentId": null, "childrenIds": ["f73fea05-6603-4788-a22f-956fd46b6f0b"], "role": "user", "timestamp": 1757993703, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "d4eca09c-3d6c-479b-80c3-42c361423ab1", "metadata": {"timestamp": 1757993703, "client_version": ""}}, "f73fea05-6603-4788-a22f-956fd46b6f0b": {"parentId": "5485846d-6242-4cef-94f7-5cbe6443ea8e", "id": "f73fea05-6603-4788-a22f-956fd46b6f0b", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993705}}, "currentId": "f73fea05-6603-4788-a22f-956fd46b6f0b"}, "messages": [{"id": "5485846d-6242-4cef-94f7-5cbe6443ea8e", "parentId": null, "childrenIds": ["f73fea05-6603-4788-a22f-956fd46b6f0b"], "role": "user", "timestamp": 1757993703, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "d4eca09c-3d6c-479b-80c3-42c361423ab1", "metadata": {"timestamp": 1757993703, "client_version": ""}}, {"parentId": "5485846d-6242-4cef-94f7-5cbe6443ea8e", "id": "f73fea05-6603-4788-a22f-956fd46b6f0b", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1757993705}], "tags": [], "timestamp": 1757993705866, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('a9255467-6494-4ec8-9c04-08eee3973d90','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758354252,1758354252,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93": {"id": "8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93", "parentId": null, "childrenIds": ["83f1c6c1-917d-4847-bc25-6aeda94b1752"], "role": "user", "timestamp": 1758354241, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "f4c4ece1-b65e-45eb-850c-42380a54652e", "metadata": {"timestamp": 1758354241, "client_version": ""}}, "83f1c6c1-917d-4847-bc25-6aeda94b1752": {"parentId": "8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93", "id": "83f1c6c1-917d-4847-bc25-6aeda94b1752", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354251}}, "currentId": "83f1c6c1-917d-4847-bc25-6aeda94b1752"}, "messages": [{"id": "8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93", "parentId": null, "childrenIds": ["83f1c6c1-917d-4847-bc25-6aeda94b1752"], "role": "user", "timestamp": 1758354241, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "f4c4ece1-b65e-45eb-850c-42380a54652e", "metadata": {"timestamp": 1758354241, "client_version": ""}}, {"parentId": "8f34d991-d7ae-47d1-bf0a-6adeb0bb5b93", "id": "83f1c6c1-917d-4847-bc25-6aeda94b1752", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354251}], "tags": [], "timestamp": 1758354251964, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('0cdbae10-2dad-40ba-8c70-3401e00796b6','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758354422,1758354426,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"0b4cbe5b-5348-4560-a574-bfe2e881909d": {"id": "0b4cbe5b-5348-4560-a574-bfe2e881909d", "parentId": null, "childrenIds": ["cb5d2998-eb17-4cbd-a6db-5c764d314f74"], "role": "user", "timestamp": 1758354393, "content": "\u4e0d\u4e0d\u4e0d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "d80e0f48-b438-4791-ae38-a2c988865b29", "metadata": {"timestamp": 1758354393, "client_version": ""}}, "cb5d2998-eb17-4cbd-a6db-5c764d314f74": {"parentId": "0b4cbe5b-5348-4560-a574-bfe2e881909d", "id": "cb5d2998-eb17-4cbd-a6db-5c764d314f74", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354416}}, "currentId": "cb5d2998-eb17-4cbd-a6db-5c764d314f74"}, "messages": [{"id": "0b4cbe5b-5348-4560-a574-bfe2e881909d", "parentId": null, "childrenIds": ["cb5d2998-eb17-4cbd-a6db-5c764d314f74"], "role": "user", "timestamp": 1758354393, "content": "\u4e0d\u4e0d\u4e0d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "d80e0f48-b438-4791-ae38-a2c988865b29", "metadata": {"timestamp": 1758354393, "client_version": ""}}, {"parentId": "0b4cbe5b-5348-4560-a574-bfe2e881909d", "id": "cb5d2998-eb17-4cbd-a6db-5c764d314f74", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354416}], "tags": [], "timestamp": 1758354421552, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('38d00b0a-4b9e-47f8-ad8e-7a331bf9f8a2','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758354491,1758354506,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"d1f6c67d-5ab8-42d6-afeb-52678e3acfdc": {"id": "d1f6c67d-5ab8-42d6-afeb-52678e3acfdc", "parentId": null, "childrenIds": ["87d3a007-7d91-45f8-8702-69db85b7c6c4"], "role": "user", "timestamp": 1758354469, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "b1d38120-944c-49f4-8bb1-a3a04739dab3", "metadata": {"timestamp": 1758354469, "client_version": ""}}, "87d3a007-7d91-45f8-8702-69db85b7c6c4": {"parentId": "d1f6c67d-5ab8-42d6-afeb-52678e3acfdc", "id": "87d3a007-7d91-45f8-8702-69db85b7c6c4", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354480}}, "currentId": "87d3a007-7d91-45f8-8702-69db85b7c6c4"}, "messages": [{"id": "d1f6c67d-5ab8-42d6-afeb-52678e3acfdc", "parentId": null, "childrenIds": ["87d3a007-7d91-45f8-8702-69db85b7c6c4"], "role": "user", "timestamp": 1758354469, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "b1d38120-944c-49f4-8bb1-a3a04739dab3", "metadata": {"timestamp": 1758354469, "client_version": ""}}, {"parentId": "d1f6c67d-5ab8-42d6-afeb-52678e3acfdc", "id": "87d3a007-7d91-45f8-8702-69db85b7c6c4", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758354480}], "tags": [], "timestamp": 1758354490736, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('254b5166-3ddd-4e5e-8f9e-c2016264847d','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758355007,1758355007,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"b3e2d724-c6b8-45cc-8417-2477d1a71ec3": {"parentId": "", "id": "b3e2d724-c6b8-45cc-8417-2477d1a71ec3", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355006}, "d0aac0c6-16bd-4285-b7fb-d6a8a593099d": {"id": "d0aac0c6-16bd-4285-b7fb-d6a8a593099d", "parentId": null, "childrenIds": ["6a2b281b-5fac-421d-86ff-0f80a07f693f"], "role": "user", "timestamp": 1758355006, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "65dff556-dd8d-48da-a7c2-2dcf31fb3e37", "metadata": {"timestamp": 1758355006, "client_version": ""}}, "6a2b281b-5fac-421d-86ff-0f80a07f693f": {"parentId": "d0aac0c6-16bd-4285-b7fb-d6a8a593099d", "id": "6a2b281b-5fac-421d-86ff-0f80a07f693f", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355006}}, "currentId": "6a2b281b-5fac-421d-86ff-0f80a07f693f"}, "messages": [{"id": "d0aac0c6-16bd-4285-b7fb-d6a8a593099d", "parentId": null, "childrenIds": ["6a2b281b-5fac-421d-86ff-0f80a07f693f"], "role": "user", "timestamp": 1758355006, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "65dff556-dd8d-48da-a7c2-2dcf31fb3e37", "metadata": {"timestamp": 1758355006, "client_version": ""}}, {"parentId": "d0aac0c6-16bd-4285-b7fb-d6a8a593099d", "id": "6a2b281b-5fac-421d-86ff-0f80a07f693f", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355006}], "tags": [], "timestamp": 1758355006578, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('210534cf-a622-46b3-8a6e-03fd0758f36e','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758355044,1758355044,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"9a657a70-04a3-4f64-b635-d1556476d75e": {"parentId": "", "id": "9a657a70-04a3-4f64-b635-d1556476d75e", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355043}, "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8": {"id": "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8", "parentId": null, "childrenIds": ["b0b0f99d-e9cf-4c9d-a99c-206ec885c653"], "role": "user", "timestamp": 1758355043, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "83a16f0d-f9f5-48d0-9278-09924b60c3d7", "metadata": {"timestamp": 1758355043, "client_version": ""}}, "b0b0f99d-e9cf-4c9d-a99c-206ec885c653": {"parentId": "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8", "id": "b0b0f99d-e9cf-4c9d-a99c-206ec885c653", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355043}}, "currentId": "b0b0f99d-e9cf-4c9d-a99c-206ec885c653"}, "messages": [{"id": "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8", "parentId": null, "childrenIds": ["b0b0f99d-e9cf-4c9d-a99c-206ec885c653"], "role": "user", "timestamp": 1758355043, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "83a16f0d-f9f5-48d0-9278-09924b60c3d7", "metadata": {"timestamp": 1758355043, "client_version": ""}}, {"parentId": "d65e71ac-6d65-4dd7-8acc-ffaf7bf6dcd8", "id": "b0b0f99d-e9cf-4c9d-a99c-206ec885c653", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355043}], "tags": [], "timestamp": 1758355043564, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('e63bd882-64d3-4f62-9225-00ad48e8db29','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758355078,1758355078,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"a61ff54c-b9b0-438a-a301-3607fd4a4388": {"parentId": "", "id": "a61ff54c-b9b0-438a-a301-3607fd4a4388", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355075}, "667a3a9f-5f65-4dcc-bb32-09df66025343": {"id": "667a3a9f-5f65-4dcc-bb32-09df66025343", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758355075, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "a025c636-0fb6-4014-8d3a-1ddd39d17d57", "metadata": {"timestamp": 1758355075, "client_version": ""}}}, "currentId": "667a3a9f-5f65-4dcc-bb32-09df66025343"}, "messages": [{"id": "667a3a9f-5f65-4dcc-bb32-09df66025343", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758355075, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "a025c636-0fb6-4014-8d3a-1ddd39d17d57", "metadata": {"timestamp": 1758355075, "client_version": ""}}], "tags": [], "timestamp": 1758355077397}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('aeba205e-8c43-463b-a149-0bbbe2675662','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758355187,1758355188,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"068941d1-49f4-4b89-b043-3ebe6261aaba": {"parentId": "", "id": "068941d1-49f4-4b89-b043-3ebe6261aaba", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355187}, "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0": {"id": "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0", "parentId": null, "childrenIds": ["2c203750-01c4-4252-8557-25fd0514fd11"], "role": "user", "timestamp": 1758355187, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "34cf88c1-ce82-4d42-a1a0-0e3dc114b9b2", "metadata": {"timestamp": 1758355187, "client_version": ""}}, "2c203750-01c4-4252-8557-25fd0514fd11": {"parentId": "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0", "id": "2c203750-01c4-4252-8557-25fd0514fd11", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355187}}, "currentId": "2c203750-01c4-4252-8557-25fd0514fd11"}, "messages": [{"id": "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0", "parentId": null, "childrenIds": ["2c203750-01c4-4252-8557-25fd0514fd11"], "role": "user", "timestamp": 1758355187, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "34cf88c1-ce82-4d42-a1a0-0e3dc114b9b2", "metadata": {"timestamp": 1758355187, "client_version": ""}}, {"parentId": "ae7f0de3-2f3c-408e-94ba-2032c1fb87c0", "id": "2c203750-01c4-4252-8557-25fd0514fd11", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355187}], "tags": [], "timestamp": 1758355187292, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('e01fb250-d0b2-4416-a110-067fe20340e3','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758355256,1758355265,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"ef048080-097e-4338-b111-b9ad01c22b52": {"parentId": "", "id": "ef048080-097e-4338-b111-b9ad01c22b52", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355234}, "9d740457-33e3-45f0-bb79-6bab8c95227e": {"id": "9d740457-33e3-45f0-bb79-6bab8c95227e", "parentId": null, "childrenIds": ["d1a98106-6701-4336-8604-64c3306bdc7d"], "role": "user", "timestamp": 1758355248, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "c761df98-1dd6-40a6-8562-f23820079a30", "metadata": {"timestamp": 1758355248, "client_version": ""}}, "d1a98106-6701-4336-8604-64c3306bdc7d": {"parentId": "9d740457-33e3-45f0-bb79-6bab8c95227e", "id": "d1a98106-6701-4336-8604-64c3306bdc7d", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355255}}, "currentId": "d1a98106-6701-4336-8604-64c3306bdc7d"}, "messages": [{"id": "9d740457-33e3-45f0-bb79-6bab8c95227e", "parentId": null, "childrenIds": ["d1a98106-6701-4336-8604-64c3306bdc7d"], "role": "user", "timestamp": 1758355248, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "c761df98-1dd6-40a6-8562-f23820079a30", "metadata": {"timestamp": 1758355248, "client_version": ""}}, {"parentId": "9d740457-33e3-45f0-bb79-6bab8c95227e", "id": "d1a98106-6701-4336-8604-64c3306bdc7d", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355255}], "tags": [], "timestamp": 1758355255533, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('a9ba5bc0-503a-4ddf-8eec-63d2d9cbf1b8','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758355332,1758355332,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"c26aac4a-87a8-4ba6-b5f0-9000a0a67307": {"parentId": "", "id": "c26aac4a-87a8-4ba6-b5f0-9000a0a67307", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355329}, "ec569b44-10b0-42bb-9467-c8bf588fc52e": {"id": "ec569b44-10b0-42bb-9467-c8bf588fc52e", "parentId": null, "childrenIds": ["0580ff50-d377-4a44-9ec9-4682ceef7964"], "role": "user", "timestamp": 1758355329, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "caffbd33-ee8b-498e-a010-a5601c91ba98", "metadata": {"timestamp": 1758355329, "client_version": ""}}, "0580ff50-d377-4a44-9ec9-4682ceef7964": {"parentId": "ec569b44-10b0-42bb-9467-c8bf588fc52e", "id": "0580ff50-d377-4a44-9ec9-4682ceef7964", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355332}}, "currentId": "0580ff50-d377-4a44-9ec9-4682ceef7964"}, "messages": [{"id": "ec569b44-10b0-42bb-9467-c8bf588fc52e", "parentId": null, "childrenIds": ["0580ff50-d377-4a44-9ec9-4682ceef7964"], "role": "user", "timestamp": 1758355329, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "caffbd33-ee8b-498e-a010-a5601c91ba98", "metadata": {"timestamp": 1758355329, "client_version": ""}}, {"parentId": "ec569b44-10b0-42bb-9467-c8bf588fc52e", "id": "0580ff50-d377-4a44-9ec9-4682ceef7964", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355332}], "tags": [], "timestamp": 1758355332105, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('46106920-6af2-4588-9b8c-85321ade053c','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758355578,1758355578,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"08538a3d-4858-4750-8e22-6c5390ff03e6": {"parentId": "", "id": "08538a3d-4858-4750-8e22-6c5390ff03e6", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355577}, "3ecef7ec-ec7d-4b20-9181-a75311ba120e": {"id": "3ecef7ec-ec7d-4b20-9181-a75311ba120e", "parentId": null, "childrenIds": ["91ac2fad-f817-457f-ab6d-99b5dfac0aab"], "role": "user", "timestamp": 1758355577, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "66373955-9d0a-43a6-afa4-c1d6e9eab995", "metadata": {"timestamp": 1758355577, "client_version": ""}}, "91ac2fad-f817-457f-ab6d-99b5dfac0aab": {"parentId": "3ecef7ec-ec7d-4b20-9181-a75311ba120e", "id": "91ac2fad-f817-457f-ab6d-99b5dfac0aab", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355577}}, "currentId": "91ac2fad-f817-457f-ab6d-99b5dfac0aab"}, "messages": [{"id": "3ecef7ec-ec7d-4b20-9181-a75311ba120e", "parentId": null, "childrenIds": ["91ac2fad-f817-457f-ab6d-99b5dfac0aab"], "role": "user", "timestamp": 1758355577, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "66373955-9d0a-43a6-afa4-c1d6e9eab995", "metadata": {"timestamp": 1758355577, "client_version": ""}}, {"parentId": "3ecef7ec-ec7d-4b20-9181-a75311ba120e", "id": "91ac2fad-f817-457f-ab6d-99b5dfac0aab", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355577}], "tags": [], "timestamp": 1758355577925, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('1261ed91-4c0b-425d-9ec3-ffd977bbf88c','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758355595,1758355595,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"e1706221-b6c8-452f-821a-2dea012ff732": {"parentId": "", "id": "e1706221-b6c8-452f-821a-2dea012ff732", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355595}, "8c700b3c-10ab-4b30-b270-a78291b8e822": {"id": "8c700b3c-10ab-4b30-b270-a78291b8e822", "parentId": null, "childrenIds": ["380e6cbd-d5b6-4847-8730-7d990e67a208"], "role": "user", "timestamp": 1758355595, "content": "\u4f60\u54c8", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "2c663a08-d045-4584-922c-f7691bc120b0", "metadata": {"timestamp": 1758355595, "client_version": ""}}, "380e6cbd-d5b6-4847-8730-7d990e67a208": {"parentId": "8c700b3c-10ab-4b30-b270-a78291b8e822", "id": "380e6cbd-d5b6-4847-8730-7d990e67a208", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355595}}, "currentId": "380e6cbd-d5b6-4847-8730-7d990e67a208"}, "messages": [{"id": "8c700b3c-10ab-4b30-b270-a78291b8e822", "parentId": null, "childrenIds": ["380e6cbd-d5b6-4847-8730-7d990e67a208"], "role": "user", "timestamp": 1758355595, "content": "\u4f60\u54c8", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "2c663a08-d045-4584-922c-f7691bc120b0", "metadata": {"timestamp": 1758355595, "client_version": ""}}, {"parentId": "8c700b3c-10ab-4b30-b270-a78291b8e822", "id": "380e6cbd-d5b6-4847-8730-7d990e67a208", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355595}], "tags": [], "timestamp": 1758355595160, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('42286399-d557-4700-aebb-ec6928be72c1','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758355665,1758355686,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"ee6d72d6-b1f0-4e91-88b6-c5929d208f39": {"parentId": "", "id": "ee6d72d6-b1f0-4e91-88b6-c5929d208f39", "childrenIds": [], "role": "assistant", "content": "\u4f60\u597d\uff0c\u6211\u662f\u60a8\u7684\u89c6\u9891\u52a9\u624b", "timestamp": 1758355661}, "1a845eda-5384-45d1-a9d1-e49fc73821b6": {"id": "1a845eda-5384-45d1-a9d1-e49fc73821b6", "parentId": null, "childrenIds": ["40d1ee99-7773-453c-a400-e623c89c61cc"], "role": "user", "timestamp": 1758355661, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "b4aeaaed-3fca-4ffc-86dc-1a02a4ceeaf8", "metadata": {"timestamp": 1758355661, "client_version": ""}}, "40d1ee99-7773-453c-a400-e623c89c61cc": {"parentId": "1a845eda-5384-45d1-a9d1-e49fc73821b6", "id": "40d1ee99-7773-453c-a400-e623c89c61cc", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355664}}, "currentId": "40d1ee99-7773-453c-a400-e623c89c61cc"}, "messages": [{"id": "1a845eda-5384-45d1-a9d1-e49fc73821b6", "parentId": null, "childrenIds": ["40d1ee99-7773-453c-a400-e623c89c61cc"], "role": "user", "timestamp": 1758355661, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "enter_type": "", "user_id": "732d6d5d-2b42-4ab6-ad85-8eca52786bf9", "task_id": "", "session_id": "b4aeaaed-3fca-4ffc-86dc-1a02a4ceeaf8", "metadata": {"timestamp": 1758355661, "client_version": ""}}, {"parentId": "1a845eda-5384-45d1-a9d1-e49fc73821b6", "id": "40d1ee99-7773-453c-a400-e623c89c61cc", "childrenIds": [], "role": "assistant", "content": "", "timestamp": 1758355664}], "tags": [], "timestamp": 1758355664571, "files": []}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('8faad1b6-2089-437e-bc6b-c1bb0285e252','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758811998,1758811998,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"02d92e57-56b3-4ec1-801d-82d8aac4c2bc": {"id": "02d92e57-56b3-4ec1-801d-82d8aac4c2bc", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758811999, "content": "\u4ecevv", "type": "chat", "workflow_type": "main", "enter_type": "", "task_id": "", "session_id": "e40a5a6e-9e6d-4e2a-b00e-beb07d275397", "metadata": {"timestamp": 1758811999, "client_version": ""}}}, "currentId": "02d92e57-56b3-4ec1-801d-82d8aac4c2bc"}, "messages": [{"id": "02d92e57-56b3-4ec1-801d-82d8aac4c2bc", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758811999, "content": "\u4ecevv", "type": "chat", "workflow_type": "main", "enter_type": "", "task_id": "", "session_id": "e40a5a6e-9e6d-4e2a-b00e-beb07d275397", "metadata": {"timestamp": 1758811999, "client_version": ""}}], "tags": [], "timestamp": 1758811999577}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('71443de5-0647-4b9a-b08c-58f3aeddd8dd','496e0f43-8bfa-464a-b333-7738d4b3b76d','新对�?,NULL,0,1758812162,1758812162,'{"id": "8faad1b6-2089-437e-bc6b-c1bb0285e252", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"c830b54b-e006-4cc7-a1ed-5ece0f6e1e42": {"id": "c830b54b-e006-4cc7-a1ed-5ece0f6e1e42", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758812163, "content": "AS\u963f\u8428A", "type": "chat", "workflow_type": "main", "enter_type": "", "task_id": "", "session_id": "695e8584-f34e-46a3-b4a2-15e0fe6fb248", "metadata": {"timestamp": 1758812163, "client_version": ""}}}, "currentId": "c830b54b-e006-4cc7-a1ed-5ece0f6e1e42"}, "messages": [{"id": "c830b54b-e006-4cc7-a1ed-5ece0f6e1e42", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758812163, "content": "AS\u963f\u8428A", "type": "chat", "workflow_type": "main", "enter_type": "", "task_id": "", "session_id": "695e8584-f34e-46a3-b4a2-15e0fe6fb248", "metadata": {"timestamp": 1758812163, "client_version": ""}}], "tags": [], "timestamp": 1758812163705}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('3e376b70-5820-40c0-ad66-cd2b088a4ba5','99646252-83fb-4e9a-bb8a-d6bc647c1da7','新对�?,NULL,0,1758967669,1758967669,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"337c7110-0c52-45dd-b546-f8652e3e5ed9": {"id": "337c7110-0c52-45dd-b546-f8652e3e5ed9", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758967668, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "entry_type": "chat", "task_id": "", "session_id": "07b74443-e85c-488b-8461-bf33b3e2245d", "metadata": {"timestamp": 1758967668, "client_version": ""}}}, "currentId": "337c7110-0c52-45dd-b546-f8652e3e5ed9"}, "messages": [{"id": "337c7110-0c52-45dd-b546-f8652e3e5ed9", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758967668, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "entry_type": "chat", "task_id": "", "session_id": "07b74443-e85c-488b-8461-bf33b3e2245d", "metadata": {"timestamp": 1758967668, "client_version": ""}}], "tags": [], "timestamp": 1758967668549}',0,'{}',NULL);
+INSERT INTO "chat" VALUES('dade63b5-e661-4c3a-8f1e-8477772ecc4a','99646252-83fb-4e9a-bb8a-d6bc647c1da7','新对�?,NULL,0,1758967729,1758967729,'{"id": "", "title": "\u65b0\u5bf9\u8bdd", "models": [""], "params": {}, "history": {"messages": {"7a5a0275-9c0e-4f0f-ab5e-ea378152e3a2": {"id": "7a5a0275-9c0e-4f0f-ab5e-ea378152e3a2", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758967728, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "entry_type": "chat", "task_id": "", "session_id": "2bed5475-271a-4acd-a4f0-2be06c57c6ee", "metadata": {"timestamp": 1758967728, "client_version": ""}}}, "currentId": "7a5a0275-9c0e-4f0f-ab5e-ea378152e3a2"}, "messages": [{"id": "7a5a0275-9c0e-4f0f-ab5e-ea378152e3a2", "parentId": null, "childrenIds": [], "role": "user", "timestamp": 1758967728, "content": "\u4f60\u597d", "type": "chat", "workflow_type": "main", "entry_type": "chat", "task_id": "", "session_id": "2bed5475-271a-4acd-a4f0-2be06c57c6ee", "metadata": {"timestamp": 1758967728, "client_version": ""}}], "tags": [], "timestamp": 1758967728606}',0,'{}',NULL);
 CREATE TABLE "chatidtag" ("id" VARCHAR(255) NOT NULL, "tag_name" VARCHAR(255) NOT NULL, "chat_id" VARCHAR(255) NOT NULL, "user_id" VARCHAR(255) NOT NULL, "timestamp" INTEGER NOT NULL NOT NULL);
 CREATE TABLE companies (
     id VARCHAR NOT NULL PRIMARY KEY,
@@ -88,8 +88,8 @@ CREATE TABLE companies (
     created_at BIGINT,
     updated_at BIGINT
 );
-INSERT INTO "companies" VALUES('1759988837','测试公司','这是一个测试公司','1759988837',NULL,'active',NULL,1759988837,1759988837);
-INSERT INTO "companies" VALUES('1759988875','测试公司','这是一个测试公司','1759988875',NULL,'active',NULL,1759988875,1759988875);
+INSERT INTO "companies" VALUES('1759988837','测试公司','这是一个测试公�?,'1759988837',NULL,'active',NULL,1759988837,1759988837);
+INSERT INTO "companies" VALUES('1759988875','测试公司','这是一个测试公�?,'1759988875',NULL,'active',NULL,1759988875,1759988875);
 CREATE TABLE config (
 	id INTEGER NOT NULL, 
 	data JSON NOT NULL, 
@@ -102,35 +102,37 @@ INSERT INTO "config" VALUES(1,'{"version": 0, "ui": {"enable_signup": false}, "a
 CREATE TABLE credit (
 	id VARCHAR NOT NULL, 
 	user_id VARCHAR NOT NULL, 
+	company_id VARCHAR, 
 	credit NUMERIC(24, 12), 
 	updated_at BIGINT, 
 	created_at BIGINT, 
 	PRIMARY KEY (id), 
 	UNIQUE (user_id)
 );
-INSERT INTO "credit" VALUES('e7d0a2bfe29f479096817e288e31f858','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,1751082047,1750585230);
-INSERT INTO "credit" VALUES('97b213454d03412db2bd52d3ca6d9dd6','500eb523-156b-4eff-ad61-acfa7de0056a',0,1757921746,1757921746);
-INSERT INTO "credit" VALUES('606d4978961f47ee841132d2f6a37ddf','99646252-83fb-4e9a-bb8a-d6bc647c1da7',0,1758893562,1758893562);
-INSERT INTO "credit" VALUES('4571f9bea0a14157954e7d755f925bd0','0086d2b1-1514-4450-8660-29629e27f984',0,1758956636,1758956636);
-INSERT INTO "credit" VALUES('4dc952d6a2f54a498b0db7d583b9a1b8','257a5a79-377f-4ebb-b049-db5cc048d111',0,1759168801,1759168801);
+INSERT INTO "credit" VALUES('e7d0a2bfe29f479096817e288e31f858','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,1751082047,1750585230);
+INSERT INTO "credit" VALUES('97b213454d03412db2bd52d3ca6d9dd6','500eb523-156b-4eff-ad61-acfa7de0056a',NULL,0,1757921746,1757921746);
+INSERT INTO "credit" VALUES('606d4978961f47ee841132d2f6a37ddf','99646252-83fb-4e9a-bb8a-d6bc647c1da7',NULL,0,1758893562,1758893562);
+INSERT INTO "credit" VALUES('4571f9bea0a14157954e7d755f925bd0','0086d2b1-1514-4450-8660-29629e27f984',NULL,0,1758956636,1758956636);
+INSERT INTO "credit" VALUES('4dc952d6a2f54a498b0db7d583b9a1b8','257a5a79-377f-4ebb-b049-db5cc048d111',NULL,0,1759168801,1759168801);
 CREATE TABLE credit_log (
 	id VARCHAR NOT NULL, 
 	user_id VARCHAR NOT NULL, 
+	company_id VARCHAR, 
 	credit NUMERIC(24, 12), 
 	detail JSON, 
 	created_at BIGINT, 
 	PRIMARY KEY (id)
 );
-INSERT INTO "credit_log" VALUES('92ae8bb86bd84c0a934aed25e25b72ad','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": true}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 249, "prompt_tokens": 3, "completion_tokens": 246, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.74, "prompt_token/s": 15.37, "total_duration": 32000510000, "load_duration": 18011300, "prompt_eval_count": 3, "prompt_eval_duration": 195174200, "eval_count": 246, "eval_duration": 31784213500, "approximate_total": "0h0m32s"}}',1750916686);
-INSERT INTO "credit_log" VALUES('7f05e9f2de3e41159904b97372811a1c','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 1661, "prompt_tokens": 255, "completion_tokens": 1406, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.58, "prompt_token/s": 19.91, "total_duration": 198388562700, "load_duration": 10949400, "prompt_eval_count": 255, "prompt_eval_duration": 12810421800, "eval_count": 1406, "eval_duration": 185567191500, "approximate_total": "0h3m18s"}}',1750916884);
-INSERT INTO "credit_log" VALUES('e4a3be8868a441699d0340784114d1f4','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 2214, "prompt_tokens": 325, "completion_tokens": 1889, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.58, "prompt_token/s": 20.18, "total_duration": 265275757500, "load_duration": 10411500, "prompt_eval_count": 325, "prompt_eval_duration": 16104844300, "eval_count": 1889, "eval_duration": 249159993200, "approximate_total": "0h4m25s"}}',1750917150);
-INSERT INTO "credit_log" VALUES('7470673de0b74141a199dcf242188091','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 1656, "prompt_tokens": 216, "completion_tokens": 1440, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.73, "prompt_token/s": 20.43, "total_duration": 196816243900, "load_duration": 10347500, "prompt_eval_count": 216, "prompt_eval_duration": 10570496100, "eval_count": 1440, "eval_duration": 186234890700, "approximate_total": "0h3m16s"}}',1750917347);
-INSERT INTO "credit_log" VALUES('adb9c2004bf04f90a35cb630914693f6','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": true}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 700, "prompt_tokens": 60, "completion_tokens": 640, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.63, "prompt_token/s": 20.17, "total_duration": 93887365900, "load_duration": 7008060500, "prompt_eval_count": 60, "prompt_eval_duration": 2974417700, "eval_count": 640, "eval_duration": 83900202400, "approximate_total": "0h1m33s"}}',1750921240);
-INSERT INTO "credit_log" VALUES('14eb95c730664507a44b93aacf1d8770','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 1576, "prompt_tokens": 668, "completion_tokens": 908, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.34, "prompt_token/s": 19.36, "total_duration": 158248769800, "load_duration": 13920000, "prompt_eval_count": 668, "prompt_eval_duration": 34507769200, "eval_count": 908, "eval_duration": 123726570200, "approximate_total": "0h2m38s"}}',1750921398);
-INSERT INTO "credit_log" VALUES('731e9687e2ec48d081edd699b2cbd444','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": true}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 217, "prompt_tokens": 3, "completion_tokens": 214, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.4, "prompt_token/s": 15.41, "total_duration": 36825729800, "load_duration": 7698623300, "prompt_eval_count": 3, "prompt_eval_duration": 194666500, "eval_count": 214, "eval_duration": 28930348800, "approximate_total": "0h0m36s"}}',1751081489);
-INSERT INTO "credit_log" VALUES('27b9499ce5b94836bf610cf3f4774eaf','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 1845, "prompt_tokens": 256, "completion_tokens": 1589, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.33, "prompt_token/s": 19.39, "total_duration": 229980542500, "load_duration": 15524100, "prompt_eval_count": 256, "prompt_eval_duration": 13202522700, "eval_count": 1589, "eval_duration": 216761980500, "approximate_total": "0h3m49s"}}',1751081719);
-INSERT INTO "credit_log" VALUES('585821914de54dc2a9c2bb40708a5d75','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 2392, "prompt_tokens": 326, "completion_tokens": 2066, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.5, "prompt_token/s": 19.47, "total_duration": 292126323400, "load_duration": 11387600, "prompt_eval_count": 326, "prompt_eval_duration": 16739583000, "eval_count": 2066, "eval_duration": 275374842500, "approximate_total": "0h4m52s"}}',1751082012);
-INSERT INTO "credit_log" VALUES('23b4fbb62cdc4df9baae0fc9f953b422','496e0f43-8bfa-464a-b333-7738d4b3b76d',0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 415, "prompt_tokens": 217, "completion_tokens": 198, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 8.02, "prompt_token/s": 20.48, "total_duration": 35307821100, "load_duration": 10560400, "prompt_eval_count": 217, "prompt_eval_duration": 10595789600, "eval_count": 198, "eval_duration": 24700962200, "approximate_total": "0h0m35s"}}',1751082047);
+INSERT INTO "credit_log" VALUES('92ae8bb86bd84c0a934aed25e25b72ad','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": true}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 249, "prompt_tokens": 3, "completion_tokens": 246, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.74, "prompt_token/s": 15.37, "total_duration": 32000510000, "load_duration": 18011300, "prompt_eval_count": 3, "prompt_eval_duration": 195174200, "eval_count": 246, "eval_duration": 31784213500, "approximate_total": "0h0m32s"}}',1750916686);
+INSERT INTO "credit_log" VALUES('7f05e9f2de3e41159904b97372811a1c','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 1661, "prompt_tokens": 255, "completion_tokens": 1406, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.58, "prompt_token/s": 19.91, "total_duration": 198388562700, "load_duration": 10949400, "prompt_eval_count": 255, "prompt_eval_duration": 12810421800, "eval_count": 1406, "eval_duration": 185567191500, "approximate_total": "0h3m18s"}}',1750916884);
+INSERT INTO "credit_log" VALUES('e4a3be8868a441699d0340784114d1f4','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 2214, "prompt_tokens": 325, "completion_tokens": 1889, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.58, "prompt_token/s": 20.18, "total_duration": 265275757500, "load_duration": 10411500, "prompt_eval_count": 325, "prompt_eval_duration": 16104844300, "eval_count": 1889, "eval_duration": 249159993200, "approximate_total": "0h4m25s"}}',1750917150);
+INSERT INTO "credit_log" VALUES('7470673de0b74141a199dcf242188091','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 1656, "prompt_tokens": 216, "completion_tokens": 1440, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.73, "prompt_token/s": 20.43, "total_duration": 196816243900, "load_duration": 10347500, "prompt_eval_count": 216, "prompt_eval_duration": 10570496100, "eval_count": 1440, "eval_duration": 186234890700, "approximate_total": "0h3m16s"}}',1750917347);
+INSERT INTO "credit_log" VALUES('adb9c2004bf04f90a35cb630914693f6','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": true}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 700, "prompt_tokens": 60, "completion_tokens": 640, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.63, "prompt_token/s": 20.17, "total_duration": 93887365900, "load_duration": 7008060500, "prompt_eval_count": 60, "prompt_eval_duration": 2974417700, "eval_count": 640, "eval_duration": 83900202400, "approximate_total": "0h1m33s"}}',1750921240);
+INSERT INTO "credit_log" VALUES('14eb95c730664507a44b93aacf1d8770','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 1576, "prompt_tokens": 668, "completion_tokens": 908, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.34, "prompt_token/s": 19.36, "total_duration": 158248769800, "load_duration": 13920000, "prompt_eval_count": 668, "prompt_eval_duration": 34507769200, "eval_count": 908, "eval_duration": 123726570200, "approximate_total": "0h2m38s"}}',1750921398);
+INSERT INTO "credit_log" VALUES('731e9687e2ec48d081edd699b2cbd444','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": true}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 217, "prompt_tokens": 3, "completion_tokens": 214, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.4, "prompt_token/s": 15.41, "total_duration": 36825729800, "load_duration": 7698623300, "prompt_eval_count": 3, "prompt_eval_duration": 194666500, "eval_count": 214, "eval_duration": 28930348800, "approximate_total": "0h0m36s"}}',1751081489);
+INSERT INTO "credit_log" VALUES('27b9499ce5b94836bf610cf3f4774eaf','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 1845, "prompt_tokens": 256, "completion_tokens": 1589, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.33, "prompt_token/s": 19.39, "total_duration": 229980542500, "load_duration": 15524100, "prompt_eval_count": 256, "prompt_eval_duration": 13202522700, "eval_count": 1589, "eval_duration": 216761980500, "approximate_total": "0h3m49s"}}',1751081719);
+INSERT INTO "credit_log" VALUES('585821914de54dc2a9c2bb40708a5d75','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 2392, "prompt_tokens": 326, "completion_tokens": 2066, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 7.5, "prompt_token/s": 19.47, "total_duration": 292126323400, "load_duration": 11387600, "prompt_eval_count": 326, "prompt_eval_duration": 16739583000, "eval_count": 2066, "eval_duration": 275374842500, "approximate_total": "0h4m52s"}}',1751082012);
+INSERT INTO "credit_log" VALUES('23b4fbb62cdc4df9baae0fc9f953b422','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,0,'{"api_path": "", "api_params": {"model": {"id": "deepseek-r1:latest"}, "is_stream": false}, "desc": "updated by CreditDeduct", "usage": {"total_price": 0.0, "prompt_unit_price": 0.0, "completion_unit_price": 0.0, "request_unit_price": 0.0, "feature_price": 0.0, "features": [], "is_calculate": false, "total_tokens": 415, "prompt_tokens": 217, "completion_tokens": 198, "completion_tokens_details": {"accepted_prediction_tokens": 0, "reasoning_tokens": 0, "rejected_prediction_tokens": 0}, "response_token/s": 8.02, "prompt_token/s": 20.48, "total_duration": 35307821100, "load_duration": 10560400, "prompt_eval_count": 217, "prompt_eval_duration": 10595789600, "eval_count": 198, "eval_duration": 24700962200, "approximate_total": "0h0m35s"}}',1751082047);
 CREATE TABLE "document" ("id" INTEGER NOT NULL PRIMARY KEY, "collection_name" VARCHAR(255) NOT NULL, "name" VARCHAR(255) NOT NULL, "title" TEXT NOT NULL NOT NULL, "filename" TEXT NOT NULL NOT NULL, "content" TEXT, "user_id" VARCHAR(255) NOT NULL, "timestamp" INTEGER NOT NULL NOT NULL);
 CREATE TABLE feedback (
 	id TEXT NOT NULL, 
@@ -250,28 +252,28 @@ CREATE TABLE hsai_material_folders (
 	PRIMARY KEY (id), 
 	FOREIGN KEY(parent_id) REFERENCES hsai_material_folders (id)
 );
-INSERT INTO "hsai_material_folders" VALUES('9934fed7-70e9-4d30-91d1-84ca9dcb774a','素材库','根目录素材库',NULL,'496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757672442,1758620370);
-INSERT INTO "hsai_material_folders" VALUES('f687636e-15ea-40c7-a4b6-ee1a3cf17730','视频','视频的目录','9934fed7-70e9-4d30-91d1-84ca9dcb774a','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757672466,1757672466);
-INSERT INTO "hsai_material_folders" VALUES('3054ada5-cef2-4504-9bc2-63390cfcc691','新的目录名称','测试子目录 - 创建于 2025-09-12 18:58:52','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757674732,1758003902);
-INSERT INTO "hsai_material_folders" VALUES('825e4948-d89f-41c1-ab2b-c556775729d3','要删除的文件夹啊','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757675870,1758005262);
-INSERT INTO "hsai_material_folders" VALUES('f4b4ef8f-8725-4cda-ac14-9ecf7642b4d6','回收站测试目录_1757676098','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676100,1757676100);
-INSERT INTO "hsai_material_folders" VALUES('dc3339ce-29ac-4f27-979f-a9927da3ef2f','回收站测试目录_1757676364','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676366,1757676366);
-INSERT INTO "hsai_material_folders" VALUES('e6b59f2b-0d1d-45c9-8df9-9aa5446b5330','回收站测试目录_1757676480','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676482,1757676482);
-INSERT INTO "hsai_material_folders" VALUES('d241a701-ac76-4988-9536-66ba57a202f6','回收站测试目录_1757676588','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676590,1757676590);
-INSERT INTO "hsai_material_folders" VALUES('a26d09f4-d38a-4fcd-bf63-ca7a5601add3','回收站测试目录_1757676636','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676638,1757676638);
-INSERT INTO "hsai_material_folders" VALUES('b7342d36-5f67-4308-a30e-ac156f89be0f','回收站测试目录_1757681419','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757681421,1757681421);
-INSERT INTO "hsai_material_folders" VALUES('32fb23c0-b601-4225-8256-524bc4d227b4','回收站测试目录_1757681584','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757681586,1757681586);
-INSERT INTO "hsai_material_folders" VALUES('cbff7b2c-fd5e-409a-8b21-410f33c581c9','回收站测试目录_1757681604','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757681606,1757681606);
-INSERT INTO "hsai_material_folders" VALUES('62ba986a-c568-434c-b10c-cb4e050466e7','回收站测试目录_1757682124','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757682126,1757682126);
-INSERT INTO "hsai_material_folders" VALUES('cdc2ccc8-bf22-454b-a125-e6e94a5eeb95','回收站测试目录_1757682243','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757682245,1757682245);
-INSERT INTO "hsai_material_folders" VALUES('b86b4af3-e408-4cf7-ae73-3cd90c3cb3ac','回收站测试目录_1757684799','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757684801,1757684801);
-INSERT INTO "hsai_material_folders" VALUES('32bd4bde-fbee-4d6d-9906-ceec6d58d168','回收站测试目录_1757685046','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757685048,1757685048);
-INSERT INTO "hsai_material_folders" VALUES('0bda98e8-4f68-4fc7-9d3c-baa3b35164ac','test_folder_1757688651','测试子目录 - 创建于 2025-09-12 22:50:51','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757688651,1757688651);
-INSERT INTO "hsai_material_folders" VALUES('dd3bd190-7162-4a17-9987-ad7b5ff9d604','回收站测试目录_1757690133','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757690135,1757690135);
-INSERT INTO "hsai_material_folders" VALUES('44110c07-72ad-4b94-9517-76a5007c3fa0','回收站测试目录_1757691770','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757691772,1757691772);
-INSERT INTO "hsai_material_folders" VALUES('02465b2d-25fa-48a4-9d1f-28d0a9c7fe50','回收站测试目录_1757694250','回收站功能测试专用目录','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757694252,1757694252);
-INSERT INTO "hsai_material_folders" VALUES('d60a88f8-575c-43e7-9c9c-19f9dd89e9da','在视频下面的文件夹','','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1758007387,1758007387);
-INSERT INTO "hsai_material_folders" VALUES('1fc5e2cf-11e9-4c12-9ee9-cdcc8566f4f2','素材库','素材库文件夹',NULL,'500eb523-156b-4eff-ad61-acfa7de0056a','null',0,1758252831,1758252831);
+INSERT INTO "hsai_material_folders" VALUES('9934fed7-70e9-4d30-91d1-84ca9dcb774a','素材�?,'根目录素材库',NULL,'496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757672442,1758620370);
+INSERT INTO "hsai_material_folders" VALUES('f687636e-15ea-40c7-a4b6-ee1a3cf17730','视频','视频的目�?,'9934fed7-70e9-4d30-91d1-84ca9dcb774a','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757672466,1757672466);
+INSERT INTO "hsai_material_folders" VALUES('3054ada5-cef2-4504-9bc2-63390cfcc691','新的目录名称','测试子目�?- 创建�?2025-09-12 18:58:52','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757674732,1758003902);
+INSERT INTO "hsai_material_folders" VALUES('825e4948-d89f-41c1-ab2b-c556775729d3','要删除的文件夹啊','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757675870,1758005262);
+INSERT INTO "hsai_material_folders" VALUES('f4b4ef8f-8725-4cda-ac14-9ecf7642b4d6','回收站测试目录_1757676098','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676100,1757676100);
+INSERT INTO "hsai_material_folders" VALUES('dc3339ce-29ac-4f27-979f-a9927da3ef2f','回收站测试目录_1757676364','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676366,1757676366);
+INSERT INTO "hsai_material_folders" VALUES('e6b59f2b-0d1d-45c9-8df9-9aa5446b5330','回收站测试目录_1757676480','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676482,1757676482);
+INSERT INTO "hsai_material_folders" VALUES('d241a701-ac76-4988-9536-66ba57a202f6','回收站测试目录_1757676588','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676590,1757676590);
+INSERT INTO "hsai_material_folders" VALUES('a26d09f4-d38a-4fcd-bf63-ca7a5601add3','回收站测试目录_1757676636','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757676638,1757676638);
+INSERT INTO "hsai_material_folders" VALUES('b7342d36-5f67-4308-a30e-ac156f89be0f','回收站测试目录_1757681419','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757681421,1757681421);
+INSERT INTO "hsai_material_folders" VALUES('32fb23c0-b601-4225-8256-524bc4d227b4','回收站测试目录_1757681584','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757681586,1757681586);
+INSERT INTO "hsai_material_folders" VALUES('cbff7b2c-fd5e-409a-8b21-410f33c581c9','回收站测试目录_1757681604','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757681606,1757681606);
+INSERT INTO "hsai_material_folders" VALUES('62ba986a-c568-434c-b10c-cb4e050466e7','回收站测试目录_1757682124','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757682126,1757682126);
+INSERT INTO "hsai_material_folders" VALUES('cdc2ccc8-bf22-454b-a125-e6e94a5eeb95','回收站测试目录_1757682243','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757682245,1757682245);
+INSERT INTO "hsai_material_folders" VALUES('b86b4af3-e408-4cf7-ae73-3cd90c3cb3ac','回收站测试目录_1757684799','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757684801,1757684801);
+INSERT INTO "hsai_material_folders" VALUES('32bd4bde-fbee-4d6d-9906-ceec6d58d168','回收站测试目录_1757685046','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757685048,1757685048);
+INSERT INTO "hsai_material_folders" VALUES('0bda98e8-4f68-4fc7-9d3c-baa3b35164ac','test_folder_1757688651','测试子目�?- 创建�?2025-09-12 22:50:51','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757688651,1757688651);
+INSERT INTO "hsai_material_folders" VALUES('dd3bd190-7162-4a17-9987-ad7b5ff9d604','回收站测试目录_1757690133','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757690135,1757690135);
+INSERT INTO "hsai_material_folders" VALUES('44110c07-72ad-4b94-9517-76a5007c3fa0','回收站测试目录_1757691770','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757691772,1757691772);
+INSERT INTO "hsai_material_folders" VALUES('02465b2d-25fa-48a4-9d1f-28d0a9c7fe50','回收站测试目录_1757694250','回收站功能测试专用目�?,'f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1757694252,1757694252);
+INSERT INTO "hsai_material_folders" VALUES('d60a88f8-575c-43e7-9c9c-19f9dd89e9da','在视频下面的文件�?,'','f687636e-15ea-40c7-a4b6-ee1a3cf17730','496e0f43-8bfa-464a-b333-7738d4b3b76d','null',0,1758007387,1758007387);
+INSERT INTO "hsai_material_folders" VALUES('1fc5e2cf-11e9-4c12-9ee9-cdcc8566f4f2','素材�?,'素材库文件夹',NULL,'500eb523-156b-4eff-ad61-acfa7de0056a','null',0,1758252831,1758252831);
 CREATE TABLE hsai_material_tags (
 	id VARCHAR NOT NULL, 
 	name VARCHAR NOT NULL, 
@@ -499,8 +501,8 @@ CREATE TABLE [hsai_projects] (
     created_at BIGINT,
     updated_at BIGINT
 , company_id VARCHAR(255) REFERENCES companies(id));
-INSERT INTO "hsai_projects" VALUES('1759988837','测试项目','这是一个测试项目','测试公司',NULL,'1759988837','active',NULL,1759988837,1759988837,'1759988837');
-INSERT INTO "hsai_projects" VALUES('1759988875','测试项目','这是一个测试项目','测试公司',NULL,'1759988875','active',NULL,1759988875,1759988875,'1759988875');
+INSERT INTO "hsai_projects" VALUES('1759988837','测试项目','这是一个测试项�?,'测试公司',NULL,'1759988837','active',NULL,1759988837,1759988837,'1759988837');
+INSERT INTO "hsai_projects" VALUES('1759988875','测试项目','这是一个测试项�?,'测试公司',NULL,'1759988875','active',NULL,1759988875,1759988875,'1759988875');
 CREATE TABLE hsai_publish_records (
 	id VARCHAR NOT NULL, 
 	publish_task_id VARCHAR NOT NULL, 
@@ -577,14 +579,14 @@ CREATE TABLE "hsai_tasks" (
 INSERT INTO "hsai_tasks" VALUES('ffae6b7d-61fc-4613-8bdc-6dbefdad508b','生成video内容创意','AI生成任务：生成video内容创意','content_analysis','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'null','{"industry": "\u673a\u68b0\u5236\u9020", "target_audience": "\u6d77\u5916\u91c7\u8d2d\u5546", "content_type": "video", "count": 5}','null',NULL,NULL,0,NULL,NULL,NULL,0,1,'null',1756525422,1756525422,NULL,NULL,NULL,NULL,NULL,NULL);
 INSERT INTO "hsai_tasks" VALUES('2ec6ef0a-6e58-4ce5-809b-4ad301b06a54','生成video内容创意','AI生成任务：生成video内容创意','content_analysis','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'null','{"industry": "\u673a\u68b0\u5236\u9020", "target_audience": "\u6d77\u5916\u91c7\u8d2d\u5546", "content_type": "video", "count": 5}','null',NULL,NULL,0,NULL,NULL,NULL,0,1,'null',1756525443,1756525443,NULL,NULL,NULL,NULL,NULL,NULL);
 INSERT INTO "hsai_tasks" VALUES('2429ca90-8828-4708-82b5-9224f54d1da1','生成video内容创意','AI生成任务：生成video内容创意','content_analysis','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'null','{"industry": "\u673a\u68b0\u5236\u9020", "target_audience": "\u6d77\u5916\u91c7\u8d2d\u5546", "content_type": "video", "count": 5}','null',NULL,NULL,0,NULL,NULL,NULL,0,1,'null',1756525471,1756525471,NULL,NULL,NULL,NULL,NULL,NULL);
-INSERT INTO "hsai_tasks" VALUES('7e6af4da-d99f-48df-a265-e0d7a0aad639','产品市场分析','AI生成任务：产品市场分析','content_analysis','cancelled','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'null','{"product_info": "\u578b\u53f7X100\uff0c\u9002\u7528\u4e8e\u4e0d\u9508\u94a2\u5207\u5272\uff0c\u529f\u73873kW", "market_context": "", "competition_info": ""}','null',NULL,NULL,0,NULL,NULL,NULL,0,1,'null',1756525670,1758695187,NULL,NULL,NULL,NULL,NULL,NULL);
-INSERT INTO "hsai_tasks" VALUES('8562297f-dcb3-4e52-a4ad-d24f23697a65','测试任务','这是一个测试任务','video_creation','pending','test_user_123',NULL,'null','null','null',NULL,NULL,0,NULL,NULL,NULL,0,5,'null',1756969137,1756969137,'new_assignee_789',NULL,NULL,NULL,NULL,NULL);
-INSERT INTO "hsai_tasks" VALUES('7fc0f02e-fd4d-47d5-b67a-6a03e230a1fa','学习爆款视频：如何制作吸引人的短视频开头','该任务需要您确认是否学习这个爆款视频内容。视频来自抖音平台，时长45秒。','video_creation','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video1.mp4", "thumbnail_url": "https://example.com/thumb1.jpg", "platform": "抖音", "duration": 45, "title": "如何制作吸引人的短视频开头", "tags": ["短视频", "开头技巧", "吸引人"], "video_id": "video_001"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758084246, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,10,'["爆款学习", "待确认", "抖音"]',1758069846,1758069846,NULL,NULL,NULL,NULL,NULL,NULL);
-INSERT INTO "hsai_tasks" VALUES('2e8b5ba2-b475-467f-af19-aba5c60a9a41','学习爆款视频：美食制作教程的拍摄技巧','该任务需要您确认是否学习这个爆款视频内容。视频来自快手平台，时长72秒。','video_creation','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video2.mp4", "thumbnail_url": "https://example.com/thumb2.jpg", "platform": "快手", "duration": 72, "title": "美食制作教程的拍摄技巧", "tags": ["美食", "拍摄技巧", "教程"], "video_id": "video_002"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758080646, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,8,'["爆款学习", "待确认", "快手"]',1758073446,1758073446,NULL,NULL,NULL,NULL,NULL,NULL);
-INSERT INTO "hsai_tasks" VALUES('f56ada53-895f-4965-bfd1-22e8df9a268a','学习爆款视频：宠物日常的趣味剪辑方法','该任务需要您确认是否学习这个爆款视频内容。视频来自抖音平台，时长38秒。','video_creation','in_progress','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video3.mp4", "thumbnail_url": "https://example.com/thumb3.jpg", "platform": "抖音", "duration": 38, "title": "宠物日常的趣味剪辑方法", "tags": ["宠物", "剪辑", "趣味"], "video_id": "video_003"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758077046, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,6,'["爆款学习", "学习中", "抖音"]',1758077046,1758077046,NULL,NULL,NULL,NULL,NULL,NULL);
-INSERT INTO "hsai_tasks" VALUES('6b5564e9-db35-4f74-91b6-148bb87a4757','学习爆款视频：旅行vlog的叙事结构','该任务需要您确认是否学习这个爆款视频内容。视频来自小红书平台，时长95秒。','video_creation','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video4.mp4", "thumbnail_url": "https://example.com/thumb4.jpg", "platform": "小红书", "duration": 95, "title": "旅行vlog的叙事结构", "tags": ["旅行", "vlog", "叙事"], "video_id": "video_004"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758073446, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,7,'["爆款学习", "待确认", "小红书"]',1758080646,1758080646,NULL,NULL,NULL,NULL,NULL,NULL);
-INSERT INTO "hsai_tasks" VALUES('e310f2a6-e3ec-4ada-82ef-01fddabe2db6','学习爆款视频：健身动作的标准示范','该任务需要您确认是否学习这个爆款视频内容。视频来自抖音平台，时长62秒。','video_creation','completed','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video5.mp4", "thumbnail_url": "https://example.com/thumb5.jpg", "platform": "抖音", "duration": 62, "title": "健身动作的标准示范", "tags": ["健身", "标准示范", "教程"], "video_id": "video_005", "learned_at": 1758001446}','{"source": "viral_video_crawl", "crawl_timestamp": 1757997846, "enterprise_id": "ent_001"}','{"analysis_result": {"script": "健身动作分解脚本...", "key_points": ["标准姿势", "呼吸节奏", "安全要点"], "material_id": "mat_001"}}',NULL,NULL,0,NULL,1758001446,NULL,0,5,'["爆款学习", "已完成", "抖音"]',1758084246,1758084246,NULL,NULL,NULL,NULL,NULL,NULL);
-INSERT INTO "hsai_tasks" VALUES('f7bac9e4-e6cd-42b4-811f-ec08191fa874','学习TikTok爆款视频：@bykovfx的视频内容','该任务需要您确认是否学习这个TikTok爆款视频内容。视频来自TikTok平台，ID为7545796456385449223。','video_creation','cancelled','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://www.tiktok.com/@bykovfx/video/7545796456385449223", "thumbnail_url": "", "platform": "TikTok", "duration": 0, "title": "@bykovfx的视频", "tags": ["TikTok", "爆款学习"], "video_id": "7545796456385449223"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758088371, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,10,'["爆款学习", "待确认", "TikTok"]',1758088371,1758695153,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "hsai_tasks" VALUES('7e6af4da-d99f-48df-a265-e0d7a0aad639','产品市场分析','AI生成任务：产品市场分�?,'content_analysis','cancelled','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'null','{"product_info": "\u578b\u53f7X100\uff0c\u9002\u7528\u4e8e\u4e0d\u9508\u94a2\u5207\u5272\uff0c\u529f\u73873kW", "market_context": "", "competition_info": ""}','null',NULL,NULL,0,NULL,NULL,NULL,0,1,'null',1756525670,1758695187,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "hsai_tasks" VALUES('8562297f-dcb3-4e52-a4ad-d24f23697a65','测试任务','这是一个测试任�?,'video_creation','pending','test_user_123',NULL,'null','null','null',NULL,NULL,0,NULL,NULL,NULL,0,5,'null',1756969137,1756969137,'new_assignee_789',NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "hsai_tasks" VALUES('7fc0f02e-fd4d-47d5-b67a-6a03e230a1fa','学习爆款视频：如何制作吸引人的短视频开�?,'该任务需要您确认是否学习这个爆款视频内容。视频来自抖音平台，时长45秒�?,'video_creation','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video1.mp4", "thumbnail_url": "https://example.com/thumb1.jpg", "platform": "抖音", "duration": 45, "title": "如何制作吸引人的短视频开�?, "tags": ["短视�?, "开头技�?, "吸引�?], "video_id": "video_001"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758084246, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,10,'["爆款学习", "待确�?, "抖音"]',1758069846,1758069846,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "hsai_tasks" VALUES('2e8b5ba2-b475-467f-af19-aba5c60a9a41','学习爆款视频：美食制作教程的拍摄技�?,'该任务需要您确认是否学习这个爆款视频内容。视频来自快手平台，时长72秒�?,'video_creation','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video2.mp4", "thumbnail_url": "https://example.com/thumb2.jpg", "platform": "快手", "duration": 72, "title": "美食制作教程的拍摄技�?, "tags": ["美食", "拍摄技�?, "教程"], "video_id": "video_002"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758080646, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,8,'["爆款学习", "待确�?, "快手"]',1758073446,1758073446,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "hsai_tasks" VALUES('f56ada53-895f-4965-bfd1-22e8df9a268a','学习爆款视频：宠物日常的趣味剪辑方法','该任务需要您确认是否学习这个爆款视频内容。视频来自抖音平台，时长38秒�?,'video_creation','in_progress','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video3.mp4", "thumbnail_url": "https://example.com/thumb3.jpg", "platform": "抖音", "duration": 38, "title": "宠物日常的趣味剪辑方�?, "tags": ["宠物", "剪辑", "趣味"], "video_id": "video_003"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758077046, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,6,'["爆款学习", "学习�?, "抖音"]',1758077046,1758077046,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "hsai_tasks" VALUES('6b5564e9-db35-4f74-91b6-148bb87a4757','学习爆款视频：旅行vlog的叙事结�?,'该任务需要您确认是否学习这个爆款视频内容。视频来自小红书平台，时�?5秒�?,'video_creation','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video4.mp4", "thumbnail_url": "https://example.com/thumb4.jpg", "platform": "小红�?, "duration": 95, "title": "旅行vlog的叙事结�?, "tags": ["旅行", "vlog", "叙事"], "video_id": "video_004"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758073446, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,7,'["爆款学习", "待确�?, "小红�?]',1758080646,1758080646,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "hsai_tasks" VALUES('e310f2a6-e3ec-4ada-82ef-01fddabe2db6','学习爆款视频：健身动作的标准示范','该任务需要您确认是否学习这个爆款视频内容。视频来自抖音平台，时长62秒�?,'video_creation','completed','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://example.com/video5.mp4", "thumbnail_url": "https://example.com/thumb5.jpg", "platform": "抖音", "duration": 62, "title": "健身动作的标准示�?, "tags": ["健身", "标准示范", "教程"], "video_id": "video_005", "learned_at": 1758001446}','{"source": "viral_video_crawl", "crawl_timestamp": 1757997846, "enterprise_id": "ent_001"}','{"analysis_result": {"script": "健身动作分解脚本...", "key_points": ["标准姿势", "呼吸节奏", "安全要点"], "material_id": "mat_001"}}',NULL,NULL,0,NULL,1758001446,NULL,0,5,'["爆款学习", "已完�?, "抖音"]',1758084246,1758084246,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "hsai_tasks" VALUES('f7bac9e4-e6cd-42b4-811f-ec08191fa874','学习TikTok爆款视频：@bykovfx的视频内�?,'该任务需要您确认是否学习这个TikTok爆款视频内容。视频来自TikTok平台，ID�?545796456385449223�?,'video_creation','cancelled','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'{"video_url": "https://www.tiktok.com/@bykovfx/video/7545796456385449223", "thumbnail_url": "", "platform": "TikTok", "duration": 0, "title": "@bykovfx的视�?, "tags": ["TikTok", "爆款学习"], "video_id": "7545796456385449223"}','{"source": "viral_video_crawl", "crawl_timestamp": 1758088371, "enterprise_id": "ent_001"}',NULL,NULL,NULL,0,NULL,NULL,NULL,0,10,'["爆款学习", "待确�?, "TikTok"]',1758088371,1758695153,NULL,NULL,NULL,NULL,NULL,NULL);
 CREATE TABLE [hsai_video_learning_logs] (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     business_name TEXT NOT NULL,
@@ -600,7 +602,7 @@ CREATE TABLE hsai_video_learning_status (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,    -- 自增主键
     business_name TEXT NOT NULL,             -- 公司名称
     video_id TEXT NOT NULL,                  -- 学习的视频ID
-    status TEXT NOT NULL,                    -- 学习状态: 学习中、已学习、已放弃
+    status TEXT NOT NULL,                    -- 学习状�? 学习中、已学习、已放弃
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,  -- 创建时间
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP   -- 更新时间
 );
@@ -809,7 +811,7 @@ INSERT INTO "redis_queue_messages" VALUES('6a87d158-0114-498c-9018-e6b71f392a34'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。需要我为您查看目前还需要合成多少个测试视频吗？如果需要，请回复“是”。",
+    "text": "您好！欢迎使用智能视频创作助手。需要我为您查看目前还需要合成多少个测试视频吗？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -826,7 +828,7 @@ INSERT INTO "redis_queue_messages" VALUES('4600c410-55dc-496f-873e-cccc7dc9c6be'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，获取待测试视频数量时出现了技术问题。您希望我现在重试一次吗？请回复“重试”或“稍后再试”。",
+    "text": "抱歉，获取待测试视频数量时出现了技术问题。您希望我现在重试一次吗？请回复“重试”或“稍后再试”�?,
     "data": {
       "video_link": ""
     }
@@ -843,7 +845,7 @@ INSERT INTO "redis_queue_messages" VALUES('8d48382f-39e4-4a2f-a6d8-7a92c644760e'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，系统在获取待测试视频数量时再次出现技术问题（数据库表不存在）。我们正在排查原因。您希望：\n1. 立即再次重试一次\n2. 稍后再试\n3. 结束当前流程\n\n请回复选项编号（1 / 2 / 3）。",
+    "text": "抱歉，系统在获取待测试视频数量时再次出现技术问题（数据库表不存在）。我们正在排查原因。您希望：\n1. 立即再次重试一次\n2. 稍后再试\n3. 结束当前流程\n\n请回复选项编号�? / 2 / 3）�?,
     "data": {
       "video_link": ""
     }
@@ -860,7 +862,7 @@ INSERT INTO "redis_queue_messages" VALUES('73f6fb6d-35c7-468c-9767-834e41610830'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作与发布助手。您是否想了解目前还需要合成多少个测试视频？如果需要，请告诉我，我将为您查询并汇报结果。",
+    "text": "您好！欢迎使用智能视频创作与发布助手。您是否想了解目前还需要合成多少个测试视频？如果需要，请告诉我，我将为您查询并汇报结果�?,
     "data": {
       "video_link": ""
     }
@@ -877,7 +879,7 @@ INSERT INTO "redis_queue_messages" VALUES('e2bfaffc-c537-4901-9aec-1d19bd2ce2e2'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，查询当前待测试视频数量时出现了技术问题。请问您希望我立即重试一次，还是稍后再试？",
+    "text": "抱歉，查询当前待测试视频数量时出现了技术问题。请问您希望我立即重试一次，还是稍后再试�?,
     "data": {
       "video_link": ""
     }
@@ -894,11 +896,11 @@ INSERT INTO "redis_queue_messages" VALUES('dac3a5e8-1a3e-4a7c-976d-c6575669a8bf'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "很抱歉，再次查询时依然遇到系统错误，暂时无法获取待测试视频的数量。您有两种选择：
-1. 立即再次重试一次。
-2. 稍后再试，或通知技术人员检查数据库配置。
+    "text": "很抱歉，再次查询时依然遇到系统错误，暂时无法获取待测试视频的数量。您有两种选择�?
+1. 立即再次重试一次�?
+2. 稍后再试，或通知技术人员检查数据库配置�?
 
-请告诉我您的决定：如果要再次重试，请回复“重试”；如果稍后再试，请回复“稍后”。",
+请告诉我您的决定：如果要再次重试，请回复“重试”；如果稍后再试，请回复“稍后”�?,
     "data": {
       "video_link": ""
     }
@@ -915,7 +917,7 @@ INSERT INTO "redis_queue_messages" VALUES('72d7878c-6566-4fc9-bc36-69f4af2ec1aa'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间�?,
     "data": {
       "video_link": ""
     }
@@ -932,7 +934,7 @@ INSERT INTO "redis_queue_messages" VALUES('c1d25131-36de-4664-b1f3-dea0c8fb7615'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 以下“目标人群”信息请您确认，如需修改请告诉我：\n   • 客户类型：工程承包商/EPC、市政照明部门、经销商/批发商、工业/商业场馆业主  \n   • 主要市场：北美、欧洲、中东、澳大利亚  \n   • 常见痛点：能耗高与电费昂贵、维护频率高/人工成本大、寿命短可靠性不足、需符合节能环保法规\n\n2. 如果以上准确，请说“确认”；如有调整，请直接指出要改的地方。",
+    "text": "1. 以下“目标人群”信息请您确认，如需修改请告诉我：\n   �?客户类型：工程承包商/EPC、市政照明部门、经销�?批发商、工�?商业场馆业主  \n   �?主要市场：北美、欧洲、中东、澳大利�? \n   �?常见痛点：能耗高与电费昂贵、维护频率高/人工成本大、寿命短可靠性不足、需符合节能环保法规\n\n2. 如果以上准确，请说“确认”；如有调整，请直接指出要改的地方�?,
     "data": {
       "video_link": ""
     }
@@ -949,7 +951,7 @@ INSERT INTO "redis_queue_messages" VALUES('7fc1bfa3-36e3-46a6-a5d1-1708add79347'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为您梳理 4 大类关键词矩阵（核心产品、行业通用、痛点场景、品牌差异化长尾词），详见上方内容。  \n2. 请您检查并反馈：  \n   2.1 是否需要增删或修改某些关键词？  \n   2.2 有无特别要突出或规避的表达？  \n3. 若无问题，只需回复「确认」，我就会进入下一步，为您批量抓取热门视频素材并存档关键词库。",
+    "text": "1. 已为您梳�?4 大类关键词矩阵（核心产品、行业通用、痛点场景、品牌差异化长尾词），详见上方内容�? \n2. 请您检查并反馈�? \n   2.1 是否需要增删或修改某些关键词？  \n   2.2 有无特别要突出或规避的表达？  \n3. 若无问题，只需回复「确认」，我就会进入下一步，为您批量抓取热门视频素材并存档关键词库�?,
     "data": {
       "video_link": ""
     }
@@ -960,7 +962,7 @@ INSERT INTO "redis_queue_messages" VALUES('aae45d50-adec-4905-b112-bad74f196717'
   "env": "gray",
   "session_id": "9fad5456-8e7a-4e91-8d31-3d98e33fa450",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "76362586-0e40-475e-90f6-f162b705cc49",
   "socket_id": "pWQk1jxOiDOtLvswAABL",
   "status": "RUNNING",
@@ -978,7 +980,7 @@ INSERT INTO "redis_queue_messages" VALUES('2a56b820-2fc4-45f7-a698-b29435aec0a2'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已生成《AOK LED Light 出海短视频获客作战地图 v1.0》，内含：  \n   • 6 大内容支柱 / 主题矩阵  \n   • 30 天拍摄 & 发布日历框架  \n   • 60 条短视频脚本模板示例（示例列出 3 条，其余确认后发送）  \n   • 开场钩子库（15 句）  \n   • 场景拍摄清单与素材规格  \n   • 周度 KPI 与执行节奏  \n\n2. 请您核对并回复：  \n   A) 账号数量、视频产量、目标 KPI 是否 OK？  \n   B) 每周 8–10 个场景拍摄的资源是否落实？  \n   C) 如无调整，直接回复【确认】，我将把蓝图正式存档并推送完整脚本与排期。",
+    "text": "1. 已生成《AOK LED Light 出海短视频获客作战地�?v1.0》，内含�? \n   �?6 大内容支�?/ 主题矩阵  \n   �?30 天拍�?& 发布日历框架  \n   �?60 条短视频脚本模板示例（示例列�?3 条，其余确认后发送）  \n   �?开场钩子库�?5 句）  \n   �?场景拍摄清单与素材规�? \n   �?周度 KPI 与执行节�? \n\n2. 请您核对并回复：  \n   A) 账号数量、视频产量、目�?KPI 是否 OK�? \n   B) 每周 8�?0 个场景拍摄的资源是否落实�? \n   C) 如无调整，直接回复【确认】，我将把蓝图正式存档并推送完整脚本与排期�?,
     "data": {
       "video_link": ""
     }
@@ -1012,7 +1014,7 @@ INSERT INTO "redis_queue_messages" VALUES('fee4d559-778d-4578-ae9c-c7010b77e6e9'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 已根据您提供的官网信息，初步整理了「目标人群」模块，请您查看并确认是否需要修改：  \n   • 客户类型：照明工程商/承包商、海外经销商/分销商、政府及市政道路照明部门、工业与商业设施运营方（仓库、工厂、体育场等）  \n   • 目标市场：北美、欧洲、澳大利亚、中东、东南亚【建议值】  \n   • 常见痛点：传统灯具耗能高、维护频次大；需通过 UL/DLC/CE 等认证才能进入当地市场；项目周期紧，交付与定制灵活度要求高；降低整体照明成本（能耗＋维护）  \n\n2. 请您确认以上信息是否准确，或告知需要调整的内容。确认后将为您保存并继续下一步。",
+    "text": "正文：\n1. 已根据您提供的官网信息，初步整理了「目标人群」模块，请您查看并确认是否需要修改：  \n   �?客户类型：照明工程商/承包商、海外经销�?分销商、政府及市政道路照明部门、工业与商业设施运营方（仓库、工厂、体育场等）  \n   �?目标市场：北美、欧洲、澳大利亚、中东、东南亚【建议值�? \n   �?常见痛点：传统灯具耗能高、维护频次大；需通过 UL/DLC/CE 等认证才能进入当地市场；项目周期紧，交付与定制灵活度要求高；降低整体照明成本（能耗＋维护�? \n\n2. 请您确认以上信息是否准确，或告知需要调整的内容。确认后将为您保存并继续下一步�?,
     "data": {
       "video_link": ""
     }
@@ -1029,7 +1031,7 @@ INSERT INTO "redis_queue_messages" VALUES('a8a7268a-943b-47c9-ab2e-a05f06ad72a4'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 我已根据官网信息整理了企业资料草案和关键词矩阵初稿（详见上方）。  \n2. 请您核对并确认：  \n   • 企业资料是否准确？  \n   • 关键词矩阵是否贴合业务？  \n3. 如无修改，请回复“没问题”或“就这样吧”，我将为您保存并进行下一步骤。",
+    "text": "正文：\n1. 我已根据官网信息整理了企业资料草案和关键词矩阵初稿（详见上方）�? \n2. 请您核对并确认：  \n   �?企业资料是否准确�? \n   �?关键词矩阵是否贴合业务？  \n3. 如无修改，请回复“没问题”或“就这样吧”，我将为您保存并进行下一步骤�?,
     "data": {
       "video_link": ""
     }
@@ -1040,7 +1042,7 @@ INSERT INTO "redis_queue_messages" VALUES('7ef4975a-7930-43f6-9fbf-b93f23d73ab6'
   "env": "gray",
   "session_id": "741168ad-a285-4cff-a736-61804624bf5b",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "4b0a8aaf-4e0f-456e-80a2-f09c58855ad9",
   "socket_id": "pWQk1jxOiDOtLvswAABL",
   "status": "RUNNING",
@@ -1058,7 +1060,7 @@ INSERT INTO "redis_queue_messages" VALUES('9dbf4922-10b2-4bd5-ac32-113c4851f2b8'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 已为 AOK LED Light 生成短视频「作战地图」v1.0（含账号矩阵、素材清单、内容 Pillars 等）。  \n2. 请您确认：  \n   • 账号数量、增长 KPI、发布节奏是否 OK？  \n   • 每周 8 组拍摄场景是否可行？  \n   • 6 大内容方向是否贴合？需增删？  \n3. 回复“确认”即可启动脚本输出与排期；如需调整请提出具体意见。",
+    "text": "正文：\n1. 已为 AOK LED Light 生成短视频「作战地图」v1.0（含账号矩阵、素材清单、内�?Pillars 等）�? \n2. 请您确认�? \n   �?账号数量、增�?KPI、发布节奏是�?OK�? \n   �?每周 8 组拍摄场景是否可行？  \n   �?6 大内容方向是否贴合？需增删�? \n3. 回复“确认”即可启动脚本输出与排期；如需调整请提出具体意见�?,
     "data": {
       "video_link": ""
     }
@@ -1075,7 +1077,7 @@ INSERT INTO "redis_queue_messages" VALUES('43c3a56a-06dc-479b-a22a-0274af966ad9'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 已收到“确认”，短视频项目正式立项，现进入「脚本 + 排期」执行阶段。  \n2. 交付物 & 时间表  \n   2.1 T＋3 天：提交完整《40 条短视频脚本包》及《30 天甘特图（日历）》Excel；  \n   2.2 T＋7 天：剪辑团队交付首批 30 条成品视频（含字幕、Hook、BGM）；  \n   2.3 T＋30 天：完成首轮数据复盘与脚本迭代，确认日更 4 条节奏；  \n   2.4 T＋90 天：验证 50 条/月留资模型，如需放量将增设账号。  \n3. 为便于您提前预览，先附上 10 条示范脚本（其余 30 条随 Excel 一并交付）：  \n   3.1 【P1·工厂探秘】《一颗灯珠的八道魔鬼测试》  \n        Hook：SMT 贴片机 48,000 pcs/h 高速运转特写  \n        结构：高速贴片 → 全检 → 72h 老化 → 成品仓 → CTA：评论“UL”获完整质检流程  \n   3.2 【P2·极限挑战】《把路灯浸入 1 米水桶 72h，结果…》  \n        Hook：灯具泡水倒计时弹幕  \n        结构：浸水中→热成像→点亮→产品型号+IP67 → CTA：下载防水报告  \n   3.3 【P3·案例】《港口升级后一年省下 18 万美金》  \n        Hook：夜景航拍 Before/After 对比  \n        结构：省电 ROI 计算 → 客户证言 → CTA：私信获取 ROI 模板  \n   3.4 【P4·FAQ】《为什么北美项目必须选 DLC Premium？》  \n        Hook：60 秒看懂 DLC 补贴  \n        结构：DLC 作用 → 查询 QPL → AOK 机型示例  \n   3.5 【P5·互动工具】《30 秒算出电费能省多少》  \n        Hook：屏幕录制 ROI 计算器  \n        结构：输入功率/时长 → 自动输出节省金额 → CTA：评论“Excel”领取  \n   3.6 【P6·品牌故事】《质检主管的 10 万步》  \n        Hook：计步器数字飙升动画  \n        结构：岗位细节 → 坚持理由 → 品质承诺  \n   3.7 【P1·工厂探秘】《48h 快速交付是怎样实现的？》  \n        Hook：自动立体仓扫码→AGV 机器人搬运  \n        结构：订单下单→备料→组装→发货 → CTA：看完整流水线  \n   3.8 【P2·极限挑战】《-40℃ 低温箱点灯实验》  \n        Hook：结霜镜头→瞬间点亮  \n        结构：测试步骤 → 低温启动优势 → CTA：留言“低温”获报告  \n   3.9 【P3·案例】《体育场 3000 套 UFO 灯替换 1000W 金卤》  \n        Hook：1:1 照度对比图  \n        结构：安装花絮→光照计读数→观众反馈→CTA：下载照度计算表  \n   3.10【P4·FAQ】《0-10V 和 DALI 有啥区别？30 秒讲明白》  \n        Hook：双路示波器波形对比  \n        结构：协议原理 → 适用场景 → AOK 支持机型  \n4. 素材准备提醒  \n   • 请在 T＋3 天内完成首周 8 组场景拍摄并上传云盘（清单已在蓝图中列明）；  \n   • 建议使用 1080p 60fps 竖屏拍摄，保持统一 LOG/色彩配置，方便后期批量调色。  \n5. 若以上安排无异议，我们将按计划推进，并在 T＋3 天通过邮件/云盘发送完整脚本和排期。  \n6. 如需调整脚本方向或增加拍摄场景，请在 24 小时内反馈，以免影响后续剪辑节奏。",
+    "text": "正文：\n1. 已收到“确认”，短视频项目正式立项，现进入「脚�?+ 排期」执行阶段�? \n2. 交付�?& 时间�? \n   2.1 T�? 天：提交完整�?0 条短视频脚本包》及�?0 天甘特图（日历）》Excel�? \n   2.2 T�? 天：剪辑团队交付首批 30 条成品视频（含字幕、Hook、BGM）；  \n   2.3 T�?0 天：完成首轮数据复盘与脚本迭代，确认日更 4 条节奏；  \n   2.4 T�?0 天：验证 50 �?月留资模型，如需放量将增设账号�? \n3. 为便于您提前预览，先附上 10 条示范脚本（其余 30 条随 Excel 一并交付）�? \n   3.1 【P1·工厂探秘】《一颗灯珠的八道魔鬼测试�? \n        Hook：SMT 贴片�?48,000 pcs/h 高速运转特�? \n        结构：高速贴�?�?全检 �?72h 老化 �?成品�?�?CTA：评论“UL”获完整质检流程  \n   3.2 【P2·极限挑战】《把路灯浸入 1 米水�?72h，结果…�? \n        Hook：灯具泡水倒计时弹�? \n        结构：浸水中→热成像→点亮→产品型号+IP67 �?CTA：下载防水报�? \n   3.3 【P3·案例】《港口升级后一年省�?18 万美金�? \n        Hook：夜景航�?Before/After 对比  \n        结构：省�?ROI 计算 �?客户证言 �?CTA：私信获�?ROI 模板  \n   3.4 【P4·FAQ】《为什么北美项目必须�?DLC Premium？�? \n        Hook�?0 秒看�?DLC 补贴  \n        结构：DLC 作用 �?查询 QPL �?AOK 机型示例  \n   3.5 【P5·互动工具】�?0 秒算出电费能省多少�? \n        Hook：屏幕录�?ROI 计算�? \n        结构：输入功�?时长 �?自动输出节省金额 �?CTA：评论“Excel”领�? \n   3.6 【P6·品牌故事】《质检主管�?10 万步�? \n        Hook：计步器数字飙升动画  \n        结构：岗位细�?�?坚持理由 �?品质承诺  \n   3.7 【P1·工厂探秘】�?8h 快速交付是怎样实现的？�? \n        Hook：自动立体仓扫码→AGV 机器人搬�? \n        结构：订单下单→备料→组装→发货 �?CTA：看完整流水�? \n   3.8 【P2·极限挑战】�?40�?低温箱点灯实验�? \n        Hook：结霜镜头→瞬间点亮  \n        结构：测试步�?�?低温启动优势 �?CTA：留言“低温”获报告  \n   3.9 【P3·案例】《体育场 3000 �?UFO 灯替�?1000W 金卤�? \n        Hook�?:1 照度对比�? \n        结构：安装花絮→光照计读数→观众反馈→CTA：下载照度计算表  \n   3.10【P4·FAQ】�?-10V �?DALI 有啥区别�?0 秒讲明白�? \n        Hook：双路示波器波形对比  \n        结构：协议原�?�?适用场景 �?AOK 支持机型  \n4. 素材准备提醒  \n   �?请在 T�? 天内完成首周 8 组场景拍摄并上传云盘（清单已在蓝图中列明）；  \n   �?建议使用 1080p 60fps 竖屏拍摄，保持统一 LOG/色彩配置，方便后期批量调色�? \n5. 若以上安排无异议，我们将按计划推进，并在 T�? 天通过邮件/云盘发送完整脚本和排期�? \n6. 如需调整脚本方向或增加拍摄场景，请在 24 小时内反馈，以免影响后续剪辑节奏�?,
     "data": {
       "video_link": ""
     }
@@ -1092,7 +1094,7 @@ INSERT INTO "redis_queue_messages" VALUES('33046188-8178-4975-ae4f-d5becca75874'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 请问主要服务的客户类型包含哪些？  \n2. 重点出口或服务市场区域？  \n3. 客户选择 AOK LED 时最看重的核心优势？  \n4. 当前主推的 LED 灯具系列或型号？  \n5. 生产基地及规模信息？\n\n烦请您补充或修正以上信息，感谢！",
+    "text": "1. 请问主要服务的客户类型包含哪些？  \n2. 重点出口或服务市场区域？  \n3. 客户选择 AOK LED 时最看重的核心优势？  \n4. 当前主推�?LED 灯具系列或型号？  \n5. 生产基地及规模信息？\n\n烦请您补充或修正以上信息，感谢！",
     "data": {
       "video_link": ""
     }
@@ -1109,7 +1111,7 @@ INSERT INTO "redis_queue_messages" VALUES('0f225153-bb84-4d62-b7ed-4e18149406f0'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为您初步提取并补全“目标人群”信息，详见上方内容。  \n2. 请您确认或修改：客户类型、目标市场、常见痛点，是否准确？如有补充或改动，请告诉我！",
+    "text": "1. 已为您初步提取并补全“目标人群”信息，详见上方内容�? \n2. 请您确认或修改：客户类型、目标市场、常见痛点，是否准确？如有补充或改动，请告诉我！",
     "data": {
       "video_link": ""
     }
@@ -1126,7 +1128,7 @@ INSERT INTO "redis_queue_messages" VALUES('7fbb6823-55ef-4cc0-a9e6-353100ae2fba'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 我已浏览官网并整理目标人群信息（见上）。  \n2. 请您确认或指出要增删修改之处；确认后即可进入下一步。",
+    "text": "1. 我已浏览官网并整理目标人群信息（见上）�? \n2. 请您确认或指出要增删修改之处；确认后即可进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -1143,7 +1145,7 @@ INSERT INTO "redis_queue_messages" VALUES('9872c635-fe4a-4fc1-9ecd-4976ab5ff5d7'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已根据官网信息，整理了目标人群模块草案，请确认或修改：  \n   - 客户类型：照明经销商 / 工程承包商 / OEM ODM合作伙伴 / 政府市政照明部门 / 体育场馆运营商  \n   - 目标市场：北美、欧洲、澳洲、中东  \n   - 常见痛点：传统光源能耗高、维护频繁、认证要求严、项目交付周期紧  \n2. 如需调整请直接告知；若无修改请回复“确认”或“可以”。",
+    "text": "1. 已根据官网信息，整理了目标人群模块草案，请确认或修改�? \n   - 客户类型：照明经销�?/ 工程承包�?/ OEM ODM合作伙伴 / 政府市政照明部门 / 体育场馆运营�? \n   - 目标市场：北美、欧洲、澳洲、中�? \n   - 常见痛点：传统光源能耗高、维护频繁、认证要求严、项目交付周期紧  \n2. 如需调整请直接告知；若无修改请回复“确认”或“可以”�?,
     "data": {
       "video_link": ""
     }
@@ -1160,7 +1162,7 @@ INSERT INTO "redis_queue_messages" VALUES('8625ed6d-97ad-4442-9525-96f7a71705d2'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 我已查看数据库，发现目标人群、企业资料、产品特点等已有多份，但需最终确认；关键词库也已完善；蓝图确认尚未最终录入当前会话。  \n2. 已按流程调用 collect_message1，向您提出补充信息的问题（见上文）。  \n3. 请您按提示补充或确认，以便我进入下一步关键词分析与蓝图制定。",
+    "text": "1. 我已查看数据库，发现目标人群、企业资料、产品特点等已有多份，但需最终确认；关键词库也已完善；蓝图确认尚未最终录入当前会话�? \n2. 已按流程调用 collect_message1，向您提出补充信息的问题（见上文）�? \n3. 请您按提示补充或确认，以便我进入下一步关键词分析与蓝图制定�?,
     "data": {
       "video_link": ""
     }
@@ -1177,7 +1179,7 @@ INSERT INTO "redis_queue_messages" VALUES('9b5311c7-8f32-48c2-881f-ee800f22c898'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，已为您整理了贵司 AOK LED LIGHT 的「目标人群」信息，如上所示。  \n2.请您核对：若信息准确，请回复“确认”或“可以”；若需调整，请指出要修改的内容。",
+    "text": "1.老板您好，已为您整理了贵�?AOK LED LIGHT 的「目标人群」信息，如上所示�? \n2.请您核对：若信息准确，请回复“确认”或“可以”；若需调整，请指出要修改的内容�?,
     "data": {
       "video_link": ""
     }
@@ -1194,7 +1196,7 @@ INSERT INTO "redis_queue_messages" VALUES('d49cee14-81a8-4d9a-a7fc-4880b193788f'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 我已根据您提供的网址，自动爬取并整理了初步信息，但为确保后续方案更精准，还需您确认/补充一些关键信息（共 5 点）。  \n2. 请您参考下方问题，按序号回复即可（如有信息保密，可选择性作答）：  \n   1) 公司官方注册名称？  \n   2) 当前重点服务的客户类型？  \n   3) 主要出口或销售目标市场？  \n   4) 用一句话概括，您最核心的竞争优势？  \n   5) 还有其他明星产品或独特技术需要特别强调吗？  \n3. 收到您的回复后，我将进入下一步整理并生成完整资料。谢谢！",
+    "text": "1. 我已根据您提供的网址，自动爬取并整理了初步信息，但为确保后续方案更精准，还需您确�?补充一些关键信息（�?5 点）�? \n2. 请您参考下方问题，按序号回复即可（如有信息保密，可选择性作答）�? \n   1) 公司官方注册名称�? \n   2) 当前重点服务的客户类型？  \n   3) 主要出口或销售目标市场？  \n   4) 用一句话概括，您最核心的竞争优势？  \n   5) 还有其他明星产品或独特技术需要特别强调吗�? \n3. 收到您的回复后，我将进入下一步整理并生成完整资料。谢谢！",
     "data": {
       "video_link": ""
     }
@@ -1211,7 +1213,7 @@ INSERT INTO "redis_queue_messages" VALUES('ea250ed0-415f-42b4-b858-f781655a4aa4'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 我们目前重点客户为 工程承包商 EPC 和工商资产投资管理公司 服务商  \n2. 重点国家： 美加 澳洲 欧盟  \n3. 客户关心= 工期 还款周期 交货期",
+    "text": "1. 我们目前重点客户�?工程承包�?EPC 和工商资产投资管理公�?服务�? \n2. 重点国家�?美加 澳洲 欧盟  \n3. 客户关心= 工期 还款周期 交货�?,
     "data": {
       "video_link": ""
     }
@@ -1228,7 +1230,7 @@ INSERT INTO "redis_queue_messages" VALUES('e1b11099-25d9-4de0-8edb-70cc972ede11'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 我已浏览贵司官网并整理了“目标人群”初步信息，请您先确认：  \n   ① 客户类型：经销商 / 批发商 / OEM 品牌商 / 工程承包商 / 政府采购  \n   ② 目标市场：北美、欧洲、澳大利亚、东南亚（建议）  \n   ③ 常见痛点：能源成本高、维护频繁、照明标准要求高、品质不稳定（建议）  \n\n2. 请问以上信息是否准确？需要补充或修改吗？",
+    "text": "1. 我已浏览贵司官网并整理了“目标人群”初步信息，请您先确认：  \n   �?客户类型：经销�?/ 批发�?/ OEM 品牌�?/ 工程承包�?/ 政府采购  \n   �?目标市场：北美、欧洲、澳大利亚、东南亚（建议）  \n   �?常见痛点：能源成本高、维护频繁、照明标准要求高、品质不稳定（建议）  \n\n2. 请问以上信息是否准确？需要补充或修改吗？",
     "data": {
       "video_link": ""
     }
@@ -1245,7 +1247,7 @@ INSERT INTO "redis_queue_messages" VALUES('d49533df-bf15-4c18-8586-557b311f1771'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为您梳理出“目标人群”信息，请确认：\n   • 客户类型：经销商/批发商、OEM/ODM 合作伙伴、工程承包商、市政照明采购方  \n   • 目标市场：北美、欧洲、澳大利亚、东南亚、中东  \n   • 常见痛点：能耗高、灯具寿命短、维护成本高、认证与合规要求复杂  \n\n2. 如信息准确，请回复“确认”或“OK”；如需调整，请指出修改内容，我会立即更新。",
+    "text": "1. 已为您梳理出“目标人群”信息，请确认：\n   �?客户类型：经销�?批发商、OEM/ODM 合作伙伴、工程承包商、市政照明采购方  \n   �?目标市场：北美、欧洲、澳大利亚、东南亚、中�? \n   �?常见痛点：能耗高、灯具寿命短、维护成本高、认证与合规要求复杂  \n\n2. 如信息准确，请回复“确认”或“OK”；如需调整，请指出修改内容，我会立即更新�?,
     "data": {
       "video_link": ""
     }
@@ -1262,7 +1264,7 @@ INSERT INTO "redis_queue_messages" VALUES('29daddc0-3e75-430d-b2d7-1481af0a3a3e'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为您初步汇总目标人群草案，请查看并确认。\n2. 如需调整，请直接告诉我修改点；确认无误请回复“确认/可以”，即可进入下一步。",
+    "text": "1. 已为您初步汇总目标人群草案，请查看并确认。\n2. 如需调整，请直接告诉我修改点；确认无误请回复“确�?可以”，即可进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -1279,7 +1281,7 @@ INSERT INTO "redis_queue_messages" VALUES('56747279-1c81-4e4f-bf4b-3c8bc9fd9a4c'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为您展示当前「目标人群」草案，请确认或提出修改，以便继续下一步。",
+    "text": "1. 已为您展示当前「目标人群」草案，请确认或提出修改，以便继续下一步�?,
     "data": {
       "video_link": ""
     }
@@ -1296,7 +1298,7 @@ INSERT INTO "redis_queue_messages" VALUES('2eeff0d2-1168-4622-a5ea-06117c921009'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 以下是工具返回的完整消息：\n------------------------------------\n以下是基于 www.aokledlight.com（AOK LED Light）官网信息、数据库历史记录以及行业搜索习惯，为您梳理出的“关键词矩阵”草案：  \n\nA. 核心产品词  \n1. LED street light 30W / 60W / 100W / 150W / 200W / 300W  \n2. LED high bay light 100W / 150W / 200W / 240W (UFO & Linear)  \n3. LED flood / stadium light 200W / 400W / 600W / 800W / 1000W  \n4. LED area / shoebox light DLC Premium  \n5. modular tunnel light IP67  \n6. UL listed high-power industrial LED fixture  \n7. CE / ENEC certified outdoor luminaire  \n8. IK10 impact-resistant flood lamp  \n\nB. 行业通用词  \n1. energy-efficient lighting solution  \n2. industrial lighting retrofit / upgrade  \n3. warehouse lighting 12-20 m high ceiling  \n4. smart lighting control 0-10 V / DALI / Zigbee  \n5. DLC listed luminaires  \n6. UL / CE compliant LED lights  \n7. high lumen-per-watt LED (>160 lm/W)  \n8. LED lighting manufacturer China  \n9. OEM / ODM LED light factory  \n10. commercial & industrial lighting supplier  \n\nC. 痛点 / 场景词  \n1. cut electricity bill 60 %  \n2. reduce maintenance cost 40 %  \n3. replace 1000 W metal-halide / HPS  \n4. instant-on, no warm-up in cold weather  \n5. port & container yard floodlighting  \n6. municipal roadway LED conversion  \n7. harsh environment salt-spray proof  \n8. corrosion-resistant marine grade  \n9. fast delivery 5-7 days  \n10. long warranty 5-10 years  \n\nD. 品牌差异化长尾词  \n1. AOK 170 lm/W ultra-high-efficacy LED light  \n2. AOK patented heat-sink design  \n3. AOK IP67 + IK10 rugged floodlight  \n4. DLC Premium AOK street light for US market  \n5. Zigbee smart-control ready AOK high bay  \n6. vertically integrated LED lighting factory AOK  \n7. 10-year warranty industrial LED fixture, China brand  \n8. North America port case study – AOK 400 W flood light  \n9. replace 400 W HPS with AOK 150 W high bay  \n10. corrosion-resistant marine grade LED light AOK  \n\n请您确认：  \n“这是我根据您的业务生成的关键词库，将用于后续的视频内容创作和推广。您看这些词准确吗？”",
+    "text": "1. 以下是工具返回的完整消息：\n------------------------------------\n以下是基�?www.aokledlight.com（AOK LED Light）官网信息、数据库历史记录以及行业搜索习惯，为您梳理出的“关键词矩阵”草案：  \n\nA. 核心产品�? \n1. LED street light 30W / 60W / 100W / 150W / 200W / 300W  \n2. LED high bay light 100W / 150W / 200W / 240W (UFO & Linear)  \n3. LED flood / stadium light 200W / 400W / 600W / 800W / 1000W  \n4. LED area / shoebox light DLC Premium  \n5. modular tunnel light IP67  \n6. UL listed high-power industrial LED fixture  \n7. CE / ENEC certified outdoor luminaire  \n8. IK10 impact-resistant flood lamp  \n\nB. 行业通用�? \n1. energy-efficient lighting solution  \n2. industrial lighting retrofit / upgrade  \n3. warehouse lighting 12-20 m high ceiling  \n4. smart lighting control 0-10 V / DALI / Zigbee  \n5. DLC listed luminaires  \n6. UL / CE compliant LED lights  \n7. high lumen-per-watt LED (>160 lm/W)  \n8. LED lighting manufacturer China  \n9. OEM / ODM LED light factory  \n10. commercial & industrial lighting supplier  \n\nC. 痛点 / 场景�? \n1. cut electricity bill 60 %  \n2. reduce maintenance cost 40 %  \n3. replace 1000 W metal-halide / HPS  \n4. instant-on, no warm-up in cold weather  \n5. port & container yard floodlighting  \n6. municipal roadway LED conversion  \n7. harsh environment salt-spray proof  \n8. corrosion-resistant marine grade  \n9. fast delivery 5-7 days  \n10. long warranty 5-10 years  \n\nD. 品牌差异化长尾词  \n1. AOK 170 lm/W ultra-high-efficacy LED light  \n2. AOK patented heat-sink design  \n3. AOK IP67 + IK10 rugged floodlight  \n4. DLC Premium AOK street light for US market  \n5. Zigbee smart-control ready AOK high bay  \n6. vertically integrated LED lighting factory AOK  \n7. 10-year warranty industrial LED fixture, China brand  \n8. North America port case study �?AOK 400 W flood light  \n9. replace 400 W HPS with AOK 150 W high bay  \n10. corrosion-resistant marine grade LED light AOK  \n\n请您确认�? \n“这是我根据您的业务生成的关键词库，将用于后续的视频内容创作和推广。您看这些词准确吗？�?,
     "data": {
       "video_link": ""
     }
@@ -1313,7 +1315,7 @@ INSERT INTO "redis_queue_messages" VALUES('b808da5c-4375-46e7-b9c1-3743a98b4e44'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为您汇总并呈现目标人群模块（见上方）。  \n2. 如果信息无误，请回复“确认”；如需修改，请指出要调整的内容。",
+    "text": "1. 已为您汇总并呈现目标人群模块（见上方）�? \n2. 如果信息无误，请回复“确认”；如需修改，请指出要调整的内容�?,
     "data": {
       "video_link": ""
     }
@@ -1330,7 +1332,7 @@ INSERT INTO "redis_queue_messages" VALUES('ccd99b38-08ea-4386-aa10-a4c1555f782b'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 我已为您整理了「目标人群」草案，请查看上方内容并确认。  \n2. 如果信息无误，请直接回复“确认”；如需修改，请指出调整点。",
+    "text": "1. 我已为您整理了「目标人群」草案，请查看上方内容并确认�? \n2. 如果信息无误，请直接回复“确认”；如需修改，请指出调整点�?,
     "data": {
       "video_link": ""
     }
@@ -1347,7 +1349,7 @@ INSERT INTO "redis_queue_messages" VALUES('d283b329-7cdd-4384-895d-40f8483e724c'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 以上为系统为您生成的目标人群草案，请您核对后回复“确认”或指出需要调整的内容，我们将立即为您更新并进入下一步。",
+    "text": "1. 以上为系统为您生成的目标人群草案，请您核对后回复“确认”或指出需要调整的内容，我们将立即为您更新并进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -1364,7 +1366,7 @@ INSERT INTO "redis_queue_messages" VALUES('13ffbdc6-ff97-4dc5-9b89-650b78574587'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 老板您好，官网我已经看过，多次向您展示了目标人群草案，但尚未收到您的确认。为了不耽误进度，再给您简要列一次，请您直接回复“确认”或指出要修改的点即可：\n\n---\n✅ 模块：目标人群  \n1. 客户类型：照明经销商 / 工程承包商 / OEM ODM 合作伙伴 / 政府市政照明部门 / 体育场馆运营商【建议值】  \n2. 目标市场：北美、欧洲、澳洲、中东【建议值】  \n3. 常见痛点：传统光源能耗高、维护频繁、认证要求严、项目交付周期紧【建议值】  \n---\n\n• 如以上信息基本准确，请直接回复“确认”。  \n• 如需增删或修改，请告诉我具体内容，我马上调整。  \n\n确认后，我才能帮您进入下一步（企业资料模块），谢谢！",
+    "text": "正文：\n1. 老板您好，官网我已经看过，多次向您展示了目标人群草案，但尚未收到您的确认。为了不耽误进度，再给您简要列一次，请您直接回复“确认”或指出要修改的点即可：\n\n---\n�?模块：目标人�? \n1. 客户类型：照明经销�?/ 工程承包�?/ OEM ODM 合作伙伴 / 政府市政照明部门 / 体育场馆运营商【建议值�? \n2. 目标市场：北美、欧洲、澳洲、中东【建议值�? \n3. 常见痛点：传统光源能耗高、维护频繁、认证要求严、项目交付周期紧【建议值�? \n---\n\n�?如以上信息基本准确，请直接回复“确认”�? \n�?如需增删或修改，请告诉我具体内容，我马上调整�? \n\n确认后，我才能帮您进入下一步（企业资料模块），谢谢�?,
     "data": {
       "video_link": ""
     }
@@ -1381,7 +1383,7 @@ INSERT INTO "redis_queue_messages" VALUES('a85d2792-2052-47bd-a351-e707899b9bbb'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 您好！系统已完整存档 AOK LED Light 的企业资料、产品特点、目标人群及关键词库等信息。  \n2. 如需对以上内容进行补充或修改，或想继续推进视频战略蓝图、脚本制作等后续工作，请告诉我具体需求。  \n3. 若暂无其他调整，我们已准备就绪，可随时开始下一步执行。请您指示！",
+    "text": "1. 您好！系统已完整存档 AOK LED Light 的企业资料、产品特点、目标人群及关键词库等信息�? \n2. 如需对以上内容进行补充或修改，或想继续推进视频战略蓝图、脚本制作等后续工作，请告诉我具体需求�? \n3. 若暂无其他调整，我们已准备就绪，可随时开始下一步执行。请您指示！",
     "data": {
       "video_link": ""
     }
@@ -1398,7 +1400,7 @@ INSERT INTO "redis_queue_messages" VALUES('99105290-c755-4938-9300-bc64cab7d349'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已根据您提供的网址信息，更新了「目标人群」模块的客户类型、目标市场及常见痛点，请查看上方内容。  \n2. 如果信息正确，请回复“确认”或“可以”；如需修改，请直接指出！",
+    "text": "1. 已根据您提供的网址信息，更新了「目标人群」模块的客户类型、目标市场及常见痛点，请查看上方内容�? \n2. 如果信息正确，请回复“确认”或“可以”；如需修改，请直接指出�?,
     "data": {
       "video_link": ""
     }
@@ -1432,7 +1434,7 @@ INSERT INTO "redis_queue_messages" VALUES('5f8bd93c-7acf-48a3-b77e-0913a595f8f4'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为您抓取并整理了「目标人群」模块的建议内容，请检查。  \n2. 如信息准确，请回复【确认】；若需调整，请回复【修改】并指出要修改的条目。",
+    "text": "1. 已为您抓取并整理了「目标人群」模块的建议内容，请检查�? \n2. 如信息准确，请回复【确认】；若需调整，请回复【修改】并指出要修改的条目�?,
     "data": {
       "video_link": ""
     }
@@ -1449,7 +1451,7 @@ INSERT INTO "redis_queue_messages" VALUES('91ced7a3-ea5f-499d-9404-88ac497f22fc'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为您初步梳理并补充了“目标人群”模块信息，详见上方列表。  \n2. 请核对并告知是否需要修改；若无误请回复“确认”或“可以”，我将为您存档并进入下一步。",
+    "text": "1. 已为您初步梳理并补充了“目标人群”模块信息，详见上方列表�? \n2. 请核对并告知是否需要修改；若无误请回复“确认”或“可以”，我将为您存档并进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -1466,7 +1468,7 @@ INSERT INTO "redis_queue_messages" VALUES('4d724271-e8b9-4479-b43c-70811d2a81e2'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 您的公司官网 www.aokledlight.com 已录入，我们也已完整整理了企业资料、产品特点、目标人群及关键词库，并生成了对应的视频战略蓝图。  \n2. 如需修改或新增任何信息（例如企业资料、产品特点、目标客群、关键词等），请直接告诉我要调整的内容；若需要下一步具体执行（脚本制作 / 视频拍摄排期 / 其他推广方案），也请说明。  \n3. 若暂无其他修改，您可以随时提出新的业务需求或问题，我将继续为您服务。",
+    "text": "1. 您的公司官网 www.aokledlight.com 已录入，我们也已完整整理了企业资料、产品特点、目标人群及关键词库，并生成了对应的视频战略蓝图�? \n2. 如需修改或新增任何信息（例如企业资料、产品特点、目标客群、关键词等），请直接告诉我要调整的内容；若需要下一步具体执行（脚本制作 / 视频拍摄排期 / 其他推广方案），也请说明�? \n3. 若暂无其他修改，您可以随时提出新的业务需求或问题，我将继续为您服务�?,
     "data": {
       "video_link": ""
     }
@@ -1483,7 +1485,7 @@ INSERT INTO "redis_queue_messages" VALUES('a47742a6-87fa-48f9-abb4-241434ccf509'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 收到以下信息，需您确认或修改：\n   模块：目标人群  \n   1) 客户类型：照明经销商 / 工程承包商 / OEM & ODM 合作伙伴 / 政府市政照明部门 / 体育场馆运营商  \n   2) 目标市场：北美、欧洲、澳大利亚、中东  \n   3) 常见痛点：传统光源能耗高、维护频繁、认证要求严、项目交付周期紧  \n\n2. 请在下方二选一回复：\n   A) 直接回复【确认】/OK，表示以上信息无误  \n   B) 如需修改，请说明要改动的内容",
+    "text": "1. 收到以下信息，需您确认或修改：\n   模块：目标人�? \n   1) 客户类型：照明经销�?/ 工程承包�?/ OEM & ODM 合作伙伴 / 政府市政照明部门 / 体育场馆运营�? \n   2) 目标市场：北美、欧洲、澳大利亚、中�? \n   3) 常见痛点：传统光源能耗高、维护频繁、认证要求严、项目交付周期紧  \n\n2. 请在下方二选一回复：\n   A) 直接回复【确认�?OK，表示以上信息无�? \n   B) 如需修改，请说明要改动的内容",
     "data": {
       "video_link": ""
     }
@@ -1500,7 +1502,7 @@ INSERT INTO "redis_queue_messages" VALUES('fb07cda3-20fe-4a5a-9e70-712a962eb3ea'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为 AOK LED Light 完成关键词矩阵草案（四大类共 40 组关键词），详见上方输出。  \n2. 如无异议，请回复“确认”；如需增删或调整，请直接指出！",
+    "text": "1. 已为 AOK LED Light 完成关键词矩阵草案（四大类共 40 组关键词），详见上方输出�? \n2. 如无异议，请回复“确认”；如需增删或调整，请直接指出！",
     "data": {
       "video_link": ""
     }
@@ -1517,7 +1519,7 @@ INSERT INTO "redis_queue_messages" VALUES('87f038d0-37a0-4fdf-9f49-37883c147c8d'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已收到并录入您的网站信息（www.aokledlight.com）。  \n2. 请核对以上“目标人群”模块，如无误请回复“确认”或“OK”，如需修改请直接指出。",
+    "text": "1. 已收到并录入您的网站信息（www.aokledlight.com）�? \n2. 请核对以上“目标人群”模块，如无误请回复“确认”或“OK”，如需修改请直接指出�?,
     "data": {
       "video_link": ""
     }
@@ -1534,7 +1536,7 @@ INSERT INTO "redis_queue_messages" VALUES('4dd2a465-e8fa-4fa9-b3af-7089c75801ef'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 以下是根据贵司官网信息，AI 已为您提炼的关键词矩阵草案（已同步到系统）。  \n2. 请您核对并确认，如无异议回复“确认”即可；若需增删改，请直接指出！",
+    "text": "1. 以下是根据贵司官网信息，AI 已为您提炼的关键词矩阵草案（已同步到系统）�? \n2. 请您核对并确认，如无异议回复“确认”即可；若需增删改，请直接指出！",
     "data": {
       "video_link": ""
     }
@@ -1551,7 +1553,7 @@ INSERT INTO "redis_queue_messages" VALUES('668847bb-cd5f-424b-b75e-80f55d196a9e'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板，为了让我们尽快进入下一步，请您直接选一个数字回复即可：\n\n2. 1️⃣  信息准确 → 请输入 “1”  \n3. 2️⃣  需要修改 → 请输入 “2” 并说明要改动的点  \n\n---\n4. ✅ 模块：目标人群  \n   1) 客户类型：照明经销商 / 工程承包商 / OEM & ODM 合作伙伴 / 政府市政照明部门 / 体育场馆运营商【建议值】  \n   2) 目标市场：北美、欧洲、澳洲、中东【建议值】  \n   3) 常见痛点：传统光源能耗高、维护频繁、认证要求严、项目交付周期紧【建议值】  \n---",
+    "text": "1. 老板，为了让我们尽快进入下一步，请您直接选一个数字回复即可：\n\n2. 1️⃣  信息准确 �?请输�?�?�? \n3. 2️⃣  需要修�?�?请输�?�?�?并说明要改动的点  \n\n---\n4. �?模块：目标人�? \n   1) 客户类型：照明经销�?/ 工程承包�?/ OEM�? ODM 合作伙伴 / 政府市政照明部门 / 体育场馆运营商【建议值�? \n   2) 目标市场：北美、欧洲、澳洲、中东【建议值�? \n   3) 常见痛点：传统光源能耗高、维护频繁、认证要求严、项目交付周期紧【建议值�? \n---",
     "data": {
       "video_link": ""
     }
@@ -1568,7 +1570,7 @@ INSERT INTO "redis_queue_messages" VALUES('a4d911c8-d9c6-4296-bf07-19cb635a7e36'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 我已根据您官网信息完成关键词矩阵初稿（见上文）。  \n2. 请您确认是否需要增删、调整；如无异议，请回复“没问题”或“确认”，我将进入下一步视频蓝图制作流程。",
+    "text": "1. 我已根据您官网信息完成关键词矩阵初稿（见上文）�? \n2. 请您确认是否需要增删、调整；如无异议，请回复“没问题”或“确认”，我将进入下一步视频蓝图制作流程�?,
     "data": {
       "video_link": ""
     }
@@ -1585,7 +1587,7 @@ INSERT INTO "redis_queue_messages" VALUES('0389aeb9-8374-45ba-ac6a-4e4b702fab3c'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为 www.aokledlight.com 梳理并输出最新版关键词矩阵，请您核对。  \n2. 若无修改，请回复 “确认” 或 “可以”；如需调整，请直接指出，随后将启动下一步视频素材抓取流程。",
+    "text": "1. 已为 www.aokledlight.com 梳理并输出最新版关键词矩阵，请您核对�? \n2. 若无修改，请回复 “确认�?�?“可以”；如需调整，请直接指出，随后将启动下一步视频素材抓取流程�?,
     "data": {
       "video_link": ""
     }
@@ -1602,7 +1604,7 @@ INSERT INTO "redis_queue_messages" VALUES('4cea6ba3-92cc-4caf-a5b6-2a9a3caa08d1'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 您好！很高兴与您交流，请问今天我可以为您提供哪些帮助？",
+    "text": "正文：\n1. 您好！很高兴与您交流，请问今天我可以为您提供哪些帮助�?,
     "data": {
       "video_link": ""
     }
@@ -1619,7 +1621,7 @@ INSERT INTO "redis_queue_messages" VALUES('40f5cca8-3f92-46c0-9857-874d438f1c6a'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 已根据官网信息为您整理了“目标人群”模块草案（含【建议值】）。请您确认或补充：  \n   - 客户类型  \n   - 目标市场  \n   - 常见痛点  \n   （如无异议，请回复“OK”即可存档；如需调整，请指出修改点）",
+    "text": "正文：\n1. 已根据官网信息为您整理了“目标人群”模块草案（含【建议值】）。请您确认或补充�? \n   - 客户类型  \n   - 目标市场  \n   - 常见痛点  \n   （如无异议，请回复“OK”即可存档；如需调整，请指出修改点）",
     "data": {
       "video_link": ""
     }
@@ -1636,7 +1638,7 @@ INSERT INTO "redis_queue_messages" VALUES('afe31081-39f7-44cb-82c4-1c6e8a500519'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 目标人群信息已确认并存档，感谢您的配合！  \n2. 后续如需补充或修改任何企业资料、产品特点、关键词库或视频蓝图，随时告诉我。  \n3. 还有其他需要协助的事项吗？",
+    "text": "正文：\n1. 目标人群信息已确认并存档，感谢您的配合！  \n2. 后续如需补充或修改任何企业资料、产品特点、关键词库或视频蓝图，随时告诉我�? \n3. 还有其他需要协助的事项吗？",
     "data": {
       "video_link": ""
     }
@@ -1653,7 +1655,7 @@ INSERT INTO "redis_queue_messages" VALUES('4b7044f8-1a64-40b5-8cba-e83d4fb7fcf5'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：  \n1. ✅ 已将新的“目标人群”确认内容存档！  \n2. 后续我们可以继续完善：  \n   1) 企业资料  \n   2) 产品特点  \n   3) 关键词库  \n   4) 增长战略  \n3. 您想先聊哪一部分？",
+    "text": "正文�? \n1. �?已将新的“目标人群”确认内容存档！  \n2. 后续我们可以继续完善�? \n   1) 企业资料  \n   2) 产品特点  \n   3) 关键词库  \n   4) 增长战略  \n3. 您想先聊哪一部分�?,
     "data": {
       "video_link": ""
     }
@@ -1664,7 +1666,7 @@ INSERT INTO "redis_queue_messages" VALUES('6a2f8664-bf5d-455b-aac1-8f2371db2f4c'
   "env": "gray",
   "session_id": "7c6a9a7d-717d-4536-b6ef-bf52d9489e6b",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "36b99433-cd33-4db5-8e64-3a7143530a9d",
   "socket_id": "eCRann95JlOxiMs8AABf",
   "status": "RUNNING",
@@ -1682,7 +1684,7 @@ INSERT INTO "redis_queue_messages" VALUES('b63679b7-e65e-4b03-9a18-256de8ae7b98'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 以下为系统自动生成的《AOK LED Light 出海短视频“作战地图”v0.9》概要，请您审阅并反馈修改意见。  \n2. 如全部确认，请回复“全部 OK”或指出需要调整的具体条目（如目标市场、账号数量、预算等）。  \n3. 审核后我将正式存档并推进下一阶段脚本蓝图。",
+    "text": "正文：\n1. 以下为系统自动生成的《AOK LED Light 出海短视频“作战地图”v0.9》概要，请您审阅并反馈修改意见�? \n2. 如全部确认，请回复“全�?OK”或指出需要调整的具体条目（如目标市场、账号数量、预算等）�? \n3. 审核后我将正式存档并推进下一阶段脚本蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -1699,7 +1701,7 @@ INSERT INTO "redis_queue_messages" VALUES('94eacc0a-b121-4c81-9973-db2ede79836f'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：  \n1. ✅ 您的《AOK LED Light 出海短视频作战地图 v0.9》已确认并存档。  \n2. 下一步计划：进入“脚本蓝图 + 首周拍摄排期”执行阶段，如需立即启动，请告知您的可拍摄日期或其他资源安排。  \n3. 若需对脚本细化、素材准备、账号注册或投流预算等环节进一步协助，请随时提出。",
+    "text": "正文�? \n1. �?您的《AOK LED Light 出海短视频作战地�?v0.9》已确认并存档�? \n2. 下一步计划：进入“脚本蓝�?+ 首周拍摄排期”执行阶段，如需立即启动，请告知您的可拍摄日期或其他资源安排�? \n3. 若需对脚本细化、素材准备、账号注册或投流预算等环节进一步协助，请随时提出�?,
     "data": {
       "video_link": ""
     }
@@ -1716,7 +1718,7 @@ INSERT INTO "redis_queue_messages" VALUES('b957d100-6df8-4212-8872-b5a61282229a'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：  \n1. 以下为“首周短视频脚本细化方案 v1.0”（对应已确认的 6 大内容支柱与每日节奏），共 10 条示范脚本，可直接套用 AI 工具批量剪辑多语版本：  \n\n   ┌─【Day-1｜工厂幕后】TikTok / Reels / Shorts  \n   ① Hook（0-3s）：航拍厂区 + 文案弹窗 “3 秒带你走进 30,000 ㎡的灯厂”  \n   ② 主体（4-20s）：  \n      • 车间 SMT 贴片 → 老化线 → 防水测试线快切，配旁白：  \n        “全部关键工序自有产线，UL / DLC 标准 100% 覆盖”  \n   ③ CTA（21-25s）：字幕＋旁白 “更多幕后揭秘，关注 AOK”  \n\n   ┌─【Day-1｜案例对比】LinkedIn / Reels  \n   ① Hook：画面分屏“升级前后电费对比 – ↓64%”  \n   ② 主体：  \n      • Before：传统 400W HPS 灯光暗黄  \n      • After：AOK 150W UFO，高照度测试仪读数 728 lux  \n   ③ CTA：置顶评论附 ROI 计算表下载链接  \n\n   ┌─【Day-2｜极限测试】TikTok / Shorts  \n   ① Hook：冰箱门打开－40°C，灯具瞬间点亮  \n   ② 主体：  \n      • 连续 10 秒慢镜头，字幕：“-40°C 低温 + 85°C 高温循环 100 次”  \n   ③ CTA：评论区提问“还想测什么？”  \n\n   ┌─【Day-2｜痛点场景】Reels  \n   ① Hook：12 m 高棚俯拍，灯下货叉车阴影对比  \n   ② 主体：  \n      • 镜头拉近，讲解 120° 配光 + 160 lm/W 如何减少暗区  \n   ③ CTA：Swipe-up 到“仓库照明升级手册”  \n\n   ┌─【Day-3｜专家科普】YouTube Shorts  \n   ① Hook：字幕闪现 “UL vs. DLC 傻傻分不清？”  \n   ② 主体：  \n      • 工程师正面出镜 15 s 讲解二者差异+北美强制性条款  \n   ③ CTA：点赞收藏，下一期讲 CE / ENEC  \n\n   ┌─【Day-3｜客户访谈】LinkedIn  \n   ① Hook：客户一句话 “We saved $120k a year!”  \n   ② 主体：  \n      • 30 s 访谈精剪 + 节能数据叠加图  \n   ③ CTA：DM for full case study  \n\n   ┌─【Day-4｜产品卖点】TikTok / Reels  \n   ① Hook：手持分光仪 0-3 s 显示 “175 lm/W”  \n   ② 主体：  \n      • 拆机展示专利散热鳍片 + 驱动仓灌胶防水  \n   ③ CTA：置顶评论关键词 “specsheet” 自动私信 PDF  \n\n   ┌─【Day-4｜应用实拍】Shorts  \n   ① Hook：夜晚道路航拍，一束束均匀光带  \n   ② 主体：  \n      • 现场量测照度 40 lux，配旁白说明配光角 155×80°  \n   ③ CTA：关注获取 IES 文件包  \n\n   ┌─【Day-5｜对比拆机】Reels  \n   ① Hook：AOK vs. 无牌灯具，螺丝同时旋下  \n   ② 主体：  \n      • 铝基板厚度、导热系数对比，热成像枪温升差 18 °C  \n   ③ CTA：双击屏幕“选靠谱灯”  \n\n   ┌─【Day-5｜ROI 计算】LinkedIn  \n   ① Hook：Excel 动画跳动 “Payback 13.5 months”  \n   ② 主体：  \n      • 3 步输入：瓦数→电价→运行时长 → 自动弹年省电费  \n   ③ CTA：下载模板并预约免费评估  \n\n2. 推进建议  \n   ① 拍摄排期：下周二集中拍摄上述 10 条所需的所有原素材（约 4-5 小时）  \n   ② 工具链：CapCut + Runway Gen-2 生成过渡镜头，Descript 多语配音，ChatGPT 生成多语字幕 SRT  \n   ③ 账号投放：TikTok & Reels 先行测试，表现最佳的视频 48 h 内剪 4:5 比例投放 LinkedIn Ads  \n\n3. 麻烦您确认：  \n   • 是否需要增加“中文配音版”以备国内渠道？  \n   • 是否有额外产品/场景需插入首周脚本？  \n\n如无修改，我将继续扩展到完整 30 天日历并生成批量剪辑指令。",
+    "text": "正文�? \n1. 以下为“首周短视频脚本细化方案 v1.0”（对应已确认的 6 大内容支柱与每日节奏），�?10 条示范脚本，可直接套�?AI 工具批量剪辑多语版本�? \n\n   ┌─【Day-1｜工厂幕后】TikTok / Reels / Shorts  \n   �?Hook�?-3s）：航拍厂区 + 文案弹窗 �? 秒带你走�?30,000 ㎡的灯厂�? \n   �?主体�?-20s）：  \n      �?车间 SMT 贴片 �?老化�?�?防水测试线快切，配旁白：  \n        “全部关键工序自有产线，UL / DLC 标准 100% 覆盖�? \n   �?CTA�?1-25s）：字幕＋旁�?“更多幕后揭秘，关注 AOK�? \n\n   ┌─【Day-1｜案例对比】LinkedIn / Reels  \n   �?Hook：画面分屏“升级前后电费对�?�?�?4%�? \n   �?主体�? \n      �?Before：传�?400W HPS 灯光暗黄  \n      �?After：AOK 150W UFO，高照度测试仪读�?728 lux  \n   �?CTA：置顶评论附 ROI 计算表下载链�? \n\n   ┌─【Day-2｜极限测试】TikTok / Shorts  \n   �?Hook：冰箱门打开�?0°C，灯具瞬间点�? \n   �?主体�? \n      �?连续 10 秒慢镜头，字幕：�?40°C 低温 + 85°C 高温循环 100 次�? \n   �?CTA：评论区提问“还想测什么？�? \n\n   ┌─【Day-2｜痛点场景】Reels  \n   �?Hook�?2 m 高棚俯拍，灯下货叉车阴影对比  \n   �?主体�? \n      �?镜头拉近，讲�?120° 配光 + 160 lm/W 如何减少暗区  \n   �?CTA：Swipe-up 到“仓库照明升级手册�? \n\n   ┌─【Day-3｜专家科普】YouTube Shorts  \n   �?Hook：字幕闪�?“UL vs. DLC 傻傻分不清？�? \n   �?主体�? \n      �?工程师正面出�?15 s 讲解二者差�?北美强制性条�? \n   �?CTA：点赞收藏，下一期讲 CE / ENEC  \n\n   ┌─【Day-3｜客户访谈】LinkedIn  \n   �?Hook：客户一句话 “We saved $120k a year!�? \n   �?主体�? \n      �?30 s 访谈精剪 + 节能数据叠加�? \n   �?CTA：DM for full case study  \n\n   ┌─【Day-4｜产品卖点】TikTok / Reels  \n   �?Hook：手持分光仪 0-3 s 显示 �?75 lm/W�? \n   �?主体�? \n      �?拆机展示专利散热鳍片 + 驱动仓灌胶防�? \n   �?CTA：置顶评论关键词 “specsheet�?自动私信 PDF  \n\n   ┌─【Day-4｜应用实拍】Shorts  \n   �?Hook：夜晚道路航拍，一束束均匀光带  \n   �?主体�? \n      �?现场量测照度 40 lux，配旁白说明配光�?155×80°  \n   �?CTA：关注获�?IES 文件�? \n\n   ┌─【Day-5｜对比拆机】Reels  \n   �?Hook：AOK vs. 无牌灯具，螺丝同时旋�? \n   �?主体�? \n      �?铝基板厚度、导热系数对比，热成像枪温升�?18 °C  \n   �?CTA：双击屏幕“选靠谱灯�? \n\n   ┌─【Day-5｜ROI 计算】LinkedIn  \n   �?Hook：Excel 动画跳动 “Payback 13.5 months�? \n   �?主体�? \n      �?3 步输入：瓦数→电价→运行时长 �?自动弹年省电�? \n   �?CTA：下载模板并预约免费评估  \n\n2. 推进建议  \n   �?拍摄排期：下周二集中拍摄上述 10 条所需的所有原素材（约 4-5 小时�? \n   �?工具链：CapCut + Runway Gen-2 生成过渡镜头，Descript 多语配音，ChatGPT 生成多语字幕 SRT  \n   �?账号投放：TikTok & Reels 先行测试，表现最佳的视频 48 h 内剪 4:5 比例投放 LinkedIn Ads  \n\n3. 麻烦您确认：  \n   �?是否需要增加“中文配音版”以备国内渠道？  \n   �?是否有额外产�?场景需插入首周脚本�? \n\n如无修改，我将继续扩展到完整 30 天日历并生成批量剪辑指令�?,
     "data": {
       "video_link": ""
     }
@@ -1733,7 +1735,7 @@ INSERT INTO "redis_queue_messages" VALUES('678a5846-c88c-4937-b241-3e43b35f43b6'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：  \n1. 已收到您对「首周短视频脚本细化方案 v1.0」的“确认”，相关脚本与排期已归档入库。  \n2. 下一步工作计划：  \n   ① 在此脚本框架上扩展完整 30 天发布日历及批量剪辑指令；  \n   ② 输出拍摄素材清单（镜头、道具、人员安排等）与多语字幕模板；  \n   ③ 预设各平台 CTA 链接与自动私信关键词。  \n3. 若有拍摄日期、额外场景或预算调整需求，请随时告知；一旦确认，我方即可进入实际拍摄与剪辑执行阶段。",
+    "text": "正文�? \n1. 已收到您对「首周短视频脚本细化方案 v1.0」的“确认”，相关脚本与排期已归档入库�? \n2. 下一步工作计划：  \n   �?在此脚本框架上扩展完�?30 天发布日历及批量剪辑指令�? \n   �?输出拍摄素材清单（镜头、道具、人员安排等）与多语字幕模板�? \n   �?预设各平�?CTA 链接与自动私信关键词�? \n3. 若有拍摄日期、额外场景或预算调整需求，请随时告知；一旦确认，我方即可进入实际拍摄与剪辑执行阶段�?,
     "data": {
       "video_link": ""
     }
@@ -1750,7 +1752,7 @@ INSERT INTO "redis_queue_messages" VALUES('37161f8c-d82e-41a4-9d73-027188c9627c'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。  \n2.为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧�? \n2.为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间�?,
     "data": {
       "video_link": ""
     }
@@ -1767,7 +1769,7 @@ INSERT INTO "redis_queue_messages" VALUES('ce7493b0-c8fe-46eb-b3a9-8149a515f1c8'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 以下信息是我浏览官网后汇总的草案，尚有空缺，请您补充或确认：  \n\n【一】目标人群（还缺 2 项）  \n① 客户类型：工程承包商 / 经销商 / 政府公共照明部门（已识别）  \n② 目标市场：________（请补充主要出口或重点开拓区域）  \n③ 常见痛点：________（如供货周期、认证要求、节能 ROI 等）  \n\n【二】企业资料（还缺 3 项）  \n① 公司所在地：深圳（已识别）  \n② 主营业务：LED 户外及工业照明（高杆灯、投光灯、街道灯、高棚灯等）（已识别）  \n③ 成立年份：________  \n④ 公司规模 / 员工人数：________  \n⑤ 一句话核心优势：15 年专注高功率 LED 照明，研发-生产-质保一体化（建议，如需修改请说明）  \n\n【三】产品特点（还缺 2 项）  \n① 主打产品：LED 高杆灯、LED 高棚灯、LED 投光灯、LED 街道灯（已识别）  \n② 核心卖点：高光效 >150 lm/W、专利散热设计、防护等级 IP66（已识别）  \n③ 交付形式：________（OEM / 自有品牌 / 现货＋定制 等）  \n\n2. 请您：  \nA) 在空白处填写或修正；  \nB) 或直接回复 “确认目标人群 / 企业资料 / 产品特点”，我们将按模块依次确认并入库。",
+    "text": "1. 以下信息是我浏览官网后汇总的草案，尚有空缺，请您补充或确认：  \n\n【一】目标人群（还缺 2 项）  \n�?客户类型：工程承包商 / 经销�?/ 政府公共照明部门（已识别�? \n�?目标市场：________（请补充主要出口或重点开拓区域）  \n�?常见痛点：________（如供货周期、认证要求、节�?ROI 等）  \n\n【二】企业资料（还缺 3 项）  \n�?公司所在地：深圳（已识别）  \n�?主营业务：LED 户外及工业照明（高杆灯、投光灯、街道灯、高棚灯等）（已识别�? \n�?成立年份：________  \n�?公司规模 / 员工人数：________  \n�?一句话核心优势�?5 年专注高功率 LED 照明，研�?生产-质保一体化（建议，如需修改请说明）  \n\n【三】产品特点（还缺 2 项）  \n�?主打产品：LED 高杆灯、LED 高棚灯、LED 投光灯、LED 街道灯（已识别）  \n�?核心卖点：高光效 >150 lm/W、专利散热设计、防护等�?IP66（已识别�? \n�?交付形式：________（OEM / 自有品牌 / 现货＋定�?等）  \n\n2. 请您�? \nA) 在空白处填写或修正；  \nB) 或直接回�?“确认目标人�?/ 企业资料 / 产品特点”，我们将按模块依次确认并入库�?,
     "data": {
       "video_link": ""
     }
@@ -1784,7 +1786,7 @@ INSERT INTO "redis_queue_messages" VALUES('ae08846a-05f3-438e-a3c3-9cb881fdb492'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，获取最新战略蓝图时出现了系统错误。我将立即为您重试。请稍等片刻，或您也可以稍后再次尝试。您现在需要我重新尝试获取战略蓝图吗？如需重试，请回复“重试”。",
+    "text": "抱歉，获取最新战略蓝图时出现了系统错误。我将立即为您重试。请稍等片刻，或您也可以稍后再次尝试。您现在需要我重新尝试获取战略蓝图吗？如需重试，请回复“重试”�?,
     "data": {
       "video_link": ""
     }
@@ -1801,7 +1803,7 @@ INSERT INTO "redis_queue_messages" VALUES('ccfdcfe9-ff53-4419-bf61-c28a38225858'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间�?,
     "data": {
       "video_link": ""
     }
@@ -1818,7 +1820,7 @@ INSERT INTO "redis_queue_messages" VALUES('46b7b9d0-67ea-438e-b52b-aa166bdcd1a0'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.我已初步整理了“目标人群”板块，包括：  \n   • 客户类型：工程承包商 / 市政采购方 / 经销商 / 工商业终端客户  \n   • 目标市场：北美、欧洲、东南亚（建议）  \n   • 常见痛点：节能降本需求大、施工及维护成本高、需符合当地照明标准与认证  \n\n2.请帮我确认或补充，或者告诉我其他要修改的信息，方便之后输出完整的战略蓝图。",
+    "text": "1.我已初步整理了“目标人群”板块，包括�? \n   �?客户类型：工程承包商 / 市政采购�?/ 经销�?/ 工商业终端客�? \n   �?目标市场：北美、欧洲、东南亚（建议）  \n   �?常见痛点：节能降本需求大、施工及维护成本高、需符合当地照明标准与认�? \n\n2.请帮我确认或补充，或者告诉我其他要修改的信息，方便之后输出完整的战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -1835,7 +1837,7 @@ INSERT INTO "redis_queue_messages" VALUES('84fd3f1c-3c85-48c3-a1ff-0fc62d8d5cfa'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板，我先把“目标人群”模块再次列给您，请您直接回复“确认”或指出需要修改的地方，我们才能进入下一步哦～\n\n---\n✅ 模块：目标人群  \n1. 客户类型：  \n   • 工程承包商 / EPC  \n   • 市政采购方（道路照明、市政照明）  \n   • 灯具经销商与分销商  \n   • 工商业终端客户（仓储、工厂、体育场馆等）\n\n2. 目标市场：  \n   • 北美  \n   • 欧洲  \n   • 东南亚【建议值】  \n\n3. 常见痛点：  \n   • 节能降本需求大  \n   • 施工及后期维护成本高  \n   • 需符合当地照明标准与认证（UL、DLC、CE 等）【建议值】\n\n---\n您看这部分信息准确吗？请确认或补充一下，确认后我会进入下一步。",
+    "text": "1.老板，我先把“目标人群”模块再次列给您，请您直接回复“确认”或指出需要修改的地方，我们才能进入下一步哦～\n\n---\n�?模块：目标人�? \n1. 客户类型�? \n   �?工程承包�?/ EPC  \n   �?市政采购方（道路照明、市政照明）  \n   �?灯具经销商与分销�? \n   �?工商业终端客户（仓储、工厂、体育场馆等）\n\n2. 目标市场�? \n   �?北美  \n   �?欧洲  \n   �?东南亚【建议值�? \n\n3. 常见痛点�? \n   �?节能降本需求大  \n   �?施工及后期维护成本高  \n   �?需符合当地照明标准与认证（UL、DLC、CE 等）【建议值】\n\n---\n您看这部分信息准确吗？请确认或补充一下，确认后我会进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -1852,7 +1854,7 @@ INSERT INTO "redis_queue_messages" VALUES('fa64e14d-304a-4639-8a1d-c6a3d04d6ab4'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.下面是我根据官网信息为您汇总的 “企业资料” 模块，请您核对一下。如有不准或需补充，请直接修改；如果准确，请回复“确认”，我就进入下一步（产品特点），随后即可整合完整的战略蓝图。\n\n---\n✅ 模块：企业资料  \n1. 公司名称：深圳市奥科莱特照明有限公司（英文：AOK Lighting Co., Ltd.）【建议值】  \n2. 品牌：AOK LED / AOK Lighting  \n3. 成立时间：2010 年【建议值】  \n4. 业务范围：研发、生产与销售工业及户外高性能 LED 灯具，提供 OEM / ODM 定制服务  \n5. 核心产品线：LED 路灯、LED 工矿灯（高棚灯）、LED 投光灯、模组灯、体育照明灯、停车场灯  \n6. 主要认证：UL、DLC、CE、RoHS、SAA、TUV、ISO9001【建议值】  \n7. 工厂规模：约 20,000 ㎡ 生产基地，配备自动化生产线【建议值】  \n8. 核心优势：  \n   • 自主研发光学与散热方案，整灯光效 150–170 lm/W  \n   • 5–10 年质保，可靠性高  \n   • 快速交付，支持定制  \n9. 典型成就：产品出口 100+ 国家，成功应用于市政道路、物流仓储、体育场馆等项目【建议值】  \n10. 企业理念：创新、品质、节能、环保【建议值】  \n---\n\n请您确认或补充，确认后我马上进入“产品特点”模块，并在全部信息确认完毕后为您输出完整战略蓝图。",
+    "text": "1.下面是我根据官网信息为您汇总的 “企业资料�?模块，请您核对一下。如有不准或需补充，请直接修改；如果准确，请回复“确认”，我就进入下一步（产品特点），随后即可整合完整的战略蓝图。\n\n---\n�?模块：企业资�? \n1. 公司名称：深圳市奥科莱特照明有限公司（英文：AOK Lighting Co., Ltd.）【建议值�? \n2. 品牌：AOK LED / AOK Lighting  \n3. 成立时间�?010 年【建议值�? \n4. 业务范围：研发、生产与销售工业及户外高性能 LED 灯具，提�?OEM / ODM 定制服务  \n5. 核心产品线：LED 路灯、LED 工矿灯（高棚灯）、LED 投光灯、模组灯、体育照明灯、停车场�? \n6. 主要认证：UL、DLC、CE、RoHS、SAA、TUV、ISO9001【建议值�? \n7. 工厂规模：约 20,000 �?生产基地，配备自动化生产线【建议值�? \n8. 核心优势�? \n   �?自主研发光学与散热方案，整灯光效 150�?70 lm/W  \n   �?5�?0 年质保，可靠性高  \n   �?快速交付，支持定制  \n9. 典型成就：产品出�?100+ 国家，成功应用于市政道路、物流仓储、体育场馆等项目【建议值�? \n10. 企业理念：创新、品质、节能、环保【建议值�? \n---\n\n请您确认或补充，确认后我马上进入“产品特点”模块，并在全部信息确认完毕后为您输出完整战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -1869,7 +1871,7 @@ INSERT INTO "redis_queue_messages" VALUES('95a89482-c0e6-48e9-bdc9-052d26b06030'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.好的老板，为确保最终战略蓝图精准，先请您确认“产品特点”模块。下面是根据官网信息汇总并结合行业惯例整理的要点：\n\n---\n✅ 模块：产品特点  \n1. 高光效：整灯光效 150–170 lm/W，节能效果显著  \n2. 长寿命：设计寿命 100,000 小时，质保 5–10 年  \n3. 专利散热：独立鳍片+ 导热通道结构，保障低温运行  \n4. 多种配光：Type II / III / IV / V 及 60°/90° 等角度，适配道路、仓库、球场等场景  \n5. 兼容智能：支持 DALI、0–10 V 调光及 Zigbee / LoRa 无线控制  \n6. 严苛认证：UL / DLC / CE / RoHS / TUV 等  \n7. 高防护：IP66 & IK10，抗冲击、耐候性强  \n8. 快速安装：模块化设计，简化维护，节省人工成本  \n9. 定制服务：提供 OEM / ODM（功率、配光、外观颜色等）  \n\n---\n请您：  \nA) 直接回复“确认”表示以上内容准确；或  \nB) 根据序号修改 / 补充需要调整的点。  \n\n收到您的确认后，我将把该模块信息存入资料库，并立即整合全部内容，为您输出完整的战略蓝图。",
+    "text": "1.好的老板，为确保最终战略蓝图精准，先请您确认“产品特点”模块。下面是根据官网信息汇总并结合行业惯例整理的要点：\n\n---\n�?模块：产品特�? \n1. 高光效：整灯光效 150�?70 lm/W，节能效果显�? \n2. 长寿命：设计寿命 100,000 小时，质�?5�?0 �? \n3. 专利散热：独立鳍�? 导热通道结构，保障低温运�? \n4. 多种配光：Type II / III / IV / V �?60°/90° 等角度，适配道路、仓库、球场等场景  \n5. 兼容智能：支�?DALI�?�?0 V 调光�?Zigbee / LoRa 无线控制  \n6. 严苛认证：UL / DLC / CE / RoHS / TUV �? \n7. 高防护：IP66 & IK10，抗冲击、耐候性强  \n8. 快速安装：模块化设计，简化维护，节省人工成本  \n9. 定制服务：提�?OEM / ODM（功率、配光、外观颜色等�? \n\n---\n请您�? \nA) 直接回复“确认”表示以上内容准确；�? \nB) 根据序号修改 / 补充需要调整的点�? \n\n收到您的确认后，我将把该模块信息存入资料库，并立即整合全部内容，为您输出完整的战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -1886,7 +1888,7 @@ INSERT INTO "redis_queue_messages" VALUES('a207a358-f409-46a8-9afd-ad069da30b4e'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.感谢确认！已将目标人群、企业资料与产品特点全部存入企业资料库，以下为您整合的最新战略蓝图（供内部参考）：\n\n一、目标人群  \n• 客户类型：工程承包商 / EPC；市政采购方；灯具经销商与分销商；工商业终端客户  \n• 目标市场：北美、欧洲、东南亚  \n• 痛点关键词：节能降本、施工维护成本、认证合规  \n\n二、企业资料  \n• 品牌与公司：AOK Lighting Co., Ltd.（深圳市奥科莱特照明有限公司）  \n• 成立：2010 年 ｜ 工厂：约 20,000 ㎡  \n• 业务范围：工业及户外高性能 LED 灯具的研发、生产、销售，提供 OEM / ODM  \n• 核心产品：LED 路灯、工矿灯、投光灯、模组灯、体育照明灯、停车场灯  \n• 认证/资质：UL、DLC、CE、RoHS、SAA、TUV、ISO9001  \n• 核心优势：150–170 lm/W 高光效、自研散热、5–10 年质保、快速交付  \n• 典型成果：产品出口 100+ 国家，覆盖市政道路、仓储物流、体育场馆等  \n\n三、产品特点  \n1. 高光效 150–170 lm/W，节能显著  \n2. 设计寿命 100,000 h，5–10 年质保  \n3. 专利散热结构确保低温稳定运行  \n4. 多配光 Type II/III/IV/V 与 60°/90° 等，适配多场景  \n5. 兼容 DALI / 0–10 V / Zigbee / LoRa 智能控制  \n6. 认证齐全：UL、DLC、CE、RoHS、TUV  \n7. IP66 & IK10 高防护，户外耐候  \n8. 模块化设计，快速安装与维护  \n9. 全面 OEM / ODM 定制能力  \n\n2.这份蓝图可作为后续视频脚本、渠道投放及客户沟通的核心信息底座。如需细化市场进入策略、内容规划或视频创意，随时告诉我！",
+    "text": "1.感谢确认！已将目标人群、企业资料与产品特点全部存入企业资料库，以下为您整合的最新战略蓝图（供内部参考）：\n\n一、目标人�? \n�?客户类型：工程承包商 / EPC；市政采购方；灯具经销商与分销商；工商业终端客�? \n�?目标市场：北美、欧洲、东南亚  \n�?痛点关键词：节能降本、施工维护成本、认证合�? \n\n二、企业资�? \n�?品牌与公司：AOK Lighting Co., Ltd.（深圳市奥科莱特照明有限公司�? \n�?成立�?010 �?�?工厂：约 20,000 �? \n�?业务范围：工业及户外高性能 LED 灯具的研发、生产、销售，提供 OEM / ODM  \n�?核心产品：LED 路灯、工矿灯、投光灯、模组灯、体育照明灯、停车场�? \n�?认证/资质：UL、DLC、CE、RoHS、SAA、TUV、ISO9001  \n�?核心优势�?50�?70 lm/W 高光效、自研散热�?�?0 年质保、快速交�? \n�?典型成果：产品出�?100+ 国家，覆盖市政道路、仓储物流、体育场馆等  \n\n三、产品特�? \n1. 高光�?150�?70 lm/W，节能显�? \n2. 设计寿命 100,000 h�?�?0 年质�? \n3. 专利散热结构确保低温稳定运行  \n4. 多配�?Type II/III/IV/V �?60°/90° 等，适配多场�? \n5. 兼容 DALI / 0�?0 V / Zigbee / LoRa 智能控制  \n6. 认证齐全：UL、DLC、CE、RoHS、TUV  \n7. IP66 & IK10 高防护，户外耐�? \n8. 模块化设计，快速安装与维护  \n9. 全面 OEM / ODM 定制能力  \n\n2.这份蓝图可作为后续视频脚本、渠道投放及客户沟通的核心信息底座。如需细化市场进入策略、内容规划或视频创意，随时告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -1903,7 +1905,7 @@ INSERT INTO "redis_queue_messages" VALUES('79939d0f-fd3f-4e8b-891f-9f36261de83f'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "AOK Lighting 2024–2026 最新完整战略蓝图（提案版）\n——————————————————————————\n以下方案基于您已确认的「企业资料、目标人群、产品特点」，并结合行业趋势与跨境 B2B 营销最佳实践整理。请核对整体方向与细节，如有需要调整的部分，请直接指出。确认后可作为公司内部 OKR、内容营销与渠道投放的执行底稿。\n\n一、市场定位与总体目标  \n1. 市场定位  \n   • 专注“高光效 + 高可靠性”工业及户外 LED 照明解决方案供应商  \n   • 关键词：节能、高质保、快速交付、智能控制  \n\n2. 三年量化目标（2024–2026）  \n   • 销售收入：年复合增长 ≥ 25%  \n   • 毛利率：保持 ≥ 32%  \n   • 重点区域 GMV 占比：北美 45% / 欧洲 35% / 东南亚 10% / 其他 10%  \n   • 核心渠道：自营官网 & SEO 25%｜LinkedIn & YouTube 30%｜分销商 45%  \n\n二、产品策略  \n1. 旗舰产品：  \n   • X 系列模组化路灯（150–170 lm/W，Type II~V 配光）——主攻北美、市政项目  \n   • H 系列高棚灯（UFO + 铝鳍片散热，智能传感）——仓储 & 工厂  \n2. 差异化卖点  \n   • 自研专利散热，L90 > 60,000h  \n   • 全线通过 UL / DLC Premium（北美）与 CE / TUV（欧盟）  \n   • 5–10 年原厂质保，备件 48 h 内发货  \n3. 产品迭代路线  \n   • 2024 Q4：推出 200 lm/W 超高光效路灯（DLC Premium 5.1）  \n   • 2025 Q2：推出可更换光源模组，缩短维护时间 30%  \n   • 2025 Q4：全线支持 Matter / Thread 无线协议，切入智慧城市项目  \n   • 2026：布局固态激光照明及 Horticulture Lighting（设施农业灯）  \n\n三、品牌与差异化定位  \nUSP（独特卖点）＝「150 lm/W+ 可靠性 + 客制化 + 全球认证」  \n品牌口号（参考）：Bright Ideas, Solid Performance.  \n公关/背书  \n   • 年内申请 3 项散热/光学新专利  \n   • 与 UL、DLC、TUV 联合举办线上技术研讨会  \n   • 发布 10 个标杆案例白皮书（含市政道路、物流园、体育场馆）  \n\n四、渠道与营销策略  \n1. 线上获客  \n   • SEO & 官网：以“LED street light manufacturer / high bay light OEM” 等长尾词冲榜 Google Top 3  \n   • B2B 社媒：LinkedIn（技术干货 + 客户见证）、YouTube（拆灯测评 + 安装教程）  \n   • 垂直平台：Mouser、Thomasnet、GlobalSpec 投放技术白皮书  \n2. 线下 & 分销  \n   • 2024–2025 重点展会：LightFair（北美）、Light+Building（德）、Hong Kong Lighting Fair（秋）  \n   • 区域分销商招募：每个战略市场 ≤3 家 A 级代理，签独家+年度销售保底  \n3. 内容矩阵  \n   • 技术博客 + 白皮书 + 案例视频  \n   • 关键词库（核心词 + 问题词 + 解决方案词）→ 经您确认后将用于 AI 快速剪辑视频 & SEO 文章  \n\n五、销售漏斗与客户旅程  \nAwareness → Consideration → Quote → Sample → PO → Repeat  \n   • 3 min 技术短视频（Awareness）  \n   • 8 页解决方案手册（Consideration）  \n   • 72 h 内寄出样品（Quote → Sample）  \n   • 项目交付期 ≤ 4 周（PO）  \n   • 质保期内 NPS ≥ 60（Repeat）  \n\n六、服务与支持  \n   • 技术支持：24 h 内邮件响应；重大项目可提供远程视频指导  \n   • 质保：5–10 年；故障件先行替换原则  \n   • 培训：为代理商提供在线认证课程 & 安装手册  \n\n七、关键里程碑 & 时间表  \n2024 Q3  \n   • 完成官网 2.0（英文/西语版）  \n   • 发布 10 条产品拆解短视频  \n2024 Q4  \n   • 超高光效 200 lm/W 路灯量产  \n   • LinkedIn 粉丝破 20k  \n2025 上半年  \n   • 欧盟新 ERP 效能法规全线合规  \n   • 北美 DLC 5.1 Premium 覆盖率 80%  \n2025 下半年  \n   • Matter 无线协议路灯上市  \n   • 设立东南亚备货仓（泰国）  \n2026  \n   • 年销破 1 亿 USD  \n   • 进入全球前 15 名户外 LED 品牌  \n\n八、年度 KPI 示意（2024）  \n• 线上获客线索 6,000 条（平均 CPL ≤ 25 USD）  \n• 样品转化率 ≥ 25%  \n• 新代理商签约 8 家  \n• 出口交付准时率 ≥ 95%  \n• 产品缺陷率 ≤ 0.5%  \n\n九、预算框架（USD）  \n• 线上广告 & SEO：150k  \n• 展会参展 & 样品：180k  \n• 视频与内容制作：60k  \n• 渠道激励（返点/返点+展台物料）：100k  \n• 研发迭代（散热专利 + Matter 模块）：220k  \n（注：可根据年度收入动态调整 8%–10% 的市场费用占比）  \n\n十、风险与应对  \n1. 价格战风险 → 重点突出高光效 + 高质保 + 认证壁垒，维持 32% 以上毛利  \n2. 认证法规更新 → 设专人跟进 DLC / UL / EU ERP 改版，产品预研 6 个月以上  \n3. 供应链波动 → 与芯片、驱动器供应商签 12 个月框架协议，东南亚设安全库存  \n4. 汇率波动 → 使用多币种报价 & 远期结汇对冲  \n\n—— END ——  \n\n请您审核：  \nA) 如无修改，直接回复“确认”即可；  \nB) 有任何部分需调整，请指出序号与需求，我会立即修订。  \n\n（确认后，我可以：  \n1) 继续生成“关键词矩阵”，用于后续视频/SEO；  \n2) 将本战略蓝图以“增长战略”模块入库。）",
+    "text": "AOK Lighting 2024�?026 最新完整战略蓝图（提案版）\n——————————————————————————\n以下方案基于您已确认的「企业资料、目标人群、产品特点」，并结合行业趋势与跨境 B2B 营销最佳实践整理。请核对整体方向与细节，如有需要调整的部分，请直接指出。确认后可作为公司内�?OKR、内容营销与渠道投放的执行底稿。\n\n一、市场定位与总体目标  \n1. 市场定位  \n   �?专注“高光效 + 高可靠性”工业及户外 LED 照明解决方案供应�? \n   �?关键词：节能、高质保、快速交付、智能控�? \n\n2. 三年量化目标�?024�?026�? \n   �?销售收入：年复合增�?�?25%  \n   �?毛利率：保持 �?32%  \n   �?重点区域 GMV 占比：北�?45% / 欧洲 35% / 东南�?10% / 其他 10%  \n   �?核心渠道：自营官�?& SEO 25%｜LinkedIn & YouTube 30%｜分销�?45%  \n\n二、产品策�? \n1. 旗舰产品�? \n   �?X 系列模组化路灯（150�?70 lm/W，Type II~V 配光）——主攻北美、市政项�? \n   �?H 系列高棚灯（UFO + 铝鳍片散热，智能传感）——仓�?& 工厂  \n2. 差异化卖�? \n   �?自研专利散热，L90 > 60,000h  \n   �?全线通过 UL / DLC Premium（北美）�?CE / TUV（欧盟）  \n   �?5�?0 年原厂质保，备件 48 h 内发�? \n3. 产品迭代路线  \n   �?2024 Q4：推�?200 lm/W 超高光效路灯（DLC Premium 5.1�? \n   �?2025 Q2：推出可更换光源模组，缩短维护时�?30%  \n   �?2025 Q4：全线支�?Matter / Thread 无线协议，切入智慧城市项�? \n   �?2026：布局固态激光照明及 Horticulture Lighting（设施农业灯�? \n\n三、品牌与差异化定�? \nUSP（独特卖点）＝�?50 lm/W+ 可靠�?+ 客制�?+ 全球认证�? \n品牌口号（参考）：Bright Ideas, Solid Performance.  \n公关/背书  \n   �?年内申请 3 项散�?光学新专�? \n   �?�?UL、DLC、TUV 联合举办线上技术研讨会  \n   �?发布 10 个标杆案例白皮书（含市政道路、物流园、体育场馆）  \n\n四、渠道与营销策略  \n1. 线上获客  \n   �?SEO & 官网：以“LED street light manufacturer / high bay light OEM�?等长尾词冲榜 Google Top 3  \n   �?B2B 社媒：LinkedIn（技术干�?+ 客户见证）、YouTube（拆灯测�?+ 安装教程�? \n   �?垂直平台：Mouser、Thomasnet、GlobalSpec 投放技术白皮书  \n2. 线下 & 分销  \n   �?2024�?025 重点展会：LightFair（北美）、Light+Building（德）、Hong Kong Lighting Fair（秋�? \n   �?区域分销商招募：每个战略市场 �? �?A 级代理，签独�?年度销售保�? \n3. 内容矩阵  \n   �?技术博�?+ 白皮�?+ 案例视频  \n   �?关键词库（核心词 + 问题�?+ 解决方案词）�?经您确认后将用于 AI 快速剪辑视�?& SEO 文章  \n\n五、销售漏斗与客户旅程  \nAwareness �?Consideration �?Quote �?Sample �?PO �?Repeat  \n   �?3 min 技术短视频（Awareness�? \n   �?8 页解决方案手册（Consideration�? \n   �?72 h 内寄出样品（Quote �?Sample�? \n   �?项目交付�?�?4 周（PO�? \n   �?质保期内 NPS �?60（Repeat�? \n\n六、服务与支持  \n   �?技术支持：24 h 内邮件响应；重大项目可提供远程视频指�? \n   �?质保�?�?0 年；故障件先行替换原�? \n   �?培训：为代理商提供在线认证课�?& 安装手册  \n\n七、关键里程碑 & 时间�? \n2024 Q3  \n   �?完成官网 2.0（英�?西语版）  \n   �?发布 10 条产品拆解短视频  \n2024 Q4  \n   �?超高光效 200 lm/W 路灯量产  \n   �?LinkedIn 粉丝�?20k  \n2025 上半�? \n   �?欧盟�?ERP 效能法规全线合规  \n   �?北美 DLC 5.1 Premium 覆盖�?80%  \n2025 下半�? \n   �?Matter 无线协议路灯上市  \n   �?设立东南亚备货仓（泰国）  \n2026  \n   �?年销�?1 �?USD  \n   �?进入全球�?15 名户�?LED 品牌  \n\n八、年�?KPI 示意�?024�? \n�?线上获客线索 6,000 条（平均 CPL �?25 USD�? \n�?样品转化�?�?25%  \n�?新代理商签约 8 �? \n�?出口交付准时�?�?95%  \n�?产品缺陷�?�?0.5%  \n\n九、预算框架（USD�? \n�?线上广告 & SEO�?50k  \n�?展会参展 & 样品�?80k  \n�?视频与内容制作：60k  \n�?渠道激励（返点/返点+展台物料）：100k  \n�?研发迭代（散热专�?+ Matter 模块）：220k  \n（注：可根据年度收入动态调�?8%�?0% 的市场费用占比）  \n\n十、风险与应对  \n1. 价格战风�?�?重点突出高光�?+ 高质�?+ 认证壁垒，维�?32% 以上毛利  \n2. 认证法规更新 �?设专人跟�?DLC / UL / EU ERP 改版，产品预�?6 个月以上  \n3. 供应链波�?�?与芯片、驱动器供应商签 12 个月框架协议，东南亚设安全库�? \n4. 汇率波动 �?使用多币种报�?& 远期结汇对冲  \n\n—�?END —�? \n\n请您审核�? \nA) 如无修改，直接回复“确认”即可；  \nB) 有任何部分需调整，请指出序号与需求，我会立即修订�? \n\n（确认后，我可以�? \n1) 继续生成“关键词矩阵”，用于后续视频/SEO�? \n2) 将本战略蓝图以“增长战略”模块入库。）",
     "data": {
       "video_link": ""
     }
@@ -1937,7 +1939,7 @@ INSERT INTO "redis_queue_messages" VALUES('e22ea096-f3dc-4264-ac18-afc4d6839695'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 下面这份“关键词矩阵”是我根据 AOK LED Light（www.aokledlight.com）的主营业务、核心优势及目标客户习惯整理的草案，后续我们会用它来做视频选题、脚本撰写以及投放推广。请您先看看是否准确、有无需要增删的地方？\n\nA. 核心产品词  \n1) LED street light 50W / 100W / 150W / 200W / 300W  \n2) LED high bay light 100W / 150W / 200W / 240W （UFO / Linear）  \n3) LED flood & stadium light 200W / 400W / 600W / 800W / 1000W  \n4) LED tunnel light / canopy light  \n5) DLC premium LED streetlight（DLC 认证路灯）  \n6) UL listed high-bay lamp（UL 认证工矿灯）  \n7) CE / ENEC certified floodlight  \n8) IP66 / IP67 outdoor LED luminaire  \n9) IK10 impact-resistant flood lamp  \n10) industrial LED lighting fixture manufacturer  \n\nB. 行业通用词  \n1) energy-efficient lighting solution  \n2) industrial lighting retrofit / upgrade  \n3) warehouse lighting 12-20 m high ceiling  \n4) smart lighting control 0-10 V / DALI / Zigbee / LoRa  \n5) DLC listed luminaires supplier  \n6) UL / CE compliant LED lights China factory  \n7) high lumen per watt LED (>160 lm/W)  \n8) OEM / ODM LED light manufacturer  \n9) commercial & industrial lighting supplier  \n10) fast delivery LED fixtures 5-7 days  \n\nC. 场景 / 痛点词  \n1) cut electricity bill 60 %  \n2) reduce maintenance cost 40 %  \n3) replace 1000 W metal-halide / HPS  \n4) port & container yard floodlighting  \n5) municipal roadway LED conversion project  \n6) harsh environment salt-spray proof lighting  \n7) instant-on, no warm-up industrial lamps  \n8) long warranty 5-10 years  \n9) ROI payback < 18 months lighting retrofit  \n10) corrosion-resistant marine grade LED  \n\nD. 品牌差异化长尾词  \n1) AOK 170 lm/W ultra-high efficacy LED light  \n2) AOK patented heat-sink design  \n3) vertically integrated LED lighting factory AOK  \n4) IP67 + IK10 rugged floodlight by AOK  \n5) Zigbee ready UFO high-bay AOK  \n6) DLC premium AOK street light for US market  \n7) 10-year warranty industrial LED fixture China  \n8) replace 400 W HPS with AOK 150 W high bay  \n9) North America port case study – AOK 400 W flood light  \n10) marine grade anti-corrosion floodlight AOK  \n\nE. 典型搜索问题 / 用户意图词  \n1) How many LED high bay lights do I need for a 15 m warehouse?  \n2) DLC premium vs standard – which street light do I choose?  \n3) Can I integrate 0-10 V dimming with my Zigbee control?  \n4) How to replace 1000 W metal-halide with 400 W LED floodlight?  \n5) What certifications are required for LED street lights in the US?  \n6) How to calculate lighting ROI payback period?  \n7) Best LED lighting manufacturer China for OEM projects  \n8) High-bay LED with 10-year warranty supplier  \n9) IP67 IK10 floodlight for coastal area lighting  \n10) Fast delivery LED fixtures within 7 days from China  \n\n请您确认：  \n2. 这些关键词是否覆盖了您重点想抓的产品 / 场景 / 痛点？  \n3. 若有遗漏或不准确之处，请告诉我；没有问题的话直接回复“没问题”或“就这样吧”。  \n\n确认无误后，我会立即把这份关键词库存入数据库，并启动视频素材抓取流程。",
+    "text": "正文：\n1. 下面这份“关键词矩阵”是我根�?AOK LED Light（www.aokledlight.com）的主营业务、核心优势及目标客户习惯整理的草案，后续我们会用它来做视频选题、脚本撰写以及投放推广。请您先看看是否准确、有无需要增删的地方？\n\nA. 核心产品�? \n1) LED street light 50W / 100W / 150W / 200W / 300W  \n2) LED high bay light 100W / 150W / 200W / 240W （UFO / Linear�? \n3) LED flood & stadium light 200W / 400W / 600W / 800W / 1000W  \n4) LED tunnel light / canopy light  \n5) DLC premium LED streetlight（DLC 认证路灯�? \n6) UL listed high-bay lamp（UL 认证工矿灯）  \n7) CE / ENEC certified floodlight  \n8) IP66 / IP67 outdoor LED luminaire  \n9) IK10 impact-resistant flood lamp  \n10) industrial LED lighting fixture manufacturer  \n\nB. 行业通用�? \n1) energy-efficient lighting solution  \n2) industrial lighting retrofit / upgrade  \n3) warehouse lighting 12-20 m high ceiling  \n4) smart lighting control 0-10 V / DALI / Zigbee / LoRa  \n5) DLC listed luminaires supplier  \n6) UL / CE compliant LED lights China factory  \n7) high lumen per watt LED (>160 lm/W)  \n8) OEM / ODM LED light manufacturer  \n9) commercial & industrial lighting supplier  \n10) fast delivery LED fixtures 5-7 days  \n\nC. 场景 / 痛点�? \n1) cut electricity bill 60 %  \n2) reduce maintenance cost 40 %  \n3) replace 1000 W metal-halide / HPS  \n4) port & container yard floodlighting  \n5) municipal roadway LED conversion project  \n6) harsh environment salt-spray proof lighting  \n7) instant-on, no warm-up industrial lamps  \n8) long warranty 5-10 years  \n9) ROI payback < 18 months lighting retrofit  \n10) corrosion-resistant marine grade LED  \n\nD. 品牌差异化长尾词  \n1) AOK 170 lm/W ultra-high efficacy LED light  \n2) AOK patented heat-sink design  \n3) vertically integrated LED lighting factory AOK  \n4) IP67 + IK10 rugged floodlight by AOK  \n5) Zigbee ready UFO high-bay AOK  \n6) DLC premium AOK street light for US market  \n7) 10-year warranty industrial LED fixture China  \n8) replace 400 W HPS with AOK 150 W high bay  \n9) North America port case study �?AOK 400 W flood light  \n10) marine grade anti-corrosion floodlight AOK  \n\nE. 典型搜索问题 / 用户意图�? \n1) How many LED high bay lights do I need for a 15 m warehouse?  \n2) DLC premium vs standard �?which street light do I choose?  \n3) Can I integrate 0-10 V dimming with my Zigbee control?  \n4) How to replace 1000 W metal-halide with 400 W LED floodlight?  \n5) What certifications are required for LED street lights in the US?  \n6) How to calculate lighting ROI payback period?  \n7) Best LED lighting manufacturer China for OEM projects  \n8) High-bay LED with 10-year warranty supplier  \n9) IP67 IK10 floodlight for coastal area lighting  \n10) Fast delivery LED fixtures within 7 days from China  \n\n请您确认�? \n2. 这些关键词是否覆盖了您重点想抓的产品 / 场景 / 痛点�? \n3. 若有遗漏或不准确之处，请告诉我；没有问题的话直接回复“没问题”或“就这样吧”�? \n\n确认无误后，我会立即把这份关键词库存入数据库，并启动视频素材抓取流程�?,
     "data": {
       "video_link": ""
     }
@@ -1954,7 +1956,7 @@ INSERT INTO "redis_queue_messages" VALUES('6c4a17fc-9413-4b74-b967-e7385335b653'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 您好！这是我基于 www.aokledlight.com 的业务与产品，整理出的「关键词矩阵」草案（核心产品词、行业通用词、痛点/场景词、品牌差异化长尾词及典型搜索问题）。后续我们会用它来做短视频选题、脚本撰写和投放推广。  \n2. 请您查看后帮我确认两点：  \n   1) 这些关键词是否覆盖了您想重点抓取的产品、场景与痛点？  \n   2) 若无增删修改，直接回复“没问题”或“就这样吧”即可。  \n3. 一旦您确认，我会立刻：  \n   • 将这份关键词库存入数据库；  \n   • 启动视频素材抓取流程，为您搜集可用的视频片段与案例。  \n4. 期待您的确认！",
+    "text": "正文：\n1. 您好！这是我基于 www.aokledlight.com 的业务与产品，整理出的「关键词矩阵」草案（核心产品词、行业通用词、痛�?场景词、品牌差异化长尾词及典型搜索问题）。后续我们会用它来做短视频选题、脚本撰写和投放推广�? \n2. 请您查看后帮我确认两点：  \n   1) 这些关键词是否覆盖了您想重点抓取的产品、场景与痛点�? \n   2) 若无增删修改，直接回复“没问题”或“就这样吧”即可�? \n3. 一旦您确认，我会立刻：  \n   �?将这份关键词库存入数据库�? \n   �?启动视频素材抓取流程，为您搜集可用的视频片段与案例�? \n4. 期待您的确认�?,
     "data": {
       "video_link": ""
     }
@@ -1965,7 +1967,7 @@ INSERT INTO "redis_queue_messages" VALUES('e301b608-3657-483d-aed5-e80bc0c861d0'
   "env": "gray",
   "session_id": "7d2c9071-802b-4b45-8c13-4f1e32ecf10f",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "b1d63b53-972c-4560-90cb-4103edb8d4a3",
   "socket_id": "Xnc9Sd9Sc008XFDMAAAH",
   "status": "RUNNING",
@@ -1983,64 +1985,64 @@ INSERT INTO "redis_queue_messages" VALUES('85038bd0-f29c-4c2d-b95f-e6b0d49df0ce'
   "status": "RUNNING",
   "data": {"content":"# AOK LED Light · 出海短视频增长「作战地图」v1.0
 
-> 适用市场：北美 / 欧洲 / 澳大利亚（英文）
+> 适用市场：北�?/ 欧洲 / 澳大利亚（英文）
 > 目标周期：试运行 3 个月
 
 ## 1. 战略目标
-- 获得月度曝光量：1,000,000+（≥100 万次）
-- 获得有效询盘：≥100 条 / 月（B2B 工业照明采购线索）
+- 获得月度曝光量：1,000,000+（≥100 万次�?
+- 获得有效询盘：≥100 �?/ 月（B2B 工业照明采购线索�?
 
 ## 2. 账号矩阵
 | 平台 | 账号数量 | 发布频次 | 备注 |
 |------|----------|----------|------|
-| TikTok (EN) | 4 | 每账号 3 更 / 周 | 面向北美、欧洲照明与建筑从业者 |
-| Instagram Reels | 2 | 每账号 3 更 / 周 | 同步短视频 + 图文卡片 |
-| YouTube Shorts | 2 | 每账号 2 更 / 周 | 强化技术深度 & 长尾搜索 |
-| LinkedIn Page | 1 | 2 更 / 周 | 重点做案例、白皮书引流 |
-| Facebook Page | 1 | 3 更 / 周 | 覆盖传统分销商人群 |
-| **合计** | **10** | **≈120 条内容 / 月** | —— |
+| TikTok (EN) | 4 | 每账�?3 �?/ �?| 面向北美、欧洲照明与建筑从业�?|
+| Instagram Reels | 2 | 每账�?3 �?/ �?| 同步短视�?+ 图文卡片 |
+| YouTube Shorts | 2 | 每账�?2 �?/ �?| 强化技术深�?& 长尾搜索 |
+| LinkedIn Page | 1 | 2 �?/ �?| 重点做案例、白皮书引流 |
+| Facebook Page | 1 | 3 �?/ �?| 覆盖传统分销商人�?|
+| **合计** | **10** | **�?20 条内�?/ �?* | —�?|
 
 ## 3. 视频产量测算
-- 计划成片数：100 条 / 月（≈25 条 / 周）
-- 参考平均曝光：10,000 次 / 条（跨平台综合）
-- 预计月曝光：100 × 10,000 = 1,000,000 次
+- 计划成片数：100 �?/ 月（�?5 �?/ 周）
+- 参考平均曝光：10,000 �?/ 条（跨平台综合）
+- 预计月曝光：100 × 10,000 = 1,000,000 �?
 
-## 4. 原始素材需求（拍摄）
-AI 可将 1 条高质量原片裂变为 ≈20 条短视频，因此：
-- 每周需拍摄高质量 **5 个场景/主题** 的素材包（共 20 个 / 月）
-  1) 工厂&车间实拍（生产流程 + 质检）
+## 4. 原始素材需求（拍摄�?
+AI 可将 1 条高质量原片裂变�?�?0 条短视频，因此：
+- 每周需拍摄高质�?**5 个场�?主题** 的素材包（共 20 �?/ 月）
+  1) 工厂&车间实拍（生产流�?+ 质检�?
   2) 实验室极限测试（IP66、IK10、光效对比）
   3) 产品 360° 细节拆解 & 组装
-  4) 客户案例现场（仓库、道路、港口等）
-  5) 技术&FAQ 口播（节能 ROI 计算、认证讲解）
-- 每个场景拍摄 3-5 个镜头 + 口播脚本，总时长 2-3 分钟。
+  4) 客户案例现场（仓库、道路、港口等�?
+  5) 技�?FAQ 口播（节�?ROI 计算、认证讲解）
+- 每个场景拍摄 3-5 个镜�?+ 口播脚本，总时�?2-3 分钟�?
 
-## 5. 内容支柱（6 大主题）
-1. Factory Insider – 工厂探秘 & 质控流程
-2. Product Lab – 性能测试 & 认证拆解
-3. Application Stories – 全球案例实拍
-4. Tech & ROI Tips – 如何节能、省钱、认证
-5. Myth Busting – 常见误区 / FAQ 快问快答
-6. Partner Voice – 客户/经销商推荐 & 合作感言
+## 5. 内容支柱�? 大主题）
+1. Factory Insider �?工厂探秘 & 质控流程
+2. Product Lab �?性能测试 & 认证拆解
+3. Application Stories �?全球案例实拍
+4. Tech & ROI Tips �?如何节能、省钱、认�?
+5. Myth Busting �?常见误区 / FAQ 快问快答
+6. Partner Voice �?客户/经销商推�?& 合作感言
 
 ## 6. 制作&发布流程
-- 周一：拍摄日（收集 5 组素材）
-- 周二：AI 剪辑初版 → 人工校审配字幕
+- 周一：拍摄日（收�?5 组素材）
+- 周二：AI 剪辑初版 �?人工校审配字�?
 - 周三-周五：按平台排期自动发布 & 互动
-- 周五：数据复盘（完播率 / CTR / 询盘数）
+- 周五：数据复盘（完播�?/ CTR / 询盘数）
 
-## 7. KPI & 里程碑
+## 7. KPI & 里程�?
 | 时间 | 累计成片 | 累计曝光 | 累计询盘 |
 |------|----------|----------|----------|
-| 1 个月 | 100+ | 1,000,000 | ≥100 |
-| 3 个月 | 300+ | 3,500,000+ | ≥300 |
+| 1 个月 | 100+ | 1,000,000 | �?00 |
+| 3 个月 | 300+ | 3,500,000+ | �?00 |
 
 ---
-**请您确认：**
-1) 以上账号数量、发布频次与素材拍摄强度是否可行？
-2) 如需调整目标或补充信息，请告诉我；无异议请回复“确认作战地图”。
+**请您确认�?*
+1) 以上账号数量、发布频次与素材拍摄强度是否可行�?
+2) 如需调整目标或补充信息，请告诉我；无异议请回复“确认作战地图”�?
 
-> 确认后，我将把该作战地图入库，并同步启动脚本蓝图的自动生成。"},
+> 确认后，我将把该作战地图入库，并同步启动脚本蓝图的自动生成�?},
   "content_type": "blue_image_content"
   },
   "create_ts": 1760149951339
@@ -2055,7 +2057,7 @@ INSERT INTO "redis_queue_messages" VALUES('60dfda91-4f3b-4164-bc77-bc1fd5923302'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 蓝图已生成！请查看并确认，如无调整直接回复“确认作战地图”。",
+    "text": "正文：\n1. 蓝图已生成！请查看并确认，如无调整直接回复“确认作战地图”�?,
     "data": {
       "video_link": ""
     }
@@ -2072,7 +2074,7 @@ INSERT INTO "redis_queue_messages" VALUES('d9d7343c-2af1-43c0-a64b-4258e90370c2'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 已收到您“确认作战地图”的回复，感谢配合！  \n2. 下一步工作计划：  \n   2.1 本周内启动首轮短视频制作（脚本 10 条、拍摄分镜 50 组、配音文案 5 条），并在 3 个工作日内将首批样片发送给您审核。  \n   2.2 同步搭建内容发布排期日历（30 天），届时将与您确认每条视频的发布时间、渠道与投放预算。  \n   2.3 若需在蓝图基础上临时调整选题或补充素材，请随时告知，我们将即时更新。  \n3. 您可随时查看进度或提出修改意见；如无其他问题，我们立即进入执行阶段！",
+    "text": "正文：\n1. 已收到您“确认作战地图”的回复，感谢配合！  \n2. 下一步工作计划：  \n   2.1 本周内启动首轮短视频制作（脚�?10 条、拍摄分�?50 组、配音文�?5 条），并�?3 个工作日内将首批样片发送给您审核�? \n   2.2 同步搭建内容发布排期日历�?0 天），届时将与您确认每条视频的发布时间、渠道与投放预算�? \n   2.3 若需在蓝图基础上临时调整选题或补充素材，请随时告知，我们将即时更新�? \n3. 您可随时查看进度或提出修改意见；如无其他问题，我们立即进入执行阶段！",
     "data": {
       "video_link": ""
     }
@@ -2089,7 +2091,7 @@ INSERT INTO "redis_queue_messages" VALUES('da8cb26d-01d6-47dc-b901-c355ab7f6ea9'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 已收到“进入执行”指令，我们将立即按既定蓝图启动第一轮短视频制作与投放执行。  \n2. 具体时间节点：  \n   2.1 T+0 — 今日：内部 Kick-off 会议，锁定 10 条脚本与 50 组分镜，安排拍摄档期；  \n   2.2 T+2 （工作日）：完成样片剪辑 & 初版字幕、配音，提交给您审核；  \n   2.3 T+3 （工作日）：根据您的反馈完成修订并输出定稿；  \n   2.4 T+4 — T+5：同步 30 天内容发布日历及渠道投放排期，确认预算和 KPI；  \n   2.5 T+6 起：分批上线投放，并在投放后台实时跟踪数据。  \n3. 监测与优化：  \n   3.1 每 48 小时整理一次曝光、CTR、完播率与转化数据；  \n   3.2 每周提供一次优化报告及下周调整方案。  \n4. 您的配合事项：  \n   4.1 样片审核及修改意见（预计 T+2 日 18:00 前）；  \n   4.2 投放账号与预算权限开通（若需我们代投）；  \n   4.3 如有额外素材 / 现场拍摄需求，请在本周内告知。  \n5. 若以上安排无异议，请回复“确认执行计划”，我们即刻进入拍摄制作流程；如需调整，请指出具体修改点。",
+    "text": "正文：\n1. 已收到“进入执行”指令，我们将立即按既定蓝图启动第一轮短视频制作与投放执行�? \n2. 具体时间节点�? \n   2.1 T+0 �?今日：内�?Kick-off 会议，锁�?10 条脚本与 50 组分镜，安排拍摄档期�? \n   2.2 T+2 （工作日）：完成样片剪辑 & 初版字幕、配音，提交给您审核�? \n   2.3 T+3 （工作日）：根据您的反馈完成修订并输出定稿；  \n   2.4 T+4 �?T+5：同�?30 天内容发布日历及渠道投放排期，确认预算和 KPI�? \n   2.5 T+6 起：分批上线投放，并在投放后台实时跟踪数据�? \n3. 监测与优化：  \n   3.1 �?48 小时整理一次曝光、CTR、完播率与转化数据；  \n   3.2 每周提供一次优化报告及下周调整方案�? \n4. 您的配合事项�? \n   4.1 样片审核及修改意见（预计 T+2 �?18:00 前）�? \n   4.2 投放账号与预算权限开通（若需我们代投）；  \n   4.3 如有额外素材 / 现场拍摄需求，请在本周内告知�? \n5. 若以上安排无异议，请回复“确认执行计划”，我们即刻进入拍摄制作流程；如需调整，请指出具体修改点�?,
     "data": {
       "video_link": ""
     }
@@ -2106,7 +2108,7 @@ INSERT INTO "redis_queue_messages" VALUES('0c1e8bdd-6161-4545-b5b7-b6e71d8f42b9'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 已正式收到您“确认执行”的最终确认，执行流程现已启动。  \n2. 当日进度：  \n   2.1 制片团队已锁定 10 条脚本并完成分镜细化；  \n   2.2 演播室与外景拍摄档期已全部排定；  \n   2.3 配音老师与后期剪辑师已就位，素材库同步完成。  \n3. 下一节点里程碑：  \n   3.1 T＋2（工作日）18:00 前：向您递交首批样片（含字幕与配音）；  \n   3.2 T＋3：根据您的反馈完成样片定稿；  \n   3.3 T＋4 ～ T＋5：确认 30 天发布日历、渠道排期与预算；  \n   3.4 T＋6 起：分批上线投放并开启 48 小时一次的数据监测与优化。  \n4. 您的配合事项：  \n   4.1 样片审核与反馈（T＋2 日 18:00 前）；  \n   4.2 投放账号及预算权限（如需我们代投）；  \n   4.3 任何临时增加的素材或变更需求，请第一时间告知。  \n5. 我们已将本次执行计划与节点同步至共享看板，您可随时查看进度。如有疑问或调整，请随时留言！",
+    "text": "正文：\n1. 已正式收到您“确认执行”的最终确认，执行流程现已启动�? \n2. 当日进度�? \n   2.1 制片团队已锁�?10 条脚本并完成分镜细化�? \n   2.2 演播室与外景拍摄档期已全部排定；  \n   2.3 配音老师与后期剪辑师已就位，素材库同步完成�? \n3. 下一节点里程碑：  \n   3.1 T�?（工作日�?8:00 前：向您递交首批样片（含字幕与配音）�? \n   3.2 T�?：根据您的反馈完成样片定稿；  \n   3.3 T�? �?T�?：确�?30 天发布日历、渠道排期与预算�? \n   3.4 T�? 起：分批上线投放并开�?48 小时一次的数据监测与优化�? \n4. 您的配合事项�? \n   4.1 样片审核与反馈（T�? �?18:00 前）�? \n   4.2 投放账号及预算权限（如需我们代投）；  \n   4.3 任何临时增加的素材或变更需求，请第一时间告知�? \n5. 我们已将本次执行计划与节点同步至共享看板，您可随时查看进度。如有疑问或调整，请随时留言�?,
     "data": {
       "video_link": ""
     }
@@ -2123,7 +2125,7 @@ INSERT INTO "redis_queue_messages" VALUES('8449878d-4406-46c7-aff5-b7b8355b6c84'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 感谢确认！全部流程已照计划推进。  \n2. 当前节点提醒：  \n   2.1 T＋2（工作日）18:00 前，您将收到首批 10 条样片（含字幕、配音）；  \n   2.2 收到样片后，烦请在 24 小时内提出修改建议，确保我们按 T＋3 完成定稿。  \n3. 若拍摄或投放过程中有任何新想法或临时需求，请随时告诉我，我们会即时调整。  \n4. 我们会在每个关键节点向您汇报，确保进度、质量与数据表现均符合预期。",
+    "text": "正文：\n1. 感谢确认！全部流程已照计划推进�? \n2. 当前节点提醒�? \n   2.1 T�?（工作日�?8:00 前，您将收到首批 10 条样片（含字幕、配音）�? \n   2.2 收到样片后，烦请�?24 小时内提出修改建议，确保我们�?T�? 完成定稿�? \n3. 若拍摄或投放过程中有任何新想法或临时需求，请随时告诉我，我们会即时调整�? \n4. 我们会在每个关键节点向您汇报，确保进度、质量与数据表现均符合预期�?,
     "data": {
       "video_link": ""
     }
@@ -2157,7 +2159,7 @@ INSERT INTO "redis_queue_messages" VALUES('4be8d7d1-bd1e-4ca7-b4a6-9494a8babea5'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "- 正文：\n1. 老板您好，我已浏览了您提供的官网链接，先归纳了“目标人群”这一模块的关键信息，您先帮我看下是否准确，或有什么需要补充 / 修改的地方？\n\n---\n✅ 模块：目标人群  \n1. 客户类型：建筑承包商 / 工程公司 / 经销商 / 政府市政照明部门 / 商业与工业终端用户  \n2. 目标市场：北美、欧洲、东南亚、中东【建议值】  \n3. 常见痛点：能耗高、维护成本高、光衰快、需要满足国际认证要求【建议值】  \n---\n\n请您确认：“以上信息对吗？如果没问题，请回复【确认】；如需调整，请告诉我具体修改点。”",
+    "text": "- 正文：\n1. 老板您好，我已浏览了您提供的官网链接，先归纳了“目标人群”这一模块的关键信息，您先帮我看下是否准确，或有什么需要补�?/ 修改的地方？\n\n---\n�?模块：目标人�? \n1. 客户类型：建筑承包商 / 工程公司 / 经销�?/ 政府市政照明部门 / 商业与工业终端用�? \n2. 目标市场：北美、欧洲、东南亚、中东【建议值�? \n3. 常见痛点：能耗高、维护成本高、光衰快、需要满足国际认证要求【建议值�? \n---\n\n请您确认：“以上信息对吗？如果没问题，请回复【确认】；如需调整，请告诉我具体修改点。�?,
     "data": {
       "video_link": ""
     }
@@ -2174,7 +2176,7 @@ INSERT INTO "redis_queue_messages" VALUES('b18672f6-70b3-4ae3-9b48-b9f922c5a1e7'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "- 正文：\n1. 感谢确认！“目标人群”信息已为您存入企业资料库。  \n2. 接下来进入第二个模块——企业资料。我根据官网内容先做了整理，如有遗漏或不准确的地方，请您指出：  \n   ---  \n   ✅ 模块：企业资料  \n   ① 公司名称：AOK LED Light Company  \n   ② 成立时间：2011 年【建议值】  \n   ③ 所在地：深圳，中国  \n   ④ 主营业务：研发、生产及销售高效节能的 LED 户外与工业照明产品  \n   ⑤ 核心品牌/系列：AOK HighBay、AOK Flood Light、AOK Street Light  \n   ⑥ 主要资质与认证：ISO 9001、CE、RoHS、UL、DLC、TUV【建议值】  \n   ⑦ 产能/规模：自有 10,000+ m² 生产基地，年产能 50 万套【建议值】  \n   ⑧ 核心优势一句话：专注高功率 LED 照明，光效高、寿命长，满足全球多国认证  \n   ---  \n3. 请您确认这部分信息，回复【确认】或指出需要修改之处，我们再完善后进入下一步。",
+    "text": "- 正文：\n1. 感谢确认！“目标人群”信息已为您存入企业资料库�? \n2. 接下来进入第二个模块——企业资料。我根据官网内容先做了整理，如有遗漏或不准确的地方，请您指出�? \n   ---  \n   �?模块：企业资�? \n   �?公司名称：AOK LED Light Company  \n   �?成立时间�?011 年【建议值�? \n   �?所在地：深圳，中国  \n   �?主营业务：研发、生产及销售高效节能的 LED 户外与工业照明产�? \n   �?核心品牌/系列：AOK HighBay、AOK Flood Light、AOK Street Light  \n   �?主要资质与认证：ISO 9001、CE、RoHS、UL、DLC、TUV【建议值�? \n   �?产能/规模：自�?10,000+ m² 生产基地，年产能 50 万套【建议值�? \n   �?核心优势一句话：专注高功率 LED 照明，光效高、寿命长，满足全球多国认�? \n   ---  \n3. 请您确认这部分信息，回复【确认】或指出需要修改之处，我们再完善后进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -2191,7 +2193,7 @@ INSERT INTO "redis_queue_messages" VALUES('e75d96f9-eb0e-4603-a37a-1fdc60e4bd58'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "- 正文：\n1. 好的，收到您提供的“产品特点”草稿！  \n2. 在进入该模块之前，按照流程我们还需先确认“企业资料”这一部分。请您先帮我核对下面内容，确认无误后，我们再正式进入“产品特点”模块。  \n---\n✅ 模块：企业资料  \n① 公司名称：AOK LED Light Company  \n② 成立时间：2011 年【建议值】  \n③ 所在地：深圳，中国  \n④ 主营业务：研发、生产及销售高效节能的 LED 户外与工业照明产品  \n⑤ 核心品牌/系列：AOK HighBay、AOK Flood Light、AOK Street Light  \n⑥ 主要资质与认证：ISO 9001、CE、RoHS、UL、DLC、TUV【建议值】  \n⑦ 产能/规模：自有 10,000+ m² 生产基地，年产能 50 万套【建议值】  \n⑧ 核心优势一句话：专注高功率 LED 照明，光效高、寿命长，满足全球多国认证  \n---\n3. 请您确认：  \n   • 如果以上信息正确，请回复【确认】；  \n   • 如需修改，请告诉我具体调整点。  \n4. 一旦确认，我会立即存档，然后再帮您核对并确认“产品特点”模块。",
+    "text": "- 正文：\n1. 好的，收到您提供的“产品特点”草稿！  \n2. 在进入该模块之前，按照流程我们还需先确认“企业资料”这一部分。请您先帮我核对下面内容，确认无误后，我们再正式进入“产品特点”模块�? \n---\n�?模块：企业资�? \n�?公司名称：AOK LED Light Company  \n�?成立时间�?011 年【建议值�? \n�?所在地：深圳，中国  \n�?主营业务：研发、生产及销售高效节能的 LED 户外与工业照明产�? \n�?核心品牌/系列：AOK HighBay、AOK Flood Light、AOK Street Light  \n�?主要资质与认证：ISO 9001、CE、RoHS、UL、DLC、TUV【建议值�? \n�?产能/规模：自�?10,000+ m² 生产基地，年产能 50 万套【建议值�? \n�?核心优势一句话：专注高功率 LED 照明，光效高、寿命长，满足全球多国认�? \n---\n3. 请您确认�? \n   �?如果以上信息正确，请回复【确认】；  \n   �?如需修改，请告诉我具体调整点�? \n4. 一旦确认，我会立即存档，然后再帮您核对并确认“产品特点”模块�?,
     "data": {
       "video_link": ""
     }
@@ -2208,7 +2210,7 @@ INSERT INTO "redis_queue_messages" VALUES('668e5279-12c3-481e-b165-6080b59ac96c'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "- 正文：\n1. 已为您将“企业资料”模块存入数据库。  \n2. 下面是“产品特点”信息，请您核对：  \n   ---  \n   ✅ 模块：产品特点  \n   ① 主推产品系列：  \n      • LED 路灯（50–300 W，Shoebox / Cobra Head）  \n      • LED 工矿灯 / UFO & 线型高棚灯（100–240 W）  \n      • LED 投光灯 / 体育场灯（200–1000 W）  \n      • LED 隧道灯 & 壁灯 / Canopy Light  \n   ② 关键性能：  \n      • 光效：≥ 160–170 lm/W  \n      • 显指：Ra ≥ 80  \n      • 色温：3000 K / 4000 K / 5000 K / 5700 K  \n      • 防护等级：IP66–IP67，IK08–IK10  \n      • 工作温度：–40 °C ~ +50 °C  \n   ③ 智能控制：0–10 V / DALI 调光，可选光感 & 微波感应，支持 Zigbee / LoRa / BLE Mesh  \n   ④ 认证与标准：UL / DLC Premium（北美），CE / RoHS / ENEC（欧盟），SAA（澳洲），TUV / CB 等  \n   ⑤ 质保与寿命：5–10 年质保，L70 > 50,000 h  \n   ⑥ 差异化优势：  \n      • 150–180 lm/W 超高光效，节能 70%+  \n      • 专利散热结构，NTC 温控防过热  \n      • 模块化设计，易于维修和升级  \n      • 快速交付：核心机型 7 天内出货  \n   ---  \n3. 请您确认：若信息准确，请回复【确认】；如有修改，请告诉我具体调整点。",
+    "text": "- 正文：\n1. 已为您将“企业资料”模块存入数据库�? \n2. 下面是“产品特点”信息，请您核对�? \n   ---  \n   �?模块：产品特�? \n   �?主推产品系列�? \n      �?LED 路灯�?0�?00 W，Shoebox / Cobra Head�? \n      �?LED 工矿�?/ UFO & 线型高棚灯（100�?40 W�? \n      �?LED 投光�?/ 体育场灯�?00�?000 W�? \n      �?LED 隧道�?& 壁灯 / Canopy Light  \n   �?关键性能�? \n      �?光效：≥ 160�?70 lm/W  \n      �?显指：Ra �?80  \n      �?色温�?000 K / 4000 K / 5000 K / 5700 K  \n      �?防护等级：IP66–IP67，IK08–IK10  \n      �?工作温度：�?0 °C ~ +50 °C  \n   �?智能控制�?�?0 V / DALI 调光，可选光�?& 微波感应，支�?Zigbee / LoRa / BLE Mesh  \n   �?认证与标准：UL / DLC Premium（北美），CE / RoHS / ENEC（欧盟），SAA（澳洲），TUV / CB �? \n   �?质保与寿命：5�?0 年质保，L70 > 50,000 h  \n   �?差异化优势：  \n      �?150�?80 lm/W 超高光效，节�?70%+  \n      �?专利散热结构，NTC 温控防过�? \n      �?模块化设计，易于维修和升�? \n      �?快速交付：核心机型 7 天内出货  \n   ---  \n3. 请您确认：若信息准确，请回复【确认】；如有修改，请告诉我具体调整点�?,
     "data": {
       "video_link": ""
     }
@@ -2225,7 +2227,7 @@ INSERT INTO "redis_queue_messages" VALUES('3546ba13-1c81-453b-bcca-4329f532821f'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "- 正文：\n1. 恭喜！三大模块信息已全部确认并存入企业资料库。  \n2. 后续如需生成营销素材、知识卡片或其他增值服务，可随时调取。  \n3. 如有新资料或需更新，请告诉我，小欧随时待命！",
+    "text": "- 正文：\n1. 恭喜！三大模块信息已全部确认并存入企业资料库�? \n2. 后续如需生成营销素材、知识卡片或其他增值服务，可随时调取�? \n3. 如有新资料或需更新，请告诉我，小欧随时待命�?,
     "data": {
       "video_link": ""
     }
@@ -2242,7 +2244,7 @@ INSERT INTO "redis_queue_messages" VALUES('544933db-f968-4c9c-8aea-73396318de9b'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "- 正文：\n1. 以下是根据您提供的企业资料、目标人群与产品特点，为 AOK LED Light 量身定制的关键词矩阵（共 40 组，分 4 类，每类 10 组）。请先帮我看看是否符合您的业务诉求，如有增删或修改，请告诉我！\n\nA. 核心产品关键词（Core Product Keywords）  \n① LED street light 150W DLC Premium  \n② LED high bay light 200W UL listed  \n③ 1000W stadium flood light IP67  \n④ 240W linear high bay DALI dimmable  \n⑤ 300W shoebox area light DLC 5.1  \n⑥ 400W high mast floodlight IK10  \n⑦ 150W UFO high bay 170 lm/W  \n⑧ 5000K LED street luminaire Type III  \n⑨ IP66 tunnel light 150W modular  \n⑩ canopy light 120W gas station  \n\nB. 行业通用关键词（Industry Generic Keywords）  \n① energy-efficient industrial lighting solution  \n② warehouse lighting retrofit service  \n③ smart lighting control 0-10V / Zigbee  \n④ DLC listed outdoor luminaires supplier  \n⑤ UL / CE compliant LED fixtures  \n⑥ high-lumen per watt LED technology  \n⑦ commercial & industrial lighting manufacturer China  \n⑧ OEM / ODM LED light factory  \n⑨ IP66 waterproof LED lighting  \n⑩ industrial lighting upgrade project  \n\nC. 痛点 / 场景关键词（Pain-Point / Scenario Keywords）  \n① cut electricity bill 60 percent  \n② reduce maintenance cost 40 percent  \n③ replace 1000W metal-halide fixture  \n④ high ceiling warehouse lighting 12-20 m  \n⑤ port & container yard floodlighting  \n⑥ municipal roadway LED conversion  \n⑦ instant-on lighting no warm-up  \n⑧ harsh environment salt-spray proof  \n⑨ fast delivery 5-7 days  \n⑩ long warranty 10 years  \n\nD. 差异化长尾关键词（Brand USP Long-Tail Keywords）  \n① AOK 170 lm/W ultra-high efficacy street light  \n② AOK patented heat-sink design high bay  \n③ IP67 + IK10 rugged AOK floodlight  \n④ DLC Premium AOK shoebox for US market  \n⑤ Zigbee smart control ready high bay by AOK  \n⑥ corrosion-resistant marine grade LED light AOK  \n⑦ AOK 10-year warranty industrial luminaire  \n⑧ vertically integrated LED lighting factory AOK  \n⑨ North America port project AOK 400W flood light  \n⑩ replace 400W HPS with AOK 150W high bay  \n\n——————  \n2. 请您确认：  \n   • 如果这些关键词准确且符合预期，请回复【确认】；  \n   • 如需调整，请告诉我修改或补充的点。  \n\n3. 一旦您确认，我将立即把关键词库存档，并启动后续的视频素材抓取流程。",
+    "text": "- 正文：\n1. 以下是根据您提供的企业资料、目标人群与产品特点，为 AOK LED Light 量身定制的关键词矩阵（共 40 组，�?4 类，每类 10 组）。请先帮我看看是否符合您的业务诉求，如有增删或修改，请告诉我！\n\nA. 核心产品关键词（Core Product Keywords�? \n�?LED street light 150W DLC Premium  \n�?LED high bay light 200W UL listed  \n�?1000W stadium flood light IP67  \n�?240W linear high bay DALI dimmable  \n�?300W shoebox area light DLC 5.1  \n�?400W high mast floodlight IK10  \n�?150W UFO high bay 170 lm/W  \n�?5000K LED street luminaire Type III  \n�?IP66 tunnel light 150W modular  \n�?canopy light 120W gas station  \n\nB. 行业通用关键词（Industry Generic Keywords�? \n�?energy-efficient industrial lighting solution  \n�?warehouse lighting retrofit service  \n�?smart lighting control 0-10V / Zigbee  \n�?DLC listed outdoor luminaires supplier  \n�?UL / CE compliant LED fixtures  \n�?high-lumen per watt LED technology  \n�?commercial & industrial lighting manufacturer China  \n�?OEM / ODM LED light factory  \n�?IP66 waterproof LED lighting  \n�?industrial lighting upgrade project  \n\nC. 痛点 / 场景关键词（Pain-Point / Scenario Keywords�? \n�?cut electricity bill 60 percent  \n�?reduce maintenance cost 40 percent  \n�?replace 1000W metal-halide fixture  \n�?high ceiling warehouse lighting 12-20 m  \n�?port & container yard floodlighting  \n�?municipal roadway LED conversion  \n�?instant-on lighting no warm-up  \n�?harsh environment salt-spray proof  \n�?fast delivery 5-7 days  \n�?long warranty 10 years  \n\nD. 差异化长尾关键词（Brand USP Long-Tail Keywords�? \n�?AOK 170 lm/W ultra-high efficacy street light  \n�?AOK patented heat-sink design high bay  \n�?IP67 + IK10 rugged AOK floodlight  \n�?DLC Premium AOK shoebox for US market  \n�?Zigbee smart control ready high bay by AOK  \n�?corrosion-resistant marine grade LED light AOK  \n�?AOK 10-year warranty industrial luminaire  \n�?vertically integrated LED lighting factory AOK  \n�?North America port project AOK 400W flood light  \n�?replace 400W HPS with AOK 150W high bay  \n\n—————�? \n2. 请您确认�? \n   �?如果这些关键词准确且符合预期，请回复【确认】；  \n   �?如需调整，请告诉我修改或补充的点�? \n\n3. 一旦您确认，我将立即把关键词库存档，并启动后续的视频素材抓取流程�?,
     "data": {
       "video_link": ""
     }
@@ -2259,7 +2261,7 @@ INSERT INTO "redis_queue_messages" VALUES('a135b839-d816-4c7e-9551-79903cd01ef8'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "- 正文：\n1. 以下关键词是在整合您最新提供的企业信息后，重新梳理并优化的 4 大类共 40 组关键词，请核对：  \n   A. 核心产品关键词  \n   ① LED street light 200W UL DLC  \n   ② LED high bay 150W 170lm/W  \n   ③ 1000W stadium flood light IP67  \n   ④ 240W UFO high bay light DALI  \n   ⑤ 300W shoebox area light Type III  \n   ⑥ IP66 tunnel light 150W modular  \n   ⑦ 400W high mast floodlight IK10  \n   ⑧ 120W gas station canopy light  \n   ⑨ 5000K roadway LED luminaire  \n   ⑩ Zigbee smart street lighting system  \n\n   B. 行业通用关键词  \n   ① energy-efficient industrial lighting  \n   ② commercial LED lighting manufacturer China  \n   ③ DLC listed outdoor luminaires supplier  \n   ④ UL / CE certified LED fixtures  \n   ⑤ warehouse lighting retrofit solution  \n   ⑥ IP67 waterproof LED light factory  \n   ⑦ OEM / ODM high-power LED lights  \n   ⑧ smart lighting control 0-10V / Zigbee  \n   ⑨ high-lumen per watt LED technology  \n   ⑩ industrial lighting upgrade project  \n\n   C. 痛点 / 场景关键词  \n   ① cut electricity cost 70 percent  \n   ② reduce maintenance downtime  \n   ③ replace 1000W metal-halide lamp  \n   ④ long-pole highway lighting retrofit  \n   ⑤ high-ceiling warehouse 15-20 m  \n   ⑥ port & dock floodlighting solution  \n   ⑦ instant-on no warm-up time  \n   ⑧ harsh coastal environment corrosion-proof  \n   ⑨ meet DLC Premium for rebates  \n   ⑩ fast 7-day delivery in stock  \n\n   D. 差异化长尾关键词  \n   ① AOK 170lm/W ultra-efficiency street light  \n   ② AOK patented heat-sink UFO high bay  \n   ③ IP67 IK10 rugged AOK floodlight  \n   ④ 10-year warranty AOK industrial luminaire  \n   ⑤ DLC Premium AOK shoebox for US market  \n   ⑥ Zigbee-ready AOK warehouse lighting  \n   ⑦ marine-grade salt-spray proof AOK light  \n   ⑧ replace 400W HPS with AOK 150W high bay  \n   ⑨ vertically integrated LED factory AOK  \n   ⑩ North America port project AOK 400W flood  \n\n2. 请您确认：  \n   • 若关键词准确，请回复【确认】；  \n   • 如需调整，请告诉我具体修改点。",
+    "text": "- 正文：\n1. 以下关键词是在整合您最新提供的企业信息后，重新梳理并优化的 4 大类�?40 组关键词，请核对�? \n   A. 核心产品关键�? \n   �?LED street light 200W UL DLC  \n   �?LED high bay 150W 170lm/W  \n   �?1000W stadium flood light IP67  \n   �?240W UFO high bay light DALI  \n   �?300W shoebox area light Type III  \n   �?IP66 tunnel light 150W modular  \n   �?400W high mast floodlight IK10  \n   �?120W gas station canopy light  \n   �?5000K roadway LED luminaire  \n   �?Zigbee smart street lighting system  \n\n   B. 行业通用关键�? \n   �?energy-efficient industrial lighting  \n   �?commercial LED lighting manufacturer China  \n   �?DLC listed outdoor luminaires supplier  \n   �?UL / CE certified LED fixtures  \n   �?warehouse lighting retrofit solution  \n   �?IP67 waterproof LED light factory  \n   �?OEM / ODM high-power LED lights  \n   �?smart lighting control 0-10V / Zigbee  \n   �?high-lumen per watt LED technology  \n   �?industrial lighting upgrade project  \n\n   C. 痛点 / 场景关键�? \n   �?cut electricity cost 70 percent  \n   �?reduce maintenance downtime  \n   �?replace 1000W metal-halide lamp  \n   �?long-pole highway lighting retrofit  \n   �?high-ceiling warehouse 15-20 m  \n   �?port & dock floodlighting solution  \n   �?instant-on no warm-up time  \n   �?harsh coastal environment corrosion-proof  \n   �?meet DLC Premium for rebates  \n   �?fast 7-day delivery in stock  \n\n   D. 差异化长尾关键词  \n   �?AOK 170lm/W ultra-efficiency street light  \n   �?AOK patented heat-sink UFO high bay  \n   �?IP67 IK10 rugged AOK floodlight  \n   �?10-year warranty AOK industrial luminaire  \n   �?DLC Premium AOK shoebox for US market  \n   �?Zigbee-ready AOK warehouse lighting  \n   �?marine-grade salt-spray proof AOK light  \n   �?replace 400W HPS with AOK 150W high bay  \n   �?vertically integrated LED factory AOK  \n   �?North America port project AOK 400W flood  \n\n2. 请您确认�? \n   �?若关键词准确，请回复【确认】；  \n   �?如需调整，请告诉我具体修改点�?,
     "data": {
       "video_link": ""
     }
@@ -2270,7 +2272,7 @@ INSERT INTO "redis_queue_messages" VALUES('6da82c3b-4bbd-41f7-be85-5010cd4a8a39'
   "env": "gray",
   "session_id": "3a4ee11a-f8bb-4a89-a67c-2b4105f6d964",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "eb700348-2860-472c-9f1a-7c30ad1214a5",
   "socket_id": "qPHzvo5anZpGGe3HAAAJ",
   "status": "RUNNING",
@@ -2288,7 +2290,7 @@ INSERT INTO "redis_queue_messages" VALUES('7cc29535-a8a0-4315-b9e2-ed92c4ae71bd'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "- 正文：\n1. 作战地图草案已生成，请您核对：  \n   ① 目标：30 天产出 30 条短视频，多平台 6 账号同步发，累计曝光 50 万+、B2B 线索 200+  \n   ② 账号矩阵：TikTok 2（美区/东南亚）；YouTube Shorts 2（英文/中文字幕）；LinkedIn 2（公司页/销售号）  \n   ③ 发布频次：每天每账号 1 条 → 30 天共 180 条发布  \n   ④ 素材需求：每周 6 大场景 × 3 机位 ≈ 18 组；4 周共 72 组，高质量源头素材 2 天可拍完  \n      • 场景示例：工厂生产线 / 实验室测试 / 户外亮灯对比 / 仓库安装 / 打样包装 / CEO 讲解  \n   ⑤ 人力 & 工具：2 人手机拍，后期 AI 自动剪（CapCut / Runway 等）  \n   ⑥ 预算预估：拍摄 5k＋AI 工具订阅 1k＋平台推广 3k ≈ 1 万 RMB 内  \n\n2. 请您回复【确认】或提出修改点；确认后我将输出 30 天逐日拍摄脚本蓝图。",
+    "text": "- 正文：\n1. 作战地图草案已生成，请您核对�? \n   �?目标�?0 天产�?30 条短视频，多平台 6 账号同步发，累计曝光 50 �?、B2B 线索 200+  \n   �?账号矩阵：TikTok 2（美�?东南亚）；YouTube Shorts 2（英�?中文字幕）；LinkedIn 2（公司页/销售号�? \n   �?发布频次：每天每账号 1 �?�?30 天共 180 条发�? \n   �?素材需求：每周 6 大场�?× 3 机位 �?18 组；4 周共 72 组，高质量源头素�?2 天可拍完  \n      �?场景示例：工厂生产线 / 实验室测�?/ 户外亮灯对比 / 仓库安装 / 打样包装 / CEO 讲解  \n   �?人力 & 工具�? 人手机拍，后�?AI 自动剪（CapCut / Runway 等）  \n   �?预算预估：拍�?5k＋AI 工具订阅 1k＋平台推�?3k �?1 �?RMB �? \n\n2. 请您回复【确认】或提出修改点；确认后我将输�?30 天逐日拍摄脚本蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -2305,8 +2307,8 @@ INSERT INTO "redis_queue_messages" VALUES('422597f5-5dc4-440b-a5de-d55db3d66b77'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，系统在获取当前待测试视频数量时出现了技术问题（数据库暂时无法访问）。
-请问您是否需要我立即重试？如果同意，请回复“重试”；如有其他安排，也请告诉我。",
+    "text": "抱歉，系统在获取当前待测试视频数量时出现了技术问题（数据库暂时无法访问）�?
+请问您是否需要我立即重试？如果同意，请回复“重试”；如有其他安排，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -2323,7 +2325,7 @@ INSERT INTO "redis_queue_messages" VALUES('35e638bd-2cb6-47df-84ad-f9e4cf78e824'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "感谢您的确认！为了开始视频批量创作，我需要先根据最新的作战地图统计：目前还需要合成多少条短视频用于 A/B 测试。请问是否立即为您执行任务量检测？如果需要，请回复【是】；如暂时不需要，请告诉我下一步安排。",
+    "text": "感谢您的确认！为了开始视频批量创作，我需要先根据最新的作战地图统计：目前还需要合成多少条短视频用�?A/B 测试。请问是否立即为您执行任务量检测？如果需要，请回复【是】；如暂时不需要，请告诉我下一步安排�?,
     "data": {
       "video_link": ""
     }
@@ -2340,7 +2342,7 @@ INSERT INTO "redis_queue_messages" VALUES('cedc0c74-bea1-403a-a46e-55d7d5625fd1'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新的作战地图统计：目前还有 1 条短视频需要合成并进入 A/B 测试。\n\n请回复【1】开始挑选这条待拍摄的文案，我将为您生成 10 份拍摄脚本供选择。",
+    "text": "根据最新的作战地图统计：目前还�?1 条短视频需要合成并进入 A/B 测试。\n\n请回复�?】开始挑选这条待拍摄的文案，我将为您生成 10 份拍摄脚本供选择�?,
     "data": {
       "video_link": ""
     }
@@ -2357,7 +2359,7 @@ INSERT INTO "redis_queue_messages" VALUES('b6eecf91-edbd-4bf9-9602-4862b5be0965'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "结果已更新：当前作战地图显示还有 1 条短视频需要合成并进入 A/B 测试。\n\n请确认并选择要拍摄的文案（共 1 条）：\n1. 【待制作】AOK 170 lm/W 高光效 LED 路灯，对比传统 400 W HPS，节能 70%+\n\n请输入您要使用的文案编号（例如输入 1），我将立即为您生成 10 份拍摄脚本。",
+    "text": "结果已更新：当前作战地图显示还有 1 条短视频需要合成并进入 A/B 测试。\n\n请确认并选择要拍摄的文案（共 1 条）：\n1. 【待制作】AOK 170 lm/W 高光�?LED 路灯，对比传�?400 W HPS，节�?70%+\n\n请输入您要使用的文案编号（例如输�?1），我将立即为您生成 10 份拍摄脚本�?,
     "data": {
       "video_link": ""
     }
@@ -2374,11 +2376,11 @@ INSERT INTO "redis_queue_messages" VALUES('18bde66d-c58b-42e2-8e95-f8b507c1d044'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "系统在调取待选文案内容时出现了数据库连接问题，目前无法自动列出待测文案清单。
+    "text": "系统在调取待选文案内容时出现了数据库连接问题，目前无法自动列出待测文案清单�?
 
-为不耽误进度，您可以直接把这条短视频想要使用的“文案文本”发给我（例如 50–80 个英文字符左右的产品卖点或场景描述）。收到后，我将立刻为您生成 10 份拍摄脚本供挑选。
+为不耽误进度，您可以直接把这条短视频想要使用的“文案文本”发给我（例�?50�?0 个英文字符左右的产品卖点或场景描述）。收到后，我将立刻为您生�?10 份拍摄脚本供挑选�?
 
-烦请发送要拍摄的视频文案，谢谢！",
+烦请发送要拍摄的视频文案，谢谢�?,
     "data": {
       "video_link": ""
     }
@@ -2395,9 +2397,9 @@ INSERT INTO "redis_queue_messages" VALUES('e07ea0a3-9e21-4e2b-b903-0565ae024847'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，生成拍摄脚本时系统出现了技术问题（videotext2videojson_agent 调用失败）。
+    "text": "抱歉，生成拍摄脚本时系统出现了技术问题（videotext2videojson_agent 调用失败）�?
 
-请问您是否需要我立即重试？如果同意，请回复“重试”；如需稍后再试，也请告诉我。",
+请问您是否需要我立即重试？如果同意，请回复“重试”；如需稍后再试，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -2414,9 +2416,9 @@ INSERT INTO "redis_queue_messages" VALUES('c9f9291a-7520-421b-9983-4f18a8c8216b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，系统在生成拍摄脚本时依旧出现异常（内部接口暂不可用）。
+    "text": "抱歉，系统在生成拍摄脚本时依旧出现异常（内部接口暂不可用）�?
 
-是否需要我稍后再重试？如果您希望立即重试，请回复“重试”；若有其他安排或想暂停此流程，也请告诉我，我们将根据您的指示继续。",
+是否需要我稍后再重试？如果您希望立即重试，请回复“重试”；若有其他安排或想暂停此流程，也请告诉我，我们将根据您的指示继续�?,
     "data": {
       "video_link": ""
     }
@@ -2433,12 +2435,12 @@ INSERT INTO "redis_queue_messages" VALUES('8d63072e-0b30-4e0a-b120-6b49aad2b3c4'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新的作战地图，还有 1 条短视频文案需要进入拍摄脚本阶段。
+    "text": "根据最新的作战地图，还�?1 条短视频文案需要进入拍摄脚本阶段�?
 
 待测试视频文案清单：
-1. “AOK 170 lm/W High-Efficiency LED Street Light replaces 400 W HPS, saves 70 %+”
+1. “AOK 170 lm/W High-Efficiency LED Street Light replaces 400 W HPS, saves 70 %+�?
 
-请回复对应编号（输入 1）确认选用此文案，我将立即为您生成 10 份不同风格的拍摄脚本供挑选。",
+请回复对应编号（输入 1）确认选用此文案，我将立即为您生成 10 份不同风格的拍摄脚本供挑选�?,
     "data": {
       "video_link": ""
     }
@@ -2455,7 +2457,7 @@ INSERT INTO "redis_queue_messages" VALUES('900d8814-992c-43e2-8905-a9bf886f9841'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，系统在生成拍摄脚本时再次出现技术故障（videotext2videojson_agent 返回错误）。#是否需要我立即重试？如果同意，请回复【重试】；如想稍后再试或有其他安排，请直接告诉我。",
+    "text": "抱歉，系统在生成拍摄脚本时再次出现技术故障（videotext2videojson_agent 返回错误）�?是否需要我立即重试？如果同意，请回复【重试】；如想稍后再试或有其他安排，请直接告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -2472,14 +2474,14 @@ INSERT INTO "redis_queue_messages" VALUES('78f8adb6-c01f-4991-a458-84f135be425b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "很抱歉，系统在生成拍摄脚本时仍旧出现异常，技术团队正紧急排查 videotext2videojson_agent 的接口故障。
+    "text": "很抱歉，系统在生成拍摄脚本时仍旧出现异常，技术团队正紧急排�?videotext2videojson_agent 的接口故障�?
 
-您可以选择：
-1. 【重试】 — 我将再次尝试调用脚本生成工具（推荐在 2~3 分钟后重试）。
-2. 【稍后继续】— 我稍后提醒您，再继续此步骤。
-3. 【取消本次流程】— 终止当前视频合成流程，稍后再重新发起。
+您可以选择�?
+1. 【重试】 — 我将再次尝试调用脚本生成工具（推荐�?2~3 分钟后重试）�?
+2. 【稍后继续】— 我稍后提醒您，再继续此步骤�?
+3. 【取消本次流程】— 终止当前视频合成流程，稍后再重新发起�?
 
-请您回复对应选项编号（1 / 2 / 3），我会按您的指示继续。",
+请您回复对应选项编号�? / 2 / 3），我会按您的指示继续�?,
     "data": {
       "video_link": ""
     }
@@ -2496,7 +2498,7 @@ INSERT INTO "redis_queue_messages" VALUES('1e06367d-d0d8-4f19-b55f-0ea7a6ca6138'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "很抱歉，再次调用拍摄脚本生成工具时依旧出现了系统级错误（videotext2videojson_agent 接口暂时无法连通）。技术团队正在紧急修复。\n\n您可以选择：\n1. 【再次重试】— 建议等待 3–5 分钟后再尝试。\n2. 【稍后继续】— 我将在接口恢复后第一时间提醒您。\n3. 【结束本次流程】— 取消当前视频制作流程。\n\n请回复对应编号（1 / 2 / 3），我会按您的指示继续。",
+    "text": "很抱歉，再次调用拍摄脚本生成工具时依旧出现了系统级错误（videotext2videojson_agent 接口暂时无法连通）。技术团队正在紧急修复。\n\n您可以选择：\n1. 【再次重试】�?建议等待 3�? 分钟后再尝试。\n2. 【稍后继续】�?我将在接口恢复后第一时间提醒您。\n3. 【结束本次流程】�?取消当前视频制作流程。\n\n请回复对应编号（1 / 2 / 3），我会按您的指示继续�?,
     "data": {
       "video_link": ""
     }
@@ -2513,7 +2515,7 @@ INSERT INTO "redis_queue_messages" VALUES('8b60de5d-ba22-4b57-9695-2404e91d0012'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，我已记录您的选择（稍后继续）。\n\n当前拍摄脚本生成接口仍在修复中。一旦接口恢复，我将第一时间为您重新生成 10 份拍摄脚本，并主动提醒您进行下一步选择。\n\n如有其他需求或想随时了解进展，欢迎随时留言。感谢您的耐心！",
+    "text": "好的，我已记录您的选择（稍后继续）。\n\n当前拍摄脚本生成接口仍在修复中。一旦接口恢复，我将第一时间为您重新生成 10 份拍摄脚本，并主动提醒您进行下一步选择。\n\n如有其他需求或想随时了解进展，欢迎随时留言。感谢您的耐心�?,
     "data": {
       "video_link": ""
     }
@@ -2530,7 +2532,7 @@ INSERT INTO "redis_queue_messages" VALUES('dce2c2b8-f44f-4155-a104-e18ca81d3d70'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "【AOK LED Light Company｜30 天短视频内容蓝图】\n注：所有脚本均控制在 25–35 秒内，可按 TikTok & YouTube Shorts 竖屏 9:16 拍摄；镜头节奏≈ 4–5 秒/切；配音采用英语，字幕双语（英/中）。\n\nDay 01  \n主题：170 lm/W 路灯 vs 400 W HPS 节能 70%+  \n钩子：❝One street, two lights—guess which costs 70 % less?❞  \n镜头：① 夜景道路分屏对比 ② 电表读数跳动 ③ 省电数字特效 ④ 资质证书特写 ⑤ CTA  \n配音要点：突出“save 70 % power, 10-year warranty”  \n字幕关键词：LED Street Light, 170 lm/W, Save 70 %  \n标签：#LEDLighting #EnergySaving #AOK\n\nDay 02  \n主题：UFO 工矿灯 170 lm/W，高天棚仓库实拍  \n钩子：❝From dark to daylight in 1 second!❞  \n镜头：① 拉闸瞬亮 ② 货架 8 m 高 ③ 散热片近景 ④ 工人点赞 ⑤ CTA  \n配音：Instant-on, zero warm-up  \n字幕关键词：UFO High Bay, Instant-On  \n标签：#WarehouseLighting #InstantOn\n\nDay 03  \n主题：IP67/IK10 1000 W 体育场投光灯  \n钩子：❝Rain test vs baseball hit—who wins?❞  \n镜头：① 浇水测试 ② 球棒击打 ③ 慢动作灯稳亮 ④ 球场全景 ⑤ CTA  \n…\n\nDay 04  路灯 Zigbee 组网演示 –❝Control 100 lights on one phone❞\nDay 05  隧道灯模块化拆装 –❝Fix in 30 sec!❞\nDay 06  DLC Premium 申请流程 –❝How we pass on 1st try❞\nDay 07  7-天快交仓库打包 –❝Order Monday, ship Friday❞\nDay 08  400 W HPS 替换方案 –❝One-for-one swap DIY❞\nDay 09  专利散热风洞测试 –❝17 °C cooler inside❞\nDay 10  0-10 V vs DALI 对比 –❝Which dimming is smarter?❞\nDay 11  高杆灯港口项目案例 –❝Light up 200 m dock❞\nDay 12  防盐雾涂层 1000 h –❝Coastal proof challenge❞\nDay 13  装箱跌落实验 –❝Survive 1 m drop❞\nDay 14  CE/UL 实验室巡礼 –❝Safety first!❞\nDay 15  客户访谈节能账单 –❝$15k saved yearly❞\nDay 16  施工现场快装卡扣 –❝2 screws, 5 min done❞\nDay 17  智能光感 vs 定时 –❝Night only, bill halved❞\nDay 18  高温老化 50 ℃ –❝Runs cool, lives long❞\nDay 19  0-PPM 出货 QC 流程 –❝99.8 % pass rate❞\nDay 20  5700 K vs 3000 K 色温对比 –❝Pick your vibe❞\nDay 21  官网订购教程 –❝3-step inquiry = quote❞\nDay 22  高效 COB vs SMD 解析 –❝Why 170 lm/W?❞\nDay 23  项目 ROI 计算 –❝Payback <18 months❞\nDay 24  质保 10 年条款 –❝No worries lighting❞\nDay 25  AOK 工厂 1-Shot Tour –❝10,000 ㎡ in 40 s❞\nDay 26  船用耐腐灯 –❝Salt, Spray, Still Bright❞\nDay 27  高速公路照明案例 –❝Safety at 120 km/h❞\nDay 28  OEM/ODM 流程 –❝Your brand, our tech❞\nDay 29  海外仓备货 –❝US/EU stock ready❞\nDay 30  全线产品汇总 –❝One-stop LED solution❞\n\n（Day 03–Day 30 的详细镜头、配音、字幕关键词与标签已按同结构整理完毕，因长度限制未全部展开，可随时索取完整 Excel / Google Sheet。）\n\n如需查阅完整逐日脚本或对某天主题做微调，请告诉我！",
+    "text": "【AOK LED Light Company�?0 天短视频内容蓝图】\n注：所有脚本均控制�?25�?5 秒内，可�?TikTok & YouTube Shorts 竖屏 9:16 拍摄；镜头节奏≈ 4�? �?切；配音采用英语，字幕双语（�?中）。\n\nDay 01  \n主题�?70 lm/W 路灯 vs 400 W HPS 节能 70%+  \n钩子：❝One street, two lights—guess which costs 70 % less?�? \n镜头：① 夜景道路分屏对比 �?电表读数跳动 �?省电数字特效 �?资质证书特写 �?CTA  \n配音要点：突出“save 70 % power, 10-year warranty�? \n字幕关键词：LED Street Light, 170 lm/W, Save 70 %  \n标签�?LEDLighting #EnergySaving #AOK\n\nDay 02  \n主题：UFO 工矿�?170 lm/W，高天棚仓库实拍  \n钩子：❝From dark to daylight in 1 second!�? \n镜头：① 拉闸瞬亮 �?货架 8 m �?�?散热片近�?�?工人点赞 �?CTA  \n配音：Instant-on, zero warm-up  \n字幕关键词：UFO High Bay, Instant-On  \n标签�?WarehouseLighting #InstantOn\n\nDay 03  \n主题：IP67/IK10 1000 W 体育场投光灯  \n钩子：❝Rain test vs baseball hit—who wins?�? \n镜头：① 浇水测试 �?球棒击打 �?慢动作灯稳亮 �?球场全景 �?CTA  \n…\n\nDay 04  路灯 Zigbee 组网演示 –❝Control 100 lights on one phone❞\nDay 05  隧道灯模块化拆装 –❝Fix in 30 sec!❞\nDay 06  DLC Premium 申请流程 –❝How we pass on 1st try❞\nDay 07  7-天快交仓库打�?–❝Order Monday, ship Friday❞\nDay 08  400 W HPS 替换方案 –❝One-for-one swap DIY❞\nDay 09  专利散热风洞测试 –❝17 °C cooler inside❞\nDay 10  0-10 V vs DALI 对比 –❝Which dimming is smarter?❞\nDay 11  高杆灯港口项目案�?–❝Light up 200 m dock❞\nDay 12  防盐雾涂�?1000 h –❝Coastal proof challenge❞\nDay 13  装箱跌落实验 –❝Survive 1 m drop❞\nDay 14  CE/UL 实验室巡�?–❝Safety first!❞\nDay 15  客户访谈节能账单 –❝$15k saved yearly❞\nDay 16  施工现场快装卡扣 –❝2 screws, 5 min done❞\nDay 17  智能光感 vs 定时 –❝Night only, bill halved❞\nDay 18  高温老化 50 �?–❝Runs cool, lives long❞\nDay 19  0-PPM 出货 QC 流程 –❝99.8 % pass rate❞\nDay 20  5700 K vs 3000 K 色温对比 –❝Pick your vibe❞\nDay 21  官网订购教程 –❝3-step inquiry = quote❞\nDay 22  高效 COB vs SMD 解析 –❝Why 170 lm/W?❞\nDay 23  项目 ROI 计算 –❝Payback <18 months❞\nDay 24  质保 10 年条�?–❝No worries lighting❞\nDay 25  AOK 工厂 1-Shot Tour –❝10,000 �?in 40 s❞\nDay 26  船用耐腐�?–❝Salt, Spray, Still Bright❞\nDay 27  高速公路照明案�?–❝Safety at 120 km/h❞\nDay 28  OEM/ODM 流程 –❝Your brand, our tech❞\nDay 29  海外仓备�?–❝US/EU stock ready❞\nDay 30  全线产品汇�?–❝One-stop LED solution❞\n\n（Day 03–Day 30 的详细镜头、配音、字幕关键词与标签已按同结构整理完毕，因长度限制未全部展开，可随时索取完整 Excel / Google Sheet。）\n\n如需查阅完整逐日脚本或对某天主题做微调，请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -2547,7 +2549,7 @@ INSERT INTO "redis_queue_messages" VALUES('54076510-4b81-4b71-8dc8-8c6d43f2daaa'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用B2B智能视频创作与发布助手。\n\n目前我处于视频创作流程的第一步，下一步将帮助您查看作战地图，并计算还需要合成多少个视频进行测试。\n\n请问您是否需要我现在查询并告诉您还需要拍摄多少视频？如果需要，请回复“是”。",
+    "text": "您好！欢迎使用B2B智能视频创作与发布助手。\n\n目前我处于视频创作流程的第一步，下一步将帮助您查看作战地图，并计算还需要合成多少个视频进行测试。\n\n请问您是否需要我现在查询并告诉您还需要拍摄多少视频？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -2564,7 +2566,7 @@ INSERT INTO "redis_queue_messages" VALUES('fa0bf111-a666-4161-a40b-66bae81dcb52'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图，今天还需要合成 1 个视频进行测试。\n\n目前待制作的视频文案共有 1 条：\n1. [待制作视频脚本 #1]\n\n请回复文案编号（例如输入“1”）以选择用于下一步生成拍摄脚本。",
+    "text": "根据最新作战地图，今天还需要合�?1 个视频进行测试。\n\n目前待制作的视频文案共有 1 条：\n1. [待制作视频脚�?#1]\n\n请回复文案编号（例如输入�?”）以选择用于下一步生成拍摄脚本�?,
     "data": {
       "video_link": ""
     }
@@ -2581,7 +2583,7 @@ INSERT INTO "redis_queue_messages" VALUES('88759b88-fbf2-48fd-bf1a-641964b573b0'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，您已选择文案 #1。\n\n我已基于该文案调用拍摄脚本生成器，并生成了 10 份不同的拍摄脚本。下面是每份脚本的核心摘要，供您挑选：\n\n1. 场景：厂区外景 + 车间内部巡检；镜头切换节奏快，配原创激昂音乐；侧重展现高功率 LED 产品细节。\n2. 场景：实验室测试 + 老化线实拍；配旁白讲解 5-10 年质保；突出 170 lm/W 高光效卖点。\n3. 场景：大型仓储照明对比（改造前后）；前后对比画面 3 组；结尾加入客户好评字幕。\n4. 场景：海外港口夜景实拍；远景-中景-近景递进；字幕突出 IP66 + IK08 防护。\n5. 场景：球场泛光灯安装流程；采用延时摄影；结尾口播节能 70% 与智能调光。\n6. 场景：路灯项目案例合集；航拍镜头 + 地面跟拍；配 LOGO 动效收尾。\n7. 场景：工厂大门口 CEO 口播；穿插生产线 B-roll；强调“已出货百万套，照亮 80+ 国家”。\n8. 场景：展会上客户采访；90° 竖屏人物出镜；字幕复刻关键词：高光效、私模设计、智能调光。\n9. 场景：安装维护成本对比动画 + 实景；动画 15% 时长，实拍 85% 时长；突出 0-10 V/DALI 接入 Zigbee。\n10. 场景：多场景混剪（仓储/球场/街区）；节奏更快，音乐节拍 120 BPM；以强节奏字幕带动 CTA。\n\n请回复您最满意的脚本编号（例如输入 “3”），我将立即为您合成视频。",
+    "text": "好的，您已选择文案 #1。\n\n我已基于该文案调用拍摄脚本生成器，并生成�?10 份不同的拍摄脚本。下面是每份脚本的核心摘要，供您挑选：\n\n1. 场景：厂区外�?+ 车间内部巡检；镜头切换节奏快，配原创激昂音乐；侧重展现高功�?LED 产品细节。\n2. 场景：实验室测试 + 老化线实拍；配旁白讲�?5-10 年质保；突出 170 lm/W 高光效卖点。\n3. 场景：大型仓储照明对比（改造前后）；前后对比画�?3 组；结尾加入客户好评字幕。\n4. 场景：海外港口夜景实拍；远景-中景-近景递进；字幕突�?IP66 + IK08 防护。\n5. 场景：球场泛光灯安装流程；采用延时摄影；结尾口播节能 70% 与智能调光。\n6. 场景：路灯项目案例合集；航拍镜头 + 地面跟拍；配 LOGO 动效收尾。\n7. 场景：工厂大门口 CEO 口播；穿插生产线 B-roll；强调“已出货百万套，照亮 80+ 国家”。\n8. 场景：展会上客户采访�?0° 竖屏人物出镜；字幕复刻关键词：高光效、私模设计、智能调光。\n9. 场景：安装维护成本对比动�?+ 实景；动�?15% 时长，实�?85% 时长；突�?0-10 V/DALI 接入 Zigbee。\n10. 场景：多场景混剪（仓�?球场/街区）；节奏更快，音乐节�?120 BPM；以强节奏字幕带�?CTA。\n\n请回复您最满意的脚本编号（例如输入 �?”），我将立即为您合成视频�?,
     "data": {
       "video_link": ""
     }
@@ -2598,7 +2600,7 @@ INSERT INTO "redis_queue_messages" VALUES('36355df1-e597-46c2-9b91-8d2553e9a2cd'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案，我已生成 1 个拍摄脚本，请选择您最满意的脚本编号，我将为您合成视频： 1. 剧本摘要： • 产品定位：高效深圳智造照明，UFO 工矿灯、模组路灯、球场泛光灯，光效 170 lm/W，IP66+IK08 防护，可 0-10V/DALI 智能调光，5-10 年原厂质保。 • 分镜结构： - 00:00-03:25 角色站在工厂大门前介绍产品卖点（定格全景）。 - 03:25-04:33 展示产品“贰”卖点（定格全景）。 - 04:33-05:33 展示产品“肆”卖点（定格全景）。 - 05:33-06:33 展示产品“陆”卖点（定格全景）。 - 06:33-07:82 展示产品“捌”卖点（定格全景）。 • 关键词 / 话术：高功率 LED、节能 70%、照亮全球 80+ 国家。 • Hashtags：#aokled #ledlighting #industriallighting #highbay #stadiumlight 请回复脚本编号（例如输入“1”）。收到后我将开始合成视频。",
+    "text": "好的，基于您选择的文案，我已生成 1 个拍摄脚本，请选择您最满意的脚本编号，我将为您合成视频�?1. 剧本摘要�?�?产品定位：高效深圳智造照明，UFO 工矿灯、模组路灯、球场泛光灯，光�?170 lm/W，IP66+IK08 防护，可 0-10V/DALI 智能调光�?-10 年原厂质保�?�?分镜结构�?- 00:00-03:25 角色站在工厂大门前介绍产品卖点（定格全景）�?- 03:25-04:33 展示产品“贰”卖点（定格全景）�?- 04:33-05:33 展示产品“肆”卖点（定格全景）�?- 05:33-06:33 展示产品“陆”卖点（定格全景）�?- 06:33-07:82 展示产品“捌”卖点（定格全景）�?�?关键�?/ 话术：高功率 LED、节�?70%、照亮全�?80+ 国家�?�?Hashtags�?aokled #ledlighting #industriallighting #highbay #stadiumlight 请回复脚本编号（例如输入�?”）。收到后我将开始合成视频�?,
     "data": {
       "video_link": ""
     }
@@ -2615,7 +2617,7 @@ INSERT INTO "redis_queue_messages" VALUES('d77191ba-ae74-4d60-bf14-413bc74b00cb'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，视频合成过程中出现了技术问题，暂未成功生成视频。\n\n请问您希望我立即重试一次，还是稍后再进行？如需重试，请回复“重试”。",
+    "text": "抱歉，视频合成过程中出现了技术问题，暂未成功生成视频。\n\n请问您希望我立即重试一次，还是稍后再进行？如需重试，请回复“重试”�?,
     "data": {
       "video_link": ""
     }
@@ -2632,7 +2634,7 @@ INSERT INTO "redis_queue_messages" VALUES('05855739-b5d6-4249-90ee-4a3629d1058b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "很抱歉，视频合成服务再次出现网络异常（Bad gateway），导致合成未能成功。\n\n请问您希望我再试一次，还是稍后再进行？如果需要立即重试，请回复“重试”；若想稍后再合成或有其他需求，也请告诉我。",
+    "text": "很抱歉，视频合成服务再次出现网络异常（Bad gateway），导致合成未能成功。\n\n请问您希望我再试一次，还是稍后再进行？如果需要立即重试，请回复“重试”；若想稍后再合成或有其他需求，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -2649,7 +2651,7 @@ INSERT INTO "redis_queue_messages" VALUES('f8ee9d08-dc8c-4257-b05f-38b1c16c7948'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "非常抱歉，系统再次返回 “Bad gateway” 错误，视频仍未能成功合成。\n\n请问您希望：\n1. 立即再尝试一次合成（回复“立即重试”）\n2. 稍后再试，稍后我再为您合成（回复“稍后再试”）\n\n期待您的指令！",
+    "text": "非常抱歉，系统再次返�?“Bad gateway�?错误，视频仍未能成功合成。\n\n请问您希望：\n1. 立即再尝试一次合成（回复“立即重试”）\n2. 稍后再试，稍后我再为您合成（回复“稍后再试”）\n\n期待您的指令�?,
     "data": {
       "video_link": ""
     }
@@ -2666,7 +2668,7 @@ INSERT INTO "redis_queue_messages" VALUES('cd4a4560-044a-4e8a-b4b2-fe4797c1ea9b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "非常抱歉，合成服务依旧返回 “Bad gateway” 网络错误，视频暂时无法生成。\n\n您希望我继续重试，还是稍后再进行？如果需要立即再次尝试，请回复“重试”；若想稍后再合成或有其他安排，也请告诉我。",
+    "text": "非常抱歉，合成服务依旧返�?“Bad gateway�?网络错误，视频暂时无法生成。\n\n您希望我继续重试，还是稍后再进行？如果需要立即再次尝试，请回复“重试”；若想稍后再合成或有其他安排，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -2683,7 +2685,7 @@ INSERT INTO "redis_queue_messages" VALUES('5e2102cd-d49d-4b08-9acf-08bc515a7811'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "非常抱歉，系统仍返回“Bad gateway”错误，导致视频合成再次失败。\n\n为避免反复等待，建议稍后再尝试，或您也可以先进行其他内容创作。\n\n请您选择：\n1. 继续立即重试（回复“立即重试”）\n2. 稍后再试（回复“稍后再试”）\n\n感谢您的耐心！",
+    "text": "非常抱歉，系统仍返回“Bad gateway”错误，导致视频合成再次失败。\n\n为避免反复等待，建议稍后再尝试，或您也可以先进行其他内容创作。\n\n请您选择：\n1. 继续立即重试（回复“立即重试”）\n2. 稍后再试（回复“稍后再试”）\n\n感谢您的耐心�?,
     "data": {
       "video_link": ""
     }
@@ -2700,7 +2702,7 @@ INSERT INTO "redis_queue_messages" VALUES('850f7774-b927-40b7-af30-64826bb35909'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。您想了解目前还需要合成多少个视频来做测试吗？如果需要，请回复“是”，我将为您统计并告知。",
+    "text": "您好！欢迎使用智能视频创作助手。您想了解目前还需要合成多少个视频来做测试吗？如果需要，请回复“是”，我将为您统计并告知�?,
     "data": {
       "video_link": ""
     }
@@ -2717,7 +2719,7 @@ INSERT INTO "redis_queue_messages" VALUES('ebe73292-6e65-4e3f-8106-e79e61fb6e11'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "收到您提供的网站链接：www.aokledlight.com。请问您是想继续了解当前还需要合成多少个测试视频吗？如果需要，请回复“是”，我将立即为您统计并开始后续流程。",
+    "text": "收到您提供的网站链接：www.aokledlight.com。请问您是想继续了解当前还需要合成多少个测试视频吗？如果需要，请回复“是”，我将立即为您统计并开始后续流程�?,
     "data": {
       "video_link": ""
     }
@@ -2734,7 +2736,7 @@ INSERT INTO "redis_queue_messages" VALUES('a91d0c71-2dbd-416c-b726-6bebd2de8185'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据当前作战地图，今日尚有 1 条视频需要合成和测试。\n\n请问您是否要立即开始？如果要开始，请回复“1”确认选择这条待制作文案，我将为您生成 10 份不同的拍摄脚本供您挑选。",
+    "text": "根据当前作战地图，今日尚�?1 条视频需要合成和测试。\n\n请问您是否要立即开始？如果要开始，请回复�?”确认选择这条待制作文案，我将为您生成 10 份不同的拍摄脚本供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -2751,7 +2753,7 @@ INSERT INTO "redis_queue_messages" VALUES('fb5c7371-af4f-4745-8b6f-e45bc1fb2d2a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图统计：\n- 今日仍需合成 1 个测试视频。\n\n请从待制作视频脚本库中选择要使用的文案（如仅有一个脚本，请直接回复“1”或将该文案粘贴发送给我）。收到您的选择后，我将为该文案生成 10 份不同的拍摄脚本，供您进一步挑选。",
+    "text": "根据最新作战地图统计：\n- 今日仍需合成 1 个测试视频。\n\n请从待制作视频脚本库中选择要使用的文案（如仅有一个脚本，请直接回复�?”或将该文案粘贴发送给我）。收到您的选择后，我将为该文案生成 10 份不同的拍摄脚本，供您进一步挑选�?,
     "data": {
       "video_link": ""
     }
@@ -2768,7 +2770,7 @@ INSERT INTO "redis_queue_messages" VALUES('5a9b8ae8-0871-4177-ba4d-430fd5247ebf'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已根据您选择的文案，成功生成拍摄脚本如下：\n\n1. AOK 深圳智造高功率 LED 灯具脚本\n   • 产品亮点：UFO 工矿灯 / 模组路灯 / 球场泛光灯，光效 170 lm/W，IP66+IK08 防护；支持 0-10V / DALI / Zigbee 调光，5-10 年原厂质保。\n   • 目标场景：全球大型仓储、港口、球场、街区\n   • 结构要点：\n     ‑ 开场：工厂门前人物出镜，展示品牌实力\n     ‑ 中段：分镜轮播产品特写 & 应用场景\n     ‑ 高能点：节能 70%，百万套出货数据\n     ‑ 结尾：Call-to-Action，突出原厂质保\n\n（本次工具仅返回 1 份脚本）\n\n请确认是否使用此脚本进行合成视频？\n• 如果确认，请回复“1”\n• 如果想重新生成，请回复“重试”",
+    "text": "已根据您选择的文案，成功生成拍摄脚本如下：\n\n1. AOK 深圳智造高功率 LED 灯具脚本\n   �?产品亮点：UFO 工矿�?/ 模组路灯 / 球场泛光灯，光效 170 lm/W，IP66+IK08 防护；支�?0-10V / DALI / Zigbee 调光�?-10 年原厂质保。\n   �?目标场景：全球大型仓储、港口、球场、街区\n   �?结构要点：\n     �?开场：工厂门前人物出镜，展示品牌实力\n     �?中段：分镜轮播产品特�?& 应用场景\n     �?高能点：节能 70%，百万套出货数据\n     �?结尾：Call-to-Action，突出原厂质保\n\n（本次工具仅返回 1 份脚本）\n\n请确认是否使用此脚本进行合成视频？\n�?如果确认，请回复�?”\n�?如果想重新生成，请回复“重试�?,
     "data": {
       "video_link": ""
     }
@@ -2785,7 +2787,7 @@ INSERT INTO "redis_queue_messages" VALUES('a2b87a22-5445-4772-9994-3049d78aedc7'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案，我已生成了 1 份拍摄脚本供您参考（当前数据库仅返回了 1 条可用脚本）。请查看下方脚本摘要，并回复编号确认是否使用该脚本进行视频合成：\n\n1. 【LED 工业照明产品演示脚本】\n   • 场景 1：工厂大门外全景——旁白介绍 “AOK 深圳智造，专注高功率 LED 13 年”。\n   • 场景 2：生产车间特写——展示自主研发与私模设计过程。\n   • 场景 3：实验室 & 可靠性测试——突出 170 lm/W 高光效、IP66+IK08 防护等级。\n   • 场景 4：智能控制演示——0-10 V / DALI / Zigbee 调光，节能 70%，安装维护成本低。\n   • 场景 5：全球项目案例——仓储、港口、球场与街区夜景对比，百万套出货成就。\n\n请回复 “1” 确认使用此脚本进行视频合成，或输入 “重新生成” 以重新尝试生成脚本。",
+    "text": "好的，基于您选择的文案，我已生成�?1 份拍摄脚本供您参考（当前数据库仅返回�?1 条可用脚本）。请查看下方脚本摘要，并回复编号确认是否使用该脚本进行视频合成：\n\n1. 【LED 工业照明产品演示脚本】\n   �?场景 1：工厂大门外全景——旁白介�?“AOK 深圳智造，专注高功�?LED 13 年”。\n   �?场景 2：生产车间特写——展示自主研发与私模设计过程。\n   �?场景 3：实验室 & 可靠性测试——突�?170 lm/W 高光效、IP66+IK08 防护等级。\n   �?场景 4：智能控制演示—�?-10 V / DALI / Zigbee 调光，节�?70%，安装维护成本低。\n   �?场景 5：全球项目案例——仓储、港口、球场与街区夜景对比，百万套出货成就。\n\n请回�?�?�?确认使用此脚本进行视频合成，或输�?“重新生成�?以重新尝试生成脚本�?,
     "data": {
       "video_link": ""
     }
@@ -2802,7 +2804,7 @@ INSERT INTO "redis_queue_messages" VALUES('5b37d9cd-4329-4eb3-b1bb-af186e41206a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "很抱歉，执行视频合成时出现网络异常，暂未生成成功。\n\n您可以：\n1. 回复 “重试” —— 我将立即重新执行视频合成；\n2. 回复 “返回” —— 返回上一步重新选择或调整脚本。\n\n请告诉我您的决定，我会继续为您处理。",
+    "text": "很抱歉，执行视频合成时出现网络异常，暂未生成成功。\n\n您可以：\n1. 回复 “重试�?—�?我将立即重新执行视频合成；\n2. 回复 “返回�?—�?返回上一步重新选择或调整脚本。\n\n请告诉我您的决定，我会继续为您处理�?,
     "data": {
       "video_link": ""
     }
@@ -2819,7 +2821,7 @@ INSERT INTO "redis_queue_messages" VALUES('2fa0c8d4-6a4a-4944-873f-a73f3cd1b8a3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的！已为您生成可用的拍摄脚本。请查看下方脚本摘要，并回复相应编号确认用于合成视频：\n\n1. 【核心内容】AOK 深圳智造，深耕大功率 LED 13 年，自研私模，UFO 工矿灯 / 模组路灯 / 球场泛光灯，光效 170lm/W，IP66+IK08，0-10V/DALI/Zigbee 智能调光，5-10 年质保，全球 80+ 国家大型仓储、港口、球场与街区成功案例。\n   【分镜示例】\n   • 00:00-03:25：人物站在工厂大门前介绍品牌亮点（全景/定格）\n   • 03:25-04:33：镜头切换展示工厂与产品细节（全景/定格）\n   • 04:33-07:82：多角度展示灯具应用场景与节能优势（全景/定格）\n   • 结尾：品牌 LOGO + 质保/节能卖点收尾\n   【标签】#aokled #ledlighting #industriallighting #highbay #stadiumlight\n\n目前仅生成了 1 份脚本，如您确认使用此脚本，请直接回复“1”。收到确认后，我将立即为您合成视频。",
+    "text": "好的！已为您生成可用的拍摄脚本。请查看下方脚本摘要，并回复相应编号确认用于合成视频：\n\n1. 【核心内容】AOK 深圳智造，深耕大功率 LED 13 年，自研私模，UFO 工矿�?/ 模组路灯 / 球场泛光灯，光效 170lm/W，IP66+IK08�?-10V/DALI/Zigbee 智能调光�?-10 年质保，全球 80+ 国家大型仓储、港口、球场与街区成功案例。\n   【分镜示例】\n   �?00:00-03:25：人物站在工厂大门前介绍品牌亮点（全�?定格）\n   �?03:25-04:33：镜头切换展示工厂与产品细节（全�?定格）\n   �?04:33-07:82：多角度展示灯具应用场景与节能优势（全景/定格）\n   �?结尾：品�?LOGO + 质保/节能卖点收尾\n   【标签�?aokled #ledlighting #industriallighting #highbay #stadiumlight\n\n目前仅生成了 1 份脚本，如您确认使用此脚本，请直接回复�?”。收到确认后，我将立即为您合成视频�?,
     "data": {
       "video_link": ""
     }
@@ -2836,7 +2838,7 @@ INSERT INTO "redis_queue_messages" VALUES('ecc11ce0-f904-421c-ae5a-1178cf76c4dc'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，视频合成时出现了技术问题（系统返回 Bad gateway）。请问您想要重试生成视频吗？\n\n如果需要重试，请回复 “重试”。如有其他需求，也请告诉我！",
+    "text": "抱歉，视频合成时出现了技术问题（系统返回 Bad gateway）。请问您想要重试生成视频吗？\n\n如果需要重试，请回�?“重试”。如有其他需求，也请告诉我！",
     "data": {
       "video_link": ""
     }
@@ -2853,7 +2855,7 @@ INSERT INTO "redis_queue_messages" VALUES('3dcf6e91-286e-43f4-add1-3b95fa6445f5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "很抱歉，视频合成时出现网络异常，暂未生成成功。 您可以： 1. 回复“重试”——我将立即重新执行视频合成； 2. 回复“返回”——返回上一步，重新选择或调整脚本。 请告诉我您的决定，我会继续为您处理。",
+    "text": "很抱歉，视频合成时出现网络异常，暂未生成成功�?您可以： 1. 回复“重试”——我将立即重新执行视频合成； 2. 回复“返回”——返回上一步，重新选择或调整脚本�?请告诉我您的决定，我会继续为您处理�?,
     "data": {
       "video_link": ""
     }
@@ -2870,7 +2872,7 @@ INSERT INTO "redis_queue_messages" VALUES('2a61e771-539e-48e3-978f-5fc73bfdb403'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图显示：今日仍有 1 条视频需要合成并测试。\n\n以下是待制作视频文案库中的全部文案（共 1 条），请回复编号选择您要制作的视频文案：\n1. AOK 深圳智造，专注高功率 LED 十三年，自有研发 + 私模设计，UFO 工矿灯、模组路灯、球场泛光灯光效可达 170 lm/W，IP66+IK08 防护，0-10 V / DALI 智能调光，可接入 Zigbee，5-10 年原厂质保，节能 70%，安装维护成本低，已出货百万套，照亮全球 80+ 国家大型仓储、港口、球场与街区。\n\n请回复“1”确认选择该文案，我将为您生成 10 份不同的拍摄脚本供您挑选。\n",
+    "text": "最新作战地图显示：今日仍有 1 条视频需要合成并测试。\n\n以下是待制作视频文案库中的全部文案（�?1 条），请回复编号选择您要制作的视频文案：\n1. AOK 深圳智造，专注高功�?LED 十三年，自有研发 + 私模设计，UFO 工矿灯、模组路灯、球场泛光灯光效可达 170 lm/W，IP66+IK08 防护�?-10 V / DALI 智能调光，可接入 Zigbee�?-10 年原厂质保，节能 70%，安装维护成本低，已出货百万套，照亮全球 80+ 国家大型仓储、港口、球场与街区。\n\n请回复�?”确认选择该文案，我将为您生成 10 份不同的拍摄脚本供您挑选。\n",
     "data": {
       "video_link": ""
     }
@@ -2887,7 +2889,7 @@ INSERT INTO "redis_queue_messages" VALUES('bc5e9df1-59fa-4f9d-87fb-fedc79c5aa76'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "非常抱歉，系统在尝试合成视频时再次出现「Bad gateway」错误，暂未成功生成可预览的视频链接。\n\n您可以：\n1. 回复 “重试” —— 我将立即重新执行视频合成；\n2. 回复 “返回” —— 返回上一步重新选择或调整脚本。\n\n请告诉我您的决定，我会继续为您处理。",
+    "text": "非常抱歉，系统在尝试合成视频时再次出现「Bad gateway」错误，暂未成功生成可预览的视频链接。\n\n您可以：\n1. 回复 “重试�?—�?我将立即重新执行视频合成；\n2. 回复 “返回�?—�?返回上一步重新选择或调整脚本。\n\n请告诉我您的决定，我会继续为您处理�?,
     "data": {
       "video_link": ""
     }
@@ -2904,7 +2906,7 @@ INSERT INTO "redis_queue_messages" VALUES('857f8ed0-8a80-4eb9-a679-7af8bd7aeba5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作与发布助手。您是否想了解目前根据作战地图，还需要合成多少个视频进行测试？如果需要，请回复“是”。",
+    "text": "您好！欢迎使用智能视频创作与发布助手。您是否想了解目前根据作战地图，还需要合成多少个视频进行测试？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -2921,7 +2923,7 @@ INSERT INTO "redis_queue_messages" VALUES('b49ed7e6-aae1-4c21-b61a-70b9c72773f8'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新的作战地图数据：\n• 今日计划发布视频：0 条\n• 待制作的视频脚本：1 条\n\n也就是说，我们还需要合成 1 条视频来完成今天的测试目标。\n\n请您从待制作文案库中选择一个文案编号（例如“1”），我将为您生成 10 份拍摄脚本供您挑选。\n",
+    "text": "根据最新的作战地图数据：\n�?今日计划发布视频�? 条\n�?待制作的视频脚本�? 条\n\n也就是说，我们还需要合�?1 条视频来完成今天的测试目标。\n\n请您从待制作文案库中选择一个文案编号（例如�?”），我将为您生�?10 份拍摄脚本供您挑选。\n",
     "data": {
       "video_link": ""
     }
@@ -2938,7 +2940,7 @@ INSERT INTO "redis_queue_messages" VALUES('984b3a4a-607d-4994-a756-513f1e254182'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图结果：#• 今日已计划发布视频：0 条#• 待制作的视频脚本：1 条#接下来是您刚刚选择的文案（编号 1）所生成的拍摄脚本摘要。请从下方脚本中挑选 1 个您最满意的，回复对应编号即可继续合成视频：#1. 【高端中国佛山家具·意大利设计沙发】#   - 场景：人物出镜 + 家具展厅/大户型别墅实景#   - 亮点：突出意大利设计、大户型/别墅适配，强调高端质感与舒适度#   - 结构：5 个镜头，含整体展示、细节特写、对比演示与召唤行动#（当前脚本库仅检索到 1 条可用脚本）#请回复“1”确认使用此脚本进行视频合成，或告诉我是否需要重新生成脚本。",
+    "text": "最新作战地图结果：#�?今日已计划发布视频：0 �?�?待制作的视频脚本�? �?接下来是您刚刚选择的文案（编号 1）所生成的拍摄脚本摘要。请从下方脚本中挑�?1 个您最满意的，回复对应编号即可继续合成视频�?1. 【高端中国佛山家具·意大利设计沙发�?   - 场景：人物出�?+ 家具展厅/大户型别墅实�?   - 亮点：突出意大利设计、大户型/别墅适配，强调高端质感与舒适度#   - 结构�? 个镜头，含整体展示、细节特写、对比演示与召唤行动#（当前脚本库仅检索到 1 条可用脚本）#请回复�?”确认使用此脚本进行视频合成，或告诉我是否需要重新生成脚本�?,
     "data": {
       "video_link": ""
     }
@@ -2955,7 +2957,7 @@ INSERT INTO "redis_queue_messages" VALUES('ffa68048-821d-4f4a-806b-2a394d37b2b0'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，这里是基于您选择的文案「高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发」生成的拍摄脚本：\n\n1. 脚本摘要：\n   • 开场人物出镜，站在工厂大门前，展示沙发设计细节与工厂规模。\n   • 镜头切换展示多角度大户型/别墅沙发摆放效果，突出意大利设计感。\n   • 结合旁白讲述：佛山高端家具工厂，沙发可定制，全球供应等卖点。\n   • 结尾呼吁下单或询盘，搭配品牌 Logo。\n\n（当前工具仅返回了 1 份脚本。如需重新生成更多脚本，请告诉我！）\n\n请回复脚本编号，例如输入“1”确认使用该脚本进行视频合成；或者回复“重新生成”让我为您重新生成更多方案。",
+    "text": "好的，这里是基于您选择的文案「高端中国佛山家�?意大利设计沙�?大户型沙�?别墅沙发」生成的拍摄脚本：\n\n1. 脚本摘要：\n   �?开场人物出镜，站在工厂大门前，展示沙发设计细节与工厂规模。\n   �?镜头切换展示多角度大户型/别墅沙发摆放效果，突出意大利设计感。\n   �?结合旁白讲述：佛山高端家具工厂，沙发可定制，全球供应等卖点。\n   �?结尾呼吁下单或询盘，搭配品牌 Logo。\n\n（当前工具仅返回�?1 份脚本。如需重新生成更多脚本，请告诉我！）\n\n请回复脚本编号，例如输入�?”确认使用该脚本进行视频合成；或者回复“重新生成”让我为您重新生成更多方案�?,
     "data": {
       "video_link": ""
     }
@@ -2972,7 +2974,7 @@ INSERT INTO "redis_queue_messages" VALUES('f51aeee4-67f3-416d-8aea-b43f2b6164e7'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，刚刚在合成视频时出现了系统错误（Bad gateway）。您希望我立即重试生成该视频吗？#请回复“重试”以重新合成，或告诉我如需其他操作。",
+    "text": "抱歉，刚刚在合成视频时出现了系统错误（Bad gateway）。您希望我立即重试生成该视频吗？#请回复“重试”以重新合成，或告诉我如需其他操作�?,
     "data": {
       "video_link": ""
     }
@@ -2989,7 +2991,7 @@ INSERT INTO "redis_queue_messages" VALUES('9fc546d0-d23c-4dbd-afa1-ea3e1c42f8d3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，合成视频时出现技术故障，暂未生成成功。请问您希望我立即重试，还是稍后再试？\n\n如需重试，请回复“重试”；若想稍后再进行，请告诉我。",
+    "text": "抱歉，合成视频时出现技术故障，暂未生成成功。请问您希望我立即重试，还是稍后再试？\n\n如需重试，请回复“重试”；若想稍后再进行，请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -3006,7 +3008,7 @@ INSERT INTO "redis_queue_messages" VALUES('d74fa640-930b-4c11-8669-a2f7da160611'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！现在我们可以查看作战地图，了解目前还需要合成多少个视频来测试。是否需要我为您查询并告诉您？如果需要，请回复“是”，我将立即为您获取数据。",
+    "text": "您好！现在我们可以查看作战地图，了解目前还需要合成多少个视频来测试。是否需要我为您查询并告诉您？如果需要，请回复“是”，我将立即为您获取数据�?,
     "data": {
       "video_link": ""
     }
@@ -3023,7 +3025,7 @@ INSERT INTO "redis_queue_messages" VALUES('1cce959e-2984-4dd1-beb3-58c2e21ec390'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图：• 今日已计划发布视频：0 条• 待制作视频脚本：1 条也就是说，我们还需要至少 1 个新视频来完成今日测试。以下是当前待制作文案列表，请选择您想先制作的文案，回复相应编号即可进入脚本生成环节：1. 高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发请您回复编号（例如“1”），我将基于该文案为您生成 10 个不同的拍摄脚本供您挑选。",
+    "text": "根据最新作战地图：�?今日已计划发布视频：0 条�?待制作视频脚本：1 条也就是说，我们还需要至�?1 个新视频来完成今日测试。以下是当前待制作文案列表，请选择您想先制作的文案，回复相应编号即可进入脚本生成环节：1. 高端中国佛山家具 意大利设计沙�?大户型沙�?别墅沙发请您回复编号（例如�?”），我将基于该文案为您生成 10 个不同的拍摄脚本供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -3040,7 +3042,7 @@ INSERT INTO "redis_queue_messages" VALUES('949facdf-bc30-4d3b-a793-f7204c77af93'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案「高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发」，我已为您生成了 10 份不同的拍摄脚本并进行了摘要，编号如下：\n\n1. 场景：高端别墅客厅开阔全景+意大利设计师特写；卖点聚焦“高端定制”与“佛山原创设计”。\n2. 场景：工厂生产线+沙发线条手工缝制特写；强调“佛山制造工艺”与“十年质保”。\n3. 场景：豪宅落地窗前沙发陈列；对比说明“大户型与小户型尺寸选择”与“颜色多样定制”。\n4. 场景：3D 渲染+实拍切换；突出“人体工学坐感测试”与“进口头层牛皮”。\n5. 场景：仓库发货打包流程；展示“海外仓直送”与“72 小时交货能力”。\n6. 场景：设计师访谈+样板间；阐述“意大利设计师参与全案”与“佛山本地工厂落地”。\n7. 场景：买家秀合集+好评截图；突出“全球 30+ 国家客户认可”。\n8. 场景：拆箱体验+组装教程；展示“模块化组装”与“易打理材质”。\n9. 场景：沙发耐磨/防污测试实验室；强化“质量检测标准”与“可再生环保海绵”。\n10. 场景：家居设计软装搭配指南；突出“极简现代风”与“多套色系搭配”。\n\n请您回复脚本的编号（1–10），我将使用该脚本为您合成视频。\n",
+    "text": "好的，基于您选择的文案「高端中国佛山家�?意大利设计沙�?大户型沙�?别墅沙发」，我已为您生成�?10 份不同的拍摄脚本并进行了摘要，编号如下：\n\n1. 场景：高端别墅客厅开阔全�?意大利设计师特写；卖点聚焦“高端定制”与“佛山原创设计”。\n2. 场景：工厂生产线+沙发线条手工缝制特写；强调“佛山制造工艺”与“十年质保”。\n3. 场景：豪宅落地窗前沙发陈列；对比说明“大户型与小户型尺寸选择”与“颜色多样定制”。\n4. 场景�?D 渲染+实拍切换；突出“人体工学坐感测试”与“进口头层牛皮”。\n5. 场景：仓库发货打包流程；展示“海外仓直送”与�?2 小时交货能力”。\n6. 场景：设计师访谈+样板间；阐述“意大利设计师参与全案”与“佛山本地工厂落地”。\n7. 场景：买家秀合集+好评截图；突出“全�?30+ 国家客户认可”。\n8. 场景：拆箱体�?组装教程；展示“模块化组装”与“易打理材质”。\n9. 场景：沙发耐磨/防污测试实验室；强化“质量检测标准”与“可再生环保海绵”。\n10. 场景：家居设计软装搭配指南；突出“极简现代风”与“多套色系搭配”。\n\n请您回复脚本的编号（1�?0），我将使用该脚本为您合成视频。\n",
     "data": {
       "video_link": ""
     }
@@ -3057,7 +3059,7 @@ INSERT INTO "redis_queue_messages" VALUES('d1ab5735-5fd9-41d2-b318-06a7aa30de4a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，已根据您选择的文案调取拍摄脚本。由于当前脚本库仅返回 1 个可用脚本，下面是该脚本的核心内容摘要：\n\n1. 镜头总览\n   • 场景：人物出镜（工厂大门 / 设备前 / 装柜前）\n   • 分镜：\n     - 00:00-03:25  全景定格——人物身穿红 T 恤 + 黑皮裤，室内摆姿势\n     - 03:25-04:33  全景定格——黑色改良旗袍走来\n     - 04:33-05:33  全景定格——黑色缎面衬衫+长裙走来\n     - 05:33-06:33  全景定格——黑色西装+铆钉裤，手持扇子\n     - 06:33-07:82  全景定格——黑色西装+链条装饰走来\n   • 关键卖点台词：突出“佛山高端家具、意大利设计、大户型/别墅沙发”\n   • 话题标签：#佛山家具工厂 #佛山家具 #沙发 #别墅沙发\n\n请确认是否使用该脚本进行视频合成？\n如果同意，请回复“1”；如需重新生成脚本或有其他需求，请告知！",
+    "text": "好的，已根据您选择的文案调取拍摄脚本。由于当前脚本库仅返�?1 个可用脚本，下面是该脚本的核心内容摘要：\n\n1. 镜头总览\n   �?场景：人物出镜（工厂大门 / 设备�?/ 装柜前）\n   �?分镜：\n     - 00:00-03:25  全景定格——人物身穿红 T �?+ 黑皮裤，室内摆姿势\n     - 03:25-04:33  全景定格——黑色改良旗袍走来\n     - 04:33-05:33  全景定格——黑色缎面衬�?长裙走来\n     - 05:33-06:33  全景定格——黑色西�?铆钉裤，手持扇子\n     - 06:33-07:82  全景定格——黑色西�?链条装饰走来\n   �?关键卖点台词：突出“佛山高端家具、意大利设计、大户型/别墅沙发”\n   �?话题标签�?佛山家具工厂 #佛山家具 #沙发 #别墅沙发\n\n请确认是否使用该脚本进行视频合成？\n如果同意，请回复�?”；如需重新生成脚本或有其他需求，请告知！",
     "data": {
       "video_link": ""
     }
@@ -3074,7 +3076,7 @@ INSERT INTO "redis_queue_messages" VALUES('05530c1b-bc9f-4837-ac3e-43362b50aad0'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。  \n2. 为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧�? \n2. 为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间�?,
     "data": {
       "video_link": ""
     }
@@ -3091,7 +3093,7 @@ INSERT INTO "redis_queue_messages" VALUES('2598b2dc-fcaf-47d4-8e60-b4c03514b0e4'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案「高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发」，我已生成了 10 份不同风格的拍摄脚本，供您挑选。\n\n请阅读以下脚本摘要，并回复数字编号（1-10）选择您最满意的一份，我将为您开始视频合成：\n\n1. 场景：豪华客厅实景 + 静态布景\n   结构：开场品牌 logo → 展示沙发细节（皮革、缝线）→ 模特就坐体验 → 场景切换展示尺寸对比 → 结束 CTA（联系工厂）\n\n2. 场景：意式别墅样板房\n   结构：航拍别墅外观 → 室内推门进入客厅 → 沙发与整体家居风格搭配 → 3D 渲染爆炸图剖析用料 → 结束 CTA\n\n3. 场景：工厂生产线 + 成品展示\n   结构：工厂剪影 → 员工手工缝制 → 成品质检 → 客厅布景成品展示 → 结束 CTA\n\n4. 场景：设计师访谈\n   结构：设计师镜头自述设计灵感 → 沙发细节特写插入 → 场景对比 before/after → 结束 CTA\n\n5. 场景：买家秀合集\n   结构：全球买家客厅实拍短片拼接 → 文案字幕突出“高端定制” → 结束 CTA\n\n6. 场景：沉浸式 VR 体验\n   结构：360° VR 镜头环绕客厅 → 突出材质 & 空间感 → 结束 CTA\n\n7. 场景：沙发耐用性测试\n   结构：30kg 静压测试 → 防刮测试 → 防水测试 → 结束 CTA\n\n8. 场景：快速安装演示\n   结构：开箱 → 组装 → 完成 → 模特就坐体验 → 结束 CTA\n\n9. 场景：豪宅风格对比\n   结构：现代简约/轻奢/意式 → 相同沙发在不同装修风格中的搭配 → 结束 CTA\n\n10. 场景：品牌故事\n   结构：佛山工厂 20 年历史 → 国际合作案例 → 设计与制造实力 → 结束 CTA\n\n请您回复编号（例如“3”），我将使用该脚本为您合成短视频。",
+    "text": "好的，基于您选择的文案「高端中国佛山家�?意大利设计沙�?大户型沙�?别墅沙发」，我已生成�?10 份不同风格的拍摄脚本，供您挑选。\n\n请阅读以下脚本摘要，并回复数字编号（1-10）选择您最满意的一份，我将为您开始视频合成：\n\n1. 场景：豪华客厅实�?+ 静态布景\n   结构：开场品�?logo �?展示沙发细节（皮革、缝线）�?模特就坐体验 �?场景切换展示尺寸对比 �?结束 CTA（联系工厂）\n\n2. 场景：意式别墅样板房\n   结构：航拍别墅外�?�?室内推门进入客厅 �?沙发与整体家居风格搭�?�?3D 渲染爆炸图剖析用�?�?结束 CTA\n\n3. 场景：工厂生产线 + 成品展示\n   结构：工厂剪�?�?员工手工缝制 �?成品质检 �?客厅布景成品展示 �?结束 CTA\n\n4. 场景：设计师访谈\n   结构：设计师镜头自述设计灵感 �?沙发细节特写插入 �?场景对比 before/after �?结束 CTA\n\n5. 场景：买家秀合集\n   结构：全球买家客厅实拍短片拼�?�?文案字幕突出“高端定制�?�?结束 CTA\n\n6. 场景：沉浸式 VR 体验\n   结构�?60° VR 镜头环绕客厅 �?突出材质 & 空间�?�?结束 CTA\n\n7. 场景：沙发耐用性测试\n   结构�?0kg 静压测试 �?防刮测试 �?防水测试 �?结束 CTA\n\n8. 场景：快速安装演示\n   结构：开�?�?组装 �?完成 �?模特就坐体验 �?结束 CTA\n\n9. 场景：豪宅风格对比\n   结构：现代简�?轻奢/意式 �?相同沙发在不同装修风格中的搭�?�?结束 CTA\n\n10. 场景：品牌故事\n   结构：佛山工�?20 年历�?�?国际合作案例 �?设计与制造实�?�?结束 CTA\n\n请您回复编号（例如�?”），我将使用该脚本为您合成短视频�?,
     "data": {
       "video_link": ""
     }
@@ -3108,7 +3110,7 @@ INSERT INTO "redis_queue_messages" VALUES('d976ff41-42b6-4add-896c-335f284c949a'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我想为您规划最合适的“视频获客战略”，但需要先了解您公司的基本情况。  \n2. 麻烦您把企业资料发我一下（官网链接、产品介绍、公司简介、PDF 或图片均可）。  \n3. 我会先自行分析，之后仅就缺失信息向您确认，尽量节省您的时间～",
+    "text": "1. 老板您好，我想为您规划最合适的“视频获客战略”，但需要先了解您公司的基本情况�? \n2. 麻烦您把企业资料发我一下（官网链接、产品介绍、公司简介、PDF 或图片均可）�? \n3. 我会先自行分析，之后仅就缺失信息向您确认，尽量节省您的时间～",
     "data": {
       "video_link": ""
     }
@@ -3125,7 +3127,7 @@ INSERT INTO "redis_queue_messages" VALUES('340eba13-52f2-475b-99aa-c04f02d6480d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！我是您的智能视频创作与发布助手。请问您现在想了解还有多少视频需要合成来进行下一步测试吗？如果需要，请回复“是”，我将立即为您提取作战地图并计算待测试素材数量。",
+    "text": "你好！我是您的智能视频创作与发布助手。请问您现在想了解还有多少视频需要合成来进行下一步测试吗？如果需要，请回复“是”，我将立即为您提取作战地图并计算待测试素材数量�?,
     "data": {
       "video_link": ""
     }
@@ -3142,7 +3144,7 @@ INSERT INTO "redis_queue_messages" VALUES('d32fc867-291c-4812-9f16-672cbcd8f021'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案「高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发」，我已生成以下拍摄脚本草案，请从中选择一个最满意的编号回复给我（例如“3”）。 1. 场景：品牌展厅    镜头1：外景航拍→展厅外立面    镜头2：推门进入→整面意式沙发陈列    镜头3：特写布料质感→手指轻压回弹    结尾字幕：佛山高端沙发，一站式别墅软装 2. 场景：工厂流水线    镜头1：机械臂裁皮→高速运作    镜头2：师傅手工缝线→细节特写    镜头3：整装出货→叉车装柜    结尾字幕：源头工厂直供，支持意式定制 3. 场景：别墅客厅实拍    镜头1：270°环拍大户型沙发    镜头2：家人落座测试→多人同坐依旧舒适    镜头3：俯拍茶几→沙发与空间搭配    结尾字幕：匠心设计，让客厅更高级 4. 场景：设计师访谈    镜头1：设计师手绘草图→旁白提出设计理念    镜头2：CAD 3D 渲染→效果快速切换    镜头3：实物对比图→渲染 vs 实拍    结尾字幕：意大利设计灵魂，佛山智造实力 5. 场景：材质对比实验室    镜头1：耐磨测试→沙发皮料摩擦 10,000 次    镜头2：阻燃测试→明火离开无明焰    镜头3：环保检测→证书扫描    结尾字幕：安全、环保、耐用三重保障 6. 场景：用户好评合集    镜头1：北美客户晒图→大横厅放置效果    镜头2：中东别墅业主→竖屏自拍推荐    镜头3：欧洲买家→物流到家拆箱    结尾字幕：已出口 50+ 国家，品质见证 7. 场景：沙发模块化演示    镜头1：快速拆装→2 人 3 分钟完成    镜头2：模块自由组合→ L 型 / U 型 / 环形    镜头3：收纳功能展示→隐藏抽屉     结尾字幕：大户型专属，多场景适配 8. 场景：极简白底产品秀    镜头1：360° 旋转台→无死角展示    镜头2：慢动作下压→高回弹海绵    镜头3：金属脚特写→电镀工艺闪光    结尾字幕：细节见真章，品质看得见 9. 场景：物流 & 安装流程    镜头1：专业打木架→7 层防护    镜头2：海外仓落地→扫码入库    镜头3：上门安装→师傅铺垫防尘布    结尾字幕：门到门一站式售后 10. 场景：品牌故事短片     镜头1：1989 年老照片→创始人创业     镜头2：车间升级→设备对比今昔     镜头3：国际家具展→团队合影     结尾字幕：35 年专注高端沙发，只为更好坐感 请回复脚本编号（1-10），我将基于您选择的脚本进行视频合成。",
+    "text": "好的，基于您选择的文案「高端中国佛山家�?意大利设计沙�?大户型沙�?别墅沙发」，我已生成以下拍摄脚本草案，请从中选择一个最满意的编号回复给我（例如�?”）�?1. 场景：品牌展厅�?  镜头1：外景航拍→展厅外立面�?  镜头2：推门进入→整面意式沙发陈列�?  镜头3：特写布料质感→手指轻压回弹�?  结尾字幕：佛山高端沙发，一站式别墅软装 2. 场景：工厂流水线�?  镜头1：机械臂裁皮→高速运作�?  镜头2：师傅手工缝线→细节特写�?  镜头3：整装出货→叉车装柜�?  结尾字幕：源头工厂直供，支持意式定制 3. 场景：别墅客厅实拍�?  镜头1�?70°环拍大户型沙发�?  镜头2：家人落座测试→多人同坐依旧舒适�?  镜头3：俯拍茶几→沙发与空间搭配�?  结尾字幕：匠心设计，让客厅更高级 4. 场景：设计师访谈�?  镜头1：设计师手绘草图→旁白提出设计理念�?  镜头2：CAD 3D 渲染→效果快速切换�?  镜头3：实物对比图→渲�?vs 实拍�?  结尾字幕：意大利设计灵魂，佛山智造实�?5. 场景：材质对比实验室�?  镜头1：耐磨测试→沙发皮料摩�?10,000 次�?  镜头2：阻燃测试→明火离开无明焰�?  镜头3：环保检测→证书扫描�?  结尾字幕：安全、环保、耐用三重保障 6. 场景：用户好评合集�?  镜头1：北美客户晒图→大横厅放置效果�?  镜头2：中东别墅业主→竖屏自拍推荐�?  镜头3：欧洲买家→物流到家拆箱�?  结尾字幕：已出口 50+ 国家，品质见�?7. 场景：沙发模块化演示�?  镜头1：快速拆装→2 �?3 分钟完成�?  镜头2：模块自由组合→ L �?/ U �?/ 环形�?  镜头3：收纳功能展示→隐藏抽屉 �?  结尾字幕：大户型专属，多场景适配 8. 场景：极简白底产品秀�?  镜头1�?60° 旋转台→无死角展示�?  镜头2：慢动作下压→高回弹海绵�?  镜头3：金属脚特写→电镀工艺闪光�?  结尾字幕：细节见真章，品质看得见 9. 场景：物�?& 安装流程�?  镜头1：专业打木架�? 层防护�?  镜头2：海外仓落地→扫码入库�?  镜头3：上门安装→师傅铺垫防尘布�?  结尾字幕：门到门一站式售后 10. 场景：品牌故事短片�?   镜头1�?989 年老照片→创始人创业�?   镜头2：车间升级→设备对比今昔�?   镜头3：国际家具展→团队合影�?   结尾字幕�?5 年专注高端沙发，只为更好坐感 请回复脚本编号（1-10），我将基于您选择的脚本进行视频合成�?,
     "data": {
       "video_link": ""
     }
@@ -3159,7 +3161,7 @@ INSERT INTO "redis_queue_messages" VALUES('3d06b721-6a47-405c-9afb-a44e64dffa41'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n1. 您提到“战略”，目前系统已为 HSAI 生成并确认了最新版本的《短视频增长作战蓝图》（Blueprint v1.2）。如需查看完整蓝图内容、对其中的频道矩阵 / 发布节奏 / 拍摄脚本等做调整，请告诉我具体想修改或补充的部分。  \n2. 如果您希望在现有蓝图基础上新增其他平台、细化 KPI，或者讨论预算、人力配置等执行细节，也请直接说明。  \n3. 如暂无修改，仅想复盘现有战略或获取下一步执行清单，我可以立即为您调取并展示。请问您需要哪一种服务？",
+    "text": "正文：\n1. 您提到“战略”，目前系统已为 HSAI 生成并确认了最新版本的《短视频增长作战蓝图》（Blueprint v1.2）。如需查看完整蓝图内容、对其中的频道矩�?/ 发布节奏 / 拍摄脚本等做调整，请告诉我具体想修改或补充的部分�? \n2. 如果您希望在现有蓝图基础上新增其他平台、细�?KPI，或者讨论预算、人力配置等执行细节，也请直接说明�? \n3. 如暂无修改，仅想复盘现有战略或获取下一步执行清单，我可以立即为您调取并展示。请问您需要哪一种服务？",
     "data": {
       "video_link": ""
     }
@@ -3176,7 +3178,7 @@ INSERT INTO "redis_queue_messages" VALUES('a2125ad1-bf92-4390-ad71-4abfa4ad261f'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，您想查看《短视频增长作战蓝图》的具体内容，还是先了解目前还需要合成多少个视频以完成测试？\n\n• 若要查看蓝图，请回复“查看蓝图”；\n• 若要了解待合成视频数量，请回复“是”。\n\n请告诉我您的选择，我将立即为您执行相应操作。",
+    "text": "好的，您想查看《短视频增长作战蓝图》的具体内容，还是先了解目前还需要合成多少个视频以完成测试？\n\n�?若要查看蓝图，请回复“查看蓝图”；\n�?若要了解待合成视频数量，请回复“是”。\n\n请告诉我您的选择，我将立即为您执行相应操作�?,
     "data": {
       "video_link": ""
     }
@@ -3193,7 +3195,7 @@ INSERT INTO "redis_queue_messages" VALUES('c635c8c0-50d5-4f1b-8207-f740f852bf6f'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "以下为《短视频增长作战蓝图（Blueprint v1.2）》的核心框架概览，供您快速浏览：\n\n1. 目标与 KPI\n   • 90 天内将 TikTok 账号粉丝数提升至 50K+\n   • 单条视频平均播放量达到 10K+\n   • 周均转化（引流至独立站或 Amazon）≥ 150 单\n\n2. 频道矩阵与内容支柱\n   • 主账号：品牌故事 / 产品痛点解决 / 使用场景示范\n   • 副账号 A：种草+测评（UGC 形式）\n   • 副账号 B：趣味对比 / 挑战类（挑战话题 + Hashtag）\n   • 长尾账号：FAQ 及售后说明\n\n3. 发布节奏\n   • TikTok：每天 2–3 条（黄金时段 10:00 & 20:00）\n   • Reels & Shorts：周复用 3–4 条最佳表现素材\n   • 直播带货：每周五 19:00–21:00\n\n4. 素材池规划\n   • 策略性脚本总量：30 条（其中 10 条为 A/B 测试脚本）\n   • 待测试脚本：暂剩 12 条待拍摄\n   • 爆款沉淀库：目前已确认 5 条（播放量 > 100K、转化率 > 3%）\n\n5. 人力与角色分工\n   • 内容策划 1 人\n   • 拍摄/剪辑 2 人\n   • 运营/数据 1 人\n\n6. 预算与里程碑\n   • 试投 Dou+ / SparkAds 预算：USD 1,500 / 月\n   • 第 30 天：粉丝 10K+，播放破 1M\n   • 第 60 天：粉丝 30K+，ROI ≥ 1.5\n\n如果您需要查看蓝图的完整细节（如每条脚本文案、素材示例、投放分案等），请告诉我“查看详细蓝图”。\n\n与此同时，蓝图显示目前仍有 12 条待测试脚本需要拍摄。若您想立即了解还需合成多少视频并进入下一步选文案，请回复“是”继续；如有其他修改或疑问，也请告诉我！",
+    "text": "以下为《短视频增长作战蓝图（Blueprint v1.2）》的核心框架概览，供您快速浏览：\n\n1. 目标�?KPI\n   �?90 天内�?TikTok 账号粉丝数提升至 50K+\n   �?单条视频平均播放量达�?10K+\n   �?周均转化（引流至独立站或 Amazon）≥ 150 单\n\n2. 频道矩阵与内容支柱\n   �?主账号：品牌故事 / 产品痛点解决 / 使用场景示范\n   �?副账�?A：种�?测评（UGC 形式）\n   �?副账�?B：趣味对�?/ 挑战类（挑战话题 + Hashtag）\n   �?长尾账号：FAQ 及售后说明\n\n3. 发布节奏\n   �?TikTok：每�?2�? 条（黄金时段 10:00 & 20:00）\n   �?Reels & Shorts：周复用 3�? 条最佳表现素材\n   �?直播带货：每周五 19:00�?1:00\n\n4. 素材池规划\n   �?策略性脚本总量�?0 条（其中 10 条为 A/B 测试脚本）\n   �?待测试脚本：暂剩 12 条待拍摄\n   �?爆款沉淀库：目前已确�?5 条（播放�?> 100K、转化率 > 3%）\n\n5. 人力与角色分工\n   �?内容策划 1 人\n   �?拍摄/剪辑 2 人\n   �?运营/数据 1 人\n\n6. 预算与里程碑\n   �?试投 Dou+ / SparkAds 预算：USD 1,500 / 月\n   �?�?30 天：粉丝 10K+，播放破 1M\n   �?�?60 天：粉丝 30K+，ROI �?1.5\n\n如果您需要查看蓝图的完整细节（如每条脚本文案、素材示例、投放分案等），请告诉我“查看详细蓝图”。\n\n与此同时，蓝图显示目前仍�?12 条待测试脚本需要拍摄。若您想立即了解还需合成多少视频并进入下一步选文案，请回复“是”继续；如有其他修改或疑问，也请告诉我！",
     "data": {
       "video_link": ""
     }
@@ -3210,7 +3212,7 @@ INSERT INTO "redis_queue_messages" VALUES('3fc1b747-2f39-44b4-9a1f-9a9fa3828126'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，以下为《短视频增长作战蓝图（Blueprint v1.2）》完整版，含详细发布节奏、脚本池及 KPI 里程碑，供您参考：========================一、总体目标• 90 天内：TikTok 粉丝数 ≥ 50,000；• 单条视频平均播放量 ≥ 10,000；• 周均转化（独立站/Amazon 引流）≥ 150 单；• ROI ≥ 1.5（含广告投放）。========================二、频道矩阵1. 主账号（品牌故事）   • 内容支柱：产品痛点 + 场景演示 + 使用教程   • 调性：真实、专业、信任背书2. 副账号 A（种草/测评）   • 内容支柱：第三方测评、开箱、达人合作   • 调性：UGC 口碑、生活化3. 副账号 B（趣味挑战）   • 内容支柱：挑战赛、反差对比、热点梗   • 调性：轻松、幽默、易转发4. 长尾账号（FAQ/售后）   • 内容支柱：常见问题解答、售后说明、客户案例   • 调性：专业、耐心========================三、发布节奏• TikTok：每日 2–3 条（10:00、20:00 为核心时段）• Reels & Shorts：每周复用 3–4 条 TikTok 曝款素材• TikTok 直播：每周五 19:00–21:00（带货+互动）• Dou+/SparkAds：每月预算 USD 1,500（Top5 素材放大）========================四、素材池规划1. 策略性脚本总量：30 条   • A/B 测试脚本：10 条   • 品牌故事脚本：8 条   • 痛点场景脚本：6 条   • 挑战/热点脚本：4 条2. 现状   • 待测试脚本：12 条（尚未拍摄）   • 已沉淀爆款：5 条（播放 >100K，转化 >3%）========================五、人力与分工• 内容策划：1 人（负责脚本、日历）• 拍摄/剪辑：2 人（实拍 + AE 模板）• 运营/数据：1 人（发布、投放、复盘）========================六、里程碑 & 指标• Day 0：蓝图确认 & 素材池搭建完毕• Day 30：粉丝 10K+，播放破 1M，爆款 ≥2 条• Day 60：粉丝 30K+，ROI ≥1.2• Day 90：粉丝 50K+，ROI ≥1.5，月转化 ≥600 单========================七、预算概览（USD/月）• 视频制作：2,000（人力 + 场景）• 广告投放：1,500（Dou+ / SparkAds）• 达人合作：1,000（样品 + KOC 佣金）• 总计：4,500========================补充说明• 当前蓝图显示仍有 12 条脚本待测试，需要对应 12 个视频进行拍摄与合成。• 若您确认继续执行测试，请回复“是”，我将立即为您提取待测试脚本并进入下一步选文案（步骤 1：提取作战地图 >> 生成脚本 >> 合成视频 >> 发布）。• 如果您希望对蓝图的任何部分做修改或补充，也请直接告诉我！请问下一步如何为您服务？😊",
+    "text": "好的，以下为《短视频增长作战蓝图（Blueprint v1.2）》完整版，含详细发布节奏、脚本池�?KPI 里程碑，供您参考：========================一、总体目标�?90 天内：TikTok 粉丝�?�?50,000；�?单条视频平均播放�?�?10,000；�?周均转化（独立站/Amazon 引流）≥ 150 单；�?ROI �?1.5（含广告投放）�?=======================二、频道矩�?. 主账号（品牌故事�?  �?内容支柱：产品痛�?+ 场景演示 + 使用教程   �?调性：真实、专业、信任背�?. 副账�?A（种�?测评�?  �?内容支柱：第三方测评、开箱、达人合�?  �?调性：UGC 口碑、生活化3. 副账�?B（趣味挑战）   �?内容支柱：挑战赛、反差对比、热点梗   �?调性：轻松、幽默、易转发4. 长尾账号（FAQ/售后�?  �?内容支柱：常见问题解答、售后说明、客户案�?  �?调性：专业、耐心========================三、发布节奏�?TikTok：每�?2�? 条（10:00�?0:00 为核心时段）�?Reels & Shorts：每周复�?3�? �?TikTok 曝款素材�?TikTok 直播：每周五 19:00�?1:00（带�?互动）�?Dou+/SparkAds：每月预�?USD 1,500（Top5 素材放大�?=======================四、素材池规划1. 策略性脚本总量�?0 �?  �?A/B 测试脚本�?0 �?  �?品牌故事脚本�? �?  �?痛点场景脚本�? �?  �?挑战/热点脚本�? �?. 现状   �?待测试脚本：12 条（尚未拍摄�?  �?已沉淀爆款�? 条（播放 >100K，转�?>3%�?=======================五、人力与分工�?内容策划�? 人（负责脚本、日历）�?拍摄/剪辑�? 人（实拍 + AE 模板）�?运营/数据�? 人（发布、投放、复盘）========================六、里程碑 & 指标�?Day 0：蓝图确�?& 素材池搭建完毕�?Day 30：粉�?10K+，播放破 1M，爆�?�? 条�?Day 60：粉�?30K+，ROI �?.2�?Day 90：粉�?50K+，ROI �?.5，月转化 �?00 �?=======================七、预算概览（USD/月）�?视频制作�?,000（人�?+ 场景）�?广告投放�?,500（Dou+ / SparkAds）�?达人合作�?,000（样�?+ KOC 佣金）�?总计�?,500========================补充说明�?当前蓝图显示仍有 12 条脚本待测试，需要对�?12 个视频进行拍摄与合成。�?若您确认继续执行测试，请回复“是”，我将立即为您提取待测试脚本并进入下一步选文案（步骤 1：提取作战地�?>> 生成脚本 >> 合成视频 >> 发布）。�?如果您希望对蓝图的任何部分做修改或补充，也请直接告诉我！请问下一步如何为您服务？😊",
     "data": {
       "video_link": ""
     }
@@ -3227,7 +3229,7 @@ INSERT INTO "redis_queue_messages" VALUES('51cde476-ea76-428a-9135-9d97f3f7f079'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "《短视频增长作战蓝图（Blueprint v1.2）》=================================一、总体目标• 90 天内将 TikTok 粉丝数提升至 50,000+• 单条视频平均播放量 ≥ 10,000• 周均转化（独立站/Amazon 引流）≥ 150 单• ROI ≥ 1.5（含广告投放）二、频道矩阵1. 主账号（品牌故事）   • 产品痛点 + 场景演示 + 使用教程   • 调性：真实、专业、可信2. 副账号 A（种草 / 测评）   • 第三方测评、开箱、达人合作   • 调性：UGC 口碑、生活化3. 副账号 B（趣味挑战）   • 挑战赛、反差对比、热点梗   • 调性：轻松、幽默、易转发4. 长尾账号（FAQ / 售后）   • 常见问题解答、售后说明、客户案例   • 调性：专业、耐心三、发布节奏• TikTok：每日 2–3 条（10:00 & 20:00）• Reels & Shorts：每周复用 3–4 条 TikTok 曝款素材• TikTok 直播：每周五 19:00–21:00（带货 + 互动）• Dou+ / SparkAds：每月预算 USD 1,500（Top5 素材放大）四、素材池规划• 策略性脚本总量：30 条（含 10 条 A/B 测试脚本）• 现状：待测试脚本 12 条；已沉淀爆款 5 条（播放 >100K，转化 >3%）五、人力与分工• 内容策划：1 人（脚本、日历）• 拍摄 / 剪辑：2 人（实拍 + AE 模板）• 运营 / 数据：1 人（发布、投放、复盘）六、里程碑• Day 0：蓝图确认 & 素材池搭建完毕• Day 30：粉丝 10K+，播放破 1M，爆款 ≥2 条• Day 60：粉丝 30K+，ROI ≥1.2• Day 90：粉丝 50K+，ROI ≥1.5，月转化 ≥600 单七、预算概览（USD/月）• 视频制作：2,000（人力 + 场景）• 广告投放：1,500（Dou+ / SparkAds）• 达人合作：1,000（样品 + KOC 佣金）• 总计：4,500补充说明• 根据蓝图，目前仍有 12 条脚本待测试，需要拍摄对应 12 个视频。• 如需进入脚本选择与视频合成流程，请随时告诉我（回复“是”即可）。",
+    "text": "《短视频增长作战蓝图（Blueprint v1.2）�?================================一、总体目标�?90 天内�?TikTok 粉丝数提升至 50,000+�?单条视频平均播放�?�?10,000�?周均转化（独立站/Amazon 引流）≥ 150 单�?ROI �?1.5（含广告投放）二、频道矩�?. 主账号（品牌故事�?  �?产品痛点 + 场景演示 + 使用教程   �?调性：真实、专业、可�?. 副账�?A（种�?/ 测评�?  �?第三方测评、开箱、达人合�?  �?调性：UGC 口碑、生活化3. 副账�?B（趣味挑战）   �?挑战赛、反差对比、热点梗   �?调性：轻松、幽默、易转发4. 长尾账号（FAQ / 售后�?  �?常见问题解答、售后说明、客户案�?  �?调性：专业、耐心三、发布节奏�?TikTok：每�?2�? 条（10:00 & 20:00）�?Reels & Shorts：每周复�?3�? �?TikTok 曝款素材�?TikTok 直播：每周五 19:00�?1:00（带�?+ 互动）�?Dou+ / SparkAds：每月预�?USD 1,500（Top5 素材放大）四、素材池规划�?策略性脚本总量�?0 条（�?10 �?A/B 测试脚本）�?现状：待测试脚本 12 条；已沉淀爆款 5 条（播放 >100K，转�?>3%）五、人力与分工�?内容策划�? 人（脚本、日历）�?拍摄 / 剪辑�? 人（实拍 + AE 模板）�?运营 / 数据�? 人（发布、投放、复盘）六、里程碑�?Day 0：蓝图确�?& 素材池搭建完毕�?Day 30：粉�?10K+，播放破 1M，爆�?�? 条�?Day 60：粉�?30K+，ROI �?.2�?Day 90：粉�?50K+，ROI �?.5，月转化 �?00 单七、预算概览（USD/月）�?视频制作�?,000（人�?+ 场景）�?广告投放�?,500（Dou+ / SparkAds）�?达人合作�?,000（样�?+ KOC 佣金）�?总计�?,500补充说明�?根据蓝图，目前仍�?12 条脚本待测试，需要拍摄对�?12 个视频。�?如需进入脚本选择与视频合成流程，请随时告诉我（回复“是”即可）�?,
     "data": {
       "video_link": ""
     }
@@ -3238,7 +3240,7 @@ INSERT INTO "redis_queue_messages" VALUES('e900f7f0-3ef9-4cb8-bcc6-b2aa147185c0'
   "env": "gray",
   "session_id": "7ae7c5de-ddde-4eed-b394-a782092bdb5b",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "457d47e4-d026-4522-b8c1-c3befe1d5c7e",
   "socket_id": "UYx-5wVV_7ZDc3U0AAAX",
   "status": "RUNNING",
@@ -3256,7 +3258,7 @@ INSERT INTO "redis_queue_messages" VALUES('a30e4e00-5343-444c-91f8-ec84eacaea76'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作与发布助手。目前我处于“提取作战地图并确认还需要合成多少个视频来测试”的阶段。如果您想了解还需拍摄多少个视频，请告诉我，接下来我将为您调取数据。",
+    "text": "您好！欢迎使用智能视频创作与发布助手。目前我处于“提取作战地图并确认还需要合成多少个视频来测试”的阶段。如果您想了解还需拍摄多少个视频，请告诉我，接下来我将为您调取数据�?,
     "data": {
       "video_link": ""
     }
@@ -3271,7 +3273,7 @@ INSERT INTO "redis_queue_messages" VALUES('0aef3f3c-8135-4391-b9e7-0d791fbc51c5'
   "request_id": "457d47e4-d026-4522-b8c1-c3befe1d5c7e",
   "socket_id": "UYx-5wVV_7ZDc3U0AAAX",
   "status": "FINISHED",
-  "data": {"content":"**HSAI 出海短视频获客战略蓝图 (v2.0)**##一、总体目标##• 90 天内 TikTok 粉丝 ≥ 50,000，YouTube Shorts 订阅 ≥ 10,000，LinkedIn 公司页关注 ≥ 8,000##• 单条视频平均播放量 ≥ 10,000；全渠道累计曝光 ≥ 8,000,000##• 周均有效询盘 ≥ 150，累计 B2B 线索 ≥ 1,800##• 付费投放 ROI ≥ 1.5##二、账号矩阵 (共 6 个账号)##1. TikTok 美区 & TikTok 东南亚区 (2)##2. YouTube Shorts 英文 & YouTube Shorts 中文字幕 (2)##3. LinkedIn 公司主页 & 销售个人号 (2)##三、内容支柱##P1 工厂探秘 / 制造实力##P2 产品痛点对比 (能耗、光衰、质保)##P3 应用场景实拍 (港口、仓库、体育场、道路)##P4 客户案例&证言##P5 挑战/热点梗 (节能挑战、秒开灯测试)##P6 FAQ / 技术干货 (认证、配光、智能控制)##四、产能规划##• 90 天需发布视频总量 ≈ 6 账号 × 日均 2 条 × 90 天 = 1,080 条##• AI 裁剪裂变比 1:15，所需源头高质素材 ≈ 1,080 / 15 ≈ 72 组##• 拍摄周期：每月 2 天集中拍，单次完成 24 组素材 (6 场景 × 4 机位)##五、脚本池##• 核心脚本 60 条 (每支柱 10 条)##• A/B 测试钩子 20 条##• 长尾答疑脚本 20 条##六、发布节奏##TikTok：每日 2 条 (10:00 & 20:00)##YouTube Shorts：每日 1 条 (17:00)##LinkedIn：工作日每日 1 条 (08:30)##直播：TikTok 每周五 19:00–21:00##七、人力配置##• 内容策划 1 人##• 手机拍摄 + 无人机 1 人##• 剪辑/AI 运维 1 人##• 运营/投放 1 人##八、预算估算 (USD/月)##• 拍摄 & 器材 2,000##• AI 订阅 / 云服务 500##• Dou+ / SparkAds 推广 1,500##• 达人联动 1,000##合计 5,000##九、里程碑##Day 0–7 蓝图确认+脚本池搭建##Day 8–30 发布 180 条 累计曝光 1M+ 粉丝 10K+##Day 31–60 累计曝光 4M+ 粉丝 30K+ ROI ≥1.2##Day 61–90 累计曝光 8M+ 粉丝 50K+ 线索 1,800 ROI ≥1.5##十、执行 SOP 摘要##1. 周一：选题会 + 数据复盘##2. 周二：脚本细化 + 拍摄清单##3. 周三–四：实地拍摄##4. 周五：AI 批量剪辑 + 上字幕##5. 周六–日：分发 + 监测 + Dou+ 放量##十一、交付物清单##✓ 60 条可拍摄脚本##✓ 72 组场景拍摄清单 (含机位/道具/台词)##✓ 90 天内容日历##✓ TikTok & YouTube Shorts 模板工程文件##✓ 直播话术大纲 & 带货清单##附注##– 全部脚本、分镜、台词已同步至 Notion 项目库；– 如需 API 接口接入剪辑&投放自动化，可额外定制。"},
+  "data": {"content":"**HSAI 出海短视频获客战略蓝�?(v2.0)**##一、总体目标##�?90 天内 TikTok 粉丝 �?50,000，YouTube Shorts 订阅 �?10,000，LinkedIn 公司页关�?�?8,000##�?单条视频平均播放�?�?10,000；全渠道累计曝光 �?8,000,000##�?周均有效询盘 �?150，累�?B2B 线索 �?1,800##�?付费投放 ROI �?1.5##二、账号矩�?(�?6 个账�?##1. TikTok 美区 & TikTok 东南亚区 (2)##2. YouTube Shorts 英文 & YouTube Shorts 中文字幕 (2)##3. LinkedIn 公司主页 & 销售个人号 (2)##三、内容支�?#P1 工厂探秘 / 制造实�?#P2 产品痛点对比 (能耗、光衰、质�?##P3 应用场景实拍 (港口、仓库、体育场、道�?##P4 客户案例&证言##P5 挑战/热点�?(节能挑战、秒开灯测�?##P6 FAQ / 技术干�?(认证、配光、智能控�?##四、产能规�?#�?90 天需发布视频总量 �?6 账号 × 日均 2 �?× 90 �?= 1,080 �?#�?AI 裁剪裂变�?1:15，所需源头高质素材 �?1,080 / 15 �?72 �?#�?拍摄周期：每�?2 天集中拍，单次完�?24 组素�?(6 场景 × 4 机位)##五、脚本池##�?核心脚本 60 �?(每支�?10 �?##�?A/B 测试钩子 20 �?#�?长尾答疑脚本 20 �?#六、发布节�?#TikTok：每�?2 �?(10:00 & 20:00)##YouTube Shorts：每�?1 �?(17:00)##LinkedIn：工作日每日 1 �?(08:30)##直播：TikTok 每周�?19:00�?1:00##七、人力配�?#�?内容策划 1 �?#�?手机拍摄 + 无人�?1 �?#�?剪辑/AI 运维 1 �?#�?运营/投放 1 �?#八、预算估�?(USD/�?##�?拍摄 & 器材 2,000##�?AI 订阅 / 云服�?500##�?Dou+ / SparkAds 推广 1,500##�?达人联动 1,000##合计 5,000##九、里程碑##Day 0�? 蓝图确认+脚本池搭�?#Day 8�?0 发布 180 �?累计曝光 1M+ 粉丝 10K+##Day 31�?0 累计曝光 4M+ 粉丝 30K+ ROI �?.2##Day 61�?0 累计曝光 8M+ 粉丝 50K+ 线索 1,800 ROI �?.5##十、执�?SOP 摘要##1. 周一：选题�?+ 数据复盘##2. 周二：脚本细�?+ 拍摄清单##3. 周三–四：实地拍�?#4. 周五：AI 批量剪辑 + 上字�?#5. 周六–日：分�?+ 监测 + Dou+ 放量##十一、交付物清单##�?60 条可拍摄脚本##�?72 组场景拍摄清�?(含机�?道具/台词)##�?90 天内容日�?#�?TikTok & YouTube Shorts 模板工程文件##�?直播话术大纲 & 带货清单##附注##�?全部脚本、分镜、台词已同步�?Notion 项目库；�?如需 API 接口接入剪辑&投放自动化，可额外定制�?},
   "content_type": "blue_image_content"
   },
   "create_ts": 1760167111720
@@ -3286,7 +3288,7 @@ INSERT INTO "redis_queue_messages" VALUES('d115c3b1-87c3-4b99-833e-145b2745ad73'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 您的专属视频获客战略已经生成！接下来就可以按照这份计划开干了！",
+    "text": "1. 您的专属视频获客战略已经生成！接下来就可以按照这份计划开干了�?,
     "data": {
       "video_link": ""
     }
@@ -3303,7 +3305,7 @@ INSERT INTO "redis_queue_messages" VALUES('5eb501b9-9e8e-431c-bc82-b2a4e6e6e59a'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，先请您发一下公司资料（比如官网链接、产品介绍、公司简介图片或 PDF 等）。  \n2. 我会先快速浏览资料，尽量减少您的输入时间，再一步步为您梳理战略蓝图。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，先请您发一下公司资料（比如官网链接、产品介绍、公司简介图片或 PDF 等）�? \n2. 我会先快速浏览资料，尽量减少您的输入时间，再一步步为您梳理战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -3320,7 +3322,7 @@ INSERT INTO "redis_queue_messages" VALUES('8f9a8863-4c30-4e63-9d82-4ab9e5f9de34'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 老板您好，为了给您输出精准、高效的战略蓝图，我需要先了解贵公司的基本情况、目标客户和产品/服务特色。  \n2. 请您发一下任意可用的资料即可（官网链接、产品介绍、公司简介 PDF 或图片等均可），我会先快速浏览并为您梳理关键要点，再为您生成战略蓝图。",
+    "text": "1. 老板您好，为了给您输出精准、高效的战略蓝图，我需要先了解贵公司的基本情况、目标客户和产品/服务特色�? \n2. 请您发一下任意可用的资料即可（官网链接、产品介绍、公司简�?PDF 或图片等均可），我会先快速浏览并为您梳理关键要点，再为您生成战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -3337,7 +3339,7 @@ INSERT INTO "redis_queue_messages" VALUES('0bc64051-2d40-4c3e-8762-f48929f0a86e'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "我已为您调取了最新的作战地图与待测试脚本库信息：\n\n• 作战地图：今日任务准备发布 0 条视频。\n• 待测试脚本库：目前尚有 1 个视频脚本待合成。\n\n接下来，请您从待测试脚本库中选择想要合成的视频文案编号并回复给我（例如：1）。我将基于您选择的文案为您生成 10 组拍摄脚本，供您挑选。\n\n请告诉我您要合成的文案编号吧！",
+    "text": "我已为您调取了最新的作战地图与待测试脚本库信息：\n\n�?作战地图：今日任务准备发�?0 条视频。\n�?待测试脚本库：目前尚�?1 个视频脚本待合成。\n\n接下来，请您从待测试脚本库中选择想要合成的视频文案编号并回复给我（例如：1）。我将基于您选择的文案为您生�?10 组拍摄脚本，供您挑选。\n\n请告诉我您要合成的文案编号吧�?,
     "data": {
       "video_link": ""
     }
@@ -3354,7 +3356,7 @@ INSERT INTO "redis_queue_messages" VALUES('efbe4f34-fdc3-47b1-9035-55983b21082f'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用智能视频创作助手。您想了解当前还需要合成多少个测试视频吗？如果需要，请回复“是”，我将在后台为您查询并告知。",
+    "text": "你好！欢迎使用智能视频创作助手。您想了解当前还需要合成多少个测试视频吗？如果需要，请回复“是”，我将在后台为您查询并告知�?,
     "data": {
       "video_link": ""
     }
@@ -3371,7 +3373,7 @@ INSERT INTO "redis_queue_messages" VALUES('985079dc-d134-4fc6-a21b-47092051dbbe'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。  \n2. 为了帮您打造让客户主动找上门的视频获客战略，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介（PDF、图片、文档都行）。  \n3. 我先快速浏览，减少您输入的时间，之后只针对缺失信息向您确认。  \n4. 方便的话，请发给我吧！",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧�? \n2. 为了帮您打造让客户主动找上门的视频获客战略，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介（PDF、图片、文档都行）�? \n3. 我先快速浏览，减少您输入的时间，之后只针对缺失信息向您确认�? \n4. 方便的话，请发给我吧�?,
     "data": {
       "video_link": ""
     }
@@ -3388,7 +3390,7 @@ INSERT INTO "redis_queue_messages" VALUES('6a2658e8-74a5-413d-a967-68a35606afa9'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "感谢您提供公司官网：www.aokledlight.com。我已记录您的企业信息。接下来，是否需要我帮您统计当前还需要合成多少个测试视频？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "感谢您提供公司官网：www.aokledlight.com。我已记录您的企业信息。接下来，是否需要我帮您统计当前还需要合成多少个测试视频？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -3399,7 +3401,7 @@ INSERT INTO "redis_queue_messages" VALUES('e3b4f380-a112-4995-8a43-4476a911cc0c'
   "env": "gray",
   "session_id": "2ddfd6c8-1696-4b25-aa05-a4e2a4bf192f",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "49d52d25-9e97-462a-afed-7ba901be9bdc",
   "socket_id": "LnSILhv7amKGPZQoAAAd",
   "status": "RUNNING",
@@ -3417,92 +3419,92 @@ INSERT INTO "redis_queue_messages" VALUES('2d5e3ec0-dd39-468d-a2a5-73f0aa58d454'
   "status": "FINISHED",
   "data": {"content":"##AOK LED Light 视频获客战略蓝图V1.0#
 ###一、总体目标#
-1.30天内累计曝光≥500,000#
-2.获取B2B有效线索≥200（含官网表单、LinkedIn询盘、邮箱）#
-3.树立“AOK=高功率LED照明专家”品牌定位#
+1.30天内累计曝光�?00,000#
+2.获取B2B有效线索�?00（含官网表单、LinkedIn询盘、邮箱）#
+3.树立“AOK=高功率LED照明专家”品牌定�?
 
-###二、账号矩阵#
-•TikTok：2个美区/东南亚区#
-•YouTube Shorts：2个（EN频道/带中文字幕频道）#
-•LinkedIn：公司主页+销售个人号，共2个#
-合计6账号，日均每号1条，30天共发布180条#
+###二、账号矩�?
+•TikTok�?个美�?东南亚区#
+•YouTube Shorts�?个（EN频道/带中文字幕频道）#
+•LinkedIn：公司主�?销售个人号，共2�?
+合计6账号，日均每�?条，30天共发布180�?
 
 ###三、视频数量与节奏#
-•原创母片：30条 （≥90秒横版4K拍摄，供AI裁切）#
-•AI裂变：横竖贴近平台最佳比例，单母片裂变6条≈180条已覆盖#
-•发布计划：见附录《30天内容日历》#
+•原创母片：30�?（≥90秒横�?K拍摄，供AI裁切�?
+•AI裂变：横竖贴近平台最佳比例，单母片裂�?条≈180条已覆盖#
+•发布计划：见附录�?0天内容日历�?
 
-###四、素材拍摄需求#
-AI虽可批量剪辑，但源头高清素材需实拍：#
-•周拍摄场景：6大场景×3机位=18组#
-•周期：4周=72组  (拍摄2天可完成)#
-•设备：iPhone14Pro以上+云台+补光灯#
-•格式：4K60fps HEVC，横版主镜、竖版备份#
+###四、素材拍摄需�?
+AI虽可批量剪辑，但源头高清素材需实拍�?
+•周拍摄场景�?大场景�?机位=18�?
+•周期：4�?72�? (拍摄2天可完成)#
+•设备：iPhone14Pro以上+云台+补光�?
+•格式：4K60fps HEVC，横版主镜、竖版备�?
 
-★6大核心场景#
+�?大核心场�?
 1.工厂产线（SMT、老化线）#
 2.实验室测试（积分球、IES、盐雾）#
-3.户外道路亮灯对比（旧灯vsAOK）#
-4.仓库/港口案例（高杆投光灯）#
+3.户外道路亮灯对比（旧灯vsAOK�?
+4.仓库/港口案例（高杆投光灯�?
 5.包装&发货（快速交付实力）#
 6.CEO/工程师讲选型#
 
 ###五、内容支柱与脚本模板（示例）#
 Pillar1 工厂探秘#
-–Hook：30秒走进中国最干净的LED路灯车间#
+–Hook�?0秒走进中国最干净的LED路灯车间#
 –镜头脚本：
-  1.无人机俯拍厂区→字幕“30000㎡自有工厂”#
-  2.SMT贴片特写→旁白“自动化良率99.8%”#
-  3.老化线整灯煲机→旁白“每盏灯72h满载老化”#
-–BGM：动感电子#
+  1.无人机俯拍厂区→字幕�?0000㎡自有工厂�?
+  2.SMT贴片特写→旁白“自动化良率99.8%�?
+  3.老化线整灯煲机→旁白“每盏灯72h满载老化�?
+–BGM：动感电�?
 –结尾CTA：评论区领取免费样品#
 
 Pillar2 产品测评#
-–Hook：“把AOK灯泡泡水？还能亮！”#
+–Hook：“把AOK灯泡泡水？还能亮！�?
 –镜头：实验室IP67浸水测试→通电#
 –配音：技术工程师英文讲解#
 
 Pillar3 客户案例#
-–Hook：“澳洲悉尼港口换灯后省电65%”#
+–Hook：“澳洲悉尼港口换灯后省电65%�?
 –镜头：现场before/after对比#
 
 Pillar4 对比实验#
-–Hook：“同功率，为何AOK比竞品亮30%？”#
+–Hook：“同功率，为何AOK比竞品亮30%？�?
 –镜头：光通量测试实测#
 
 Pillar5 安装指南#
-–Hook：“3分钟学会更换1000W金卤灯”#
+–Hook：�?分钟学会更换1000W金卤灯�?
 –镜头：技术员登高作业步骤分解#
 
 Pillar6 行业科普#
-–Hook：“UL vs DLC Premium傻傻分不清？”#
+–Hook：“UL vs DLC Premium傻傻分不清？�?
 –镜头：白板手绘+讲解#
 
-###六、30天内容日历（节选）#
+###六�?0天内容日历（节选）#
 Day1 工厂探秘#
 Day2 产品测评#
 Day3 客户案例#
 Day4 对比实验#
 Day5 安装指南#
 Day6 行业科普#
-…循环迭代+热点插入#
+…循环迭�?热点插入#
 
 ###七、推广与分发#
-•TikTok：关键词+Hashtag（#ledlighting #warehouse）+合作KOL转评#
-•YouTube Shorts：标题≥40字，首句关键词；Description放官网+WhatsApp#
-•LinkedIn：配长文+白皮书下载引流#
+•TikTok：关键词+Hashtag�?ledlighting #warehouse�?合作KOL转评#
+•YouTube Shorts：标题≥40字，首句关键词；Description放官�?WhatsApp#
+•LinkedIn：配长文+白皮书下载引�?
 
-###八、预算估算#
-1.拍摄物料/人员：¥5,000#
+###八、预算估�?
+1.拍摄物料/人员：�?,000#
 2.AI SaaS工具（CapCut Pro/Runway）：¥1,000#
 3.投流预算（TikTok Spark Ads、LinkedIn InMail）：¥3,000#
-Total≈¥9,000 (≤1万)#
+Total≈�?,000 (�?�?#
 
-###九、预期指标模型#
-•单账号日均播放：4,500×6≈27,000#
-•30天播放：≈810,000（保守折半=405,000）#
-•CTR2%，落地页访问8,100 次#
-•表单/咨询转化率2.5%≈200条线索#
+###九、预期指标模�?
+•单账号日均播放�?,500×6�?7,000#
+�?0天播放：�?10,000（保守折�?405,000�?
+•CTR2%，落地页访问8,100 �?
+•表�?咨询转化�?.5%�?00条线�?
 
 ###十、执行里程碑#
 Week0 蓝图确认+账号搭建完成#
@@ -3510,10 +3512,10 @@ Week1-2 拍摄+母片剪辑完毕#
 Week2-4 AI裂变+日常发布#
 Week4 复盘优化+追加脚本v2#
 
-###附录：SOP 快速参考#
-1.拍摄→传OneDrive→AI自动剪→审片→发布#
-2.每天09:00排程TikTok；12:00 Shorts；18:00 LinkedIn#
-3.评论30分钟内人工回复#
+###附录：SOP 快速参�?
+1.拍摄→传OneDrive→AI自动剪→审片→发�?
+2.每天09:00排程TikTok�?2:00 Shorts�?8:00 LinkedIn#
+3.评论30分钟内人工回�?
 
 ---#
 以上《AOK LED Light 视频获客战略蓝图》生成完毕，确认后即可执行！#"},
@@ -3542,7 +3544,7 @@ INSERT INTO "redis_queue_messages" VALUES('6c882371-ceb9-4a29-8c54-482900caaed2'
   "env": "gray",
   "session_id": "2ddfd6c8-1696-4b25-aa05-a4e2a4bf192f",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "1d5f34f3-614d-4a01-b8f0-9914102f4436",
   "socket_id": "LnSILhv7amKGPZQoAAAd",
   "status": "RUNNING",
@@ -3558,7 +3560,7 @@ INSERT INTO "redis_queue_messages" VALUES('ee5ec9df-222c-43a8-88e1-078b33b06a84'
   "request_id": "1d5f34f3-614d-4a01-b8f0-9914102f4436",
   "socket_id": "LnSILhv7amKGPZQoAAAd",
   "status": "FINISHED",
-  "data": {"content":"#《AOK LED Light 出海视频获客战略蓝图》v1.3##一、总体目标##1.30天内发布原生短视频30条→AI裂变发布180条##2.运营账号矩阵6个(TikTok美区+东南亚区、YouTubeShorts英/中双频道、LinkedIn公司页+销售号)##3.累计曝光≥500000次,获取有效B2B线索≥200条##4.预算≤10000RMB(拍摄5000+AI工具1000+推广3000)##二、账号运营作战地图##账号数量:6个##发布频次:每日每账号1条→30天共180条##内容支柱6类:1工厂探秘2产品测评3客户案例4对比实验5安装指南6行业科普##三、素材拍摄需求##计算:AI裂变能力≈每条原生可扩6条,需30原生→每周拍摄6大场景×3机位=18组;4周72组##拍摄清单示例:##1 SMT自动生产线特写/走机位/空拍##2 IES实验室配光测试##3 公路夜晚AOK路灯vs传统灯对比##4 15m仓库高棚灯安装流程##5 出货包装&质检走查##6 CEO问答:如何选功率&认证##四、30天发布日历(节选)##Day1 TikTok:工厂探秘线路板贴片#HighEfficacyLED##YouTube:工厂探秘EN字幕##LinkedIn:CEO选型QA##…##Day30 TikTok:客户案例北美港口照明ROI#Save60%Energy##五、脚本模版(示例1/30)##主题:工厂SMT生产线##镜头1:无人机俯拍车间→旁白"10000㎡智能工厂"##镜头2:贴片机高速运转特写→字幕"40000pcs/h"##镜头3:QC人工检测→旁白"每片板3道检验"##镜头4:成品灯珠光效测试→字幕"170lm/W"##音乐:BGM FutureBass 120bpm##钩子文案:Still buying 110lm/W lights? Watch this!##六、人员与流程##团队:1手机拍摄+1助理,剪辑自动化CapCut模板##流程:Shooting2天/周→素材云盘→AI剪→运营排期表##七、风险与应对##1素材不足→周例会复盘及时补拍##2账号限流→多账号AB测试+静态海外IP##3转化跟踪→落地页+WhatsApp按钮UTM##八、成功指标KPI##曝光50万+、CTR>3%、留言>500、询盘200##九、执行里程碑##Week1完成原生素材拍摄&剪辑模板##Week2账号全部上线并首周发布完10条##Week4完成30日历全部上线并复盘ROI##十、结语##按照此蓝图执行,30天即可完成品牌冷启动并获取首批高质量海外工程照明客户!#"},
+  "data": {"content":"#《AOK LED Light 出海视频获客战略蓝图》v1.3##一、总体目标##1.30天内发布原生短视�?0条→AI裂变发布180�?#2.运营账号矩阵6�?TikTok美区+东南亚区、YouTubeShorts�?中双频道、LinkedIn公司�?销售号)##3.累计曝光�?00000�?获取有效B2B线索�?00�?#4.预算�?0000RMB(拍摄5000+AI工具1000+推广3000)##二、账号运营作战地�?#账号数量:6�?#发布频次:每日每账�?条→30天共180�?#内容支柱6�?1工厂探秘2产品测评3客户案例4对比实验5安装指南6行业科普##三、素材拍摄需�?#计算:AI裂变能力≈每条原生可�?�?需30原生→每周拍�?大场景�?机位=18�?4�?2�?#拍摄清单示例:##1 SMT自动生产线特�?走机�?空拍##2 IES实验室配光测�?#3 公路夜晚AOK路灯vs传统灯对�?#4 15m仓库高棚灯安装流�?#5 出货包装&质检走查##6 CEO问答:如何选功�?认证##四�?0天发布日�?节�?##Day1 TikTok:工厂探秘线路板贴�?HighEfficacyLED##YouTube:工厂探秘EN字幕##LinkedIn:CEO选型QA##�?#Day30 TikTok:客户案例北美港口照明ROI#Save60%Energy##五、脚本模�?示例1/30)##主题:工厂SMT生产�?#镜头1:无人机俯拍车间→旁白"10000㎡智能工�?##镜头2:贴片机高速运转特写→字幕"40000pcs/h"##镜头3:QC人工检测→旁白"每片�?道检�?##镜头4:成品灯珠光效测试→字�?170lm/W"##音乐:BGM FutureBass 120bpm##钩子文案:Still buying 110lm/W lights? Watch this!##六、人员与流程##团队:1手机拍摄+1助理,剪辑自动化CapCut模板##流程:Shooting2�?周→素材云盘→AI剪→运营排期�?#七、风险与应对##1素材不足→周例会复盘及时补拍##2账号限流→多账号AB测试+静态海外IP##3转化跟踪→落地页+WhatsApp按钮UTM##八、成功指标KPI##曝光50�?、CTR>3%、留言>500、询�?00##九、执行里程碑##Week1完成原生素材拍摄&剪辑模板##Week2账号全部上线并首周发布完10�?#Week4完成30日历全部上线并复盘ROI##十、结�?#按照此蓝图执�?30天即可完成品牌冷启动并获取首批高质量海外工程照明客户!#"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760169027684
@@ -3584,7 +3586,7 @@ INSERT INTO "redis_queue_messages" VALUES('1ce2b404-6d8a-4963-a149-f0579dd8419a'
   "env": "gray",
   "session_id": "2ddfd6c8-1696-4b25-aa05-a4e2a4bf192f",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "1d5f34f3-614d-4a01-b8f0-9914102f4436",
   "socket_id": "LnSILhv7amKGPZQoAAAd",
   "status": "RUNNING",
@@ -3600,66 +3602,66 @@ INSERT INTO "redis_queue_messages" VALUES('7e68dc30-4af0-4e57-840f-787ecc540737'
   "request_id": "1d5f34f3-614d-4a01-b8f0-9914102f4436",
   "socket_id": "LnSILhv7amKGPZQoAAAd",
   "status": "FINISHED",
-  "data": {"content":"#《AOK LED Light 出海视频获客战略蓝图》 v2.0
+  "data": {"content":"#《AOK LED Light 出海视频获客战略蓝图�?v2.0
 ## 1. 战略总览
-- 战役周期: 30 天
-- 运营账号: TikTok×2(美区/东南亚) YouTube Shorts×2(EN/CN) LinkedIn×2(公司页/销售号) 共 6 账号
-- 视频产量: 原生拍摄素材 72 组 → AI 裂变 ≈ 180 条短视频(每日 6 发布)
-- 目标 KPI: 曝光 ≥500000 次  线索 ≥200 条  关注 ≥5000
-## 2. 素材拍摄需求(每周)
-场景1 工厂生产线
-场景2 实验室可靠性测试
+- 战役周期: 30 �?
+- 运营账号: TikTok×2(美区/东南�? YouTube Shorts×2(EN/CN) LinkedIn×2(公司�?销售号) �?6 账号
+- 视频产量: 原生拍摄素材 72 �?�?AI 裂变 �?180 条短视频(每日 6 发布)
+- 目标 KPI: 曝光 �?00000 �? 线索 �?00 �? 关注 �?000
+## 2. 素材拍摄需�?每周)
+场景1 工厂生产�?
+场景2 实验室可靠性测�?
 场景3 户外道路亮灯对比
-场景4 仓库高棚灯安装
-场景5 打样包装&快速交付
-场景6 CEO 30s 价值金句
-每场景 3 机位(远/中/近)×60fps 4K
-周合计: 6×3=18 组镜头 预计 2 天拍摄即可
+场景4 仓库高棚灯安�?
+场景5 打样包装&快速交�?
+场景6 CEO 30s 价值金�?
+每场�?3 机位(�?�?�?×60fps 4K
+周合�? 6×3=18 组镜�?预计 2 天拍摄即�?
 ## 3. 内容支柱 & 脚本示例
 A 工厂探秘
-  镜头1 无人机航拍工厂外景 旁白: "30,000㎡ 自有工厂, 每天出货3,000 套 LED" 标题: Made in Shenzhen 配乐: Epic Tech
+  镜头1 无人机航拍工厂外�?旁白: "30,000�?自有工厂, 每天出货3,000 �?LED" 标题: Made in Shenzhen 配乐: Epic Tech
 B 产品测评
   镜头1 灯具光效测试对比 旁白:"170 lm/W=省电70%" 钩子: 高光效够亮吗?
 C 客户案例
   镜头1 澳大利亚港口夜景 before/after 文字叠加 ROI
 D 对比实验
-  镜头1 1000W 金卤 vs 150W AOK 高湾灯 电表实时跳动
+  镜头1 1000W 金卤 vs 150W AOK 高湾�?电表实时跳动
 E 安装指南
-  镜头1 工程师3 分钟更换路灯 模拟施工
+  镜头1 工程�? 分钟更换路灯 模拟施工
 F 行业科普
   镜头1 DLC/UL 认证图标飞入 旁白解释为何重要
-## 4. 30 天发布日历(示意)
+## 4. 30 天发布日�?示意)
 Day1 工厂探秘 A1 A2 A3
 Day2 产品测评 B1 B2 B3
 Day3 客户案例 C1 C2 C3
-...循环 6 支柱×5 轮 =30 天
+...循环 6 支柱×5 �?=30 �?
 ## 5. 账号运营节奏
-- TikTok: 剧情+实拍结合, 首 3 秒钩子, 9:00/20:00 发布
-- YouTube Shorts: 竖屏≤58s, 关键词#ledlighting #industrial
+- TikTok: 剧情+实拍结合, �?3 秒钩�? 9:00/20:00 发布
+- YouTube Shorts: 竖屏�?8s, 关键�?ledlighting #industrial
 - LinkedIn: 1min 横竖混剪, 文案附白皮书 CTA
 ## 6. 广告 & 转化
 - 投放预算 3000 RMB, Spark Ads 放大爆款
-- 评论区置顶 "免费灯光升级方案" 表单链接
+- 评论区置�?"免费灯光升级方案" 表单链接
 ## 7. 团队分工
-- BD/销售: 提供案例素材+跟进线索
+- BD/销�? 提供案例素材+跟进线索
 - 市场: 脚本策划 & 账号维护
-- 助理: 2 天集中拍摄
-## 8. 工具栈
+- 助理: 2 天集中拍�?
+## 8. 工具�?
 拍摄 iPhone 15 Pro + DJI Osmos
 剪辑 CapCut 模板批量
 文案 ChatGPT+Keywords
 数据分析 VidIQ & LinkedIn Analytics
-## 9. 交付物
+## 9. 交付�?
 - 详版 Shot list Excel
-- 180 条视频模板 .capcutproj
-- 30 天发布日历 .xlsx
+- 180 条视频模�?.capcutproj
+- 30 天发布日�?.xlsx
 - ROI 追踪 Dashboard
-## 10. 下一步行动
-1 本周五完成 72 组素材拍摄
+## 10. 下一步行�?
+1 本周五完�?72 组素材拍�?
 2 周末导入 CapCut AI 批量剪辑
 3 下周一 6 账号同步上线
-4 每 48h 复盘热点及时跟拍
-祝 AOK LED Light 全球增量, 30 天见证 200+ 工程询盘!#"},
+4 �?48h 复盘热点及时跟拍
+�?AOK LED Light 全球增量, 30 天见�?200+ 工程询盘!#"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760169714931
@@ -3674,7 +3676,7 @@ INSERT INTO "redis_queue_messages" VALUES('36447eb3-e82a-41e6-8df7-45e601cd4428'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 您的专属视频获客战略已经生成！  \n2. 接下来即可依照这份战略蓝图执行，祝项目大卖！",
+    "text": "1. 您的专属视频获客战略已经生成�? \n2. 接下来即可依照这份战略蓝图执行，祝项目大卖！",
     "data": {
       "video_link": ""
     }
@@ -3691,7 +3693,7 @@ INSERT INTO "redis_queue_messages" VALUES('211e5e71-0ca7-4217-a244-ab15a2f2750b'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. 战略蓝图名称：AOK LED Light 出海视频获客战略蓝图 v2  \n2. 战略周期：30 天  \n3. 核心 KPI：  \n   3.1 累计曝光 ≥ 50 万次  \n   3.2 收集 B2B 询盘 ≥ 200 条  \n4. 账号矩阵（共 6 个）：  \n   4.1 TikTok（美区）  \n   4.2 TikTok（东南亚区）  \n   4.3 YouTube Shorts（英文频道）  \n   4.4 YouTube Shorts（中文字幕频道）  \n   4.5 LinkedIn 公司主页  \n   4.6 LinkedIn 销售个人号  \n5. 发布频次与量级：  \n   5.1 每账号每日 1 条原创短视频  \n   5.2 AI 裂变后日均发布量 ≈ 180 条/天，30 天合计 ≈ 5,400 条  \n6. 内容支柱（6 大主题）：  \n   6.1 工厂探秘（研发、生产线、品质检测）  \n   6.2 产品测评（光效、散热、防护等级对比）  \n   6.3 客户案例（港口、仓库、球场、市政道路）  \n   6.4 对比实验（替换金卤灯、省电 70%+ 等）  \n   6.5 安装指南（高棚灯安装、路灯布线、智能控制接入）  \n   6.6 行业科普（UL/DLC/CE 认证、ROI 计算、光学基础）  \n7. 素材拍摄计划：  \n   7.1 每周 6 大场景 × 3 机位 = 18 组高清素材  \n   7.2 4 周共 72 组素材（2 天集中拍摄即可完成）  \n8. 后期制作与工具：  \n   8.1 剪辑 & 模板：CapCut + Premiere  \n   8.2 AI 裂变：Runway / Descript / OpusClip  \n   8.3 配音 & 字幕：ElevenLabs + 自动字幕插件  \n9. 预算估算（RMB）：  \n   9.1 拍摄成本：≈ 5,000  \n   9.2 AI / SaaS 订阅：≈ 1,000  \n   9.3 平台推广（Feed 广告 + InMail）：≈ 3,000  \n   9.4 合计 ≤ 10,000  \n10. 执行里程碑：  \n   10.1 D1：蓝图确认 & 脚本库交付（首批 10 条脚本）  \n   10.2 D3–D4：完成首轮拍摄（6 场景）  \n   10.3 D5：首周 6 条原生短视频上线  \n   10.4 D7：AI 裂变批量发布，监测数据看板上线  \n   10.5 D14：复盘 & 优化脚本钩子库，补拍缺口素材  \n   10.6 D30：达成曝光 / 询盘 KPI，输出《30 天复盘报告》  \n11. 数据监测：  \n   11.1 统一使用 Looker Studio 关联 TikTok / YouTube / LinkedIn API  \n   11.2 指标包含：播放量、完播率、互动率、点击率、表单提交数  \n12. 团队分工：  \n   12.1 1 名营销负责人：日历排程 & 广告投放  \n   12.2 1 名拍摄/剪辑：素材采集 + 后期包装  \n   12.3 1 名销售：LinkedIn 私信跟进 & 询盘转化  \n13. 风险与应对：  \n   13.1 素材不足 → 预留二次补拍窗口，每周至少半天机动  \n   13.2 广告审核延迟 → 提前 24h 提交广告素材  \n   13.3 账号限流 → 多账号矩阵 + A/B 钩子测试  \n14. 下一步行动：  \n   14.1 如确认无误，请回复“确认蓝图”，我将：  \n        • 推送完整 30 天内容日历（Excel）  \n        • 提供 30 条开场钩子脚本与镜头分镜  \n        • 启动 D1–D4 拍摄排期预定  \n祝项目大卖，期待您的确认！",
+    "text": "正文�? \n1. 战略蓝图名称：AOK LED Light 出海视频获客战略蓝图 v2  \n2. 战略周期�?0 �? \n3. 核心 KPI�? \n   3.1 累计曝光 �?50 万次  \n   3.2 收集 B2B 询盘 �?200 �? \n4. 账号矩阵（共 6 个）�? \n   4.1 TikTok（美区）  \n   4.2 TikTok（东南亚区）  \n   4.3 YouTube Shorts（英文频道）  \n   4.4 YouTube Shorts（中文字幕频道）  \n   4.5 LinkedIn 公司主页  \n   4.6 LinkedIn 销售个人号  \n5. 发布频次与量级：  \n   5.1 每账号每�?1 条原创短视频  \n   5.2 AI 裂变后日均发布量 �?180 �?天，30 天合�?�?5,400 �? \n6. 内容支柱�? 大主题）�? \n   6.1 工厂探秘（研发、生产线、品质检测）  \n   6.2 产品测评（光效、散热、防护等级对比）  \n   6.3 客户案例（港口、仓库、球场、市政道路）  \n   6.4 对比实验（替换金卤灯、省�?70%+ 等）  \n   6.5 安装指南（高棚灯安装、路灯布线、智能控制接入）  \n   6.6 行业科普（UL/DLC/CE 认证、ROI 计算、光学基础�? \n7. 素材拍摄计划�? \n   7.1 每周 6 大场�?× 3 机位 = 18 组高清素�? \n   7.2 4 周共 72 组素材（2 天集中拍摄即可完成）  \n8. 后期制作与工具：  \n   8.1 剪辑 & 模板：CapCut + Premiere  \n   8.2 AI 裂变：Runway / Descript / OpusClip  \n   8.3 配音 & 字幕：ElevenLabs + 自动字幕插件  \n9. 预算估算（RMB）：  \n   9.1 拍摄成本：≈ 5,000  \n   9.2 AI / SaaS 订阅：≈ 1,000  \n   9.3 平台推广（Feed 广告 + InMail）：�?3,000  \n   9.4 合计 �?10,000  \n10. 执行里程碑：  \n   10.1 D1：蓝图确�?& 脚本库交付（首批 10 条脚本）  \n   10.2 D3–D4：完成首轮拍摄（6 场景�? \n   10.3 D5：首�?6 条原生短视频上线  \n   10.4 D7：AI 裂变批量发布，监测数据看板上�? \n   10.5 D14：复�?& 优化脚本钩子库，补拍缺口素材  \n   10.6 D30：达成曝�?/ 询盘 KPI，输出�?0 天复盘报告�? \n11. 数据监测�? \n   11.1 统一使用 Looker Studio 关联 TikTok / YouTube / LinkedIn API  \n   11.2 指标包含：播放量、完播率、互动率、点击率、表单提交数  \n12. 团队分工�? \n   12.1 1 名营销负责人：日历排程 & 广告投放  \n   12.2 1 名拍�?剪辑：素材采�?+ 后期包装  \n   12.3 1 名销售：LinkedIn 私信跟进 & 询盘转化  \n13. 风险与应对：  \n   13.1 素材不足 �?预留二次补拍窗口，每周至少半天机�? \n   13.2 广告审核延迟 �?提前 24h 提交广告素材  \n   13.3 账号限流 �?多账号矩�?+ A/B 钩子测试  \n14. 下一步行动：  \n   14.1 如确认无误，请回复“确认蓝图”，我将�? \n        �?推送完�?30 天内容日历（Excel�? \n        �?提供 30 条开场钩子脚本与镜头分镜  \n        �?启动 D1–D4 拍摄排期预定  \n祝项目大卖，期待您的确认�?,
     "data": {
       "video_link": ""
     }
@@ -3708,7 +3710,7 @@ INSERT INTO "redis_queue_messages" VALUES('8f4ef746-baf1-46e6-8158-4dcc89af5d11'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "感谢确认！为了执行这份战略蓝图，第一步是统计目前可用的脚本和素材数量，明确还需要合成多少个测试视频。现在是否为您进行统计？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "感谢确认！为了执行这份战略蓝图，第一步是统计目前可用的脚本和素材数量，明确还需要合成多少个测试视频。现在是否为您进行统计？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -3725,7 +3727,7 @@ INSERT INTO "redis_queue_messages" VALUES('60f9d1c8-8ff8-4d2c-99b9-403cb2c8dd82'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了精准生成战略蓝图，需先确认企业信息、产品特点与目标人群等基础资料。  \n2. 请您提供（或确认）如下信息：  \n   - 官网或品牌介绍链接 / 电子资料  \n   - 主推产品及差异化卖点（如功率段、光效、认证、典型应用案例等）  \n   - 目标市场与核心客户画像（如经销商、工程承包商、终端用户等）  \n3. 如果之前已完整提供，可直接回复“信息已全，开始生成蓝图”；如需补充/修改，请发送更新内容，感谢！",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了精准生成战略蓝图，需先确认企业信息、产品特点与目标人群等基础资料�? \n2. 请您提供（或确认）如下信息：  \n   - 官网或品牌介绍链�?/ 电子资料  \n   - 主推产品及差异化卖点（如功率段、光效、认证、典型应用案例等�? \n   - 目标市场与核心客户画像（如经销商、工程承包商、终端用户等�? \n3. 如果之前已完整提供，可直接回复“信息已全，开始生成蓝图”；如需补充/修改，请发送更新内容，感谢�?,
     "data": {
       "video_link": ""
     }
@@ -3736,7 +3738,7 @@ INSERT INTO "redis_queue_messages" VALUES('e543c95e-2eda-40b0-97f3-e2c00592f1ed'
   "env": "gray",
   "session_id": "2ddfd6c8-1696-4b25-aa05-a4e2a43bf1f",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc043811",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "1d5f34f3-614d-4a01-b8f0-9914102f436",
   "socket_id": "LnSILhv7amKGPZQoAAAd",
   "status": "RUNNING",
@@ -3754,7 +3756,7 @@ INSERT INTO "redis_queue_messages" VALUES('3d905a0d-f3c6-4338-a5fb-3217c33edee9'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。您想现在了解还需要合成多少个视频来进行测试吗？如果需要，请回复“是”，我将为您提取作战地图并告知剩余拍摄数量。",
+    "text": "您好！欢迎使用智能视频创作助手。您想现在了解还需要合成多少个视频来进行测试吗？如果需要，请回复“是”，我将为您提取作战地图并告知剩余拍摄数量�?,
     "data": {
       "video_link": ""
     }
@@ -3771,7 +3773,7 @@ INSERT INTO "redis_queue_messages" VALUES('ed878141-4b90-4ec0-81cc-18b845ec4b5a'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。  \n2.为了帮您制定精准的视频战略蓝图，麻烦先提供以下资料（已有的可直接跳过）：  \n   ① 官网链接 / 企业宣传资料  \n   ② 主推产品或服务简介  \n   ③ 目标客户群（地区、角色、痛点）  \n3.您可以直接把现成文档或图片丢给我，我会先快速浏览并归纳，减少您的输入时间。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧�? \n2.为了帮您制定精准的视频战略蓝图，麻烦先提供以下资料（已有的可直接跳过）：  \n   �?官网链接 / 企业宣传资料  \n   �?主推产品或服务简�? \n   �?目标客户群（地区、角色、痛点）  \n3.您可以直接把现成文档或图片丢给我，我会先快速浏览并归纳，减少您的输入时间�?,
     "data": {
       "video_link": ""
     }
@@ -3788,7 +3790,7 @@ INSERT INTO "redis_queue_messages" VALUES('78321fea-195a-4290-8b65-8afab2e29a13'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图，今日尚未安排发布视频，目前待制作的视频脚本数量为 1 个。\n\n接下来，请选择您想要拍摄的文案编号（共有 1 条可选）：\n1. [待制作脚本文案]\n\n请回复编号 1 以继续，我将为您生成 10 个不同风格的拍摄脚本供您挑选。\n",
+    "text": "根据最新作战地图，今日尚未安排发布视频，目前待制作的视频脚本数量为 1 个。\n\n接下来，请选择您想要拍摄的文案编号（共�?1 条可选）：\n1. [待制作脚本文案]\n\n请回复编�?1 以继续，我将为您生成 10 个不同风格的拍摄脚本供您挑选。\n",
     "data": {
       "video_link": ""
     }
@@ -3805,7 +3807,7 @@ INSERT INTO "redis_queue_messages" VALUES('2f3cd526-eedf-451b-879e-ff57d9e820d3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案，我已生成 1 个拍摄脚本，请确认是否使用该脚本：\n\n1. 画面节奏：快节奏工厂＋场景展示\n   • 开头（0-3s）—— 工厂外景航拍＋品牌 Logo，字幕：AOK 深圳智造，13 年专注高功率 LED\n   • 中段（3-10s）—— 生产车间、SMT 贴片、老化线特写，字幕：UFO 工矿灯 / 模组路灯 / 球场泛光灯 170lm/W\n   • 功能亮点（10-17s）—— IP66 + IK08 防护、0-10V / DALI / Zigbee 智能调光，字幕同步\n   • 应用场景（17-22s）—— 全球 80+ 国家仓储、港口、球场实拍案例切换\n   • 收尾（22-30s）—— 5-10 年原厂质保 + 节能 70%，屏幕中央出现 CTA：立即咨询\n\n如果您满意这支脚本，请回复“1”确认使用；如需重新生成，请回复“重新生成”。",
+    "text": "好的，基于您选择的文案，我已生成 1 个拍摄脚本，请确认是否使用该脚本：\n\n1. 画面节奏：快节奏工厂＋场景展示\n   �?开头（0-3s）—�?工厂外景航拍＋品�?Logo，字幕：AOK 深圳智造，13 年专注高功率 LED\n   �?中段�?-10s）—�?生产车间、SMT 贴片、老化线特写，字幕：UFO 工矿�?/ 模组路灯 / 球场泛光�?170lm/W\n   �?功能亮点�?0-17s）—�?IP66 + IK08 防护�?-10V / DALI / Zigbee 智能调光，字幕同步\n   �?应用场景�?7-22s）—�?全球 80+ 国家仓储、港口、球场实拍案例切换\n   �?收尾�?2-30s）—�?5-10 年原厂质�?+ 节能 70%，屏幕中央出�?CTA：立即咨询\n\n如果您满意这支脚本，请回复�?”确认使用；如需重新生成，请回复“重新生成”�?,
     "data": {
       "video_link": ""
     }
@@ -3822,7 +3824,7 @@ INSERT INTO "redis_queue_messages" VALUES('d7dfea2f-b948-4ae0-9c0d-9004c7e0008d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案，我已生成 1 个拍摄脚本，请确认是否使用该脚本：\n\n1. 画面节奏：快节奏工厂＋场景展示\n   • 开头（0-3s）—— 工厂外景航拍＋品牌 Logo，字幕：AOK 深圳智造，13 年专注高功率 LED\n   • 中段（3-10s）—— 生产车间、SMT 贴片、老化线特写，字幕：UFO 工矿灯 / 模组路灯 / 球场泛光灯 170 lm/W\n   • 功能亮点（10-17s）—— IP66 + IK08 防护、0-10V / DALI / Zigbee 智能调光，字幕同步\n   • 应用场景（17-22s）—— 全球 80+ 国家仓储、港口、球场实拍案例切换\n   • 收尾（22-30s）—— 5-10 年原厂质保 + 节能 70%，屏幕中央出现 CTA：立即咨询\n\n如果您满意这支脚本，请回复“1”确认使用；如需重新生成，请回复“重新生成”。",
+    "text": "好的，基于您选择的文案，我已生成 1 个拍摄脚本，请确认是否使用该脚本：\n\n1. 画面节奏：快节奏工厂＋场景展示\n   �?开头（0-3s）—�?工厂外景航拍＋品�?Logo，字幕：AOK 深圳智造，13 年专注高功率 LED\n   �?中段�?-10s）—�?生产车间、SMT 贴片、老化线特写，字幕：UFO 工矿�?/ 模组路灯 / 球场泛光�?170 lm/W\n   �?功能亮点�?0-17s）—�?IP66 + IK08 防护�?-10V / DALI / Zigbee 智能调光，字幕同步\n   �?应用场景�?7-22s）—�?全球 80+ 国家仓储、港口、球场实拍案例切换\n   �?收尾�?2-30s）—�?5-10 年原厂质�?+ 节能 70%，屏幕中央出�?CTA：立即咨询\n\n如果您满意这支脚本，请回复�?”确认使用；如需重新生成，请回复“重新生成”�?,
     "data": {
       "video_link": ""
     }
@@ -3839,7 +3841,7 @@ INSERT INTO "redis_queue_messages" VALUES('f1e19024-c795-4094-be85-26f0aab7f10a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已为您获取最新作战地图：\n• 今日已安排发布 0 条视频\n• 待制作视频脚本数量：1 条\n\n下面是尚未制作的文案（共 1 条）：\n1. 高效深圳智造照明，自主设计工矿灯，高光效路灯，球场级泛光灯（#aokled #ledlighting #industriallighting）\n\n请回复编号 1 确认使用这条文案，我将基于它生成 10 份不同风格的拍摄脚本供您挑选。",
+    "text": "已为您获取最新作战地图：\n�?今日已安排发�?0 条视频\n�?待制作视频脚本数量：1 条\n\n下面是尚未制作的文案（共 1 条）：\n1. 高效深圳智造照明，自主设计工矿灯，高光效路灯，球场级泛光灯�?aokled #ledlighting #industriallighting）\n\n请回复编�?1 确认使用这条文案，我将基于它生成 10 份不同风格的拍摄脚本供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -3856,7 +3858,7 @@ INSERT INTO "redis_queue_messages" VALUES('196498a4-22d5-4e7f-bae9-7ae34dfea8d3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图已更新：\n• 今日尚未安排发布视频。\n• 待制作的视频脚本数量：1 个。\n\n待制作文案列表（共 1 条）：\n1. AOK 高功率 LED 工厂/产品整体宣传短片\n\n请回复编号 1 以确认选择该文案并进入脚本生成步骤；如有疑问请告知。",
+    "text": "最新作战地图已更新：\n�?今日尚未安排发布视频。\n�?待制作的视频脚本数量�? 个。\n\n待制作文案列表（�?1 条）：\n1. AOK 高功�?LED 工厂/产品整体宣传短片\n\n请回复编�?1 以确认选择该文案并进入脚本生成步骤；如有疑问请告知�?,
     "data": {
       "video_link": ""
     }
@@ -3873,7 +3875,7 @@ INSERT INTO "redis_queue_messages" VALUES('8dc4f757-2b5b-4b46-ab75-a1a314fae6a4'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，在合成视频时出现网络异常，暂未成功生成视频链接。\n\n请问您要：\n1. 重新尝试合成视频（回复“重试”）\n2. 取消本次合成（回复“取消”）\n\n请告知您的选择，我将立即为您处理。",
+    "text": "抱歉，在合成视频时出现网络异常，暂未成功生成视频链接。\n\n请问您要：\n1. 重新尝试合成视频（回复“重试”）\n2. 取消本次合成（回复“取消”）\n\n请告知您的选择，我将立即为您处理�?,
     "data": {
       "video_link": ""
     }
@@ -3890,7 +3892,7 @@ INSERT INTO "redis_queue_messages" VALUES('2aa4729a-e21d-4d95-b6cf-a18d502d8aba'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的智能视频创作助手。现在可以为您检查作战地图并确认还需要合成多少个测试视频。如果您想开始，请回复“开始”。",
+    "text": "您好！我是您的智能视频创作助手。现在可以为您检查作战地图并确认还需要合成多少个测试视频。如果您想开始，请回复“开始”�?,
     "data": {
       "video_link": ""
     }
@@ -3907,7 +3909,7 @@ INSERT INTO "redis_queue_messages" VALUES('0f633025-a77f-4fad-9e80-86e5c852fe3c'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. 您的《出海视频获客战略蓝图》已生成并多次迭代（当前最新版本 v2）。核心要点包括：  \n   - 30 天内完成 30 条原生短视频；  \n   - 6 账号矩阵（TikTok 2、YouTube Shorts 2、LinkedIn 2）；  \n   - 预计累计曝光 50 万+、获取 200 条B2B线索；  \n   - 每周拍摄 6 大场景 × 3 机位，共 18 组高清素材；  \n   - 内容支柱 6 类，配备完整30 天发布日历与脚本示例。  \n\n2. 如果您想查看蓝图详情、修改其中的目标或发布节奏，或需要新增其他渠道/内容，请告诉我具体需求；我将立即为您更新蓝图或安排后续执行步骤。  \n\n3. 若对现有蓝图已确认无误，可直接回复“开始执行”或提出下一步（如拍摄排期、脚本细化、测试视频合成等）指令，我将协助推进。",
+    "text": "正文�? \n1. 您的《出海视频获客战略蓝图》已生成并多次迭代（当前最新版�?v2）。核心要点包括：  \n   - 30 天内完成 30 条原生短视频�? \n   - 6 账号矩阵（TikTok 2、YouTube Shorts 2、LinkedIn 2）；  \n   - 预计累计曝光 50 �?、获�?200 条B2B线索�? \n   - 每周拍摄 6 大场�?× 3 机位，共 18 组高清素材；  \n   - 内容支柱 6 类，配备完整30 天发布日历与脚本示例�? \n\n2. 如果您想查看蓝图详情、修改其中的目标或发布节奏，或需要新增其他渠�?内容，请告诉我具体需求；我将立即为您更新蓝图或安排后续执行步骤�? \n\n3. 若对现有蓝图已确认无误，可直接回复“开始执行”或提出下一步（如拍摄排期、脚本细化、测试视频合成等）指令，我将协助推进�?,
     "data": {
       "video_link": ""
     }
@@ -3918,7 +3920,7 @@ INSERT INTO "redis_queue_messages" VALUES('9d7cde2b-cbed-4eb0-ac28-3d134d53bd2a'
   "env": "gray",
   "session_id": "5276ceda-2ea2-4c92-97be-c0ce7a057f2a",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "a00d9b58-9965-4d22-a6bf-aafe80e9810d",
   "socket_id": "iXzDRklJ1brx3adXAAAl",
   "status": "RUNNING",
@@ -3934,7 +3936,7 @@ INSERT INTO "redis_queue_messages" VALUES('112a9e6c-361c-43a9-8a97-8cd42158d3c0'
   "request_id": "a00d9b58-9965-4d22-a6bf-aafe80e9810d",
   "socket_id": "iXzDRklJ1brx3adXAAAl",
   "status": "FINISHED",
-  "data": {"content":"# AOK LED Light 出海视频获客战略蓝图  \n\n> v3.0  –  2024-06-XX  \n\n---  \n## 1. 战略目标  \n1. 30 天内在 TikTok / YouTube Shorts / LinkedIn 三个平台共运营 6 个账号；  \n2. 发布 180 条短视频（30 条原生 + AI 裂变 150 条），累计曝光 ≥ 500,000 次；  \n3. 采集有效 B2B 线索 ≥ 200 条（邮件或 LinkedIn DM）；  \n4. 拉升品牌关键词搜索量 ≥ 30 %，沉淀 1 套可复用的「出海短视频增长 SOP」。  \n\n---  \n## 2. 账号矩阵 & 发布频次  \n| 平台 | 账号 | 定位 | 频次 | 30 天发布量 |  \n|------|------|------|------|------------|  \n| TikTok | 美区 @AOKLighting | 工商业照明解决方案 | 1 / d | 30 |  \n| TikTok | 东南亚区 @AOKLED | 产品测评 + 安装指南 | 1 / d | 30 |  \n| YouTube Shorts | EN Channel | Case Study + 科普 | 1 / d | 30 |  \n| YouTube Shorts | ZH Channel | 中文讲解 + 技术拆解 | 1 / d | 30 |  \n| LinkedIn Page | AOK LED Light | 官方品牌 + 行业洞察 | 1 / d | 30 |  \n| LinkedIn Personal | Sales Tom | 解决方案 + 客户故事 | 1 / d | 30 |  \n合计：6 账号 × 30 天 = 180 条发布  \n\n---  \n## 3. 内容支柱（6 Pillars）  \n1. 工厂探秘  \n2. 产品测评 / 对比实验  \n3. 客户案例 & 成功故事  \n4. 安装指南 & 技术拆解  \n5. 行业科普 & 采购避坑  \n6. 团队人物 & 品牌愿景  \n\n---  \n## 4. 素材需求计算  \n• AI 可裂变 5×，但“源头素材”必须高清拍摄。  \n• 每周 6 大场景 × 3 机位 = **18 组素材 / 周**。  \n• 4 周共需 **72 组**；手机 + 云台 2 天即可完成拍摄。  \n\n---  \n## 5. 每周拍摄清单  \n| 场景 | 镜头指引 | 旁白 / 拍摄要点 |  \n|------|----------|----------------|  \n| 1. SMT 生产线 | 推轨+特写 | 贴片速度 + SPI 检测 |  \n| 2. 老化测试房 | 环绕+延时 | 72 h 100% 负载老化 |  \n| 3. IP66 淋雨测试 | 正反交替 | 喷淋 30 min 无进水 |  \n| 4. 户外道路 A/B 对比 | 航拍 + 夜景 | 节能 70 %，照度对比 |  \n| 5. 仓库高棚灯安装 | 手持跟拍 | 15 min 快速更换 |  \n| 6. CEO 快问快答 | 三分镜 | Why AOK? & 10-yr warranty |  \n\n---  \n## 6. 脚本模板（示例 2 条）  \n● Pillar 2 – 产品测评  \n  • Hook：Can this tiny chip save 70 % on your warehouse bill?  \n  • B-roll：芯片特写 → 测光仪数值 → 老灯拆除 → 新灯点亮  \n  • VO：AOK’s 170 lm/W high-bay …  \n  • CTA：DM ‘HB170’ for spec sheet  \n\n● Pillar 3 – 客户案例  \n  • Hook：How Chicago port slashed power cost in half  \n  • B-roll：港口夜景 → 工人采访 → 电表读数  \n  • VO：300 pcs AOK 400 W flood replaced …  \n  • CTA：Comment ‘PORT’ for ROI calculator  \n\n---  \n## 7. 30 天内容日历（摘要）  \nWeek 1：工厂探秘 + 产品测评  \nWeek 2：客户案例 + 安装指南  \nWeek 3：对比实验 + 行业科普  \nWeek 4：回顾 + 团队人物 + 用户 UGC  \n▶ 完整 XLS 日历已附（链接）。  \n\n---  \n## 8. 标题 & Hashtag 公式  \n• 标题 = [痛点数字] + [成果] + [CTA]  \n• Hashtag 池：#LEDLighting #HighBay #EnergySaving #DLC #UL #WarehouseLighting #AOKLED #MadeInChina  \n\n---  \n## 9. 工具栈  \n• 剪辑：CapCut／VN + Auto-Sub  \n• 裂变：OpusClip／Vega AI  \n• 配音：ElevenLabs EN／粤语  \n• 数据跟踪：Exolyt（TikTok）+ TubeBuddy（YT）+ Shield（LinkedIn）  \n\n---  \n## 10. 预算估算  \n1. 拍摄（2 天 / 2 人）：¥5,000  \n2. AI 工具订阅：¥1,000  \n3. 推广（TikTok Spark Ads 等）：¥3,000  \n合计 ≈ ¥9,000（≤ RMB 1 万）  \n\n---  \n## 11. KPI & 跟踪面板  \n| 指标 | 目标 | 工具 |  \n|-------|-------|------|  \n| 总曝光 | ≥ 500,000 | 平台 Analytics |  \n| 观看完成率 | ≥ 25 % | 同上 |  \n| CTR | ≥ 2.5 % | Spark Ads |  \n| 线索 | ≥ 200 | HubSpot 表单 / DM |  \n\n---  \n## 12. 下一步  \n1. 本蓝图入库 → 共享 Google Drive 全套表格 & 模板；  \n2. 安排拍摄日期（D1–D2），确认场景 & 人员；  \n3. 开通海外静态 IP，并注册 6 个账号；  \n4. D+3 完成首批 10 条脚本 & 样片审核；  \n5. D+7 正式进入「日更 + AI 裂变」节奏。  \n\n---  \n> 您只需在本周内拍摄 **6 大场景 × 3 机位** 共 18 组素材，就能让 AI 为您裂变出 **上百条** 高质量短视频，实现 50 万+ 曝光与 200 条 B2B 询盘！  \n\n---  \n© 2024 AOK LED Light  |  出海视频增长团队 提供"},
+  "data": {"content":"# AOK LED Light 出海视频获客战略蓝图  \n\n> v3.0  �? 2024-06-XX  \n\n---  \n## 1. 战略目标  \n1. 30 天内�?TikTok / YouTube Shorts / LinkedIn 三个平台共运�?6 个账号；  \n2. 发布 180 条短视频�?0 条原�?+ AI 裂变 150 条），累计曝�?�?500,000 次；  \n3. 采集有效 B2B 线索 �?200 条（邮件�?LinkedIn DM）；  \n4. 拉升品牌关键词搜索量 �?30 %，沉淀 1 套可复用的「出海短视频增长 SOP」�? \n\n---  \n## 2. 账号矩阵 & 发布频次  \n| 平台 | 账号 | 定位 | 频次 | 30 天发布量 |  \n|------|------|------|------|------------|  \n| TikTok | 美区 @AOKLighting | 工商业照明解决方�?| 1 / d | 30 |  \n| TikTok | 东南亚区 @AOKLED | 产品测评 + 安装指南 | 1 / d | 30 |  \n| YouTube Shorts | EN Channel | Case Study + 科普 | 1 / d | 30 |  \n| YouTube Shorts | ZH Channel | 中文讲解 + 技术拆�?| 1 / d | 30 |  \n| LinkedIn Page | AOK LED Light | 官方品牌 + 行业洞察 | 1 / d | 30 |  \n| LinkedIn Personal | Sales Tom | 解决方案 + 客户故事 | 1 / d | 30 |  \n合计�? 账号 × 30 �?= 180 条发�? \n\n---  \n## 3. 内容支柱�? Pillars�? \n1. 工厂探秘  \n2. 产品测评 / 对比实验  \n3. 客户案例 & 成功故事  \n4. 安装指南 & 技术拆�? \n5. 行业科普 & 采购避坑  \n6. 团队人物 & 品牌愿景  \n\n---  \n## 4. 素材需求计�? \n�?AI 可裂�?5×，但“源头素材”必须高清拍摄�? \n�?每周 6 大场�?× 3 机位 = **18 组素�?/ �?*�? \n�?4 周共需 **72 �?*；手�?+ 云台 2 天即可完成拍摄�? \n\n---  \n## 5. 每周拍摄清单  \n| 场景 | 镜头指引 | 旁白 / 拍摄要点 |  \n|------|----------|----------------|  \n| 1. SMT 生产�?| 推轨+特写 | 贴片速度 + SPI 检�?|  \n| 2. 老化测试�?| 环绕+延时 | 72 h 100% 负载老化 |  \n| 3. IP66 淋雨测试 | 正反交替 | 喷淋 30 min 无进�?|  \n| 4. 户外道路 A/B 对比 | 航拍 + 夜景 | 节能 70 %，照度对�?|  \n| 5. 仓库高棚灯安�?| 手持跟拍 | 15 min 快速更�?|  \n| 6. CEO 快问快答 | 三分�?| Why AOK? & 10-yr warranty |  \n\n---  \n## 6. 脚本模板（示�?2 条）  \n�?Pillar 2 �?产品测评  \n  �?Hook：Can this tiny chip save 70 % on your warehouse bill?  \n  �?B-roll：芯片特�?�?测光仪数�?�?老灯拆除 �?新灯点亮  \n  �?VO：AOK’s 170 lm/W high-bay �? \n  �?CTA：DM ‘HB170�?for spec sheet  \n\n�?Pillar 3 �?客户案例  \n  �?Hook：How Chicago port slashed power cost in half  \n  �?B-roll：港口夜�?�?工人采访 �?电表读数  \n  �?VO�?00 pcs AOK 400 W flood replaced �? \n  �?CTA：Comment ‘PORT�?for ROI calculator  \n\n---  \n## 7. 30 天内容日历（摘要�? \nWeek 1：工厂探�?+ 产品测评  \nWeek 2：客户案�?+ 安装指南  \nWeek 3：对比实�?+ 行业科普  \nWeek 4：回�?+ 团队人物 + 用户 UGC  \n�?完整 XLS 日历已附（链接）�? \n\n---  \n## 8. 标题 & Hashtag 公式  \n�?标题 = [痛点数字] + [成果] + [CTA]  \n�?Hashtag 池：#LEDLighting #HighBay #EnergySaving #DLC #UL #WarehouseLighting #AOKLED #MadeInChina  \n\n---  \n## 9. 工具�? \n�?剪辑：CapCut／VN + Auto-Sub  \n�?裂变：OpusClip／Vega AI  \n�?配音：ElevenLabs EN／粤�? \n�?数据跟踪：Exolyt（TikTok�? TubeBuddy（YT�? Shield（LinkedIn�? \n\n---  \n## 10. 预算估算  \n1. 拍摄�? �?/ 2 人）：�?,000  \n2. AI 工具订阅：�?,000  \n3. 推广（TikTok Spark Ads 等）：�?,000  \n合计 �?¥9,000（≤ RMB 1 万）  \n\n---  \n## 11. KPI & 跟踪面板  \n| 指标 | 目标 | 工具 |  \n|-------|-------|------|  \n| 总曝�?| �?500,000 | 平台 Analytics |  \n| 观看完成�?| �?25 % | 同上 |  \n| CTR | �?2.5 % | Spark Ads |  \n| 线索 | �?200 | HubSpot 表单 / DM |  \n\n---  \n## 12. 下一�? \n1. 本蓝图入�?�?共享 Google Drive 全套表格 & 模板�? \n2. 安排拍摄日期（D1–D2），确认场景 & 人员�? \n3. 开通海外静�?IP，并注册 6 个账号；  \n4. D+3 完成首批 10 条脚�?& 样片审核�? \n5. D+7 正式进入「日�?+ AI 裂变」节奏�? \n\n---  \n> 您只需在本周内拍摄 **6 大场�?× 3 机位** �?18 组素材，就能�?AI 为您裂变�?**上百�?* 高质量短视频，实�?50 �? 曝光�?200 �?B2B 询盘�? \n\n---  \n© 2024 AOK LED Light  |  出海视频增长团队 提供"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760172841348
@@ -3966,7 +3968,7 @@ INSERT INTO "redis_queue_messages" VALUES('c268da2f-6c12-4ff6-97e9-c49028ffe251'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造高效的战略蓝图，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。  \n\n2. AOK Lighting 未来 36 个月「增长战略蓝图」（仅供内部参考）  \n\n一、总体愿景与关键目标  \n1. 愿景：成为全球高效节能工业与户外照明 Top 10 供应商  \n2. 财务目标：  \n   • 营收 CAGR≥35%，2027 年达到 3.5 亿美元  \n   • 毛利率稳定 ≥32%，净利率 ≥12%  \n3. 市场目标：在北美/欧洲/东南亚三大核心市场分别拿下 ≥8% 份额  \n4. 产品目标：整灯光效提升至 180 lm/W，智能联网产品占比 ≥40%  \n\n二、市场定位与细分打法  \n1. 核心场景：市政道路、物流仓储、体育场馆、工矿厂房  \n2. 目标客群：  \n   • 甲方/市政采购（道路、港口等）  \n   • EPC/总包商（大型项目）  \n   • 全球灯具分销商 & 经销商  \n   • 工商业终端（仓储、工厂、体育场）  \n3. 差异化定位：  \n   • 全系列 UL/DLC/CE 认证 + 150–170 lm/W 高光效  \n   • 5–10 年质保 / 专利散热 / 模块化快速维护  \n   • OEM + ODM 定制交付 ≤30 天  \n\n三、产品与技术路线图  \n1. 0–12 个月：  \n   • 路灯/工矿灯新一代升级到 170 lm/W  \n   • 推出 Zigbee/LoRa 智能调光套件  \n   • 发布 DLC V5.1 Premium 全覆盖型号  \n2. 12–24 个月：  \n   • 研发 180 lm/W 钠灯替换系列 + 一体化太阳能灯  \n   • 推出 IP69K 食品工厂高棚灯  \n3. 24–36 个月：  \n   • 打造 SaaS 光环境管理平台，实现数据订阅营收  \n   • 与储能厂商联合推出“光 + 储”解决方案  \n\n四、渠道与市场拓展  \n1. 北美：  \n   • 争取 10 家战略分销商；重点开发公路局 / 校园系统集采  \n   • 参加 LightFair、NECA、CONEXPO  \n2. 欧洲：  \n   • 德国/法国/意大利招募本地 SI 合作；加速 DALI2 智能灯具渗透  \n   • 参展 Light + Building、Intertraffic  \n3. 东南亚：  \n   • EPC 标案+OEM 组合打法；与本地国企/地产商成立 JV 或授权工厂  \n4. 线上获客：  \n   • LinkedIn & Google Ads 直引流；SEO 布局“LED street light DLC”“high bay factory light”等 500+ 关键词  \n   • Alibaba / Global Sources 做 RFQ 转化  \n\n五、品牌与传播策略  \n1. Slogan：“Power the World with Efficient Light”  \n2. 核心卖点：高光效 | 智能 | 定制 | 无忧质保  \n3. 内容矩阵：案例视频 + 白皮书 + 节能 ROI 计算器  \n4. PR：与 DIALux、IES 等机构合作发布行业报告  \n\n六、运营与供应链  \n1. 精益生产：SMT 自动化率 90%，产线切换 <2 h  \n2. QMS：ISO9001 + Six Sigma，DPPM≤200  \n3. 交付：海外 FBA 中转仓 + 区域服务中心（美国东/西、德国、泰国）  \n4. 成本：自制率≥60%，关键器件与 Lumileds、Inventronics 签战略协议  \n\n七、组织与人才  \n1. 海外销售团队扩编至 60 人，实施 Key Account 制  \n2. 建立光学/智能控制双技术中心（深圳 + 杭州）  \n3. 股权激励：TOP20 核心骨干占公司 8–10% 期权池  \n\n八、关键里程碑（Gantt 纵览）  \nMonth 0–6：新路灯系列量产、北美 3 家分销合作签订  \nMonth 6–12：智能调光套件上市、欧洲 DALI2 认证完成  \nMonth 12–18：180 lm/W 高棚灯发布、泰国仓库启用  \nMonth 18–24：太阳能一体化路灯立项并认证  \nMonth 24–30：SaaS 平台 Beta，上线 50+ 付费项目  \nMonth 30–36：营收破 3.5 亿美元、IPO 预备启动  \n\n九、核心指标（OKR）  \n• O1：年复合营收增长 35%  \n   KR：月度新增项目金额 ≥800 万美元  \n• O2：产品高光效覆盖率 80%  \n   KR：新产品平均光效 ≥175 lm/W  \n• O3：客户复购率提升至 60%  \n   KR：NPS≥65，售后故障率 ≤0.3%  \n• O4：海外本地化库存周转 ≤25 天  \n   KR：区域 Fill-Rate ≥95%  \n\n十、风险与应对  \n1. 原材料价格波动 → 长约锁价 + 期货对冲  \n2. 贸易壁垒 & 关税 → 多出口原产地布局（越南/墨西哥代工）  \n3. 技术替代（激光照明等）→ 每年投入营收 6% 做前沿预研  \n\n—— 以上为 AOK Lighting 36 个月「战略蓝图」。  \n请您确认是否符合预期；如无异议，我将把该蓝图锁定入库并启动后续执行规划。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造高效的战略蓝图，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间�? \n\n2. AOK Lighting 未来 36 个月「增长战略蓝图」（仅供内部参考）  \n\n一、总体愿景与关键目�? \n1. 愿景：成为全球高效节能工业与户外照明 Top 10 供应�? \n2. 财务目标�? \n   �?营收 CAGR�?5%�?027 年达�?3.5 亿美�? \n   �?毛利率稳�?�?2%，净利率 �?2%  \n3. 市场目标：在北美/欧洲/东南亚三大核心市场分别拿�?�?% 份额  \n4. 产品目标：整灯光效提升至 180 lm/W，智能联网产品占�?�?0%  \n\n二、市场定位与细分打法  \n1. 核心场景：市政道路、物流仓储、体育场馆、工矿厂�? \n2. 目标客群�? \n   �?甲方/市政采购（道路、港口等�? \n   �?EPC/总包商（大型项目�? \n   �?全球灯具分销�?& 经销�? \n   �?工商业终端（仓储、工厂、体育场�? \n3. 差异化定位：  \n   �?全系�?UL/DLC/CE 认证 + 150�?70 lm/W 高光�? \n   �?5�?0 年质�?/ 专利散热 / 模块化快速维�? \n   �?OEM + ODM 定制交付 �?0 �? \n\n三、产品与技术路线图  \n1. 0�?2 个月�? \n   �?路灯/工矿灯新一代升级到 170 lm/W  \n   �?推出 Zigbee/LoRa 智能调光套件  \n   �?发布 DLC V5.1 Premium 全覆盖型�? \n2. 12�?4 个月�? \n   �?研发 180 lm/W 钠灯替换系列 + 一体化太阳能灯  \n   �?推出 IP69K 食品工厂高棚�? \n3. 24�?6 个月�? \n   �?打�?SaaS 光环境管理平台，实现数据订阅营收  \n   �?与储能厂商联合推出“光 + 储”解决方�? \n\n四、渠道与市场拓展  \n1. 北美�? \n   �?争取 10 家战略分销商；重点开发公路局 / 校园系统集采  \n   �?参加 LightFair、NECA、CONEXPO  \n2. 欧洲�? \n   �?德国/法国/意大利招募本�?SI 合作；加�?DALI2 智能灯具渗�? \n   �?参展 Light + Building、Intertraffic  \n3. 东南亚：  \n   �?EPC 标案+OEM 组合打法；与本地国企/地产商成�?JV 或授权工�? \n4. 线上获客�? \n   �?LinkedIn & Google Ads 直引流；SEO 布局“LED street light DLC”“high bay factory light”等 500+ 关键�? \n   �?Alibaba / Global Sources �?RFQ 转化  \n\n五、品牌与传播策略  \n1. Slogan：“Power the World with Efficient Light�? \n2. 核心卖点：高光效 | 智能 | 定制 | 无忧质保  \n3. 内容矩阵：案例视�?+ 白皮�?+ 节能 ROI 计算�? \n4. PR：与 DIALux、IES 等机构合作发布行业报�? \n\n六、运营与供应�? \n1. 精益生产：SMT 自动化率 90%，产线切�?<2 h  \n2. QMS：ISO9001 + Six Sigma，DPPM�?00  \n3. 交付：海�?FBA 中转�?+ 区域服务中心（美国东/西、德国、泰国）  \n4. 成本：自制率�?0%，关键器件与 Lumileds、Inventronics 签战略协�? \n\n七、组织与人才  \n1. 海外销售团队扩编至 60 人，实施 Key Account �? \n2. 建立光学/智能控制双技术中心（深圳 + 杭州�? \n3. 股权激励：TOP20 核心骨干占公�?8�?0% 期权�? \n\n八、关键里程碑（Gantt 纵览�? \nMonth 0�?：新路灯系列量产、北�?3 家分销合作签订  \nMonth 6�?2：智能调光套件上市、欧�?DALI2 认证完成  \nMonth 12�?8�?80 lm/W 高棚灯发布、泰国仓库启�? \nMonth 18�?4：太阳能一体化路灯立项并认�? \nMonth 24�?0：SaaS 平台 Beta，上�?50+ 付费项目  \nMonth 30�?6：营收破 3.5 亿美元、IPO 预备启动  \n\n九、核心指标（OKR�? \n�?O1：年复合营收增长 35%  \n   KR：月度新增项目金�?�?00 万美�? \n�?O2：产品高光效覆盖�?80%  \n   KR：新产品平均光效 �?75 lm/W  \n�?O3：客户复购率提升�?60%  \n   KR：NPS�?5，售后故障率 �?.3%  \n�?O4：海外本地化库存周转 �?5 �? \n   KR：区�?Fill-Rate �?5%  \n\n十、风险与应对  \n1. 原材料价格波�?�?长约锁价 + 期货对冲  \n2. 贸易壁垒 & 关税 �?多出口原产地布局（越�?墨西哥代工）  \n3. 技术替代（激光照明等）→ 每年投入营收 6% 做前沿预�? \n\n—�?以上�?AOK Lighting 36 个月「战略蓝图」�? \n请您确认是否符合预期；如无异议，我将把该蓝图锁定入库并启动后续执行规划�?,
     "data": {
       "video_link": ""
     }
@@ -3983,7 +3985,7 @@ INSERT INTO "redis_queue_messages" VALUES('6af61df4-5d9e-43cf-a541-2933d48756ad'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。目前我可以先为您提取作战地图与脚本库，计算还需要测试的素材数量。请问您现在是否需要了解还需要合成多少个视频来进行测试？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "您好！欢迎使用智能视频创作助手。目前我可以先为您提取作战地图与脚本库，计算还需要测试的素材数量。请问您现在是否需要了解还需要合成多少个视频来进行测试？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -4000,7 +4002,7 @@ INSERT INTO "redis_queue_messages" VALUES('449e8058-7758-4cb8-972a-38cc76c3cffd'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "当前作战地图显示：今日尚未准备发布任何视频；待制作视频脚本库中还有 1 个脚本需要测试。请在待制作脚本库中选择您要先行拍摄的文案，并回复其编号（例如输入“1”）。收到您的选择后，我将为您生成对应的拍摄脚本。",
+    "text": "当前作战地图显示：今日尚未准备发布任何视频；待制作视频脚本库中还�?1 个脚本需要测试。请在待制作脚本库中选择您要先行拍摄的文案，并回复其编号（例如输入�?”）。收到您的选择后，我将为您生成对应的拍摄脚本�?,
     "data": {
       "video_link": ""
     }
@@ -4017,7 +4019,7 @@ INSERT INTO "redis_queue_messages" VALUES('043706b1-1ceb-4543-9e67-8091f0242f48'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案，我已生成了 1 个可用的拍摄脚本，请确认是否使用该脚本进行视频合成。\n\n1. 脚本摘要\n   • 视频主题：高端中国佛山家具，意大利设计沙发，大户型／别墅沙发\n   • 场景：人物在工厂大门、设备区、装柜区等多场景出镜，展示产品与工厂实力\n   • 画面：全景定格＋人物行进镜头，分 5 个镜头段落\n   • 亮点：原创音乐、话题标签 #佛山家具工厂 #佛山家具 #沙发 #别墅沙发\n\n如果您确认使用此脚本，请回复“1”。收到确认后，我将立即为您合成视频。",
+    "text": "好的，基于您选择的文案，我已生成�?1 个可用的拍摄脚本，请确认是否使用该脚本进行视频合成。\n\n1. 脚本摘要\n   �?视频主题：高端中国佛山家具，意大利设计沙发，大户型／别墅沙发\n   �?场景：人物在工厂大门、设备区、装柜区等多场景出镜，展示产品与工厂实力\n   �?画面：全景定格＋人物行进镜头，分 5 个镜头段落\n   �?亮点：原创音乐、话题标�?#佛山家具工厂 #佛山家具 #沙发 #别墅沙发\n\n如果您确认使用此脚本，请回复�?”。收到确认后，我将立即为您合成视频�?,
     "data": {
       "video_link": ""
     }
@@ -4034,7 +4036,7 @@ INSERT INTO "redis_queue_messages" VALUES('d556b745-ce70-406b-a28e-34ec16be878c'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间�?,
     "data": {
       "video_link": ""
     }
@@ -4051,7 +4053,7 @@ INSERT INTO "redis_queue_messages" VALUES('9aff6c49-d667-41e2-b6c2-bfba9ea79f8d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，已根据您选择的文案生成了 1 个可用拍摄脚本（当前脚本库仅剩 1 条）。请确认是否使用该脚本进行视频合成：\n\n1. 脚本摘要\n   • 主题：高端中国佛山家具——意大利设计大户型/别墅沙发\n   • 主要镜头：人物出镜（工厂大门/设备/装柜前）+ 多款沙发产品特写\n   • 亮点信息：意大利设计、大户型/别墅沙发、佛山家具工厂直供\n   • 标签：#佛山家具工厂 #佛山家具 #沙发 #别墅沙发\n\n如果您确认使用该脚本，请直接回复 “1”，我将为您合成视频。\n如需返回上一步重新选择文案，请告诉我。",
+    "text": "好的，已根据您选择的文案生成了 1 个可用拍摄脚本（当前脚本库仅�?1 条）。请确认是否使用该脚本进行视频合成：\n\n1. 脚本摘要\n   �?主题：高端中国佛山家具——意大利设计大户�?别墅沙发\n   �?主要镜头：人物出镜（工厂大门/设备/装柜前）+ 多款沙发产品特写\n   �?亮点信息：意大利设计、大户型/别墅沙发、佛山家具工厂直供\n   �?标签�?佛山家具工厂 #佛山家具 #沙发 #别墅沙发\n\n如果您确认使用该脚本，请直接回复 �?”，我将为您合成视频。\n如需返回上一步重新选择文案，请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -4068,7 +4070,7 @@ INSERT INTO "redis_queue_messages" VALUES('5dcc377b-0ec4-4461-93d9-7de703e6ac79'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，视频合成时出现网络问题导致失败（Bad gateway）。\n\n请问您希望如何操作？\n1. 重新尝试合成当前脚本 – 回复“重试”。\n2. 返回上一环节，重新选择脚本 – 回复“返回”。\n\n收到您的指令后，我将立即为您处理。",
+    "text": "抱歉，视频合成时出现网络问题导致失败（Bad gateway）。\n\n请问您希望如何操作？\n1. 重新尝试合成当前脚本 �?回复“重试”。\n2. 返回上一环节，重新选择脚本 �?回复“返回”。\n\n收到您的指令后，我将立即为您处理�?,
     "data": {
       "video_link": ""
     }
@@ -4085,7 +4087,7 @@ INSERT INTO "redis_queue_messages" VALUES('a1129d47-1f3d-4244-81ea-a18a1fc28ba7'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，合成视频时出现了技术问题（系统报错：Bad gateway）。请问您是否希望我立即重试合成？1. 重新尝试合成2. 稍后再试请回复对应选项数字，我将根据您的选择继续操作。",
+    "text": "抱歉，合成视频时出现了技术问题（系统报错：Bad gateway）。请问您是否希望我立即重试合成？1. 重新尝试合成2. 稍后再试请回复对应选项数字，我将根据您的选择继续操作�?,
     "data": {
       "video_link": ""
     }
@@ -4102,7 +4104,7 @@ INSERT INTO "redis_queue_messages" VALUES('ad890ee1-2f47-4300-9021-8be51719d993'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "感谢您提供官网链接：www.aokledlight.com。\n接下来，我可以为您提取当前的作战地图，并告诉您还需要合成多少个视频来进行测试。请问您现在想了解这一信息吗？如果需要，请回复“是”，我将立即为您调用系统进行分析。",
+    "text": "感谢您提供官网链接：www.aokledlight.com。\n接下来，我可以为您提取当前的作战地图，并告诉您还需要合成多少个视频来进行测试。请问您现在想了解这一信息吗？如果需要，请回复“是”，我将立即为您调用系统进行分析�?,
     "data": {
       "video_link": ""
     }
@@ -4119,7 +4121,7 @@ INSERT INTO "redis_queue_messages" VALUES('051fd49f-e524-4270-b126-782f2b3237c9'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手🎬。\n\n目前我可以先为您提取最新的作战地图和待测试脚本库数量，告诉您现在还需要合成多少个视频来进行测试。\n\n请问您需要我立即查询并告诉您吗？如果需要，请回复“是”，我将立刻为您查询。",
+    "text": "您好！欢迎使用智能视频创作助手🎬。\n\n目前我可以先为您提取最新的作战地图和待测试脚本库数量，告诉您现在还需要合成多少个视频来进行测试。\n\n请问您需要我立即查询并告诉您吗？如果需要，请回复“是”，我将立刻为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -4136,7 +4138,7 @@ INSERT INTO "redis_queue_messages" VALUES('7c32b31a-70f3-4c10-9af6-6dee0b9e5180'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 以下内容基于 AOK Lighting（www.aokledlight.com）现有资料，已为您快速生成一份「增长战略蓝图」草案，并配套一份“关键词矩阵”。请您先整体浏览，确认无误后告诉我“没问题”或“就这样吧”，我会立即把关键词入库并启动下一步的视频素材抓取流程。  \n\n2. ——  \n【一】企业资料（复盘）  \n  1. 公司名称：深圳市奥科莱特照明有限公司（AOK Lighting Co., Ltd.）  \n  2. 成立时间：2010 年；自有工厂约 20,000 ㎡  \n  3. 业务范围：研发、生产、销售工业及户外高性能 LED 灯具（可 OEM / ODM 定制）  \n  4. 核心产品：LED 路灯、LED 工矿灯（高棚灯）、LED 投光灯、模组灯、体育照明灯、停车场灯  \n  5. 关键认证：UL、DLC、CE、RoHS、SAA、TUV、ISO9001  \n  6. 核心优势：150–170 lm/W 高光效；专利散热；5–10 年质保；快速交付；出口 100+ 国家  \n\n【二】目标人群  \n  • 工程承包商 / EPC  \n  • 市政采购方（道路、市政照明）  \n  • 灯具经销商与分销商  \n  • 工商业终端客户（仓储、工厂、体育场馆等）  \n  目标市场：北美、欧洲、东南亚  \n  痛点：节能降本、施工与维护成本高、必须符合当地认证  \n\n【三】产品卖点提炼  \n  1. 整灯光效 150–170 lm/W，能源成本下降 40–70%  \n  2. 设计寿命 100,000 h，5–10 年质保  \n  3. 专利散热结构，环境温度 55 °C 依旧稳定  \n  4. Type II/III/IV/V、多角度配光，满足道路、仓储、球场多场景  \n  5. 兼容 DALI、0–10 V、Zigbee/LoRa 智能控制  \n  6. IP66 & IK10；UL/DLC/CE/RoHS/TUV 全认证  \n  7. 模块化设计，5 分钟更换光源/电源，降低维护费  \n  8. OEM/ODM：功率、配光、外观颜色均可定制  \n\n【四】内容增长战略总览  \n  1. 核心内容支柱（Pillars）  \n     A. 节能降本案例（客户 ROI 前后对比）  \n     B. 智能与高效（高光效 + 智能控制）  \n     C. 可靠性实验室（寿命、散热、防护直播/短视频实验）  \n     D. 项目速递（全球道路/球场/仓库安装纪录片式短片）  \n\n  2. 短视频形式  \n     • 60–90 秒案例速看（对标 TikTok / Reels / 抖音）  \n     • 工厂 15 秒质检快闪  \n     • 动画/3D 拆解散热结构  \n     • KOL（照明工程师）拆箱测评  \n\n  3. 渠道 + 节奏  \n     • TikTok 国际站 + YouTube Shorts（北美/东南亚）  \n     • LinkedIn 原生视频（B2B 决策者）  \n     • 每月 20 条短视频，4 个主题各 5 条  \n     • 前两周快速 A/B 测试钩子，后两周放大高转化素材  \n\n  4. 指标  \n     • 每月新增询盘 ≥ 120 条  \n     • 视频完播率 ≥ 35 %  \n     • CPM ≤ $15（付费扩大时）  \n\n【五】关键词矩阵（草案）  \n  A. 产品核心词  \n     led street light, led high bay, led flood light, led module light, sports lighting, parking lot light  \n  B. 行业通用词 / 需求词  \n     high efficacy 170lm/w, smart lighting, DALI dimming, DLC premium, UL listed, IP66 outdoor lighting  \n  C. 痛点/解决方案词  \n     energy saving led retrofit, maintenance-free lighting, reduce electricity bill, long life 100000h, 10-year warranty  \n  D. 场景/应用词  \n     warehouse led lighting, roadway lighting solution, tennis court lighting, factory high bay, municipality street light  \n  E. 认证/标准词  \n     UL, DLC, CE, RoHS, TUV, IK10, ISO9001  \n  F. 客户可能搜索的问题  \n     • “How many lumens is a 150W LED high bay?”  \n     • “Best LED street light for cold weather”  \n     • “DLC vs UL difference in LED lights”  \n     • “LED retrofit payback calculator”  \n\n——  \n3. 以上即为“战略蓝图”与“关键词库”草案。  \n   请您确认：  \n   ① 企业资料 / 目标人群 / 产品卖点是否准确？  \n   ② 关键词矩阵是否符合您的业务搜索习惯？  \n\n4. 如无异议，请回复“没问题”或“就这样吧”，我会马上：  \n   ① 调用 keywords_agent 工具抓取视频素材；  \n   ② 同时写库备份（pgtool）。",
+    "text": "1. 以下内容基于 AOK Lighting（www.aokledlight.com）现有资料，已为您快速生成一份「增长战略蓝图」草案，并配套一份“关键词矩阵”。请您先整体浏览，确认无误后告诉我“没问题”或“就这样吧”，我会立即把关键词入库并启动下一步的视频素材抓取流程�? \n\n2. —�? \n【一】企业资料（复盘�? \n  1. 公司名称：深圳市奥科莱特照明有限公司（AOK Lighting Co., Ltd.�? \n  2. 成立时间�?010 年；自有工厂�?20,000 �? \n  3. 业务范围：研发、生产、销售工业及户外高性能 LED 灯具（可 OEM / ODM 定制�? \n  4. 核心产品：LED 路灯、LED 工矿灯（高棚灯）、LED 投光灯、模组灯、体育照明灯、停车场�? \n  5. 关键认证：UL、DLC、CE、RoHS、SAA、TUV、ISO9001  \n  6. 核心优势�?50�?70 lm/W 高光效；专利散热�?�?0 年质保；快速交付；出口 100+ 国家  \n\n【二】目标人�? \n  �?工程承包�?/ EPC  \n  �?市政采购方（道路、市政照明）  \n  �?灯具经销商与分销�? \n  �?工商业终端客户（仓储、工厂、体育场馆等�? \n  目标市场：北美、欧洲、东南亚  \n  痛点：节能降本、施工与维护成本高、必须符合当地认�? \n\n【三】产品卖点提�? \n  1. 整灯光效 150�?70 lm/W，能源成本下�?40�?0%  \n  2. 设计寿命 100,000 h�?�?0 年质�? \n  3. 专利散热结构，环境温�?55 °C 依旧稳定  \n  4. Type II/III/IV/V、多角度配光，满足道路、仓储、球场多场景  \n  5. 兼容 DALI�?�?0 V、Zigbee/LoRa 智能控制  \n  6. IP66 & IK10；UL/DLC/CE/RoHS/TUV 全认�? \n  7. 模块化设计，5 分钟更换光源/电源，降低维护费  \n  8. OEM/ODM：功率、配光、外观颜色均可定�? \n\n【四】内容增长战略总览  \n  1. 核心内容支柱（Pillars�? \n     A. 节能降本案例（客�?ROI 前后对比�? \n     B. 智能与高效（高光�?+ 智能控制�? \n     C. 可靠性实验室（寿命、散热、防护直�?短视频实验）  \n     D. 项目速递（全球道路/球场/仓库安装纪录片式短片�? \n\n  2. 短视频形�? \n     �?60�?0 秒案例速看（对�?TikTok / Reels / 抖音�? \n     �?工厂 15 秒质检快闪  \n     �?动画/3D 拆解散热结构  \n     �?KOL（照明工程师）拆箱测�? \n\n  3. 渠道 + 节奏  \n     �?TikTok 国际�?+ YouTube Shorts（北�?东南亚）  \n     �?LinkedIn 原生视频（B2B 决策者）  \n     �?每月 20 条短视频�? 个主题各 5 �? \n     �?前两周快�?A/B 测试钩子，后两周放大高转化素�? \n\n  4. 指标  \n     �?每月新增询盘 �?120 �? \n     �?视频完播�?�?35 %  \n     �?CPM �?$15（付费扩大时�? \n\n【五】关键词矩阵（草案）  \n  A. 产品核心�? \n     led street light, led high bay, led flood light, led module light, sports lighting, parking lot light  \n  B. 行业通用�?/ 需求词  \n     high efficacy 170lm/w, smart lighting, DALI dimming, DLC premium, UL listed, IP66 outdoor lighting  \n  C. 痛点/解决方案�? \n     energy saving led retrofit, maintenance-free lighting, reduce electricity bill, long life 100000h, 10-year warranty  \n  D. 场景/应用�? \n     warehouse led lighting, roadway lighting solution, tennis court lighting, factory high bay, municipality street light  \n  E. 认证/标准�? \n     UL, DLC, CE, RoHS, TUV, IK10, ISO9001  \n  F. 客户可能搜索的问�? \n     �?“How many lumens is a 150W LED high bay?�? \n     �?“Best LED street light for cold weather�? \n     �?“DLC vs UL difference in LED lights�? \n     �?“LED retrofit payback calculator�? \n\n—�? \n3. 以上即为“战略蓝图”与“关键词库”草案�? \n   请您确认�? \n   �?企业资料 / 目标人群 / 产品卖点是否准确�? \n   �?关键词矩阵是否符合您的业务搜索习惯？  \n\n4. 如无异议，请回复“没问题”或“就这样吧”，我会马上�? \n   �?调用 keywords_agent 工具抓取视频素材�? \n   �?同时写库备份（pgtool）�?,
     "data": {
       "video_link": ""
     }
@@ -4153,7 +4155,7 @@ INSERT INTO "redis_queue_messages" VALUES('0355e0ab-7a6f-4ca9-9b3f-6ea69d971f2c'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图信息：\n1. 今日任务：准备发布 0 条视频。\n2. 待制作脚本库：还有 1 个视频需要拍摄与测试。\n\n接下来，请您从待制作文案库中选择要优先拍摄的视频文案编号并告诉我（例如：回复“1”）。\n\n收到您的选择后，我会为该文案生成 10 份不同的拍摄脚本供您挑选。",
+    "text": "最新作战地图信息：\n1. 今日任务：准备发�?0 条视频。\n2. 待制作脚本库：还�?1 个视频需要拍摄与测试。\n\n接下来，请您从待制作文案库中选择要优先拍摄的视频文案编号并告诉我（例如：回复�?”）。\n\n收到您的选择后，我会为该文案生成 10 份不同的拍摄脚本供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -4170,7 +4172,7 @@ INSERT INTO "redis_queue_messages" VALUES('7a616a9f-603c-48fa-acc4-94a87ae5df20'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已为您找到编号 1 对应的文案，并基于该文案生成了 1 个拍摄脚本供您选择（由于素材本身限定，目前仅生成 1 份结果）：\n\n1. 【高端中国佛山家具｜意大利设计大户型别墅沙发】\n   • 亮点：突出佛山工厂实力、别墅/大户型定位、意大利原创设计；\n   • 分镜：5 个镜头（人物出镜+产品展示），含核心卖点字幕与走位；\n   • 拍摄要点：展厅全景—>沙发特写—>工厂生产线—>设计师讲解—>客户体验；\n   • 话术示例：\n     ① 入口：『想找既奢华又舒适的别墅沙发？来佛山看这款！』\n     ② 核心：『意大利原创设计，真皮触感+80 万次耐磨测试』\n     ③ 结尾：『点击了解报价，佛山工厂直供全球』\n   • #话题：#佛山家具工厂 #佛山家具 #沙发 #别墅沙发\n\n请您确认是否使用上述脚本进行视频自动合成？\n\n如果确认，请回复“1”进行合成；如需重新生成，请告知。",
+    "text": "已为您找到编�?1 对应的文案，并基于该文案生成�?1 个拍摄脚本供您选择（由于素材本身限定，目前仅生�?1 份结果）：\n\n1. 【高端中国佛山家具｜意大利设计大户型别墅沙发】\n   �?亮点：突出佛山工厂实力、别�?大户型定位、意大利原创设计；\n   �?分镜�? 个镜头（人物出镜+产品展示），含核心卖点字幕与走位；\n   �?拍摄要点：展厅全景�?沙发特写�?工厂生产线�?设计师讲解�?客户体验；\n   �?话术示例：\n     �?入口：『想找既奢华又舒适的别墅沙发？来佛山看这款！』\n     �?核心：『意大利原创设计，真皮触�?80 万次耐磨测试』\n     �?结尾：『点击了解报价，佛山工厂直供全球』\n   �?#话题�?佛山家具工厂 #佛山家具 #沙发 #别墅沙发\n\n请您确认是否使用上述脚本进行视频自动合成？\n\n如果确认，请回复�?”进行合成；如需重新生成，请告知�?,
     "data": {
       "video_link": ""
     }
@@ -4181,7 +4183,7 @@ INSERT INTO "redis_queue_messages" VALUES('6c4f3538-0662-4c3d-bdb8-1d8124c3c35e'
   "env": "gray",
   "session_id": "2855bc8a-e132-4e7b-8c15-3f75f5cc88d9",
   "user_id": "0086d2b1-1514-4450-8660-29629e27f984",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "7d10183f-d5d3-4147-bca2-a5ea592f8152",
   "socket_id": "C32KSv8olHbt1RTvAAAF",
   "status": "RUNNING",
@@ -4199,7 +4201,7 @@ INSERT INTO "redis_queue_messages" VALUES('24160c2a-de08-4c53-89f2-c81248869f5d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案「高端中国佛山家具 · 意大利设计沙发 · 大户型/别墅沙发」，我已生成了 10 份不同的拍摄脚本，供您挑选。请阅读下面的脚本摘要，选出最符合您期望的视频风格并回复编号（1-10）。\n\n1. 场景式开箱体验\n   • 场景：高端别墅客厅\n   • 亮点：真人开箱＋家具细节特写＋豪宅氛围\n   • 节奏：前 5 秒冲击视觉，15 秒突出卖点\n\n2. 设计灵感溯源\n   • 场景：意大利设计师工作室 & 佛山工厂\n   • 亮点：设计手稿、打样对比、材料展示\n   • 节奏：讲故事式，结尾 CTA 下单\n\n3. 真实买家秀合集\n   • 场景：全球 5 位客户实景拍摄\n   • 亮点：不同装修风格下的沙发适配度\n   • 节奏：快剪＋字幕，情绪拉满\n\n4. 30 秒极简广告片\n   • 场景：纯白摄影棚＋灯光\n   • 亮点：线条与剪影突出沙发轮廓\n   • 节奏：极简配乐，金句文案结尾\n\n5. 极致舒适度测试\n   • 场景：实验室 + 软弹测试仪器\n   • 亮点：对比普通沙发弹性、耐磨测试画面\n   • 节奏：硬核数据与体验融合\n\n6. 手工匠心纪录片\n   • 场景：佛山大师傅手工缝制\n   • 亮点：慢镜头＋旁白，突出工艺\n   • 节奏：温暖人文风\n\n7. 轻奢家居 Vlog\n   • 场景：博主一日生活\n   • 亮点：沙发融入生活细节，随手镜头\n   • 节奏：轻快音乐，故事叙述\n\n8. AR 空间对比\n   • 场景：真实客厅 + AR 效果叠加\n   • 亮点：展示沙发多种配色、尺寸对比\n   • 节奏：科技感，结尾扫码体验\n\n9. 五大卖点速看\n   • 场景：字幕条 + 快闪\n   • 亮点：环保皮革、模组化坐垫、意大利设计\n   • 节奏：15 秒超快节奏\n\n10. 沙发 VS 沙发\n   • 场景：同价位竞品对比\n   • 亮点：坐感、耐久、颜值三维 PK\n   • 节奏：对半分屏，结尾投票互动\n\n请回复您最满意的脚本编号，我将为您合成视频。 😊",
+    "text": "好的，基于您选择的文案「高端中国佛山家�?· 意大利设计沙�?· 大户�?别墅沙发」，我已生成�?10 份不同的拍摄脚本，供您挑选。请阅读下面的脚本摘要，选出最符合您期望的视频风格并回复编号（1-10）。\n\n1. 场景式开箱体验\n   �?场景：高端别墅客厅\n   �?亮点：真人开箱＋家具细节特写＋豪宅氛围\n   �?节奏：前 5 秒冲击视觉，15 秒突出卖点\n\n2. 设计灵感溯源\n   �?场景：意大利设计师工作室 & 佛山工厂\n   �?亮点：设计手稿、打样对比、材料展示\n   �?节奏：讲故事式，结尾 CTA 下单\n\n3. 真实买家秀合集\n   �?场景：全�?5 位客户实景拍摄\n   �?亮点：不同装修风格下的沙发适配度\n   �?节奏：快剪＋字幕，情绪拉满\n\n4. 30 秒极简广告片\n   �?场景：纯白摄影棚＋灯光\n   �?亮点：线条与剪影突出沙发轮廓\n   �?节奏：极简配乐，金句文案结尾\n\n5. 极致舒适度测试\n   �?场景：实验室 + 软弹测试仪器\n   �?亮点：对比普通沙发弹性、耐磨测试画面\n   �?节奏：硬核数据与体验融合\n\n6. 手工匠心纪录片\n   �?场景：佛山大师傅手工缝制\n   �?亮点：慢镜头＋旁白，突出工艺\n   �?节奏：温暖人文风\n\n7. 轻奢家居 Vlog\n   �?场景：博主一日生活\n   �?亮点：沙发融入生活细节，随手镜头\n   �?节奏：轻快音乐，故事叙述\n\n8. AR 空间对比\n   �?场景：真实客�?+ AR 效果叠加\n   �?亮点：展示沙发多种配色、尺寸对比\n   �?节奏：科技感，结尾扫码体验\n\n9. 五大卖点速看\n   �?场景：字幕条 + 快闪\n   �?亮点：环保皮革、模组化坐垫、意大利设计\n   �?节奏�?5 秒超快节奏\n\n10. 沙发 VS 沙发\n   �?场景：同价位竞品对比\n   �?亮点：坐感、耐久、颜值三�?PK\n   �?节奏：对半分屏，结尾投票互动\n\n请回复您最满意的脚本编号，我将为您合成视频�?😊",
     "data": {
       "video_link": ""
     }
@@ -4214,7 +4216,7 @@ INSERT INTO "redis_queue_messages" VALUES('943c2743-f581-43e1-a3bd-7ebc1a4a741c'
   "request_id": "7d10183f-d5d3-4147-bca2-a5ea592f8152",
   "socket_id": "C32KSv8olHbt1RTvAAAF",
   "status": "FINISHED",
-  "data": {"content":"# AOK Lighting — 出海视频获客《增长战略蓝图》\n\n---\n## 0. 概览\n- 战略周期：2024 Q3–Q4（6 个月）\n- 核心 **North-Star 指标**：海外有效询盘 ≥ **120 条 / 月**\n- 内容打法：多账号矩阵 + AI 多版本裂变 + 案例驱动转化\n\n---\n## 1. 目标拆解\n| 阶段 | 询盘目标 | 曝光需求 | 账号数量 | 视频产量 |\n|------|----------|----------|----------|----------|\n| 月度 | ≥120 条  | ≥1,000,000 次 | 10 个 | 80 条 |\n\n> 经验系数：100 万曝光 ≈ 120–150 条 B2B 询盘（LED 工业照明行业均值 0.012–0.015%）。\n\n---\n## 2. 账号矩阵\n1. TikTok 国际站   ×4（EN/ES/TH/AR）\n2. YouTube Shorts   ×2（EN/ES）\n3. LinkedIn 企业页 ×1（EN）\n4. LinkedIn 员工号 ×2（销售 VP / 技术经理）\n5. Instagram Reels ×1（EN）\n\n---\n## 3. 视频产量计算\n- **月度需求**：80 条成片（≈ 每天 2–3 条发布）。\n- **AI 裂变系数**：1 组原始素材 → 5–6 条不同剪辑（改文案 / 字幕 / 封面 / 配乐）。\n- **原始素材需求**：80 ÷ 6 ≈ 14 组 / 月 ≈ **3–4 组 / 周**。\n- **拍摄工作量**：每组素材 = 1–2 个场景 + 3 个机位；因此 **每周拍摄 6–8 个场景镜头** 即可。\n\n---\n## 4. 内容支柱 & 脚本示例\n### Pillar A｜节能降本案例（20%）\n示例脚本《仓库改造前后电费对比》\n1. 镜头1（工厂外景 3s）：字幕 Hook——“电费省 55%，他们怎么做到的？”\n2. 镜头2（旧灯 vs AOK 灯对比 5s）：分屏展示照度 & 电表读数。\n3. 镜头3（客户访谈 7s）：采样字幕重点“6 个月回本”。\n4. 镜头4（动态图表 5s）：ROI 计算动画。\n5. 结尾 CTA（2s）：官网 ROI 计算器 & 联系方式。\n\n### Pillar B｜可靠性实验室（20%）\n脚本《IP66 冲水实测》：高压水枪→内部拆解→LED 板依旧点亮。\n\n### Pillar C｜智能+高效（20%）\n脚本《LoRa 组网 1 分钟教程》：实拍网关 + 手机 App 控光。\n\n### Pillar D｜项目速递（20%）\n脚本《泰国高速公路夜景对比》：航拍 before/after + 线路安装花絮。\n\n### Pillar E｜技术快问快答（20%）\n脚本《UL vs DLC 有啥区别？》：工程师出镜 15s 解释，结束引导下载白皮书。\n\n---\n## 5. 发布节奏\n- TikTok / Shorts：每周 5×（周一至周五 10:00 UTC-5）\n- LinkedIn 企业页：周二、周四 8:30 PST（案例长贴 + 技术长视频）\n- 员工号：周一、周三 1 条软文 + 1 条转发案例视频\n\n> Tips：提前 30 天在 Notion 日历排期→ Zapier 自动同步到社媒调度工具（Publer/Hootsuite）。\n\n---\n## 6. KPI 看板\n1. 完播率 ≥35%\n2. CTR ≥1.5%\n3. 留资转化 ≥3%\n4. CPM 控制 ≤$15（投放放大阶段）\n\n---\n## 7. 素材拍摄清单（每月）\n| 类别 | 场景 | 拍摄要点 |\n|------|------|-----------|\n| 工程案例 | 3 处已完工项目 | 航拍+夜景+客户采访 |\n| 实验室测试 | 2 次 | 防水/老化/散热 3 机位 |\n| 工厂速看 | 1 次 | SMT 产线 + 老化房快闪 |\n| KOL 联动 | 1 次 | 开箱+测光对比 |\n| Q&A 口播 | 8 题 | 单机位+AI 抠像背景 |\n\n---\n## 8. 预算概览（USD/月）\n| 项目 | 金额 | 备注 |\n|------|------|------|\n| 视频拍摄/剪辑 | 5,000 | 含外籍主播 2 天 |\n| KOL 评测 | 3,000 | 2 位照明工程博主 |\n| 广告投放 | 8,000 | TikTok TopView + LinkedIn CA |\n| 工具订阅 | 1,000 | AI 剪辑+社媒排程+CRM |\n| 机动 | 2,000 | 不可预见费用 |\n| **合计** | **19,000** |  \n\n---\n## 9. 执行时间线（Gantt 简表）\n```\nWeek1  | 脚本锁定 & 场景勘察\nWeek2  | 拍摄 & 素材入库\nWeek3  | 首批 20 条剪辑 + 账号初始化\nWeek4  | 全渠道上线 & 付费冷启动\nMonth2 | KOL 评测、复盘高转化素材\nMonth3 | 预算加码 & 新语种账号（TH/AR）\nMonth4 | SEO 长尾+再营销广告\nMonth5 | 联名白皮书 & 大型案例纪录片\nMonth6 | 总结优化 & 2025 预算申请\n```\n\n---\n## 10. 关键分工\n- 增长负责人（PM）：统筹 KPI / 预算\n- 内容策划：脚本 & 排期\n- 摄影/剪辑 2 名：拍摄 + AI 多版本\n- 渠道投放：素材上传 & 广告优化\n- 外籍主播：英语出镜口播、配音\n\n---\n## 结束语\n✅ 做到「每周 3 个场景、80 条短视频、10 账号矩阵」，借助 AI 裂变与精准分发，预计 3 个月即可实现月均 120 条以上优质询盘。AOK，只差执行！\n\n——\n"},
+  "data": {"content":"# AOK Lighting �?出海视频获客《增长战略蓝图》\n\n---\n## 0. 概览\n- 战略周期�?024 Q3–Q4�? 个月）\n- 核心 **North-Star 指标**：海外有效询�?�?**120 �?/ �?*\n- 内容打法：多账号矩阵 + AI 多版本裂�?+ 案例驱动转化\n\n---\n## 1. 目标拆解\n| 阶段 | 询盘目标 | 曝光需�?| 账号数量 | 视频产量 |\n|------|----------|----------|----------|----------|\n| 月度 | �?20 �? | �?,000,000 �?| 10 �?| 80 �?|\n\n> 经验系数�?00 万曝�?�?120�?50 �?B2B 询盘（LED 工业照明行业均�?0.012�?.015%）。\n\n---\n## 2. 账号矩阵\n1. TikTok 国际�?  ×4（EN/ES/TH/AR）\n2. YouTube Shorts   ×2（EN/ES）\n3. LinkedIn 企业�?×1（EN）\n4. LinkedIn 员工�?×2（销�?VP / 技术经理）\n5. Instagram Reels ×1（EN）\n\n---\n## 3. 视频产量计算\n- **月度需�?*�?0 条成片（�?每天 2�? 条发布）。\n- **AI 裂变系数**�? 组原始素�?�?5�? 条不同剪辑（改文�?/ 字幕 / 封面 / 配乐）。\n- **原始素材需�?*�?0 ÷ 6 �?14 �?/ �?�?**3�? �?/ �?*。\n- **拍摄工作�?*：每组素�?= 1�? 个场�?+ 3 个机位；因此 **每周拍摄 6�? 个场景镜�?* 即可。\n\n---\n## 4. 内容支柱 & 脚本示例\n### Pillar A｜节能降本案例（20%）\n示例脚本《仓库改造前后电费对比》\n1. 镜头1（工厂外�?3s）：字幕 Hook——“电费省 55%，他们怎么做到的？”\n2. 镜头2（旧�?vs AOK 灯对�?5s）：分屏展示照度 & 电表读数。\n3. 镜头3（客户访�?7s）：采样字幕重点�? 个月回本”。\n4. 镜头4（动态图�?5s）：ROI 计算动画。\n5. 结尾 CTA�?s）：官网 ROI 计算�?& 联系方式。\n\n### Pillar B｜可靠性实验室�?0%）\n脚本《IP66 冲水实测》：高压水枪→内部拆解→LED 板依旧点亮。\n\n### Pillar C｜智�?高效�?0%）\n脚本《LoRa 组网 1 分钟教程》：实拍网关 + 手机 App 控光。\n\n### Pillar D｜项目速递（20%）\n脚本《泰国高速公路夜景对比》：航拍 before/after + 线路安装花絮。\n\n### Pillar E｜技术快问快答（20%）\n脚本《UL vs DLC 有啥区别？》：工程师出�?15s 解释，结束引导下载白皮书。\n\n---\n## 5. 发布节奏\n- TikTok / Shorts：每�?5×（周一至周�?10:00 UTC-5）\n- LinkedIn 企业页：周二、周�?8:30 PST（案例长�?+ 技术长视频）\n- 员工号：周一、周�?1 条软�?+ 1 条转发案例视频\n\n> Tips：提�?30 天在 Notion 日历排期�?Zapier 自动同步到社媒调度工具（Publer/Hootsuite）。\n\n---\n## 6. KPI 看板\n1. 完播�?�?5%\n2. CTR �?.5%\n3. 留资转化 �?%\n4. CPM 控制 �?15（投放放大阶段）\n\n---\n## 7. 素材拍摄清单（每月）\n| 类别 | 场景 | 拍摄要点 |\n|------|------|-----------|\n| 工程案例 | 3 处已完工项目 | 航拍+夜景+客户采访 |\n| 实验室测�?| 2 �?| 防水/老化/散热 3 机位 |\n| 工厂速看 | 1 �?| SMT 产线 + 老化房快�?|\n| KOL 联动 | 1 �?| 开�?测光对比 |\n| Q&A 口播 | 8 �?| 单机�?AI 抠像背景 |\n\n---\n## 8. 预算概览（USD/月）\n| 项目 | 金额 | 备注 |\n|------|------|------|\n| 视频拍摄/剪辑 | 5,000 | 含外籍主�?2 �?|\n| KOL 评测 | 3,000 | 2 位照明工程博�?|\n| 广告投放 | 8,000 | TikTok TopView + LinkedIn CA |\n| 工具订阅 | 1,000 | AI 剪辑+社媒排程+CRM |\n| 机动 | 2,000 | 不可预见费用 |\n| **合计** | **19,000** |  \n\n---\n## 9. 执行时间线（Gantt 简表）\n```\nWeek1  | 脚本锁定 & 场景勘察\nWeek2  | 拍摄 & 素材入库\nWeek3  | 首批 20 条剪�?+ 账号初始化\nWeek4  | 全渠道上�?& 付费冷启动\nMonth2 | KOL 评测、复盘高转化素材\nMonth3 | 预算加码 & 新语种账号（TH/AR）\nMonth4 | SEO 长尾+再营销广告\nMonth5 | 联名白皮�?& 大型案例纪录片\nMonth6 | 总结优化 & 2025 预算申请\n```\n\n---\n## 10. 关键分工\n- 增长负责人（PM）：统筹 KPI / 预算\n- 内容策划：脚�?& 排期\n- 摄影/剪辑 2 名：拍摄 + AI 多版本\n- 渠道投放：素材上�?& 广告优化\n- 外籍主播：英语出镜口播、配音\n\n---\n## 结束语\n�?做到「每�?3 个场景�?0 条短视频�?0 账号矩阵」，借助 AI 裂变与精准分发，预计 3 个月即可实现月均 120 条以上优质询盘。AOK，只差执行！\n\n——\n"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760177130766
@@ -4229,7 +4231,7 @@ INSERT INTO "redis_queue_messages" VALUES('ca716f48-ef34-46ec-834c-d7bd854b6d2d'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. ✅ 模块：目标人群  \n客户类型：工程承包商 / EPC、 市政采购方（道路 / 城市照明）、 灯具经销商与分销商、 工商业终端客户（仓储、工厂、体育场馆等）  \n目标市场：北美、欧洲、东南亚  \n常见痛点：节能降本、施工与维护成本高、必须符合当地认证  \n\n2. 《AOK Lighting 增长战略蓝图（完整版）》  \n（已完整列出商业目标、目标人群与市场、产品卖点、内容增长策略、内容支柱与素材、渠道节奏、关键指标、资源配置、时间线路、风险应对等十个板块。）  \n\n3. 您的专属《增长战略蓝图》已全部生成并上传，您可以立即按照此计划开干！",
+    "text": "1. �?模块：目标人�? \n客户类型：工程承包商 / EPC�?市政采购方（道路 / 城市照明）�?灯具经销商与分销商�?工商业终端客户（仓储、工厂、体育场馆等�? \n目标市场：北美、欧洲、东南亚  \n常见痛点：节能降本、施工与维护成本高、必须符合当地认�? \n\n2. 《AOK Lighting 增长战略蓝图（完整版）�? \n（已完整列出商业目标、目标人群与市场、产品卖点、内容增长策略、内容支柱与素材、渠道节奏、关键指标、资源配置、时间线路、风险应对等十个板块。）  \n\n3. 您的专属《增长战略蓝图》已全部生成并上传，您可以立即按照此计划开干！",
     "data": {
       "video_link": ""
     }
@@ -4263,7 +4265,7 @@ INSERT INTO "redis_queue_messages" VALUES('6dc68b19-76bd-4778-b9ea-97dfc2483072'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，视频自动合成时出现网络问题，导致本次合成失败。\n\n请问您希望我立即重试一次，还是稍后再试？如果想要重新合成，请回复“重试”；如有其他需求，也请告诉我。",
+    "text": "抱歉，视频自动合成时出现网络问题，导致本次合成失败。\n\n请问您希望我立即重试一次，还是稍后再试？如果想要重新合成，请回复“重试”；如有其他需求，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -4280,7 +4282,7 @@ INSERT INTO "redis_queue_messages" VALUES('fa275ed3-5f29-4a52-bf0e-aa2ed448f407'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "- 正文：\nAOK Lighting―海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n   • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）。  \n   • 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明。  \n   • 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n   • 工程承包商 / EPC：注重认证齐全、交付周期、维护成本。  \n   • 市政采购方：关心节能指标、质保年限、符合道路标准。  \n   • 经销/分销商：关注利润空间、库存周转、售后配合。  \n   • 工商业终端：关注 ROI、智能控制集成、安装便利。  \n   • 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品&差异化  \n   • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低。  \n   • 100,000 h 寿命＋5-10 年质保，减少市政/EPC 质保压力。  \n   • 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠。  \n   • 智能兼容（DALI、0-10 V、Zigbee/LoRa），升级无忧。  \n   • OEM/ODM 快速定制，缩短项目周期。  \n\n4. 品牌价值主张  \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目标  \n   • 北美：市政道路＋停车场照明，DLC Premium 路灯切入；年销售目标 1.2 万套。  \n   • 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万。  \n   • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万。  \n   • 三年合计：海外销售 CAGR ≥35%，2026 年出口破 30 百万美金。\n\n6. 渠道与价格策略  \n   • 1 级：核心 EPC＋大型分销商，合同价→项目结算。  \n   • 2 级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣。  \n   • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套。  \n   • 配套服务：样灯 1 周交付，备品备件 48h 内发货。\n\n7. 营销与传播  \n   a. 内容/SEO  \n      - 核心关键词矩阵（示例）：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting, UL listed shoebox light …  \n      - 场景案例文章：道路节能改造、仓库 ROI 试算、体育场照明指南。  \n   b. 数字渠道  \n      - 官网+LinkedIn+YouTube：技术演示&案例视频；  \n      - Facebook/Instagram：工程现场短视频；  \n      - Google Ads+Bing Ads：项目经理、采购关键词投放。  \n   c. 展会/活动  \n      - 每年：LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair。  \n      - 联合代理举办“High-Efficacy Lighting Day”。  \n\n8. 客户旅程与转化漏斗  \n   Awareness→兴趣 (技术白皮书下载)→方案咨询→样灯测试→POC 订单→批量采购→保修期内复购/升级。  \n   • 关键触点：官网 CTA、工程案例视频、售前 ROI 计算工具。  \n   • 关键转化工具：在线 TCO 计算器、30 天免费样灯计划。  \n\n9. 关键 KPI (季度)  \n   • MQL（工程线索）≥300 条；  \n   • 样灯转化率 ≥35%；  \n   • 交付准时率 ≥95%；  \n   • 客户复购率 ≥25%；  \n   • 线上内容发布 ≥12 篇/月；  \n   • LinkedIn 订阅增长率 ≥10%/月。  \n\n10. 里程碑与资源  \n   • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线。  \n   • 2024 Q4：东南亚渠道招募完成；上线在线 ROI 计算器。  \n   • 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万。  \n   • 2025 H2：海外仓建立（US 西岸 & 德国）；交付周期缩短 5 天。  \n   • 2026 Q4：海外总营收 ≥ US$30 M；全球代理网覆盖 25+ 国。  \n\n——  \n请核对并告诉我“确认”或提出修改意见；确认后我将把该战略蓝图存档并进入下一步执行。",
+    "text": "- 正文：\nAOK Lighting―海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n   �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）�? \n   �?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照明�? \n   �?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n   �?工程承包�?/ EPC：注重认证齐全、交付周期、维护成本�? \n   �?市政采购方：关心节能指标、质保年限、符合道路标准�? \n   �?经销/分销商：关注利润空间、库存周转、售后配合�? \n   �?工商业终端：关注 ROI、智能控制集成、安装便利�? \n   �?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品&差异�? \n   �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最低�? \n   �?100,000 h 寿命�?-10 年质保，减少市政/EPC 质保压力�? \n   �?专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠�? \n   �?智能兼容（DALI�?-10 V、Zigbee/LoRa），升级无忧�? \n   �?OEM/ODM 快速定制，缩短项目周期�? \n\n4. 品牌价值主�? \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目�? \n   �?北美：市政道路＋停车场照明，DLC Premium 路灯切入；年销售目�?1.2 万套�? \n   �?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 万�? \n   �?东南亚：城市基建与园区节能改造；年销售目�?US$300 万�? \n   �?三年合计：海外销�?CAGR �?5%�?026 年出口破 30 百万美金。\n\n6. 渠道与价格策�? \n   �?1 级：核心 EPC＋大型分销商，合同价→项目结算�? \n   �?2 级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣�? \n   �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套�? \n   �?配套服务：样�?1 周交付，备品备件 48h 内发货。\n\n7. 营销与传�? \n   a. 内容/SEO  \n      - 核心关键词矩阵（示例）：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting, UL listed shoebox light �? \n      - 场景案例文章：道路节能改造、仓�?ROI 试算、体育场照明指南�? \n   b. 数字渠道  \n      - 官网+LinkedIn+YouTube：技术演�?案例视频�? \n      - Facebook/Instagram：工程现场短视频�? \n      - Google Ads+Bing Ads：项目经理、采购关键词投放�? \n   c. 展会/活动  \n      - 每年：LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair�? \n      - 联合代理举办“High-Efficacy Lighting Day”�? \n\n8. 客户旅程与转化漏�? \n   Awareness→兴�?(技术白皮书下载)→方案咨询→样灯测试→POC 订单→批量采购→保修期内复购/升级�? \n   �?关键触点：官�?CTA、工程案例视频、售�?ROI 计算工具�? \n   �?关键转化工具：在�?TCO 计算器�?0 天免费样灯计划�? \n\n9. 关键 KPI (季度)  \n   �?MQL（工程线索）�?00 条；  \n   �?样灯转化�?�?5%�? \n   �?交付准时�?�?5%�? \n   �?客户复购�?�?5%�? \n   �?线上内容发布 �?2 �?月；  \n   �?LinkedIn 订阅增长�?�?0%/月�? \n\n10. 里程碑与资源  \n   �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上线�? \n   �?2024 Q4：东南亚渠道招募完成；上线在�?ROI 计算器�? \n   �?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 万�? \n   �?2025 H2：海外仓建立（US 西岸 & 德国）；交付周期缩短 5 天�? \n   �?2026 Q4：海外总营�?�?US$30 M；全球代理网覆盖 25+ 国�? \n\n—�? \n请核对并告诉我“确认”或提出修改意见；确认后我将把该战略蓝图存档并进入下一步执行�?,
     "data": {
       "video_link": ""
     }
@@ -4291,7 +4293,7 @@ INSERT INTO "redis_queue_messages" VALUES('8846a1d4-5f5d-47c1-bfad-f9c050197121'
   "env": "gray",
   "session_id": "40378446-8040-45c8-a7a7-99aeecfcd10d",
   "user_id": "0086d2b1-1514-4450-8660-29629e27f984",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "b8346c72-029d-44b1-97d8-6c88f6ad2cfe",
   "socket_id": "d2AI6OcmC3JCL0A3AAAF",
   "status": "RUNNING",
@@ -4307,7 +4309,7 @@ INSERT INTO "redis_queue_messages" VALUES('9199420c-99e7-43cc-b02d-39d2ec89a152'
   "request_id": "b8346c72-029d-44b1-97d8-6c88f6ad2cfe",
   "socket_id": "d2AI6OcmC3JCL0A3AAAF",
   "status": "FINISHED",
-  "data": {"content":"## AOK Lighting — 海外增长战略蓝图（2024-2026）\n\n### 1. 市场定位\n- 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）。  \n- 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明。  \n- 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n### 2. 客户洞察\n1. 工程承包商 / EPC：认证齐全、交付周期、维护成本。  \n2. 市政采购方：节能指标、质保年限、符合道路标准。  \n3. 经销/分销商：利润空间、库存周转、售后配合。  \n4. 工商业终端：ROI、智能控制集成、安装便利。  \n痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n### 3. 核心产品 & 差异化\n- 整灯光效 150–170 lm/W，TCO 最低。  \n- 100 000 h 寿命＋5–10 年质保。  \n- 专利散热＋多配光＋IP66/IK10。  \n- 智能兼容：DALI、0-10 V、Zigbee/LoRa。  \n- OEM/ODM 快速定制。\n\n### 4. 品牌价值主张\n“更高光效，更省成本”——为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n### 5. 目标市场与销售目标\n| 区域 | 主要场景 | 年度销售目标 | 关键认证 |\n| --- | --- | --- | --- |\n| 北美 | 市政道路/停车场 | 1.2 万套 | DLC Premium / UL |\n| 欧洲 | 工矿/物流仓储/体育 | €800 万 | CE / TUV |\n| 东南亚 | 城市基建/园区改造 | US$300 万 | CE / SAA |\n三年合计：CAGR ≥ 35%，2026 年出口破 US$30 M。\n\n### 6. 渠道与价格策略\n1. 核心 EPC + 大型分销商 → 合同价/项目价。  \n2. 区域代理 + 专业批发商 → MSRP-30%。  \n3. 直销：市政标案 & 体育场；配套金融租赁。  \n4. 服务：样灯 1 周交付，备件 48 h 内发货。\n\n### 7. 营销与传播\n- 内容 / SEO：LED street light, DLC Premium, high bay 170 lm/W …  \n- 数字渠道：官网 + LinkedIn + YouTube（技术演示）；FB/IG（工程现场短视频）；Google/Bing Ads（采购关键词）。  \n- 展会：LightFair (US)、InterLumi (EU)、HK Lighting Fair；线下“High-Efficacy Lighting Day”。\n\n### 8. 客户旅程 & 转化漏斗\nAwareness → 兴趣 → 方案咨询 → 样灯测试 → POC → 批量采购 → 复购/升级。  \n关键触点：官网 CTA、案例视频、ROI 工具。  \n转化工具：在线 TCO 计算器、30 天免费样灯计划。\n\n### 9. 关键 KPI（季度）\n- MQL ≥ 300  \n- 样灯转化率 ≥ 35 %  \n- 准时交付 ≥ 95 %  \n- 复购率 ≥ 25 %  \n- 内容发布 ≥ 12 篇/月  \n- LinkedIn 粉丝增长 ≥ 10 %/月\n\n### 10. 里程碑\n| 时间 | 里程碑 | 结果指标 |\n| --- | --- | --- |\n| 2024 Q3 | 北美 DLC Premium 路灯量产；官网多语言 | 交付周期 ↓10 % |\n| 2024 Q4 | 东南亚渠道招募；上线 ROI 计算器 | 渠道覆盖 3 国 |\n| 2025 H1 | 欧洲体育照明旗舰案例 | YouTube 订阅 ≥ 50 k |\n| 2025 H2 | 海外仓（US & DE）上线 | 交付周期 ↓5 天 |\n| 2026 Q4 | 海外营收 ≥ US$30 M | 覆盖 25+ 国 |\n\n> 您的专属《出海视频获客战略规划书》已生成，祝业务腾飞！"},
+  "data": {"content":"## AOK Lighting �?海外增长战略蓝图�?024-2026）\n\n### 1. 市场定位\n- 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）�? \n- 细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照明�? \n- 战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n### 2. 客户洞察\n1. 工程承包�?/ EPC：认证齐全、交付周期、维护成本�? \n2. 市政采购方：节能指标、质保年限、符合道路标准�? \n3. 经销/分销商：利润空间、库存周转、售后配合�? \n4. 工商业终端：ROI、智能控制集成、安装便利�? \n痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n### 3. 核心产品 & 差异化\n- 整灯光效 150�?70 lm/W，TCO 最低�? \n- 100 000 h 寿命�?�?0 年质保�? \n- 专利散热＋多配光＋IP66/IK10�? \n- 智能兼容：DALI�?-10 V、Zigbee/LoRa�? \n- OEM/ODM 快速定制。\n\n### 4. 品牌价值主张\n“更高光效，更省成本”——为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n### 5. 目标市场与销售目标\n| 区域 | 主要场景 | 年度销售目�?| 关键认证 |\n| --- | --- | --- | --- |\n| 北美 | 市政道路/停车�?| 1.2 万套 | DLC Premium / UL |\n| 欧洲 | 工矿/物流仓储/体育 | �?00 �?| CE / TUV |\n| 东南�?| 城市基建/园区改�?| US$300 �?| CE / SAA |\n三年合计：CAGR �?35%�?026 年出口破 US$30 M。\n\n### 6. 渠道与价格策略\n1. 核心 EPC + 大型分销�?�?合同�?项目价�? \n2. 区域代理 + 专业批发�?�?MSRP-30%�? \n3. 直销：市政标�?& 体育场；配套金融租赁�? \n4. 服务：样�?1 周交付，备件 48 h 内发货。\n\n### 7. 营销与传播\n- 内容 / SEO：LED street light, DLC Premium, high bay 170 lm/W �? \n- 数字渠道：官�?+ LinkedIn + YouTube（技术演示）；FB/IG（工程现场短视频）；Google/Bing Ads（采购关键词）�? \n- 展会：LightFair (US)、InterLumi (EU)、HK Lighting Fair；线下“High-Efficacy Lighting Day”。\n\n### 8. 客户旅程 & 转化漏斗\nAwareness �?兴趣 �?方案咨询 �?样灯测试 �?POC �?批量采购 �?复购/升级�? \n关键触点：官�?CTA、案例视频、ROI 工具�? \n转化工具：在�?TCO 计算器�?0 天免费样灯计划。\n\n### 9. 关键 KPI（季度）\n- MQL �?300  \n- 样灯转化�?�?35 %  \n- 准时交付 �?95 %  \n- 复购�?�?25 %  \n- 内容发布 �?12 �?�? \n- LinkedIn 粉丝增长 �?10 %/月\n\n### 10. 里程碑\n| 时间 | 里程�?| 结果指标 |\n| --- | --- | --- |\n| 2024 Q3 | 北美 DLC Premium 路灯量产；官网多语言 | 交付周期 �?0 % |\n| 2024 Q4 | 东南亚渠道招募；上线 ROI 计算�?| 渠道覆盖 3 �?|\n| 2025 H1 | 欧洲体育照明旗舰案例 | YouTube 订阅 �?50 k |\n| 2025 H2 | 海外仓（US & DE）上�?| 交付周期 �? �?|\n| 2026 Q4 | 海外营收 �?US$30 M | 覆盖 25+ �?|\n\n> 您的专属《出海视频获客战略规划书》已生成，祝业务腾飞�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760177932169
@@ -4322,7 +4324,7 @@ INSERT INTO "redis_queue_messages" VALUES('6459d6c7-2311-4695-ad62-35a02ccc4e57'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 已确认并存档，以上即为您所需的战略蓝图，祝项目大卖！  \n2. 您的专属《海外增长战略蓝图》已全部生成并同步完毕，祝您大卖！",
+    "text": "1. 已确认并存档，以上即为您所需的战略蓝图，祝项目大卖！  \n2. 您的专属《海外增长战略蓝图》已全部生成并同步完毕，祝您大卖�?,
     "data": {
       "video_link": ""
     }
@@ -4339,7 +4341,7 @@ INSERT INTO "redis_queue_messages" VALUES('dad26ccd-d646-4c5c-8c08-c249dd076d3b'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的“战略蓝图”，我需要先快速了解一下贵公司的基本情况。  \n2. 请您先提供任意一种资料即可：  \n   • 官网链接  \n   • 产品/服务介绍文件（PDF、Word、图片均可）  \n   • 公司简介或宣传册  \n3. 我会先自动分析，尽量减少您后续输入的时间。收到资料后，我们很快就能进入蓝图输出环节！",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的“战略蓝图”，我需要先快速了解一下贵公司的基本情况�? \n2. 请您先提供任意一种资料即可：  \n   �?官网链接  \n   �?产品/服务介绍文件（PDF、Word、图片均可）  \n   �?公司简介或宣传�? \n3. 我会先自动分析，尽量减少您后续输入的时间。收到资料后，我们很快就能进入蓝图输出环节！",
     "data": {
       "video_link": ""
     }
@@ -4356,7 +4358,7 @@ INSERT INTO "redis_queue_messages" VALUES('736807a2-9479-447a-985d-e2f1d0a7bf68'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：  \n1. 市场定位  \n   • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）。  \n   • 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明。  \n   • 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”。  \n\n2. 客户洞察  \n   • 工程承包商 / EPC：注重认证齐全、交付周期、维护成本。  \n   • 市政采购方：关心节能指标、质保年限、符合道路标准。  \n   • 经销/分销商：关注利润空间、库存周转、售后配合。  \n   • 工商业终端：关注 ROI、智能控制集成、安装便利。  \n   • 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。  \n\n3. 核心产品 & 差异化  \n   • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低。  \n   • 100,000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力。  \n   • 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠。  \n   • 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧。  \n   • OEM/ODM 快速定制，缩短项目周期。  \n\n4. 品牌价值主张  \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。  \n\n5. 目标市场与份额目标  \n   • 北美：市政道路＋停车场照明；年销售目标 1.2 万套。  \n   • 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万。  \n   • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万。  \n   • 三年合计：海外销售 CAGR ≥35%，2026 年出口破 3,000 万美元。  \n\n6. 渠道与价格策略  \n   • 1 级：核心 EPC＋大型分销商，合同价→项目结算。  \n   • 2 级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣。  \n   • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套。  \n   • 配套服务：样灯 1 周交付，备品备件 48 h 内发货。  \n\n7. 营销与传播  \n   a. 内容/SEO  \n      - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等。  \n      - 场景案例文章：道路节能改造、仓库 ROI 试算、体育场照明指南。  \n   b. 数字渠道  \n      - 官网＋LinkedIn＋YouTube：技术演示 & 案例视频；  \n      - Facebook/Instagram：工程现场短视频；  \n      - Google Ads＋Bing Ads：项目经理、采购关键词投放。  \n   c. 展会/活动  \n      - LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair；  \n      - 联合代理举办 “High-Efficacy Lighting Day”。  \n\n8. 客户旅程与转化漏斗  \n   Awareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购/升级。  \n   • 关键触点：官网 CTA、案例视频、ROI 计算工具。  \n   • 转化工具：在线 TCO 计算器、30 天免费样灯计划。  \n\n9. 关键 KPI（季度）  \n   • MQL ≥300 条  \n   • 样灯转化率 ≥35%  \n   • 准时交付 ≥95%  \n   • 客户复购率 ≥25%  \n   • 内容发布 ≥12 篇/月  \n   • LinkedIn 订阅增长 ≥10%/月  \n\n10. 里程碑  \n   • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线。  \n   • 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器。  \n   • 2025 H1：欧洲体育照明案例落地；YouTube 订阅破 5 万。  \n   • 2025 H2：海外仓（US & DE）上线；交付周期缩短 5 天。  \n   • 2026 Q4：海外营收 ≥US$30 M；代理网覆盖 25+ 国。",
+    "text": "正文�? \n1. 市场定位  \n   �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）�? \n   �?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照明�? \n   �?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”�? \n\n2. 客户洞察  \n   �?工程承包�?/ EPC：注重认证齐全、交付周期、维护成本�? \n   �?市政采购方：关心节能指标、质保年限、符合道路标准�? \n   �?经销/分销商：关注利润空间、库存周转、售后配合�? \n   �?工商业终端：关注 ROI、智能控制集成、安装便利�? \n   �?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规�? \n\n3. 核心产品 & 差异�? \n   �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最低�? \n   �?100,000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力�? \n   �?专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠�? \n   �?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧�? \n   �?OEM/ODM 快速定制，缩短项目周期�? \n\n4. 品牌价值主�? \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案�? \n\n5. 目标市场与份额目�? \n   �?北美：市政道路＋停车场照明；年销售目�?1.2 万套�? \n   �?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 万�? \n   �?东南亚：城市基建与园区节能改造；年销售目�?US$300 万�? \n   �?三年合计：海外销�?CAGR �?5%�?026 年出口破 3,000 万美元�? \n\n6. 渠道与价格策�? \n   �?1 级：核心 EPC＋大型分销商，合同价→项目结算�? \n   �?2 级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣�? \n   �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套�? \n   �?配套服务：样�?1 周交付，备品备件 48 h 内发货�? \n\n7. 营销与传�? \n   a. 内容/SEO  \n      - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等�? \n      - 场景案例文章：道路节能改造、仓�?ROI 试算、体育场照明指南�? \n   b. 数字渠道  \n      - 官网＋LinkedIn＋YouTube：技术演�?& 案例视频�? \n      - Facebook/Instagram：工程现场短视频�? \n      - Google Ads＋Bing Ads：项目经理、采购关键词投放�? \n   c. 展会/活动  \n      - LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair�? \n      - 联合代理举办 “High-Efficacy Lighting Day”�? \n\n8. 客户旅程与转化漏�? \n   Awareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购/升级�? \n   �?关键触点：官�?CTA、案例视频、ROI 计算工具�? \n   �?转化工具：在�?TCO 计算器�?0 天免费样灯计划�? \n\n9. 关键 KPI（季度）  \n   �?MQL �?00 �? \n   �?样灯转化�?�?5%  \n   �?准时交付 �?5%  \n   �?客户复购�?�?5%  \n   �?内容发布 �?2 �?�? \n   �?LinkedIn 订阅增长 �?0%/�? \n\n10. 里程�? \n   �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上线�? \n   �?2024 Q4：东南亚渠道招募完成；上�?ROI 计算器�? \n   �?2025 H1：欧洲体育照明案例落地；YouTube 订阅�?5 万�? \n   �?2025 H2：海外仓（US & DE）上线；交付周期缩短 5 天�? \n   �?2026 Q4：海外营�?≥US$30 M；代理网覆盖 25+ 国�?,
     "data": {
       "video_link": ""
     }
@@ -4367,7 +4369,7 @@ INSERT INTO "redis_queue_messages" VALUES('3f8e6ecb-3f26-4901-9e15-0003c7c2b932'
   "env": "gray",
   "session_id": "d2a3dcbc-0594-4845-955d-56b362e81e83",
   "user_id": "0086d2b1-1514-4450-8660-29629e27f984",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "6f0d4fd6-a743-4696-9a21-86d63c336bff",
   "socket_id": "doXherjGlgEh80zKAAAH",
   "status": "RUNNING",
@@ -4383,7 +4385,7 @@ INSERT INTO "redis_queue_messages" VALUES('0086d65f-0f64-4394-b3af-1c8a15185cc7'
   "request_id": "6f0d4fd6-a743-4696-9a21-86d63c336bff",
   "socket_id": "doXherjGlgEh80zKAAAH",
   "status": "FINISHED",
-  "data": {"content":"# AOK Lighting — 短视频获客作战地图（海外市场 2024-2025）\n\n## 1. 总体目标\n- 覆盖市场：北美、欧洲、东南亚  \n- 12 个月获取 6,000+ 高质量海外工程线索（MQL）  \n- 视频曝光 ≥ **1.2 亿次**；品牌关键词搜索量提升 **3 倍**  \n- 账号矩阵：**15 个账号**（10 英语 + 3 西语 + 2 德语）  \n- 视频总产出：≈ **3,600 条**（平均每日 10 条矩阵分发）  \n\n---\n\n## 2. 账号配置\n| 平台 | 账号数 | 语言 | 目标受众 | 更新频率 |\n| --- | --- | --- | --- | --- |\n| TikTok | 5 | 英语 | 工程经理 / 采购 | 1-2 条/天 |\n| YouTube Shorts | 3 | 英语 / 德语 | EPC / 分销商 | 1 条/天 |\n| Instagram Reels | 3 | 英语 / 西语 | 设计院 / 代理商 | 1 条/天 |\n| Facebook Reels | 2 | 英语 | 市政采购 | 1 条/天 |\n| LinkedIn | 2 | 英语 | B2B 决策者 | 3 条/周 |\n\n---\n\n## 3. 素材拍摄需求\n每周仅需拍摄 **1 天** → 8 大场景 × 5 机位 ≈ **40 镜头**  \n1. 工厂自动化产线  \n2. 老化测试实验室  \n3. IP66 & IK10 测试  \n4. 道路实装夜拍  \n5. 仓库节能对比  \n6. 体育场 960 fps 慢动作  \n7. 工程师解说散热专利  \n8. 包装 & 快速发货  \n\n40 镜头 × AI 裁切混剪 ≈ **240 条短视频/周**  \n1 个月即可累积 1,000+ 视频资产，支撑 3 个月矩阵发布。\n\n---\n\n## 4. 内容方向 & 核心脚本示例\n1. Factory Tour  \n   - 旁白：This is how we make a 170 lm/W street light in 48 h.  \n   - 标题：Inside a DLC Premium LED factory  \n2. Extreme Test  \n   - 旁白：Can your street light survive THIS?  \n   - 标题：5 kg 冲击测试结果  \n3. Case Study  \n   - 标题：How this city cut 63% power bill with AOK LED  \n4. ROI Talk  \n   - 旁白：Save $41,200/year switching 400 fixtures.  \n5. Tech Q&A  \n   - 标题：60 sec to know DLC Premium  \n6. How-to Install  \n   - 标题：Install a 300 W high bay in 90 s — no tools!  \n\n---\n\n## 5. 发布排期（首月示例）\n- Week 1：每日 8 条（4 工厂 + 2 测试 + 1 Q&A + 1 案例）  \n- Week 2：加入 ROI 计算类，比例 20%  \n- 循环迭代 → 月更 240-300 条  \n\n---\n\n## 6. 运营 SOP\n1. Mon：选题脚本 & 拍摄清单  \n2. Tue：实景拍摄（8 场景）  \n3. Wed：素材入库 & AI 批量剪辑  \n4. Thu：人工抽检 20% + 上字幕  \n5. Fri：一键排期 15 账号  \n6. Daily：数据监控 & 回复 Top Comment  \n\n---\n\n## 7. 资源清单\n- 海外静态 IP：15 组  \n- 素材云盘：Google Drive 2 TB  \n- AI 工具：CapCut、Descript、OpusClip  \n- 本地化：DeepL Pro + 专业母语外包  \n\n---\n\n## 8. 指标预估\n- 播放量：1.2 亿  \n- 粉丝：TikTok 50 万｜YouTube 15 万｜Instagram 10 万｜LinkedIn 5 万  \n- 询盘：> 6,000 条 → 5 % 成交 ≈ **300 单 / US$4,500 万**  \n\n---\n\n## 9. 团队配置\n- 视频策划 ×1  \n- 英语主持 ×1  \n- 拍摄剪辑 ×1  \n- 海外运营 ×2  \n- AI 工具操作 ×1  \n\n---\n\n## 10. 年度预算\n- 人工：≈ ¥96 万  \n- 设备 & 软件：≈ ¥8 万  \n- 广告投流：≈ US$50,000  \n- 其他：≈ ¥10 万  \n**合计：≈ ¥140 万（ROI > 10）**  \n\n> 您的专属视频获客战略已经生成！照着这份蓝图，即刻开拍，快速获客！"},
+  "data": {"content":"# AOK Lighting �?短视频获客作战地图（海外市场 2024-2025）\n\n## 1. 总体目标\n- 覆盖市场：北美、欧洲、东南亚  \n- 12 个月获取 6,000+ 高质量海外工程线索（MQL�? \n- 视频曝光 �?**1.2 亿次**；品牌关键词搜索量提�?**3 �?*  \n- 账号矩阵�?*15 个账�?*�?0 英语 + 3 西语 + 2 德语�? \n- 视频总产出：�?**3,600 �?*（平均每�?10 条矩阵分发）  \n\n---\n\n## 2. 账号配置\n| 平台 | 账号�?| 语言 | 目标受众 | 更新频率 |\n| --- | --- | --- | --- | --- |\n| TikTok | 5 | 英语 | 工程经理 / 采购 | 1-2 �?�?|\n| YouTube Shorts | 3 | 英语 / 德语 | EPC / 分销�?| 1 �?�?|\n| Instagram Reels | 3 | 英语 / 西语 | 设计�?/ 代理�?| 1 �?�?|\n| Facebook Reels | 2 | 英语 | 市政采购 | 1 �?�?|\n| LinkedIn | 2 | 英语 | B2B 决策�?| 3 �?�?|\n\n---\n\n## 3. 素材拍摄需求\n每周仅需拍摄 **1 �?* �?8 大场�?× 5 机位 �?**40 镜头**  \n1. 工厂自动化产�? \n2. 老化测试实验�? \n3. IP66 & IK10 测试  \n4. 道路实装夜拍  \n5. 仓库节能对比  \n6. 体育�?960 fps 慢动�? \n7. 工程师解说散热专�? \n8. 包装 & 快速发�? \n\n40 镜头 × AI 裁切混剪 �?**240 条短视频/�?*  \n1 个月即可累积 1,000+ 视频资产，支�?3 个月矩阵发布。\n\n---\n\n## 4. 内容方向 & 核心脚本示例\n1. Factory Tour  \n   - 旁白：This is how we make a 170 lm/W street light in 48 h.  \n   - 标题：Inside a DLC Premium LED factory  \n2. Extreme Test  \n   - 旁白：Can your street light survive THIS?  \n   - 标题�? kg 冲击测试结果  \n3. Case Study  \n   - 标题：How this city cut 63% power bill with AOK LED  \n4. ROI Talk  \n   - 旁白：Save $41,200/year switching 400 fixtures.  \n5. Tech Q&A  \n   - 标题�?0 sec to know DLC Premium  \n6. How-to Install  \n   - 标题：Install a 300 W high bay in 90 s �?no tools!  \n\n---\n\n## 5. 发布排期（首月示例）\n- Week 1：每�?8 条（4 工厂 + 2 测试 + 1 Q&A + 1 案例�? \n- Week 2：加�?ROI 计算类，比例 20%  \n- 循环迭代 �?月更 240-300 �? \n\n---\n\n## 6. 运营 SOP\n1. Mon：选题脚本 & 拍摄清单  \n2. Tue：实景拍摄（8 场景�? \n3. Wed：素材入�?& AI 批量剪辑  \n4. Thu：人工抽检 20% + 上字�? \n5. Fri：一键排�?15 账号  \n6. Daily：数据监�?& 回复 Top Comment  \n\n---\n\n## 7. 资源清单\n- 海外静�?IP�?5 �? \n- 素材云盘：Google Drive 2 TB  \n- AI 工具：CapCut、Descript、OpusClip  \n- 本地化：DeepL Pro + 专业母语外包  \n\n---\n\n## 8. 指标预估\n- 播放量：1.2 �? \n- 粉丝：TikTok 50 万｜YouTube 15 万｜Instagram 10 万｜LinkedIn 5 �? \n- 询盘�? 6,000 �?�?5 % 成交 �?**300 �?/ US$4,500 �?*  \n\n---\n\n## 9. 团队配置\n- 视频策划 ×1  \n- 英语主持 ×1  \n- 拍摄剪辑 ×1  \n- 海外运营 ×2  \n- AI 工具操作 ×1  \n\n---\n\n## 10. 年度预算\n- 人工：≈ ¥96 �? \n- 设备 & 软件：≈ ¥8 �? \n- 广告投流：≈ US$50,000  \n- 其他：≈ ¥10 �? \n**合计：≈ ¥140 万（ROI > 10�?*  \n\n> 您的专属视频获客战略已经生成！照着这份蓝图，即刻开拍，快速获客！"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760178305164
@@ -4398,7 +4400,7 @@ INSERT INTO "redis_queue_messages" VALUES('a06d96a8-ec35-46f8-8e8d-edf1bcc67ad5'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n1. 以下是为 AOK Lighting（奥科莱特）定制的《海外增长战略蓝图 2024-2026》——一次性完整输出，您可以直接用于内部宣讲或投资路演。如需微调，请告诉我！\n\n────────────────\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n• 战略角色：北美 / 欧洲 EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n• 工程承包商 / EPC：认证齐全、交付周期、维护成本  \n• 市政采购方：能效指标、质保年限、道路标准合规  \n• 经销 / 分销商：利润空间、库存周转、售后配合  \n• 工商业终端：ROI、智能控制、安装便利  \n• 共性痛点：节能降本，施工维护成本高，需 UL/DLC/CE 等认证\n\n3. 核心产品 & 差异化  \n• 整灯光效 150-170 lm/W，TCO 最低  \n• 100 000 h 寿命＋5-10 年质保，减轻质保压力  \n• 专利散热＋多配光＋IP66/IK10，高温多尘亦可靠  \n• 智能兼容 DALI / 0-10 V / Zigbee / LoRa  \n• OEM/ODM 快速定制，缩短项目周期\n\n4. 品牌价值主张  \n“更高光效，更省成本”——用自主光学 & 散热，为全球工程客户提供长期可靠的节能照明解决方案\n\n5. 目标市场与年度份额  \n• 北美：市政道路＋停车场灯，年销 1.2 万套  \n• 欧洲：工矿 / 物流仓储＋体育照明，年销 €800 万  \n• 东南亚：城市基建＋园区节能，年销 US$300 万  \n• 三年合计：海外 CAGR ≥35%，2026 出口 ≥US$30 M\n\n6. 渠道与价格策略  \n• 一级：核心 EPC＋大型分销商，合同价结算  \n• 二级：区域代理＋灯具批发商，MSRP-30 % 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁支持  \n• 服务承诺：样灯 1 周交付，备件 48 h 内发货\n\n7. 营销与传播  \nA. 内容 / SEO：  \n   ‑ 关键词矩阵——LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting …  \n   ‑ 场景文章——道路节能改造、仓库 ROI 试算、体育场照明指南  \nB. 数字渠道：  \n   ‑ 官网 + LinkedIn + YouTube（技术演示 & 案例视频）  \n   ‑ Facebook / Instagram（工程现场短视频）  \n   ‑ Google Ads / Bing Ads（项目经理 & 采购关键词投放）  \nC. 展会 / 活动：LightFair (US)、InterLumi (EU)、HK Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”\n\n8. 客户旅程 & 转化漏斗  \nAwareness → 兴趣 → 方案咨询 → 样灯测试 → POC → 批量采购 → 复购 / 升级  \n• 关键触点：官网 CTA、案例视频、ROI 计算器  \n• 转化工具：在线 TCO 计算器、30 天免费样灯计划\n\n9. 关键 KPI（季度）  \n• MQL ≥300  \n• 样灯转化率 ≥35 %  \n• 准时交付 ≥95 %  \n• 复购率 ≥25 %  \n• 内容发布 ≥12 篇 / 月  \n• LinkedIn 粉丝增长 ≥10 % / 月\n\n10. 里程碑（2024-2026）  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：美国西岸 & 德国海外仓运营；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国\n\n────────────────\n2. 《AOK Lighting 短视频获客作战地图》已全部生成并为您入库，照着蓝图即可直接开干，祝您大卖！",
+    "text": "正文：\n1. 以下是为 AOK Lighting（奥科莱特）定制的《海外增长战略蓝�?2024-2026》——一次性完整输出，您可以直接用于内部宣讲或投资路演。如需微调，请告诉我！\n\n────────────────\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n�?战略角色：北�?/ 欧洲 EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n�?工程承包�?/ EPC：认证齐全、交付周期、维护成�? \n�?市政采购方：能效指标、质保年限、道路标准合�? \n�?经销 / 分销商：利润空间、库存周转、售后配�? \n�?工商业终端：ROI、智能控制、安装便�? \n�?共性痛点：节能降本，施工维护成本高，需 UL/DLC/CE 等认证\n\n3. 核心产品 & 差异�? \n�?整灯光效 150-170 lm/W，TCO 最�? \n�?100 000 h 寿命�?-10 年质保，减轻质保压力  \n�?专利散热＋多配光＋IP66/IK10，高温多尘亦可靠  \n�?智能兼容 DALI / 0-10 V / Zigbee / LoRa  \n�?OEM/ODM 快速定制，缩短项目周期\n\n4. 品牌价值主�? \n“更高光效，更省成本”——用自主光学 & 散热，为全球工程客户提供长期可靠的节能照明解决方案\n\n5. 目标市场与年度份�? \n�?北美：市政道路＋停车场灯，年销 1.2 万套  \n�?欧洲：工�?/ 物流仓储＋体育照明，年销 �?00 �? \n�?东南亚：城市基建＋园区节能，年销 US$300 �? \n�?三年合计：海�?CAGR �?5%�?026 出口 ≥US$30 M\n\n6. 渠道与价格策�? \n�?一级：核心 EPC＋大型分销商，合同价结�? \n�?二级：区域代理＋灯具批发商，MSRP-30 % 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁支持  \n�?服务承诺：样�?1 周交付，备件 48 h 内发货\n\n7. 营销与传�? \nA. 内容 / SEO�? \n   �?关键词矩阵——LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting �? \n   �?场景文章——道路节能改造、仓�?ROI 试算、体育场照明指南  \nB. 数字渠道�? \n   �?官网 + LinkedIn + YouTube（技术演�?& 案例视频�? \n   �?Facebook / Instagram（工程现场短视频�? \n   �?Google Ads / Bing Ads（项目经�?& 采购关键词投放）  \nC. 展会 / 活动：LightFair (US)、InterLumi (EU)、HK Lighting Fair；联合代理举�?“High-Efficacy Lighting Day”\n\n8. 客户旅程 & 转化漏斗  \nAwareness �?兴趣 �?方案咨询 �?样灯测试 �?POC �?批量采购 �?复购 / 升级  \n�?关键触点：官�?CTA、案例视频、ROI 计算�? \n�?转化工具：在�?TCO 计算器�?0 天免费样灯计划\n\n9. 关键 KPI（季度）  \n�?MQL �?00  \n�?样灯转化�?�?5 %  \n�?准时交付 �?5 %  \n�?复购�?�?5 %  \n�?内容发布 �?2 �?/ �? \n�?LinkedIn 粉丝增长 �?0 % / 月\n\n10. 里程碑（2024-2026�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言上线  \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：美国西�?& 德国海外仓运营；交付周期缩短 5 �? \n�?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ 国\n\n────────────────\n2. 《AOK Lighting 短视频获客作战地图》已全部生成并为您入库，照着蓝图即可直接开干，祝您大卖�?,
     "data": {
       "video_link": ""
     }
@@ -4415,7 +4417,7 @@ INSERT INTO "redis_queue_messages" VALUES('dea3f168-e136-42fc-89e8-117efdec5fec'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "AOK Lighting — 海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程 / 项目型照明  \n• 战略角色：北美、欧洲 EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n• 工程承包商 / EPC：看重认证齐全、交付周期、维护成本  \n• 市政采购方：关注节能指标、质保年限、符合道路标准  \n• 经销 / 分销商：关注利润空间、库存周转、售后配合  \n• 工商业终端：关注 ROI、智能控制集成、安装便利  \n• 共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合规\n\n3. 核心产品与差异化  \n• 整灯光效 150–170 lm/W，TCO 最低  \n• 100 000 h 寿命＋5–10 年质保，降低市政 / EPC 风险  \n• 专利散热＋多配光＋高防护 IP66 / IK10，适应极端环境  \n• 智能兼容（DALI、0-10 V、Zigbee / LoRa），升级无忧  \n• OEM / ODM 快速定制，缩短项目周期\n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n• 欧洲：工矿 / 物流仓储＋体育照明；年销售目标 €800 万  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M\n\n6. 渠道与价格策略  \n• 一级：核心 EPC ＋大型分销商，合同价→项目结算  \n• 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n• 配套服务：样灯 1 周交付，备品备件 48 h 内发货\n\n7. 营销与传播  \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook / Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）  \nC. 展会 / 活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏斗  \nAwareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购 / 升级  \n关键触点：官网 CTA、案例视频、ROI 计算工具  \n转换工具：在线 TCO 计算器、30 天免费样灯计划\n\n9. 关键 KPI（季度）  \n• MQL ≥300 条  \n• 样灯转化率 ≥35%  \n• 准时交付 ≥95%  \n• 客户复购率 ≥25%  \n• 内容发布 ≥12 篇 / 月  \n• LinkedIn 粉丝增长 ≥10% / 月\n\n10. 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国",
+    "text": "AOK Lighting �?海外增长战略蓝图�?024-2026）\n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?/ 项目型照�? \n�?战略角色：北美、欧�?EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n�?工程承包�?/ EPC：看重认证齐全、交付周期、维护成�? \n�?市政采购方：关注节能指标、质保年限、符合道路标�? \n�?经销 / 分销商：关注利润空间、库存周转、售后配�? \n�?工商业终端：关注 ROI、智能控制集成、安装便�? \n�?共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合规\n\n3. 核心产品与差异化  \n�?整灯光效 150�?70 lm/W，TCO 最�? \n�?100 000 h 寿命�?�?0 年质保，降低市政 / EPC 风险  \n�?专利散热＋多配光＋高防护 IP66 / IK10，适应极端环境  \n�?智能兼容（DALI�?-10 V、Zigbee / LoRa），升级无忧  \n�?OEM / ODM 快速定制，缩短项目周期\n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n�?欧洲：工�?/ 物流仓储＋体育照明；年销售目�?�?00 �? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M\n\n6. 渠道与价格策�? \n�?一级：核心 EPC ＋大型分销商，合同价→项目结算  \n�?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n�?配套服务：样�?1 周交付，备品备件 48 h 内发货\n\n7. 营销与传�? \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook / Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放�? \nC. 展会 / 活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏�? \nAwareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购 / 升级  \n关键触点：官�?CTA、案例视频、ROI 计算工具  \n转换工具：在�?TCO 计算器�?0 天免费样灯计划\n\n9. 关键 KPI（季度）  \n�?MQL �?00 �? \n�?样灯转化�?�?5%  \n�?准时交付 �?5%  \n�?客户复购�?�?5%  \n�?内容发布 �?2 �?/ �? \n�?LinkedIn 粉丝增长 �?0% / 月\n\n10. 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n�?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ �?,
     "data": {
       "video_link": ""
     }
@@ -4432,7 +4434,7 @@ INSERT INTO "redis_queue_messages" VALUES('71add1e1-5e5e-44f9-a7fd-d132b417c4f5'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 以下为系统自动生成的《海外增长战略蓝图（2024-2026）》草案，供您确认：  \n\n————————————————  \nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1) 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n• 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”  \n\n2) 客户洞察  \n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n• 市政采购方：关心节能指标、质保年限、符合道路标准  \n• 经销/分销商：关注利润空间、库存周转、售后配合  \n• 工商业终端：关注 ROI、智能控制集成、安装便利  \n• 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规  \n\n3) 核心产品 & 差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n• 100 000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力  \n• 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n• 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n• OEM/ODM 快速定制，缩短项目周期  \n\n4) 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5) 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n• 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M  \n\n6) 渠道与价格策略  \n• 一级：核心 EPC＋大型分销商，合同价→项目结算  \n• 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n• 配套服务：样灯 1 周交付，备品备件 48 h 内发货  \n\n7) 营销与传播  \nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）  \nC. 展会/活动：LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”  \n\n8) 客户旅程与转化漏斗  \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n关键触点：官网 CTA、案例视频、ROI 计算工具  \n转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n9) 关键 KPI（季度）  \n• MQL ≥300 条  \n• 样灯转化率 ≥35%  \n• 准时交付 ≥95%  \n• 客户复购率 ≥25%  \n• 内容发布 ≥12 篇/月  \n• LinkedIn 粉丝增长 ≥10%/月  \n\n10) 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国  \n\n————————————————  \n\n请您确认：  \n① 以上战略蓝图是否符合您的需求？  \n② 是否需要增删或调整任何部分？  \n\n如无修改，直接回复“确认”即可完成定稿。",
+    "text": "1. 以下为系统自动生成的《海外增长战略蓝图（2024-2026）》草案，供您确认�? \n\n———————————————�? \nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1) 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n�?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家�? \n\n2) 客户洞察  \n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n�?市政采购方：关心节能指标、质保年限、符合道路标�? \n�?经销/分销商：关注利润空间、库存周转、售后配�? \n�?工商业终端：关注 ROI、智能控制集成、安装便�? \n�?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合�? \n\n3) 核心产品 & 差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n�?100 000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力  \n�?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n�?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n�?OEM/ODM 快速定制，缩短项目周期  \n\n4) 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5) 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n�?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M  \n\n6) 渠道与价格策�? \n�?一级：核心 EPC＋大型分销商，合同价→项目结算  \n�?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n�?配套服务：样�?1 周交付，备品备件 48 h 内发�? \n\n7) 营销与传�? \nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放�? \nC. 展会/活动：LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day�? \n\n8) 客户旅程与转化漏�? \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n关键触点：官�?CTA、案例视频、ROI 计算工具  \n转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n9) 关键 KPI（季度）  \n�?MQL �?00 �? \n�?样灯转化�?�?5%  \n�?准时交付 �?5%  \n�?客户复购�?�?5%  \n�?内容发布 �?2 �?�? \n�?LinkedIn 粉丝增长 �?0%/�? \n\n10) 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n�?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ �? \n\n———————————————�? \n\n请您确认�? \n�?以上战略蓝图是否符合您的需求？  \n�?是否需要增删或调整任何部分�? \n\n如无修改，直接回复“确认”即可完成定稿�?,
     "data": {
       "video_link": ""
     }
@@ -4443,7 +4445,7 @@ INSERT INTO "redis_queue_messages" VALUES('06ffce97-7a2a-4790-858c-2fcb3a4df0b1'
   "env": "gray",
   "session_id": "e64d92f0-c9ed-41bd-b13e-b7efefb2c58e",
   "user_id": "0086d2b1-1514-4450-8660-29629e27f984",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "7fed0ee5-aaad-44bc-ae8b-bef6c1d8af58",
   "socket_id": "ut_ZSlUFtZFdvtELAAAF",
   "status": "RUNNING",
@@ -4459,7 +4461,7 @@ INSERT INTO "redis_queue_messages" VALUES('4a6c2169-b60e-4acb-850e-993ea3ba9f0b'
   "request_id": "7fed0ee5-aaad-44bc-ae8b-bef6c1d8af58",
   "socket_id": "ut_ZSlUFtZFdvtELAAAF",
   "status": "FINISHED",
-  "data": {"content":"# AOK Lighting — 出海视频获客战略规划书（2024-2025）\n\n---\n## 1. 总体目标\n1. 市场：北美、欧洲、东南亚三大核心区域  \n2. 12 个月视频总曝光 ≥ **1.2 亿**  \n3. 获取高质量海外工程线索（MQL）≥ **6,000 条**  \n4. 预计成交转化率 5%，对应 **≈300 个项目订单 / 4,500 万美元销售额**  \n5. 品牌关键词搜索量提升 **≥3 倍**\n\n---\n## 2. 账号矩阵配置（共 15 个）\n| 平台 | 账号数 | 语言 | 目标受众 | 更新频率 |\n|------|-------|------|---------|---------|\n| TikTok | 5 | 英语 | 工程经理 / 采购 | 1–2 条/天 |\n| YouTube Shorts | 3 | 英语 / 德语 | EPC、分销商 | 1 条/天 |\n| Instagram Reels | 3 | 英语 / 西语 | 设计院、代理商 | 1 条/天 |\n| Facebook Reels | 2 | 英语 | 市政采购 | 1 条/天 |\n| LinkedIn | 2 | 英语 | B2B 决策者 | 3 条/周 |\n\n*合计：每日平均发布 10 条短视频；全年 ≈ **3,600 条***\n\n---\n## 3. 素材拍摄需求\n• **周拍摄 1 天**，共 8 大场景 × 5 机位 ≈ **40 个原始镜头**  \n  1. 工厂自动化产线  \n  2. 老化测试实验室  \n  3. IP66 & IK10 冲水/砸球测试  \n  4. 道路实装夜拍  \n  5. 仓库高棚灯节能对比  \n  6. 体育场 960fps 投光灯慢动作  \n  7. 工程师讲解散热专利  \n  8. 包装 & 快速发货流程  \n• **AI 裂变**：40 镜头 × CapCut/OpusClip 批量混剪 ≈ **240 条短视频/周**  \n• 1 个月即可累积 1,000+ 视频资产，满足矩阵 **3 个月发布量**\n\n---\n## 4. 内容方向 & 详细脚本示例（6 大类）\n### 4.1 工厂探秘（Factory Tour）\n- 镜头：无人贴片线 → 老化架 → 包装线  \n- 旁白：This is how we make a 170 lm/W street light in 48 hours.  \n- 标题：*Inside a DLC-Premium LED factory in China* #manufacturing  \n- BGM：电子工业风  \n\n### 4.2 极限测试（Extreme Test）\n- 镜头：IP66 冲水 → IK10 铁球冲击 → −40 ℃ 冷冻箱  \n- 旁白：Can your street light survive THIS?  \n- 标题：*We smashed our light with a 5 kg ball… guess what happened?*  \n\n### 4.3 客户案例（Case Study）\n- 镜头：美国德州道路夜景前后对比  \n- 采访：市政代表 15 秒 testimonial  \n- 标题：*How this city cut 63 % power bill with AOK LED*  \n\n### 4.4 ROI 计算（Money Talk）\n- 镜头：Excel 屏录 + 动画  \n- 旁白：Save $41,200/year by switching 400 fixtures.  \n- CTA：评论区获取 ROI 报告  \n\n### 4.5 快问快答（Tech Q&A）\n- 镜头：工程师正对镜头  \n- 问题：What’s DLC Premium?、How to choose beam angle?  \n- 标题：*60 sec to know LED certifications*  \n\n### 4.6 安装教学（How-to）\n- 镜头：模块化插拔三步完成  \n- 标题：*Install a 300 W high bay in 90 seconds – no tools!*  \n\n---\n## 5. 发布排期示例（首月）\n| 周次 | 每日发布 | 重点方向 | LinkedIn 配套 |\n|------|---------|---------|---------------|\n| Week 1 | 8 条 | 工厂 4 + 测试 2 + Q&A 1 + 案例 1 | 2 篇技术帖 +1 × 2 min 横版案例片 |\n| Week 2 | 8 条 | 加入 ROI 主题占比 20 % | 技术白皮书下载 CTA |\n| Week 3 | 9 条 | 案例 & 安装教学提升 | 直播预告 *LED Cost-saving Live* |\n| Week 4 | 9 条 | 数据复盘 + AB 测试调整 | 1 场 30 min 在线直播 |\n\n---\n## 6. 运营 SOP\n1. Monday — 选题脚本 & 拍摄清单确认  \n2. Tuesday — 实景拍摄（8 场景）  \n3. Wednesday — 素材入库 & AI 批量剪辑  \n4. Thursday — 人工复检 20 % 抽样 + 加字幕  \n5. Friday — 一键排期到 15 个账号（Publer / Hootsuite）  \n6. Daily — 监控数据 & 回复 Top Comment（英语母语助手）\n\n---\n## 7. 资源与工具清单\n• 海外静态 IP：15 组  \n• 素材云盘：Google Drive 2 TB 共享  \n• AI 工具：CapCut for Business、Descript、OpusClip  \n• 翻译 & 本地化：DeepL Pro + 专业母语外包  \n• 付费推广：Google Ads / Meta Ads（占全部视频 10 %）\n\n---\n## 8. 核心指标预估（12 个月）\n| 指标 | 目标值 |\n|------|-------|\n| 视频播放量 | ≥ 1.2 亿 |\n| 粉丝总量 | TikTok 50 万 / YouTube 15 万 / Instagram 10 万 / LinkedIn 5 万 |\n| 链接点击 & DM 询盘 | ≥ 6,000 |\n| 项目成交 | ≈ 300 单 |\n| 预计销售额 | ≈ 4,500 万 USD |\n\n---\n## 9. 团队配置\n• 视频策划/编导 ×1  \n• 英语主持（兼售前顾问）×1  \n• 拍摄剪辑 ×1  \n• 海外运营/客服 ×2  \n• AI 工具操作岗 ×1  \n\n---\n## 10. 预算（年）\n| 类别 | 预算 |\n|------|------|\n| 人员 | ¥ 960,000 |\n| 设备 & 软件 | ¥ 80,000 |\n| 付费投流（Google/Meta） | US$ 50,000 |\n| 其他杂费 | ¥ 100,000 |\n| **合计** | 约 ¥ 1,400,000 （ROI > 10） |\n\n---\n> 您的专属视频获客战略已经生成！请确认无误后，即可按照此蓝图执行。"},
+  "data": {"content":"# AOK Lighting �?出海视频获客战略规划书（2024-2025）\n\n---\n## 1. 总体目标\n1. 市场：北美、欧洲、东南亚三大核心区域  \n2. 12 个月视频总曝�?�?**1.2 �?*  \n3. 获取高质量海外工程线索（MQL）≥ **6,000 �?*  \n4. 预计成交转化�?5%，对�?**�?00 个项目订�?/ 4,500 万美元销售额**  \n5. 品牌关键词搜索量提升 **�? �?*\n\n---\n## 2. 账号矩阵配置（共 15 个）\n| 平台 | 账号�?| 语言 | 目标受众 | 更新频率 |\n|------|-------|------|---------|---------|\n| TikTok | 5 | 英语 | 工程经理 / 采购 | 1�? �?�?|\n| YouTube Shorts | 3 | 英语 / 德语 | EPC、分销�?| 1 �?�?|\n| Instagram Reels | 3 | 英语 / 西语 | 设计院、代理商 | 1 �?�?|\n| Facebook Reels | 2 | 英语 | 市政采购 | 1 �?�?|\n| LinkedIn | 2 | 英语 | B2B 决策�?| 3 �?�?|\n\n*合计：每日平均发�?10 条短视频；全�?�?**3,600 �?**\n\n---\n## 3. 素材拍摄需求\n�?**周拍�?1 �?*，共 8 大场�?× 5 机位 �?**40 个原始镜�?*  \n  1. 工厂自动化产�? \n  2. 老化测试实验�? \n  3. IP66 & IK10 冲水/砸球测试  \n  4. 道路实装夜拍  \n  5. 仓库高棚灯节能对�? \n  6. 体育�?960fps 投光灯慢动作  \n  7. 工程师讲解散热专�? \n  8. 包装 & 快速发货流�? \n�?**AI 裂变**�?0 镜头 × CapCut/OpusClip 批量混剪 �?**240 条短视频/�?*  \n�?1 个月即可累积 1,000+ 视频资产，满足矩�?**3 个月发布�?*\n\n---\n## 4. 内容方向 & 详细脚本示例�? 大类）\n### 4.1 工厂探秘（Factory Tour）\n- 镜头：无人贴片线 �?老化�?�?包装�? \n- 旁白：This is how we make a 170 lm/W street light in 48 hours.  \n- 标题�?Inside a DLC-Premium LED factory in China* #manufacturing  \n- BGM：电子工业风  \n\n### 4.2 极限测试（Extreme Test）\n- 镜头：IP66 冲水 �?IK10 铁球冲击 �?�?0 �?冷冻�? \n- 旁白：Can your street light survive THIS?  \n- 标题�?We smashed our light with a 5 kg ball�?guess what happened?*  \n\n### 4.3 客户案例（Case Study）\n- 镜头：美国德州道路夜景前后对�? \n- 采访：市政代�?15 �?testimonial  \n- 标题�?How this city cut 63 % power bill with AOK LED*  \n\n### 4.4 ROI 计算（Money Talk）\n- 镜头：Excel 屏录 + 动画  \n- 旁白：Save $41,200/year by switching 400 fixtures.  \n- CTA：评论区获取 ROI 报告  \n\n### 4.5 快问快答（Tech Q&A）\n- 镜头：工程师正对镜头  \n- 问题：What’s DLC Premium?、How to choose beam angle?  \n- 标题�?60 sec to know LED certifications*  \n\n### 4.6 安装教学（How-to）\n- 镜头：模块化插拔三步完成  \n- 标题�?Install a 300 W high bay in 90 seconds �?no tools!*  \n\n---\n## 5. 发布排期示例（首月）\n| 周次 | 每日发布 | 重点方向 | LinkedIn 配套 |\n|------|---------|---------|---------------|\n| Week 1 | 8 �?| 工厂 4 + 测试 2 + Q&A 1 + 案例 1 | 2 篇技术帖 +1 × 2 min 横版案例�?|\n| Week 2 | 8 �?| 加入 ROI 主题占比 20 % | 技术白皮书下载 CTA |\n| Week 3 | 9 �?| 案例 & 安装教学提升 | 直播预告 *LED Cost-saving Live* |\n| Week 4 | 9 �?| 数据复盘 + AB 测试调整 | 1 �?30 min 在线直播 |\n\n---\n## 6. 运营 SOP\n1. Monday �?选题脚本 & 拍摄清单确认  \n2. Tuesday �?实景拍摄�? 场景�? \n3. Wednesday �?素材入库 & AI 批量剪辑  \n4. Thursday �?人工复检 20 % 抽样 + 加字�? \n5. Friday �?一键排期到 15 个账号（Publer / Hootsuite�? \n6. Daily �?监控数据 & 回复 Top Comment（英语母语助手）\n\n---\n## 7. 资源与工具清单\n�?海外静�?IP�?5 �? \n�?素材云盘：Google Drive 2 TB 共享  \n�?AI 工具：CapCut for Business、Descript、OpusClip  \n�?翻译 & 本地化：DeepL Pro + 专业母语外包  \n�?付费推广：Google Ads / Meta Ads（占全部视频 10 %）\n\n---\n## 8. 核心指标预估�?2 个月）\n| 指标 | 目标�?|\n|------|-------|\n| 视频播放�?| �?1.2 �?|\n| 粉丝总量 | TikTok 50 �?/ YouTube 15 �?/ Instagram 10 �?/ LinkedIn 5 �?|\n| 链接点击 & DM 询盘 | �?6,000 |\n| 项目成交 | �?300 �?|\n| 预计销售额 | �?4,500 �?USD |\n\n---\n## 9. 团队配置\n�?视频策划/编导 ×1  \n�?英语主持（兼售前顾问）�?  \n�?拍摄剪辑 ×1  \n�?海外运营/客服 ×2  \n�?AI 工具操作�?×1  \n\n---\n## 10. 预算（年）\n| 类别 | 预算 |\n|------|------|\n| 人员 | ¥ 960,000 |\n| 设备 & 软件 | ¥ 80,000 |\n| 付费投流（Google/Meta�?| US$ 50,000 |\n| 其他杂费 | ¥ 100,000 |\n| **合计** | �?¥ 1,400,000 （ROI > 10�?|\n\n---\n> 您的专属视频获客战略已经生成！请确认无误后，即可按照此蓝图执行�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760316832913
@@ -4474,7 +4476,7 @@ INSERT INTO "redis_queue_messages" VALUES('759e8543-bb49-43cb-900c-a0cf330d1d45'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 您的《海外增长战略蓝图（2024-2026）》已为您生成并输出（详见上文内容）。  \n2. 同时，匹配的视频获客战略蓝图也已生成并提交。祝执行顺利，期待您的好消息！",
+    "text": "1. 您的《海外增长战略蓝图（2024-2026）》已为您生成并输出（详见上文内容）�? \n2. 同时，匹配的视频获客战略蓝图也已生成并提交。祝执行顺利，期待您的好消息�?,
     "data": {
       "video_link": ""
     }
@@ -4491,7 +4493,7 @@ INSERT INTO "redis_queue_messages" VALUES('43f6d330-9a89-471a-a60d-ecb5a67f0a91'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍或公司简介图片都行，我会先仔细浏览，尽量减少您的输入时间。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍或公司简介图片都行，我会先仔细浏览，尽量减少您的输入时间�?,
     "data": {
       "video_link": ""
     }
@@ -4508,7 +4510,7 @@ INSERT INTO "redis_queue_messages" VALUES('d8b1144b-4737-4f8b-b7dd-0c0f075cd487'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 以下为最新版《海外增长战略蓝图（2024-2026）》草案，已基于现有数据库资料自动汇总生成，供您快速查看：  \n\n————————————————  \nAOK Lighting — 海外增长战略蓝图（2024-2026）\n\n1) 市场定位  \n• 赛道：工业与户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程 / 项目型照明  \n• 战略角色：北美 / 欧洲 / 东南亚 EPC 承包商与市政的“节能降本光效专家”  \n\n2) 客户洞察  \n• 工程承包商 / EPC：要认证齐、交付快、维护低  \n• 市政采购：看节能指标、质保年限、道路标准  \n• 经销 / 分销商：看利润空间、库存周转、售后配合  \n• 工商业终端：看 ROI、智能控制、安装便利  \n• 共性痛点：节能降本、维护成本高、需 UL / DLC / CE 等合规  \n\n3) 核心产品 & 差异化  \n• 整灯光效 150–170 lm/W，TCO 最低  \n• 寿命 100 000 h＋5-10 年质保  \n• 专利散热＋多配光＋IP66 / IK10 高防护  \n• 智能兼容（DALI、0-10 V、Zigbee / LoRa）  \n• OEM / ODM 快速定制，项目周期缩短  \n\n4) 品牌价值主张  \n“更高光效，更省成本”——凭自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5) 目标市场与份额目标  \n• 北美：市政道路＋停车场；年销 1.2 万套  \n• 欧洲：工矿 / 物流仓储＋体育照明；年销 €800 万  \n• 东南亚：基建与园区节能改造；年销 US$300 万  \n• 三年合计：海外销售 CAGR ≥ 35%，2026 年出口破 US$30 M  \n\n6) 渠道与价格策略  \n• 1 级：核心 EPC＋大型分销商，合同价结算  \n• 2 级：区域代理＋专业批发商，统一 MSRP-30%  \n• 直销：关键市政标案 & 大型体育场，金融租赁配套  \n• 服务：样灯 1 周交付，备件 48 h 发货  \n\n7) 营销与传播  \n• 核心关键词：LED street light, DLC Premium, high bay 170 lm/W, outdoor sports lighting, IP66 industrial lighting …  \n• 数字渠道：官网＋LinkedIn＋YouTube；TikTok / Instagram Reels 工程短视频；Google / Bing Ads 精准投放  \n• 展会：LightFair(US)、InterLumi(EU)、HK Lighting Fair；举办 “High-Efficacy Lighting Day”  \n\n8) 客户旅程与转化漏斗  \nAwareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购 / 升级  \n关键触点：官网 CTA、案例视频、在线 ROI 计算器  \n转化工具：30 天免费样灯计划  \n\n9) 关键 KPI（季度）  \n• MQL ≥ 300  \n• 样灯转化率 ≥ 35 %  \n• 准时交付 ≥ 95 %  \n• 复购率 ≥ 25 %  \n• 内容发布 ≥ 12 篇 / 月  \n• LinkedIn 粉丝增长 ≥ 10 % / 月  \n\n10) 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期再降 5 天  \n• 2026 Q4：海外营收 ≥ US$30 M；全球代理覆盖 25+ 国  \n\n————————————————  \n\n2. 请您核对并告知：  \n① 以上蓝图是否已满足您的需求？  \n② 是否需增加、删减或修改任何模块？  \n\n若回复“确认”或“没问题”，我将把最终蓝图写入数据库并进入后续环节。",
+    "text": "1. 以下为最新版《海外增长战略蓝图（2024-2026）》草案，已基于现有数据库资料自动汇总生成，供您快速查看：  \n\n———————————————�? \nAOK Lighting �?海外增长战略蓝图�?024-2026）\n\n1) 市场定位  \n�?赛道：工业与户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?/ 项目型照�? \n�?战略角色：北�?/ 欧洲 / 东南�?EPC 承包商与市政的“节能降本光效专家�? \n\n2) 客户洞察  \n�?工程承包�?/ EPC：要认证齐、交付快、维护低  \n�?市政采购：看节能指标、质保年限、道路标�? \n�?经销 / 分销商：看利润空间、库存周转、售后配�? \n�?工商业终端：�?ROI、智能控制、安装便�? \n�?共性痛点：节能降本、维护成本高、需 UL / DLC / CE 等合�? \n\n3) 核心产品 & 差异�? \n�?整灯光效 150�?70 lm/W，TCO 最�? \n�?寿命 100 000 h�?-10 年质�? \n�?专利散热＋多配光＋IP66 / IK10 高防�? \n�?智能兼容（DALI�?-10 V、Zigbee / LoRa�? \n�?OEM / ODM 快速定制，项目周期缩短  \n\n4) 品牌价值主�? \n“更高光效，更省成本”——凭自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5) 目标市场与份额目�? \n�?北美：市政道路＋停车场；年销 1.2 万套  \n�?欧洲：工�?/ 物流仓储＋体育照明；年销 �?00 �? \n�?东南亚：基建与园区节能改造；年销 US$300 �? \n�?三年合计：海外销�?CAGR �?35%�?026 年出口破 US$30 M  \n\n6) 渠道与价格策�? \n�?1 级：核心 EPC＋大型分销商，合同价结�? \n�?2 级：区域代理＋专业批发商，统一 MSRP-30%  \n�?直销：关键市政标�?& 大型体育场，金融租赁配套  \n�?服务：样�?1 周交付，备件 48 h 发货  \n\n7) 营销与传�? \n�?核心关键词：LED street light, DLC Premium, high bay 170 lm/W, outdoor sports lighting, IP66 industrial lighting �? \n�?数字渠道：官网＋LinkedIn＋YouTube；TikTok / Instagram Reels 工程短视频；Google / Bing Ads 精准投放  \n�?展会：LightFair(US)、InterLumi(EU)、HK Lighting Fair；举�?“High-Efficacy Lighting Day�? \n\n8) 客户旅程与转化漏�? \nAwareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购 / 升级  \n关键触点：官�?CTA、案例视频、在�?ROI 计算�? \n转化工具�?0 天免费样灯计�? \n\n9) 关键 KPI（季度）  \n�?MQL �?300  \n�?样灯转化�?�?35 %  \n�?准时交付 �?95 %  \n�?复购�?�?25 %  \n�?内容发布 �?12 �?/ �? \n�?LinkedIn 粉丝增长 �?10 % / �? \n\n10) 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期再降 5 �? \n�?2026 Q4：海外营�?�?US$30 M；全球代理覆�?25+ �? \n\n———————————————�? \n\n2. 请您核对并告知：  \n�?以上蓝图是否已满足您的需求？  \n�?是否需增加、删减或修改任何模块�? \n\n若回复“确认”或“没问题”，我将把最终蓝图写入数据库并进入后续环节�?,
     "data": {
       "video_link": ""
     }
@@ -4525,7 +4527,7 @@ INSERT INTO "redis_queue_messages" VALUES('4641dabc-4287-475e-a2b8-629a30a8d760'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 以下是基于 AOK Lighting 现有资料，为您快速梳理出的「海外增长战略蓝图 2024-2026」（V1.0 草案）。请您先整体浏览，看看方向与重点是否符合预期，任何环节都可以随时指出修改——确认后我会把最终版本存档，并进入下一步关键词库 / 视频获客方案。  \n————————————————  \nAOK Lighting—海外增长战略蓝图（2024-2026）  \n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n• 战略角色：北美 / 欧洲 EPC 承包商与市政的“节能降本光效专家”  \n\n2. 客户洞察  \n• 工程承包商 / EPC：关注认证齐全、交付周期、维护成本  \n• 市政采购方：关注节能指标、质保年限、符合道路标准  \n• 经销 / 分销商：关注利润空间、库存周转、售后配合  \n• 工商业终端：关注 ROI、智能控制集成、安装便利  \n• 共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合规  \n\n3. 核心产品 & 差异化  \n• 整灯光效 150–170 lm/W，TCO 最低  \n• 100 000 h 寿命＋5-10 年质保，降低质保风险  \n• 专利散热＋多配光＋高防护 IP66 / IK10，极端环境可靠  \n• 智能兼容（DALI、0-10 V、Zigbee / LoRa），升级无忧  \n• OEM / ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主张  \n“更高光效，更省成本”——以自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与销售目标  \n• 北美：市政道路＋停车场照明，年销 1.2 万套  \n• 欧洲：工矿 / 仓储＋体育照明，年销 €800 万  \n• 东南亚：基建与园区节能改造，年销 US$300 万  \n• 三年合计：海外销售 CAGR ≥ 35%，2026 年出口 ≥ US$30 M  \n\n6. 渠道与价格策略  \n• 1 级：核心 EPC＋大型分销商，合同价→项目结算  \n• 2 级：区域代理＋专业批发商，统一 MSRP −30% 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n• 配套服务：样灯 1 周交付，备件 48 h 内发货  \n\n7. 营销与传播  \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W 等核心关键词＋案例文章  \nB. 数字渠道：官网＋LinkedIn＋YouTube（演示 & 案例）；TikTok / IG / FB Reels（工程现场短视频）；Google & Bing Ads 精准投放  \nC. 展会 / 活动：LightFair（US）、InterLumi（EU）、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”  \n\n8. 客户旅程 & 转化漏斗  \nAwareness → 兴趣（下载白皮书）→ 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购 / 升级  \n关键触点：官网 CTA、案例视频、在线 ROI 计算器  \n转化工具：30 天免费样灯计划、在线 TCO 计算器  \n\n9. 关键 KPI（季度）  \n• MQL ≥ 300 条 • 样灯转化率 ≥ 35% • 准时交付 ≥ 95%  \n• 客户复购率 ≥ 25% • 内容发布 ≥ 12 篇 / 月 • LinkedIn 粉丝增长 ≥ 10% / 月  \n\n10. 里程碑与资源  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥ US$30 M；全球代理网覆盖 25+ 国  \n————————————————  \n\n请您确认：  \n1) 整体战略方向是否 OK？  \n2) 是否需要增删具体市场 / 产品或 KPI？  \n\n确认后我即可：  \n• 把《增长战略蓝图》入库归档；  \n• 继续生成「关键词矩阵」→ 用于后续内容 / 视频推广。",
+    "text": "1. 以下是基�?AOK Lighting 现有资料，为您快速梳理出的「海外增长战略蓝�?2024-2026」（V1.0 草案）。请您先整体浏览，看看方向与重点是否符合预期，任何环节都可以随时指出修改——确认后我会把最终版本存档，并进入下一步关键词�?/ 视频获客方案�? \n———————————————�? \nAOK Lighting—海外增长战略蓝图（2024-2026�? \n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n�?战略角色：北�?/ 欧洲 EPC 承包商与市政的“节能降本光效专家�? \n\n2. 客户洞察  \n�?工程承包�?/ EPC：关注认证齐全、交付周期、维护成�? \n�?市政采购方：关注节能指标、质保年限、符合道路标�? \n�?经销 / 分销商：关注利润空间、库存周转、售后配�? \n�?工商业终端：关注 ROI、智能控制集成、安装便�? \n�?共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合�? \n\n3. 核心产品 & 差异�? \n�?整灯光效 150�?70 lm/W，TCO 最�? \n�?100 000 h 寿命�?-10 年质保，降低质保风险  \n�?专利散热＋多配光＋高防护 IP66 / IK10，极端环境可�? \n�?智能兼容（DALI�?-10 V、Zigbee / LoRa），升级无忧  \n�?OEM / ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主�? \n“更高光效，更省成本”——以自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与销售目�? \n�?北美：市政道路＋停车场照明，年销 1.2 万套  \n�?欧洲：工�?/ 仓储＋体育照明，年销 �?00 �? \n�?东南亚：基建与园区节能改造，年销 US$300 �? \n�?三年合计：海外销�?CAGR �?35%�?026 年出�?�?US$30 M  \n\n6. 渠道与价格策�? \n�?1 级：核心 EPC＋大型分销商，合同价→项目结算  \n�?2 级：区域代理＋专业批发商，统一 MSRP �?0% 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n�?配套服务：样�?1 周交付，备件 48 h 内发�? \n\n7. 营销与传�? \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W 等核心关键词＋案例文�? \nB. 数字渠道：官网＋LinkedIn＋YouTube（演�?& 案例）；TikTok / IG / FB Reels（工程现场短视频）；Google & Bing Ads 精准投放  \nC. 展会 / 活动：LightFair（US）、InterLumi（EU）、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day�? \n\n8. 客户旅程 & 转化漏斗  \nAwareness �?兴趣（下载白皮书）→ 方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购 / 升级  \n关键触点：官�?CTA、案例视频、在�?ROI 计算�? \n转化工具�?0 天免费样灯计划、在�?TCO 计算�? \n\n9. 关键 KPI（季度）  \n�?MQL �?300 条 �?样灯转化�?�?35% �?准时交付 �?95%  \n�?客户复购�?�?25% �?内容发布 �?12 �?/ 月 �?LinkedIn 粉丝增长 �?10% / �? \n\n10. 里程碑与资源  \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n�?2026 Q4：海外营�?�?US$30 M；全球代理网覆盖 25+ �? \n———————————————�? \n\n请您确认�? \n1) 整体战略方向是否 OK�? \n2) 是否需要增删具体市�?/ 产品�?KPI�? \n\n确认后我即可�? \n�?把《增长战略蓝图》入库归档；  \n�?继续生成「关键词矩阵」→ 用于后续内容 / 视频推广�?,
     "data": {
       "video_link": ""
     }
@@ -4542,7 +4544,7 @@ INSERT INTO "redis_queue_messages" VALUES('ea32c423-355b-40fc-a08f-8a47b4099cc7'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）。  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明。  \n• 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本。  \n• 市政采购方：关心节能指标、质保年限、符合道路标准。  \n• 经销/分销商：关注利润空间、库存周转、售后配合。  \n• 工商业终端：关注 ROI、智能控制集成、安装便利。  \n• 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品&差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低。  \n• 100,000 h 寿命＋5-10 年质保，减少市政/EPC 质保压力。  \n• 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠。  \n• 智能兼容（DALI、0-10 V、Zigbee/LoRa），升级无忧。  \n• OEM/ODM 快速定制，缩短项目周期。\n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套。  \n• 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万。  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万。  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 30 百万美金。\n\n6. 渠道与价格策略  \n• 1 级：核心 EPC＋大型分销商，合同价→项目结算。  \n• 2 级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣。  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套。  \n• 配套服务：样灯 1 周交付，备品备件 48h 内发货。\n\n7. 营销与传播  \na. 内容/SEO  \n  - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等  \n  - 场景案例文章：道路节能改造、仓库 ROI 试算、体育场照明指南。  \nb. 数字渠道  \n  - 官网+LinkedIn+YouTube：技术演示&案例视频；  \n  - Facebook/Instagram：工程现场短视频；  \n  - Google Ads+Bing Ads：项目经理、采购关键词投放。  \nc. 展会/活动  \n  - LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair  \n  - 联合代理举办“High-Efficacy Lighting Day”。\n\n8. 客户旅程与转化漏斗  \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级。  \n• 关键触点：官网 CTA、案例视频、ROI 计算工具。  \n• 转化工具：在线 TCO 计算器、30 天免费样灯计划。\n\n9. 关键 KPI（季度）  \n• MQL ≥300  \n• 样灯转化率 ≥35%  \n• 准时交付 ≥95%  \n• 复购率 ≥25%  \n• 内容发布 ≥12 篇/月  \n• LinkedIn 增长 ≥10%/月\n\n10. 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线。  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器。  \n• 2025 H1：欧洲体育照明案例落地；YouTube 订阅破 5 万。  \n• 2025 H2：海外仓（US & DE）上线；交付周期缩短 5 天。  \n• 2026 Q4：海外营收 ≥US$30M；代理网覆盖 25+ 国。",
+    "text": "1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）�? \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照明�? \n�?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成本�? \n�?市政采购方：关心节能指标、质保年限、符合道路标准�? \n�?经销/分销商：关注利润空间、库存周转、售后配合�? \n�?工商业终端：关注 ROI、智能控制集成、安装便利�? \n�?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品&差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最低�? \n�?100,000 h 寿命�?-10 年质保，减少市政/EPC 质保压力�? \n�?专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠�? \n�?智能兼容（DALI�?-10 V、Zigbee/LoRa），升级无忧�? \n�?OEM/ODM 快速定制，缩短项目周期。\n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套�? \n�?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 万�? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 万�? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 30 百万美金。\n\n6. 渠道与价格策�? \n�?1 级：核心 EPC＋大型分销商，合同价→项目结算�? \n�?2 级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣�? \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套�? \n�?配套服务：样�?1 周交付，备品备件 48h 内发货。\n\n7. 营销与传�? \na. 内容/SEO  \n  - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting �? \n  - 场景案例文章：道路节能改造、仓�?ROI 试算、体育场照明指南�? \nb. 数字渠道  \n  - 官网+LinkedIn+YouTube：技术演�?案例视频�? \n  - Facebook/Instagram：工程现场短视频�? \n  - Google Ads+Bing Ads：项目经理、采购关键词投放�? \nc. 展会/活动  \n  - LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair  \n  - 联合代理举办“High-Efficacy Lighting Day”。\n\n8. 客户旅程与转化漏�? \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级�? \n�?关键触点：官�?CTA、案例视频、ROI 计算工具�? \n�?转化工具：在�?TCO 计算器�?0 天免费样灯计划。\n\n9. 关键 KPI（季度）  \n�?MQL �?00  \n�?样灯转化�?�?5%  \n�?准时交付 �?5%  \n�?复购�?�?5%  \n�?内容发布 �?2 �?�? \n�?LinkedIn 增长 �?0%/月\n\n10. 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上线�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算器�? \n�?2025 H1：欧洲体育照明案例落地；YouTube 订阅�?5 万�? \n�?2025 H2：海外仓（US & DE）上线；交付周期缩短 5 天�? \n�?2026 Q4：海外营�?≥US$30M；代理网覆盖 25+ 国�?,
     "data": {
       "video_link": ""
     }
@@ -4559,7 +4561,7 @@ INSERT INTO "redis_queue_messages" VALUES('c3407206-49c5-432c-be2c-f7a5e75fb5e2'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n• 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n• 市政采购方：关注节能指标、质保年限、符合道路标准  \n• 经销/分销商：关注利润空间、库存周转、售后配合  \n• 工商业终端：关注 ROI、智能控制集成、安装便利  \n• 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规\n\n3. 核心产品 & 差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n• 100,000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力  \n• 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n• 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n• OEM/ODM 快速定制，缩短项目周期\n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n• 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M\n\n6. 渠道与价格策略  \n• 一级：核心 EPC＋大型分销商，合同价→项目结算  \n• 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n• 配套服务：样灯 1 周交付，备品备件 48 h 内发货\n\n7. 营销与传播  \nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）  \nC. 展会/活动：每年参加 LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏斗  \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n关键触点：官网 CTA、案例视频、ROI 计算工具  \n转化工具：在线 TCO 计算器、30 天免费样灯计划\n\n9. 关键 KPI（季度）  \n• MQL ≥300 条  \n• 样灯转化率 ≥35%  \n• 准时交付 ≥95%  \n• 客户复购率 ≥25%  \n• 内容发布 ≥12 篇/月  \n• LinkedIn 粉丝增长 ≥10%/月\n\n10. 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国",
+    "text": "1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n�?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n�?市政采购方：关注节能指标、质保年限、符合道路标�? \n�?经销/分销商：关注利润空间、库存周转、售后配�? \n�?工商业终端：关注 ROI、智能控制集成、安装便�? \n�?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规\n\n3. 核心产品 & 差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n�?100,000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力  \n�?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n�?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n�?OEM/ODM 快速定制，缩短项目周期\n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n�?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M\n\n6. 渠道与价格策�? \n�?一级：核心 EPC＋大型分销商，合同价→项目结算  \n�?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n�?配套服务：样�?1 周交付，备品备件 48 h 内发货\n\n7. 营销与传�? \nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放�? \nC. 展会/活动：每年参�?LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏�? \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n关键触点：官�?CTA、案例视频、ROI 计算工具  \n转化工具：在�?TCO 计算器�?0 天免费样灯计划\n\n9. 关键 KPI（季度）  \n�?MQL �?00 �? \n�?样灯转化�?�?5%  \n�?准时交付 �?5%  \n�?客户复购�?�?5%  \n�?内容发布 �?2 �?�? \n�?LinkedIn 粉丝增长 �?0%/月\n\n10. 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n�?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ �?,
     "data": {
       "video_link": ""
     }
@@ -4570,7 +4572,7 @@ INSERT INTO "redis_queue_messages" VALUES('2888a263-e833-449b-b585-887c4d4faa6f'
   "env": "gray",
   "session_id": "50882de8-73cb-4bd0-bc7c-46dca48a7592",
   "user_id": "0086d2b1-1514-4450-8660-29629e27f984",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "4b0d3dc3-b731-4e75-8da7-375decd003ed",
   "socket_id": "SQFodU25-_zPeygoAAAF",
   "status": "RUNNING",
@@ -4586,7 +4588,7 @@ INSERT INTO "redis_queue_messages" VALUES('a6222b8d-4999-4f8a-9c8a-a77d2d28a2ec'
   "request_id": "4b0d3dc3-b731-4e75-8da7-375decd003ed",
   "socket_id": "SQFodU25-_zPeygoAAAF",
   "status": "FINISHED",
-  "data": {"content":"# AOK Lighting – 1-Page Overseas Video Growth Blueprint (2024-2025)\n\n## 1. Account Matrix\n| 平台 | 账号数量 | 目标市场 | 账号定位 |\n|------|---------|----------|---------|\n| TikTok | 4 | 北美(2)、欧洲(1)、东南亚(1) | “LED 节能工程解决方案”短视频号 |\n| YouTube Shorts | 2 | 全球 | 工程案例&安装教程官方号 |\n| LinkedIn | 2 | 全球 B2B | 技术/案例快速剪辑号 |\n| Instagram Reels | 2 | 北美、欧洲 | 工程现场+品牌故事号 |\n**合计：10 个账号** （全部使用美区/欧区主体+海外静态 IP 上传，确保本土推荐权重）\n\n## 2. 内容主题（10 大主题循环）\n1. Factory Tour & “How It’s Made”\n2. Product Demo – 光效/配光/防水测试\n3. Customer Case Study –道路/仓库/体育场\n4. Installation Tutorial – 3 分钟搞定更换\n5. ROI Calculator – 节能对比动画\n6. Extreme Weather Stress Test – ‑40°C / 盐雾\n7. Maintenance Cost Breakdown – 五年省多少?\n8. Smart Control Integration – Zigbee/DALI 演示\n9. Behind the Tech – 散热专利揭秘\n10. Trade-Show Diary – LightFair/InterLumi Vlog\n\n> 每条主题可被 AI 裂变为：\n> • 15s Hook 版  • 30s 讲解版  • 60s 深度版\n\n## 3. 产能计划\n• 源素材：每周拍摄 3 大场景（工厂/客户现场/主播棚）≈ 90 分钟原片。\n• AI 裂变：同素材经剪辑脚本模板→ 60 条短视频/周。\n• 发布节奏：10 账号 × 6 条/周 = 60 条/周（与产能匹配）。\n• 三个月累计：≈ 720 条短视频；覆盖 9 大关键词簇；形成案例库。\n\n## 4. 目标 KPI（首 3 个月试跑）\n1. 内容产出：≥ 720 条短视频\n2. 曝光量：≥ 2,000,000 次观看\n3. 互动量：≥ 50,000 点赞 / 评论 / 分享\n4. 关注增长：TikTok ≥ 30k；YouTube ≥ 10k；LinkedIn ≥ 5k\n5. 线索获取：MQL ≥ 1,000 条（含样灯申请 & 邮件注册）\n6. 样灯转化率：≥ 30%\n\n## 5. 资源清单\n• 10 个美区/欧区账号 + 海外静态 IP\n• 手机 2 台 + GoPro 1 台 + 领夹麦 2 个 + 补光灯 1 套\n• AI 剪辑 SaaS（CapCut Pro + Descript）+ 内容管理 Notion\n• 关键词矩阵 & 脚本模板库（已同步）\n\n---\n确认无误后，即可按照此蓝图开拍；数据每周复盘、月度迭代。"},
+  "data": {"content":"# AOK Lighting �?1-Page Overseas Video Growth Blueprint (2024-2025)\n\n## 1. Account Matrix\n| 平台 | 账号数量 | 目标市场 | 账号定位 |\n|------|---------|----------|---------|\n| TikTok | 4 | 北美(2)、欧�?1)、东南亚(1) | “LED 节能工程解决方案”短视频�?|\n| YouTube Shorts | 2 | 全球 | 工程案例&安装教程官方�?|\n| LinkedIn | 2 | 全球 B2B | 技�?案例快速剪辑号 |\n| Instagram Reels | 2 | 北美、欧�?| 工程现场+品牌故事�?|\n**合计�?0 个账�?* （全部使用美�?欧区主体+海外静�?IP 上传，确保本土推荐权重）\n\n## 2. 内容主题�?0 大主题循环）\n1. Factory Tour & “How It’s Made”\n2. Product Demo �?光效/配光/防水测试\n3. Customer Case Study –道�?仓库/体育场\n4. Installation Tutorial �?3 分钟搞定更换\n5. ROI Calculator �?节能对比动画\n6. Extreme Weather Stress Test �?�?0°C / 盐雾\n7. Maintenance Cost Breakdown �?五年省多�?\n8. Smart Control Integration �?Zigbee/DALI 演示\n9. Behind the Tech �?散热专利揭秘\n10. Trade-Show Diary �?LightFair/InterLumi Vlog\n\n> 每条主题可被 AI 裂变为：\n> �?15s Hook �? �?30s 讲解�? �?60s 深度版\n\n## 3. 产能计划\n�?源素材：每周拍摄 3 大场景（工厂/客户现场/主播棚）�?90 分钟原片。\n�?AI 裂变：同素材经剪辑脚本模板→ 60 条短视频/周。\n�?发布节奏�?0 账号 × 6 �?�?= 60 �?周（与产能匹配）。\n�?三个月累计：�?720 条短视频；覆�?9 大关键词簇；形成案例库。\n\n## 4. 目标 KPI（首 3 个月试跑）\n1. 内容产出：≥ 720 条短视频\n2. 曝光量：�?2,000,000 次观看\n3. 互动量：�?50,000 点赞 / 评论 / 分享\n4. 关注增长：TikTok �?30k；YouTube �?10k；LinkedIn �?5k\n5. 线索获取：MQL �?1,000 条（含样灯申�?& 邮件注册）\n6. 样灯转化率：�?30%\n\n## 5. 资源清单\n�?10 个美�?欧区账号 + 海外静�?IP\n�?手机 2 �?+ GoPro 1 �?+ 领夹�?2 �?+ 补光�?1 套\n�?AI 剪辑 SaaS（CapCut Pro + Descript�? 内容管理 Notion\n�?关键词矩�?& 脚本模板库（已同步）\n\n---\n确认无误后，即可按照此蓝图开拍；数据每周复盘、月度迭代�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760318011405
@@ -4601,7 +4603,7 @@ INSERT INTO "redis_queue_messages" VALUES('eea02001-798b-42fa-bde8-9cefa0306d60'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 您的 1-页《AOK Lighting 海外视频增长蓝图》已生成并推送完毕！管理层可直接查看并据此启动执行。",
+    "text": "1. 您的 1-页《AOK Lighting 海外视频增长蓝图》已生成并推送完毕！管理层可直接查看并据此启动执行�?,
     "data": {
       "video_link": ""
     }
@@ -4618,7 +4620,7 @@ INSERT INTO "redis_queue_messages" VALUES('2e1f2fe8-9876-4ab1-909d-b8c034a398e4'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n2. 市场定位  \n   • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   • 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n   • 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”  \n\n3. 客户洞察  \n   • 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n   • 市政采购方：关注节能指标、质保年限、符合道路标准  \n   • 经销/分销商：关注利润空间、库存周转、售后配合  \n   • 工商业终端：关注 ROI、智能控制集成、安装便利  \n   • 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规  \n\n4. 核心产品&差异化  \n   • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n   • 100,000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力  \n   • 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n   • 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n   • OEM/ODM 快速定制，缩短项目周期  \n\n5. 品牌价值主张  \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n6. 目标市场与份额目标  \n   • 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n   • 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n   • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n   • 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M  \n\n7. 渠道与价格策略  \n   • 一级：核心 EPC＋大型分销商，合同价→项目结算  \n   • 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n   • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n   • 配套服务：样灯 1 周交付，备品备件 48 h 内发货  \n\n8. 营销与传播  \n   a. 内容/SEO  \n      - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等  \n      - 场景案例文章：道路节能改造、仓库 ROI 试算、体育场照明指南  \n   b. 数字渠道  \n      - 官网 + LinkedIn + YouTube：技术演示&案例视频  \n      - Facebook/Instagram：工程现场短视频  \n      - Google Ads + Bing Ads：项目经理、采购关键词投放  \n   c. 展会/活动  \n      - LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair  \n      - 联合代理举办 “High-Efficacy Lighting Day”  \n\n9. 客户旅程与转化漏斗  \n   Awareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购/升级  \n   • 关键触点：官网 CTA、案例视频、ROI 计算工具  \n   • 转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n10. 关键 KPI（季度）  \n    • MQL ≥300 条  \n    • 样灯转化率 ≥35%  \n    • 准时交付 ≥95%  \n    • 客户复购率 ≥25%  \n    • 内容发布 ≥12 篇/月  \n    • LinkedIn 增长 ≥10%/月  \n\n11. 里程碑  \n    • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n    • 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n    • 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n    • 2025 H2：海外仓（US & DE）上线；交付周期缩短 5 天  \n    • 2026 Q4：海外营收 ≥US$30 M；代理网覆盖 25+ 国",
+    "text": "1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n2. 市场定位  \n   �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   �?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n   �?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家�? \n\n3. 客户洞察  \n   �?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n   �?市政采购方：关注节能指标、质保年限、符合道路标�? \n   �?经销/分销商：关注利润空间、库存周转、售后配�? \n   �?工商业终端：关注 ROI、智能控制集成、安装便�? \n   �?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合�? \n\n4. 核心产品&差异�? \n   �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n   �?100,000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力  \n   �?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n   �?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n   �?OEM/ODM 快速定制，缩短项目周期  \n\n5. 品牌价值主�? \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n6. 目标市场与份额目�? \n   �?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n   �?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n   �?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n   �?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M  \n\n7. 渠道与价格策�? \n   �?一级：核心 EPC＋大型分销商，合同价→项目结算  \n   �?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n   �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n   �?配套服务：样�?1 周交付，备品备件 48 h 内发�? \n\n8. 营销与传�? \n   a. 内容/SEO  \n      - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting �? \n      - 场景案例文章：道路节能改造、仓�?ROI 试算、体育场照明指南  \n   b. 数字渠道  \n      - 官网 + LinkedIn + YouTube：技术演�?案例视频  \n      - Facebook/Instagram：工程现场短视频  \n      - Google Ads + Bing Ads：项目经理、采购关键词投放  \n   c. 展会/活动  \n      - LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair  \n      - 联合代理举办 “High-Efficacy Lighting Day�? \n\n9. 客户旅程与转化漏�? \n   Awareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购/升级  \n   �?关键触点：官�?CTA、案例视频、ROI 计算工具  \n   �?转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n10. 关键 KPI（季度）  \n    �?MQL �?00 �? \n    �?样灯转化�?�?5%  \n    �?准时交付 �?5%  \n    �?客户复购�?�?5%  \n    �?内容发布 �?2 �?�? \n    �?LinkedIn 增长 �?0%/�? \n\n11. 里程�? \n    �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n    �?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n    �?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n    �?2025 H2：海外仓（US & DE）上线；交付周期缩短 5 �? \n    �?2026 Q4：海外营�?≥US$30 M；代理网覆盖 25+ �?,
     "data": {
       "video_link": ""
     }
@@ -4635,7 +4637,7 @@ INSERT INTO "redis_queue_messages" VALUES('f9c55ddd-7e9b-4ef7-abf7-3fad861d469e'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n1. AOK Lighting—海外增长战略蓝图（2024-2026）  \n\n2. 市场定位  \n   • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   • 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n   • 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”  \n\n3. 客户洞察  \n   • 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n   • 市政采购方：关注节能指标、质保年限、符合道路标准  \n   • 经销/分销商：关注利润空间、库存周转、售后配合  \n   • 工商业终端：关注 ROI、智能控制集成、安装便利  \n   • 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规  \n\n4. 核心产品&差异化  \n   • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n   • 100 000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力  \n   • 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n   • 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n   • OEM/ODM 快速定制，缩短项目周期  \n\n5. 品牌价值主张  \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n6. 目标市场与份额目标  \n   • 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n   • 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n   • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n   • 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M  \n\n7. 渠道与价格策略  \n   • 一级：核心 EPC＋大型分销商，合同价→项目结算  \n   • 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n   • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n   • 配套服务：样灯 1 周交付，备品备件 48 h 内发货  \n\n8. 营销与传播  \n   A. 内容/SEO  \n      - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等  \n      - 场景案例文章：道路节能改造、仓库 ROI 试算、体育场照明指南  \n   B. 数字渠道  \n      - 官网 + LinkedIn + YouTube：技术演示 & 案例视频  \n      - Facebook/Instagram：工程现场短视频  \n      - Google Ads + Bing Ads：项目经理、采购关键词投放  \n   C. 展会/活动  \n      - LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair  \n      - 联合代理举办 “High-Efficacy Lighting Day”  \n\n9. 客户旅程与转化漏斗  \n   Awareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购/升级  \n   • 关键触点：官网 CTA、案例视频、ROI 计算工具  \n   • 转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n10. 关键 KPI（季度）  \n    • MQL ≥300 条  \n    • 样灯转化率 ≥35%  \n    • 准时交付 ≥95%  \n    • 客户复购率 ≥25%  \n    • 内容发布 ≥12 篇/月  \n    • LinkedIn 粉丝增长 ≥10%/月  \n\n11. 里程碑  \n    • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n    • 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n    • 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n    • 2025 H2：海外仓（US 西岸 & 德国）上线；交付周期缩短 5 天  \n    • 2026 Q4：海外营收 ≥US$30 M；代理网覆盖 25+ 国",
+    "text": "正文：\n1. AOK Lighting—海外增长战略蓝图（2024-2026�? \n\n2. 市场定位  \n   �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   �?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n   �?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家�? \n\n3. 客户洞察  \n   �?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n   �?市政采购方：关注节能指标、质保年限、符合道路标�? \n   �?经销/分销商：关注利润空间、库存周转、售后配�? \n   �?工商业终端：关注 ROI、智能控制集成、安装便�? \n   �?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合�? \n\n4. 核心产品&差异�? \n   �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n   �?100 000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力  \n   �?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n   �?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n   �?OEM/ODM 快速定制，缩短项目周期  \n\n5. 品牌价值主�? \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n6. 目标市场与份额目�? \n   �?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n   �?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n   �?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n   �?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M  \n\n7. 渠道与价格策�? \n   �?一级：核心 EPC＋大型分销商，合同价→项目结算  \n   �?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n   �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n   �?配套服务：样�?1 周交付，备品备件 48 h 内发�? \n\n8. 营销与传�? \n   A. 内容/SEO  \n      - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting �? \n      - 场景案例文章：道路节能改造、仓�?ROI 试算、体育场照明指南  \n   B. 数字渠道  \n      - 官网 + LinkedIn + YouTube：技术演�?& 案例视频  \n      - Facebook/Instagram：工程现场短视频  \n      - Google Ads + Bing Ads：项目经理、采购关键词投放  \n   C. 展会/活动  \n      - LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair  \n      - 联合代理举办 “High-Efficacy Lighting Day�? \n\n9. 客户旅程与转化漏�? \n   Awareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购/升级  \n   �?关键触点：官�?CTA、案例视频、ROI 计算工具  \n   �?转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n10. 关键 KPI（季度）  \n    �?MQL �?00 �? \n    �?样灯转化�?�?5%  \n    �?准时交付 �?5%  \n    �?客户复购�?�?5%  \n    �?内容发布 �?2 �?�? \n    �?LinkedIn 粉丝增长 �?0%/�? \n\n11. 里程�? \n    �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n    �?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n    �?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n    �?2025 H2：海外仓（US 西岸 & 德国）上线；交付周期缩短 5 �? \n    �?2026 Q4：海外营�?≥US$30 M；代理网覆盖 25+ �?,
     "data": {
       "video_link": ""
     }
@@ -4652,7 +4654,7 @@ INSERT INTO "redis_queue_messages" VALUES('3f046793-1057-47d6-bb25-626bed026e80'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "正文：\n1. 老板您好，我是您的专属增长顾问小欧。为了帮您后续生成最贴合需求的方案，麻烦您先提供一下公司资料（如官网链接、产品/服务介绍或公司简介文档、图片等），我会先快速整理，减少您输入的时间。",
+    "text": "正文：\n1. 老板您好，我是您的专属增长顾问小欧。为了帮您后续生成最贴合需求的方案，麻烦您先提供一下公司资料（如官网链接、产�?服务介绍或公司简介文档、图片等），我会先快速整理，减少您输入的时间�?,
     "data": {
       "video_link": ""
     }
@@ -4669,7 +4671,7 @@ INSERT INTO "redis_queue_messages" VALUES('a185fb17-3d19-4aa4-a9a3-dbf8d81839bc'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）。  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明。  \n• 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本。  \n• 市政采购方：关心节能指标、质保年限、符合道路标准。  \n• 经销/分销商：关注利润空间、库存周转、售后配合。  \n• 工商业终端：关注 ROI、智能控制集成、安装便利。  \n• 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品&差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低。  \n• 100,000 h 寿命＋5-10 年质保，减少市政/EPC 质保压力。  \n• 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠。  \n• 智能兼容（DALI、0-10 V、Zigbee/LoRa），升级无忧。  \n• OEM/ODM 快速定制，缩短项目周期。\n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套。  \n• 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万。  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万。  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 30 百万美金。\n\n6. 渠道与价格策略  \n• 1 级：核心 EPC＋大型分销商，合同价→项目结算。  \n• 2 级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣。  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套。  \n• 配套服务：样灯 1 周交付，备品备件 48h 内发货。\n\n7. 营销与传播  \na. 内容/SEO  \n  - 核心关键词矩阵（示例）：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting, UL listed shoebox light …  \n  - 场景案例文章：道路节能改造、仓库 ROI 试算、体育场照明指南。  \nb. 数字渠道  \n  - 官网+LinkedIn+YouTube：技术演示&案例视频；  \n  - Facebook/Instagram：工程现场短视频；  \n  - Google Ads+Bing Ads：项目经理、采购关键词投放。  \nc. 展会/活动  \n  - 每年：LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair。  \n  - 联合代理举办“High-Efficacy Lighting Day”。\n\n8. 客户旅程与转化漏斗  \nAwareness→兴趣 (技术白皮书下载)→方案咨询→样灯测试→POC 订单→批量采购→保修期内复购/升级。  \n• 关键触点：官网 CTA、工程案例视频、售前 ROI 计算工具。  \n• 关键转化工具：在线 TCO 计算器、30 天免费样灯计划。\n\n9. 关键 KPI (季度)  \n• MQL（工程线索）≥300 条；  \n• 样灯转化率 ≥35%；  \n• 交付准时率 ≥95%；  \n• 客户复购率 ≥25%；  \n• 线上内容发布 ≥12 篇/月；  \n• LinkedIn 订阅增长率 ≥10%/月。\n\n10. 里程碑与资源  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线。  \n• 2024 Q4：东南亚渠道招募完成；上线在线 ROI 计算器。  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万。  \n• 2025 H2：海外仓建立（US 西岸 & 德国）；交付周期缩短 5 天。  \n• 2026 Q4：海外总营收 ≥ US$30 M；全球代理网覆盖 25+ 国。",
+    "text": "正文�? \n1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）�? \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照明�? \n�?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成本�? \n�?市政采购方：关心节能指标、质保年限、符合道路标准�? \n�?经销/分销商：关注利润空间、库存周转、售后配合�? \n�?工商业终端：关注 ROI、智能控制集成、安装便利�? \n�?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品&差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最低�? \n�?100,000 h 寿命�?-10 年质保，减少市政/EPC 质保压力�? \n�?专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠�? \n�?智能兼容（DALI�?-10 V、Zigbee/LoRa），升级无忧�? \n�?OEM/ODM 快速定制，缩短项目周期。\n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套�? \n�?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 万�? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 万�? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 30 百万美金。\n\n6. 渠道与价格策�? \n�?1 级：核心 EPC＋大型分销商，合同价→项目结算�? \n�?2 级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣�? \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套�? \n�?配套服务：样�?1 周交付，备品备件 48h 内发货。\n\n7. 营销与传�? \na. 内容/SEO  \n  - 核心关键词矩阵（示例）：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting, UL listed shoebox light �? \n  - 场景案例文章：道路节能改造、仓�?ROI 试算、体育场照明指南�? \nb. 数字渠道  \n  - 官网+LinkedIn+YouTube：技术演�?案例视频�? \n  - Facebook/Instagram：工程现场短视频�? \n  - Google Ads+Bing Ads：项目经理、采购关键词投放�? \nc. 展会/活动  \n  - 每年：LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair�? \n  - 联合代理举办“High-Efficacy Lighting Day”。\n\n8. 客户旅程与转化漏�? \nAwareness→兴�?(技术白皮书下载)→方案咨询→样灯测试→POC 订单→批量采购→保修期内复购/升级�? \n�?关键触点：官�?CTA、工程案例视频、售�?ROI 计算工具�? \n�?关键转化工具：在�?TCO 计算器�?0 天免费样灯计划。\n\n9. 关键 KPI (季度)  \n�?MQL（工程线索）�?00 条；  \n�?样灯转化�?�?5%�? \n�?交付准时�?�?5%�? \n�?客户复购�?�?5%�? \n�?线上内容发布 �?2 �?月；  \n�?LinkedIn 订阅增长�?�?0%/月。\n\n10. 里程碑与资源  \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上线�? \n�?2024 Q4：东南亚渠道招募完成；上线在�?ROI 计算器�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 万�? \n�?2025 H2：海外仓建立（US 西岸 & 德国）；交付周期缩短 5 天�? \n�?2026 Q4：海外总营�?�?US$30 M；全球代理网覆盖 25+ 国�?,
     "data": {
       "video_link": ""
     }
@@ -4686,7 +4688,7 @@ INSERT INTO "redis_queue_messages" VALUES('494f6ded-1cc6-46af-b4cf-1cbff95e4444'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n   • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   • 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n   • 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”  \n\n2. 客户洞察  \n   • 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n   • 市政采购方：关注节能指标、质保年限、符合道路标准  \n   • 经销/分销商：关注利润空间、库存周转、售后配合  \n   • 工商业终端：关注 ROI、智能控制集成、安装便利  \n   • 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规  \n\n3. 核心产品&差异化  \n   • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n   • 100 000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力  \n   • 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n   • 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n   • OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主张  \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目标  \n   • 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n   • 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n   • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n   • 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M  \n\n6. 渠道与价格策略  \n   • 一级：核心 EPC＋大型分销商，合同价→项目结算  \n   • 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n   • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n   • 配套服务：样灯 1 周交付，备品备件 48 h 内发货  \n\n7. 营销与传播  \n   A. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等关键词；案例文章：道路节能改造、仓库 ROI 试算、体育场照明指南  \n   B. 数字渠道：官网＋LinkedIn＋YouTube；Facebook/Instagram；Google Ads＋Bing Ads  \n   C. 展会/活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；举办 “High-Efficacy Lighting Day”  \n\n8. 客户旅程与转化漏斗  \n   Awareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n   • 关键触点：官网 CTA、案例视频、ROI 计算工具  \n   • 转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n9. 关键 KPI（季度）  \n   • MQL ≥300  \n   • 样灯转化率 ≥35%  \n   • 准时交付 ≥95%  \n   • 复购率 ≥25%  \n   • 内容发布 ≥12 篇/月  \n   • LinkedIn 粉丝增长 ≥10%/月  \n\n10. 里程碑  \n   • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n   • 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n   • 2025 H1：欧洲体育照明案例落地；YouTube 订阅破 5 万  \n   • 2025 H2：海外仓（US & DE）上线；交付周期缩短 5 天  \n   • 2026 Q4：海外营收 ≥US$30 M；代理网覆盖 25+ 国",
+    "text": "正文�? \n1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n   �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   �?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n   �?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家�? \n\n2. 客户洞察  \n   �?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n   �?市政采购方：关注节能指标、质保年限、符合道路标�? \n   �?经销/分销商：关注利润空间、库存周转、售后配�? \n   �?工商业终端：关注 ROI、智能控制集成、安装便�? \n   �?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合�? \n\n3. 核心产品&差异�? \n   �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n   �?100 000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力  \n   �?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n   �?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n   �?OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主�? \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目�? \n   �?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n   �?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n   �?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n   �?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M  \n\n6. 渠道与价格策�? \n   �?一级：核心 EPC＋大型分销商，合同价→项目结算  \n   �?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n   �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n   �?配套服务：样�?1 周交付，备品备件 48 h 内发�? \n\n7. 营销与传�? \n   A. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等关键词；案例文章：道路节能改造、仓�?ROI 试算、体育场照明指南  \n   B. 数字渠道：官网＋LinkedIn＋YouTube；Facebook/Instagram；Google Ads＋Bing Ads  \n   C. 展会/活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；举�?“High-Efficacy Lighting Day�? \n\n8. 客户旅程与转化漏�? \n   Awareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n   �?关键触点：官�?CTA、案例视频、ROI 计算工具  \n   �?转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n9. 关键 KPI（季度）  \n   �?MQL �?00  \n   �?样灯转化�?�?5%  \n   �?准时交付 �?5%  \n   �?复购�?�?5%  \n   �?内容发布 �?2 �?�? \n   �?LinkedIn 粉丝增长 �?0%/�? \n\n10. 里程�? \n   �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n   �?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n   �?2025 H1：欧洲体育照明案例落地；YouTube 订阅�?5 �? \n   �?2025 H2：海外仓（US & DE）上线；交付周期缩短 5 �? \n   �?2026 Q4：海外营�?≥US$30 M；代理网覆盖 25+ �?,
     "data": {
       "video_link": ""
     }
@@ -4703,7 +4705,7 @@ INSERT INTO "redis_queue_messages" VALUES('2b00bb4c-99da-42d0-9477-ef1ef41235a6'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。是否需要我先帮您查看作战地图，并计算当前还需要合成多少个视频进行测试？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。是否需要我先帮您查看作战地图，并计算当前还需要合成多少个视频进行测试？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -4720,7 +4722,7 @@ INSERT INTO "redis_queue_messages" VALUES('f157fa48-92ac-4c45-a133-2afdc9465935'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 已为 HSAI 生成并多次迭代《出海视频获客战略蓝图》，当前最新版为 Blueprint v2，核心要点如下：\n   • 30 天内，通过 TikTok / YouTube Shorts / LinkedIn 共 6 账号矩阵，每天裂变发布 180 条短视频  \n   • 预计累计曝光 ≥ 50 万，获取 B2B 询盘 ≥ 200 条  \n   • 每周拍摄 6 大场景 × 3 机位，共 18 组高清素材（4 周合计 72 组），两天即可拍完  \n   • 内容支柱 6 类：工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普  \n   • 已附 30 天发布日历、脚本示例、Hook & VO 库、执行节奏与所需人/物料清单  \n   • 预算控制 ≤ 1 万元（拍摄 5k + AI 工具 1k + 推广 3k）\n\n2. 如需：\n   a) 查看完整蓝图文档 / 日历 / 脚本  \n   b) 对蓝图里的任何模块（目标、渠道、预算、脚本等）进行调整  \n   c) 直接进入执行（生成首批脚本、拍摄清单或每日发布提醒）  \n   请告诉我相应选项或进一步的修改意见！",
+    "text": "1. 已为 HSAI 生成并多次迭代《出海视频获客战略蓝图》，当前最新版�?Blueprint v2，核心要点如下：\n   �?30 天内，通过 TikTok / YouTube Shorts / LinkedIn �?6 账号矩阵，每天裂变发�?180 条短视频  \n   �?预计累计曝光 �?50 万，获取 B2B 询盘 �?200 �? \n   �?每周拍摄 6 大场�?× 3 机位，共 18 组高清素材（4 周合�?72 组），两天即可拍�? \n   �?内容支柱 6 类：工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科�? \n   �?已附 30 天发布日历、脚本示例、Hook & VO 库、执行节奏与所需�?物料清单  \n   �?预算控制 �?1 万元（拍�?5k + AI 工具 1k + 推广 3k）\n\n2. 如需：\n   a) 查看完整蓝图文档 / 日历 / 脚本  \n   b) 对蓝图里的任何模块（目标、渠道、预算、脚本等）进行调�? \n   c) 直接进入执行（生成首批脚本、拍摄清单或每日发布提醒�? \n   请告诉我相应选项或进一步的修改意见�?,
     "data": {
       "video_link": ""
     }
@@ -4737,7 +4739,7 @@ INSERT INTO "redis_queue_messages" VALUES('1890dfaa-280a-49e1-9308-b87b183a9ec3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "以下为《出海视频获客战略蓝图》完整版所包含的主要模块，供您快速浏览：\n1. 目标 & 指标：曝光 50 万 / 询盘 200 条 / 预算 ≤ 1 万元\n2. 渠道矩阵：TikTok、YouTube Shorts、LinkedIn 共 6 账号，30 天发布 180 条短视频\n3. 周拍摄排期：每周 6 大场景 × 3 机位，共 18 组素材（4 周合计 72 组）\n4. 内容支柱：工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普\n5. 月度发布日历：每日具体发布账号、时间段、内容主题\n6. Hook & VO 库：200+ 高转化标题、开场钩子与旁白示例\n7. 脚本示例：每类支柱均附 3–5 条短视频脚本示范\n8. 执行节奏：拍摄、剪辑、审核、发布全流程 Gantt 图\n9. 人 & 物料清单：所需人员角色、设备、场地、软件、预算拆分\n10. KPI 追踪面板：曝光、互动、询盘、ROI 实时看板\n\n如需查看任意章节的详细文档，请告诉我对应编号或模块名称，我可以逐段为您展开。\n\n同时，为了尽快落地蓝图，是否需要我先统计一下现阶段还剩余多少条待合成视频（测试素材池 vs. 发布计划对比）？如果需要，请回复“是”，我将立即为您查询并进入下一步。",
+    "text": "以下为《出海视频获客战略蓝图》完整版所包含的主要模块，供您快速浏览：\n1. 目标 & 指标：曝�?50 �?/ 询盘 200 �?/ 预算 �?1 万元\n2. 渠道矩阵：TikTok、YouTube Shorts、LinkedIn �?6 账号�?0 天发�?180 条短视频\n3. 周拍摄排期：每周 6 大场�?× 3 机位，共 18 组素材（4 周合�?72 组）\n4. 内容支柱：工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普\n5. 月度发布日历：每日具体发布账号、时间段、内容主题\n6. Hook & VO 库：200+ 高转化标题、开场钩子与旁白示例\n7. 脚本示例：每类支柱均�?3�? 条短视频脚本示范\n8. 执行节奏：拍摄、剪辑、审核、发布全流程 Gantt 图\n9. �?& 物料清单：所需人员角色、设备、场地、软件、预算拆分\n10. KPI 追踪面板：曝光、互动、询盘、ROI 实时看板\n\n如需查看任意章节的详细文档，请告诉我对应编号或模块名称，我可以逐段为您展开。\n\n同时，为了尽快落地蓝图，是否需要我先统计一下现阶段还剩余多少条待合成视频（测试素材�?vs. 发布计划对比）？如果需要，请回复“是”，我将立即为您查询并进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -4754,7 +4756,7 @@ INSERT INTO "redis_queue_messages" VALUES('80aaebd0-e78b-42e4-b549-801d85b8fb03'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）。  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明。  \n• 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本。  \n• 市政采购方：关心节能指标、质保年限、符合道路标准。  \n• 经销/分销商：关注利润空间、库存周转、售后配合。  \n• 工商业终端：关注 ROI、智能控制集成、安装便利。  \n• 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品&差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低。  \n• 100,000 h 寿命＋5-10 年质保，减少市政/EPC 质保压力。  \n• 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠。  \n• 智能兼容（DALI、0-10 V、Zigbee/LoRa），升级无忧。  \n• OEM/ODM 快速定制，缩短项目周期。\n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套。  \n• 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万。  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万。  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 30 百万美金。\n\n6. 渠道与价格策略  \n• 1 级：核心 EPC＋大型分销商，合同价→项目结算。  \n• 2 级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣。  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套。  \n• 配套服务：样灯 1 周交付，备品备件 48h 内发货。\n\n7. 营销与传播  \na. 内容/SEO  \n  - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等  \n  - 场景案例文章：道路节能改造、仓库 ROI 试算、体育场照明指南。  \nb. 数字渠道  \n  - 官网+LinkedIn+YouTube：技术演示&案例视频；  \n  - Facebook/Instagram：工程现场短视频；  \n  - Google Ads+Bing Ads：项目经理、采购关键词投放。  \nc. 展会/活动  \n  - LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair  \n  - 联合代理举办“High-Efficacy Lighting Day”。\n\n8. 客户旅程与转化漏斗  \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级。  \n• 关键触点：官网 CTA、案例视频、ROI 计算工具。  \n• 转化工具：在线 TCO 计算器、30 天免费样灯计划。\n\n9. 关键 KPI（季度）  \n• MQL ≥300  \n• 样灯转化率 ≥35%  \n• 准时交付 ≥95%  \n• 复购率 ≥25%  \n• 内容发布 ≥12 篇/月  \n• LinkedIn 增长 ≥10%/月\n\n10. 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线。  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器。  \n• 2025 H1：欧洲体育照明案例落地；YouTube 订阅破 5 万。  \n• 2025 H2：海外仓（US & DE）上线；交付周期缩短 5 天。  \n• 2026 Q4：海外营收 ≥US$30M；代理网覆盖 25+ 国。",
+    "text": "正文�? \n1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）�? \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照明�? \n�?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成本�? \n�?市政采购方：关心节能指标、质保年限、符合道路标准�? \n�?经销/分销商：关注利润空间、库存周转、售后配合�? \n�?工商业终端：关注 ROI、智能控制集成、安装便利�? \n�?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品&差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最低�? \n�?100,000 h 寿命�?-10 年质保，减少市政/EPC 质保压力�? \n�?专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠�? \n�?智能兼容（DALI�?-10 V、Zigbee/LoRa），升级无忧�? \n�?OEM/ODM 快速定制，缩短项目周期。\n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套�? \n�?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 万�? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 万�? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 30 百万美金。\n\n6. 渠道与价格策�? \n�?1 级：核心 EPC＋大型分销商，合同价→项目结算�? \n�?2 级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣�? \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套�? \n�?配套服务：样�?1 周交付，备品备件 48h 内发货。\n\n7. 营销与传�? \na. 内容/SEO  \n  - 核心关键词：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting �? \n  - 场景案例文章：道路节能改造、仓�?ROI 试算、体育场照明指南�? \nb. 数字渠道  \n  - 官网+LinkedIn+YouTube：技术演�?案例视频�? \n  - Facebook/Instagram：工程现场短视频�? \n  - Google Ads+Bing Ads：项目经理、采购关键词投放�? \nc. 展会/活动  \n  - LightFair (US)、InterLumi (Europe)、Hong Kong Lighting Fair  \n  - 联合代理举办“High-Efficacy Lighting Day”。\n\n8. 客户旅程与转化漏�? \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级�? \n�?关键触点：官�?CTA、案例视频、ROI 计算工具�? \n�?转化工具：在�?TCO 计算器�?0 天免费样灯计划。\n\n9. 关键 KPI（季度）  \n�?MQL �?00  \n�?样灯转化�?�?5%  \n�?准时交付 �?5%  \n�?复购�?�?5%  \n�?内容发布 �?2 �?�? \n�?LinkedIn 增长 �?0%/月\n\n10. 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上线�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算器�? \n�?2025 H1：欧洲体育照明案例落地；YouTube 订阅�?5 万�? \n�?2025 H2：海外仓（US & DE）上线；交付周期缩短 5 天�? \n�?2026 Q4：海外营�?≥US$30M；代理网覆盖 25+ 国�?,
     "data": {
       "video_link": ""
     }
@@ -4771,7 +4773,7 @@ INSERT INTO "redis_queue_messages" VALUES('1fcfc2c4-22cd-4d80-a9ba-30dd509876bb'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n   • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）。  \n   • 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明。  \n   • 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n   • 工程承包商 / EPC：注重认证齐全、交付周期、维护成本。  \n   • 市政采购方：关注节能指标、质保年限、符合道路标准。  \n   • 经销/分销商：关注利润空间、库存周转、售后配合。  \n   • 工商业终端：关注 ROI、智能控制集成、安装便利。  \n   • 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品 & 差异化  \n   • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低。  \n   • 100 000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力。  \n   • 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠。  \n   • 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧。  \n   • OEM/ODM 快速定制，缩短项目周期。\n\n4. 品牌价值主张  \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目标  \n   • 北美：市政道路＋停车场照明；年销售目标 1.2 万套。  \n   • 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万。  \n   • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万。  \n   • 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M。\n\n6. 渠道与价格策略  \n   • 一级：核心 EPC＋大型分销商，合同价→项目结算。  \n   • 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣。  \n   • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套。  \n   • 配套服务：样灯 1 周交付，备品备件 48 h 内发货。\n\n7. 营销与传播  \n   A. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；案例文章：道路节能改造、仓库 ROI 试算、体育场照明指南。  \n   B. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）。  \n   C. 展会/活动：每年参加 LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举办“High-Efficacy Lighting Day”。\n\n8. 客户旅程与转化漏斗  \n   Awareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n   • 关键触点：官网 CTA、案例视频、ROI 计算工具。  \n   • 转化工具：在线 TCO 计算器、30 天免费样灯计划。\n\n9. 关键 KPI（季度）  \n   • MQL ≥300 条。  \n   • 样灯转化率 ≥35%。  \n   • 准时交付 ≥95%。  \n   • 客户复购率 ≥25%。  \n   • 内容发布 ≥12 篇/月。  \n   • LinkedIn 粉丝增长 ≥10%/月。\n\n10. 里程碑  \n    • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线。  \n    • 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器。  \n    • 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万。  \n    • 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天。  \n    • 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国。",
+    "text": "正文�? \n1. AOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n   �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）�? \n   �?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照明�? \n   �?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”。\n\n2. 客户洞察  \n   �?工程承包�?/ EPC：注重认证齐全、交付周期、维护成本�? \n   �?市政采购方：关注节能指标、质保年限、符合道路标准�? \n   �?经销/分销商：关注利润空间、库存周转、售后配合�? \n   �?工商业终端：关注 ROI、智能控制集成、安装便利�? \n   �?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规。\n\n3. 核心产品 & 差异�? \n   �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最低�? \n   �?100 000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力�? \n   �?专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠�? \n   �?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧�? \n   �?OEM/ODM 快速定制，缩短项目周期。\n\n4. 品牌价值主�? \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案。\n\n5. 目标市场与份额目�? \n   �?北美：市政道路＋停车场照明；年销售目�?1.2 万套�? \n   �?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 万�? \n   �?东南亚：城市基建与园区节能改造；年销售目�?US$300 万�? \n   �?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M。\n\n6. 渠道与价格策�? \n   �?一级：核心 EPC＋大型分销商，合同价→项目结算�? \n   �?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣�? \n   �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套�? \n   �?配套服务：样�?1 周交付，备品备件 48 h 内发货。\n\n7. 营销与传�? \n   A. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；案例文章：道路节能改造、仓�?ROI 试算、体育场照明指南�? \n   B. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）�? \n   C. 展会/活动：每年参�?LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举办“High-Efficacy Lighting Day”。\n\n8. 客户旅程与转化漏�? \n   Awareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n   �?关键触点：官�?CTA、案例视频、ROI 计算工具�? \n   �?转化工具：在�?TCO 计算器�?0 天免费样灯计划。\n\n9. 关键 KPI（季度）  \n   �?MQL �?00 条�? \n   �?样灯转化�?�?5%�? \n   �?准时交付 �?5%�? \n   �?客户复购�?�?5%�? \n   �?内容发布 �?2 �?月�? \n   �?LinkedIn 粉丝增长 �?0%/月。\n\n10. 里程�? \n    �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上线�? \n    �?2024 Q4：东南亚渠道招募完成；上�?ROI 计算器�? \n    �?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 万�? \n    �?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天�? \n    �?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ 国�?,
     "data": {
       "video_link": ""
     }
@@ -4788,7 +4790,7 @@ INSERT INTO "redis_queue_messages" VALUES('55787c9d-01e0-40a5-96b2-6db9d46ca850'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，根据最新作战地图，当前待制作视频脚本共有 1 条，今日尚未安排发布视频。因此，仍需合成 1 个视频以满足发布计划。\n\n接下来，请确认是否使用这 1 条待制作文案进行脚本生成。如需继续，请回复“1”即可开始生成拍摄脚本。",
+    "text": "好的，根据最新作战地图，当前待制作视频脚本共�?1 条，今日尚未安排发布视频。因此，仍需合成 1 个视频以满足发布计划。\n\n接下来，请确认是否使用这 1 条待制作文案进行脚本生成。如需继续，请回复�?”即可开始生成拍摄脚本�?,
     "data": {
       "video_link": ""
     }
@@ -4805,7 +4807,7 @@ INSERT INTO "redis_queue_messages" VALUES('364ae4ed-aa16-484d-a0ef-7095637d30bd'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。为了帮助您高效规划接下来的拍摄与测试，请问您是否需要了解当前还需要合成多少个视频？如果需要，请回复“是”，我将为您提取作战地图并计算剩余的测试视频数量。",
+    "text": "您好！欢迎使用智能视频创作助手。为了帮助您高效规划接下来的拍摄与测试，请问您是否需要了解当前还需要合成多少个视频？如果需要，请回复“是”，我将为您提取作战地图并计算剩余的测试视频数量�?,
     "data": {
       "video_link": ""
     }
@@ -4822,7 +4824,7 @@ INSERT INTO "redis_queue_messages" VALUES('292c9f61-4077-40b6-bfbe-7c8034b952a7'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。  \n2. 为了帮您打造让客户主动找上门的视频，请您先提供一些公司资料，如：  \n   • 官网链接  \n   • 产品介绍文件或页面  \n   • 公司简介/宣传册/图片  \n   • 任何您觉得能帮助我快速了解贵司业务与优势的资料  \n3. 我会先快速浏览并记录，后续减少您输入的时间，精准制定视频战略。  \n4. 请把方便分享的资料直接发给我吧！",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧�? \n2. 为了帮您打造让客户主动找上门的视频，请您先提供一些公司资料，如：  \n   �?官网链接  \n   �?产品介绍文件或页�? \n   �?公司简�?宣传�?图片  \n   �?任何您觉得能帮助我快速了解贵司业务与优势的资�? \n3. 我会先快速浏览并记录，后续减少您输入的时间，精准制定视频战略�? \n4. 请把方便分享的资料直接发给我吧！",
     "data": {
       "video_link": ""
     }
@@ -4839,7 +4841,7 @@ INSERT INTO "redis_queue_messages" VALUES('b2a3145e-0ab7-4469-9250-ea59619d1507'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已收到您公司的官网链接 www.aokledlight.com，我会作为后续策划视频内容的参考。接下来，是否需要我为您提取作战地图并计算当前还需要合成多少个测试视频？如果需要，请回复“是”，我将立即为您查询并告诉您还需制作的视频数量。",
+    "text": "已收到您公司的官网链�?www.aokledlight.com，我会作为后续策划视频内容的参考。接下来，是否需要我为您提取作战地图并计算当前还需要合成多少个测试视频？如果需要，请回复“是”，我将立即为您查询并告诉您还需制作的视频数量�?,
     "data": {
       "video_link": ""
     }
@@ -4850,7 +4852,7 @@ INSERT INTO "redis_queue_messages" VALUES('facdbe73-7317-485e-bf41-3d25027be14d'
   "env": "gray",
   "session_id": "03d92c1d-22b7-4a2d-9a63-d11d7cf2bc56",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "17cb3ee2-8940-41d0-904d-13bffb53b2ac",
   "socket_id": "y1oKBj0pOfpvOrYmAAAN",
   "status": "RUNNING",
@@ -4866,7 +4868,7 @@ INSERT INTO "redis_queue_messages" VALUES('84317abc-9f07-468f-9621-afec431ccafa'
   "request_id": "17cb3ee2-8940-41d0-904d-13bffb53b2ac",
   "socket_id": "y1oKBj0pOfpvOrYmAAAN",
   "status": "FINISHED",
-  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图》\n\n> 版本：2024-Q3 v3.0  \n> 目标周期：30 天  \n> 适用市场：北美 / 欧洲 / 澳洲 / 中东  \n> 主要平台：TikTok、YouTube Shorts、LinkedIn  \n> KPI：曝光 ≥ 500,000；B2B 线索 ≥ 200；有效询盘 ≥ 50  \n\n---\n\n## 1. 作战总目标\n1.1 视频投放量：\n• 原生拍摄短视频 30 条（≈ 每日 1 条）  \n• AI 裂变剪辑 ≥ 6×，共 180 条可发布素材  \n• 6 账号矩阵 x 30 天 = 180 次发布  \n\n1.2 账号矩阵：\n• TikTok 2 个（美区、东南亚区）  \n• YouTube Shorts 2 个（英文频道、中文字幕频道）  \n• LinkedIn 2 个（公司页 + 销售个人号）  \n\n1.3 预估效果：\n• 曝光 500,000+  \n• 完播率 40%+  \n• 互动（赞 / 评论 / 私信）15,000+  \n• 表单/私信线索 200+，有效询盘 50+  \n\n---\n\n## 2. 素材拍摄需求\n| 周次 | 场景类别 | 拍摄机位 | 预计素材组 |\n|------|---------|---------|-----------|\n| Week1 | 工厂产线（贴片、组装、老化） | 正面+俯拍+特写 | 18 |\n| Week2 | 实验室与测试（光学/EMC/IP66） | 正面+侧面+测量 HUD | 18 |\n| Week3 | 户外道路 & 港口亮灯对比 | 白天广角+夜景航拍+灯下特写 | 18 |\n| Week4 | 安装 & 质检 & 包装发货 | 高空+肩扛+手持 | 18 |\n| **合计** | **4 周 6 大主题** | **≥3 机位/主题** | **72 组高清素材** |\n\n提示：单反 / 手机 4K 60fps 即可；灯具实拍务必记录「对比前后节能 %」和「照度计读数」。\n\n---\n\n## 3. 内容支柱（6 大方向）& 核心钩子\n1. 工厂探秘：揭秘 AOK 工厂如何让灯具 10 年不坏？  \n2. 产品测评：150W 高棚灯 vs 400W 金卤灯，用电差多少？  \n3. 客户案例：澳洲港口 800 套投光灯交付全过程  \n4. 对比实验：1 分钟告诉你 IP67 与 IP65 差在哪  \n5. 安装指南：5 步完成 12m 高棚灯替换，节约 40% 维护费  \n6. 行业科普：UL / DLC Premium 认证到底值不值？  \n\n---\n\n## 4. 30 天发布日历（示例）\nDay1  工厂探秘  | Day2  科普  | Day3  对比实验  | Day4  案例  | ...  \n（完整日历见附件 Excel，系统已同步）\n\n---\n\n## 5. 脚本模板示例（方向：对比实验）\n• 镜头 1（0-3s）Hook：同功率灯具，为何电费差 2 倍？  \n• 镜头 2（3-8s）展示旧灯能耗 & 现场照度  \n• 镜头 3（8-15s）替换 AOK 灯后对比  \n• 镜头 4（15-25s）节能计算公式叠字 + 快节奏 BGM  \n• 镜头 5（25-30s）Call to Action：评论区领取 ROI 计算器  \n\n---\n\n## 6. 人员、工具、预算\n• 拍摄：2 人（业务+助理），2 天完成  \n• 剪辑：CapCut / Runway / Descript（AI 批量产出）  \n• 发布：Publer / Hootsuite 排程  \n• 广告加热：TikTok Spark Ads / YouTube Discovery 预算 ≈ ¥3,000  \n• 合计成本：≈ ¥10,000 （可根据地区上下浮动）\n\n---\n\n## 7. 风险 & 解决方案\n• 平台限流 → 准备海外静态 IP，多账号 A/B 测试  \n• 认证类内容易被误判 → 标题避免出现过度夸张数据，附权威证书截图  \n• 拍摄周期拖延 → 周前排期，素材清单 Check-List 追踪\n\n---\n\n## 8. 行动清单（D0-D7）\n1. D0：确认蓝图 & 账号注册（含海外 IP 配置）  \n2. D1：锁定拍摄日期，输出《72 组素材清单》  \n3. D2-D3：完成实地拍摄  \n4. D4-D5：AI 剪辑 + 审核，产出 180 条视频包  \n5. D6：批量上传；设置 30 天排程  \n6. D7 起：每日复盘数据，动态调整钩子 & 首帧  \n\n---\n\n**请回复 “确认蓝图” 以便我为您启动下一步：将脚本与素材清单入库并安排自动化发布。**"},
+  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图》\n\n> 版本�?024-Q3 v3.0  \n> 目标周期�?0 �? \n> 适用市场：北�?/ 欧洲 / 澳洲 / 中东  \n> 主要平台：TikTok、YouTube Shorts、LinkedIn  \n> KPI：曝�?�?500,000；B2B 线索 �?200；有效询�?�?50  \n\n---\n\n## 1. 作战总目标\n1.1 视频投放量：\n�?原生拍摄短视�?30 条（�?每日 1 条）  \n�?AI 裂变剪辑 �?6×，共 180 条可发布素材  \n�?6 账号矩阵 x 30 �?= 180 次发�? \n\n1.2 账号矩阵：\n�?TikTok 2 个（美区、东南亚区）  \n�?YouTube Shorts 2 个（英文频道、中文字幕频道）  \n�?LinkedIn 2 个（公司�?+ 销售个人号�? \n\n1.3 预估效果：\n�?曝光 500,000+  \n�?完播�?40%+  \n�?互动（赞 / 评论 / 私信�?5,000+  \n�?表单/私信线索 200+，有效询�?50+  \n\n---\n\n## 2. 素材拍摄需求\n| 周次 | 场景类别 | 拍摄机位 | 预计素材�?|\n|------|---------|---------|-----------|\n| Week1 | 工厂产线（贴片、组装、老化�?| 正面+俯拍+特写 | 18 |\n| Week2 | 实验室与测试（光�?EMC/IP66�?| 正面+侧面+测量 HUD | 18 |\n| Week3 | 户外道路 & 港口亮灯对比 | 白天广角+夜景航拍+灯下特写 | 18 |\n| Week4 | 安装 & 质检 & 包装发货 | 高空+肩扛+手持 | 18 |\n| **合计** | **4 �?6 大主�?* | **�? 机位/主题** | **72 组高清素�?* |\n\n提示：单�?/ 手机 4K 60fps 即可；灯具实拍务必记录「对比前后节�?%」和「照度计读数」。\n\n---\n\n## 3. 内容支柱�? 大方向）& 核心钩子\n1. 工厂探秘：揭�?AOK 工厂如何让灯�?10 年不坏？  \n2. 产品测评�?50W 高棚�?vs 400W 金卤灯，用电差多少？  \n3. 客户案例：澳洲港�?800 套投光灯交付全过�? \n4. 对比实验�? 分钟告诉�?IP67 �?IP65 差在�? \n5. 安装指南�? 步完�?12m 高棚灯替换，节约 40% 维护�? \n6. 行业科普：UL / DLC Premium 认证到底值不值？  \n\n---\n\n## 4. 30 天发布日历（示例）\nDay1  工厂探秘  | Day2  科普  | Day3  对比实验  | Day4  案例  | ...  \n（完整日历见附件 Excel，系统已同步）\n\n---\n\n## 5. 脚本模板示例（方向：对比实验）\n�?镜头 1�?-3s）Hook：同功率灯具，为何电费差 2 倍？  \n�?镜头 2�?-8s）展示旧灯能�?& 现场照度  \n�?镜头 3�?-15s）替�?AOK 灯后对比  \n�?镜头 4�?5-25s）节能计算公式叠�?+ 快节�?BGM  \n�?镜头 5�?5-30s）Call to Action：评论区领取 ROI 计算�? \n\n---\n\n## 6. 人员、工具、预算\n�?拍摄�? 人（业务+助理），2 天完�? \n�?剪辑：CapCut / Runway / Descript（AI 批量产出�? \n�?发布：Publer / Hootsuite 排程  \n�?广告加热：TikTok Spark Ads / YouTube Discovery 预算 �?¥3,000  \n�?合计成本：≈ ¥10,000 （可根据地区上下浮动）\n\n---\n\n## 7. 风险 & 解决方案\n�?平台限流 �?准备海外静�?IP，多账号 A/B 测试  \n�?认证类内容易被误�?�?标题避免出现过度夸张数据，附权威证书截图  \n�?拍摄周期拖延 �?周前排期，素材清�?Check-List 追踪\n\n---\n\n## 8. 行动清单（D0-D7）\n1. D0：确认蓝�?& 账号注册（含海外 IP 配置�? \n2. D1：锁定拍摄日期，输出�?2 组素材清单�? \n3. D2-D3：完成实地拍�? \n4. D4-D5：AI 剪辑 + 审核，产�?180 条视频包  \n5. D6：批量上传；设置 30 天排�? \n6. D7 起：每日复盘数据，动态调整钩�?& 首帧  \n\n---\n\n**请回�?“确认蓝图�?以便我为您启动下一步：将脚本与素材清单入库并安排自动化发布�?*"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760324368146
@@ -4881,7 +4883,7 @@ INSERT INTO "redis_queue_messages" VALUES('90e55324-b139-455d-9f10-c57e5909aee9'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 您的专属《AOK LED Light 出海视频获客战略蓝图》已生成并推送！  \n2. 请查看并回复“确认蓝图”，即可进入脚本落地与自动化发布阶段。",
+    "text": "1. 您的专属《AOK LED Light 出海视频获客战略蓝图》已生成并推送！  \n2. 请查看并回复“确认蓝图”，即可进入脚本落地与自动化发布阶段�?,
     "data": {
       "video_link": ""
     }
@@ -4898,7 +4900,7 @@ INSERT INTO "redis_queue_messages" VALUES('f786a9ed-8d0f-4acc-80a4-cdc229fa9296'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. AOK Lighting—海外增长战略蓝图（2024-2026）  \n\n1. 市场定位  \n   • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   • 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n   • 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”  \n\n2. 客户洞察  \n   • 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n   • 市政采购方：关注节能指标、质保年限、符合道路标准  \n   • 经销/分销商：关注利润空间、库存周转、售后配合  \n   • 工商业终端：关注 ROI、智能控制集成、安装便利  \n   • 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规  \n\n3. 核心产品 & 差异化  \n   • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n   • 100 000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力  \n   • 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n   • 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n   • OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主张  \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目标  \n   • 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n   • 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n   • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n   • 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M  \n\n6. 渠道与价格策略  \n   • 一级：核心 EPC＋大型分销商，合同价→项目结算  \n   • 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n   • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n   • 配套服务：样灯 1 周交付，备品备件 48 h 内发货  \n\n7. 营销与传播  \n   A. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \n   B. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）  \n   C. 展会/活动：每年参加 LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”  \n\n8. 客户旅程与转化漏斗  \n   Awareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n   • 关键触点：官网 CTA、案例视频、ROI 计算工具  \n   • 转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n9. 关键 KPI（季度）  \n   • MQL ≥300 条  \n   • 样灯转化率 ≥35%  \n   • 准时交付 ≥95%  \n   • 客户复购率 ≥25%  \n   • 内容发布 ≥12 篇/月  \n   • LinkedIn 粉丝增长 ≥10%/月  \n\n10. 里程碑  \n    • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n    • 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n    • 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n    • 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n    • 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国",
+    "text": "正文�? \n1. AOK Lighting—海外增长战略蓝图（2024-2026�? \n\n1. 市场定位  \n   �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   �?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n   �?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家�? \n\n2. 客户洞察  \n   �?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n   �?市政采购方：关注节能指标、质保年限、符合道路标�? \n   �?经销/分销商：关注利润空间、库存周转、售后配�? \n   �?工商业终端：关注 ROI、智能控制集成、安装便�? \n   �?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合�? \n\n3. 核心产品 & 差异�? \n   �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n   �?100 000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力  \n   �?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n   �?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n   �?OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主�? \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目�? \n   �?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n   �?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n   �?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n   �?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M  \n\n6. 渠道与价格策�? \n   �?一级：核心 EPC＋大型分销商，合同价→项目结算  \n   �?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n   �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n   �?配套服务：样�?1 周交付，备品备件 48 h 内发�? \n\n7. 营销与传�? \n   A. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \n   B. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放�? \n   C. 展会/活动：每年参�?LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day�? \n\n8. 客户旅程与转化漏�? \n   Awareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n   �?关键触点：官�?CTA、案例视频、ROI 计算工具  \n   �?转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n9. 关键 KPI（季度）  \n   �?MQL �?00 �? \n   �?样灯转化�?�?5%  \n   �?准时交付 �?5%  \n   �?客户复购�?�?5%  \n   �?内容发布 �?2 �?�? \n   �?LinkedIn 粉丝增长 �?0%/�? \n\n10. 里程�? \n    �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n    �?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n    �?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n    �?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n    �?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ �?,
     "data": {
       "video_link": ""
     }
@@ -4915,7 +4917,7 @@ INSERT INTO "redis_queue_messages" VALUES('7884a143-359a-4fe8-9a40-08686ec32b70'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n• 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”  \n\n2. 客户洞察  \n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n• 市政采购方：关注节能指标、质保年限、符合道路标准  \n• 经销/分销商：关注利润空间、库存周转、售后配合  \n• 工商业终端：关注 ROI、智能控制集成、安装便利  \n• 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规  \n\n3. 核心产品 & 差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n• 100 000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力  \n• 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n• 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n• OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n• 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M  \n\n6. 渠道与价格策略  \n• 一级：核心 EPC＋大型分销商，合同价→项目结算  \n• 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n• 配套服务：样灯 1 周交付，备品备件 48 h 内发货  \n\n7. 营销与传播  \nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）  \nC. 展会/活动：每年参加 LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”  \n\n8. 客户旅程与转化漏斗  \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n• 关键触点：官网 CTA、案例视频、ROI 计算工具  \n• 转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n9. 关键 KPI（季度）  \n• MQL ≥300 条  \n• 样灯转化率 ≥35%  \n• 准时交付 ≥95%  \n• 客户复购率 ≥25%  \n• 内容发布 ≥12 篇/月  \n• LinkedIn 粉丝增长 ≥10%/月  \n\n10. 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国",
+    "text": "正文�? \nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n�?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家�? \n\n2. 客户洞察  \n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n�?市政采购方：关注节能指标、质保年限、符合道路标�? \n�?经销/分销商：关注利润空间、库存周转、售后配�? \n�?工商业终端：关注 ROI、智能控制集成、安装便�? \n�?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合�? \n\n3. 核心产品 & 差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n�?100 000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力  \n�?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n�?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n�?OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n�?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M  \n\n6. 渠道与价格策�? \n�?一级：核心 EPC＋大型分销商，合同价→项目结算  \n�?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n�?配套服务：样�?1 周交付，备品备件 48 h 内发�? \n\n7. 营销与传�? \nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放�? \nC. 展会/活动：每年参�?LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day�? \n\n8. 客户旅程与转化漏�? \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n�?关键触点：官�?CTA、案例视频、ROI 计算工具  \n�?转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n9. 关键 KPI（季度）  \n�?MQL �?00 �? \n�?样灯转化�?�?5%  \n�?准时交付 �?5%  \n�?客户复购�?�?5%  \n�?内容发布 �?2 �?�? \n�?LinkedIn 粉丝增长 �?0%/�? \n\n10. 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n�?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ �?,
     "data": {
       "video_link": ""
     }
@@ -4932,7 +4934,7 @@ INSERT INTO "redis_queue_messages" VALUES('bb0ab7c3-6866-4e14-a34f-a5440b892535'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n   • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   • 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n   • 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”  \n\n2. 客户洞察  \n   • 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n   • 市政采购方：关注节能指标、质保年限、符合道路标准  \n   • 经销/分销商：关注利润空间、库存周转、售后配合  \n   • 工商业终端：关注 ROI、智能控制集成、安装便利  \n   • 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规  \n\n3. 核心产品与差异化  \n   • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n   • 100 000 h 寿命＋5–10 年质保，降低市政/EPC 质保风险  \n   • 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n   • 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n   • OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主张  \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目标  \n   • 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n   • 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n   • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n   • 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M  \n\n6. 渠道与价格策略  \n   • 一级：核心 EPC＋大型分销商，合同价→项目结算  \n   • 二级：区域代理＋专业批发商，统一 MSRP −30% 折扣  \n   • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n   • 配套服务：样灯 1 周交付，备品备件 48 h 内发货  \n\n7. 营销与传播  \n   a. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \n   b. 数字渠道：官网＋LinkedIn＋YouTube；Facebook/Instagram；Google Ads＋Bing Ads  \n   c. 展会/活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；举办 “High-Efficacy Lighting Day”  \n\n8. 客户旅程与转化漏斗  \n   Awareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购/升级  \n   • 关键触点：官网 CTA、案例视频、ROI 计算工具  \n   • 转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n9. 关键 KPI（季度）  \n   • MQL ≥300 条  \n   • 样灯转化率 ≥35%  \n   • 准时交付 ≥95%  \n   • 客户复购率 ≥25%  \n   • 内容发布 ≥12 篇/月  \n   • LinkedIn 粉丝增长 ≥10%/月  \n\n10. 里程碑  \n    • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n    • 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n    • 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n    • 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n    • 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国",
+    "text": "正文�? \nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n   �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   �?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n   �?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家�? \n\n2. 客户洞察  \n   �?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n   �?市政采购方：关注节能指标、质保年限、符合道路标�? \n   �?经销/分销商：关注利润空间、库存周转、售后配�? \n   �?工商业终端：关注 ROI、智能控制集成、安装便�? \n   �?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合�? \n\n3. 核心产品与差异化  \n   �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n   �?100 000 h 寿命�?�?0 年质保，降低市政/EPC 质保风险  \n   �?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n   �?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n   �?OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主�? \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目�? \n   �?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n   �?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n   �?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n   �?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M  \n\n6. 渠道与价格策�? \n   �?一级：核心 EPC＋大型分销商，合同价→项目结算  \n   �?二级：区域代理＋专业批发商，统一 MSRP �?0% 折扣  \n   �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n   �?配套服务：样�?1 周交付，备品备件 48 h 内发�? \n\n7. 营销与传�? \n   a. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \n   b. 数字渠道：官网＋LinkedIn＋YouTube；Facebook/Instagram；Google Ads＋Bing Ads  \n   c. 展会/活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；举�?“High-Efficacy Lighting Day�? \n\n8. 客户旅程与转化漏�? \n   Awareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购/升级  \n   �?关键触点：官�?CTA、案例视频、ROI 计算工具  \n   �?转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n9. 关键 KPI（季度）  \n   �?MQL �?00 �? \n   �?样灯转化�?�?5%  \n   �?准时交付 �?5%  \n   �?客户复购�?�?5%  \n   �?内容发布 �?2 �?�? \n   �?LinkedIn 粉丝增长 �?0%/�? \n\n10. 里程�? \n    �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n    �?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n    �?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n    �?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n    �?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ �?,
     "data": {
       "video_link": ""
     }
@@ -4949,7 +4951,7 @@ INSERT INTO "redis_queue_messages" VALUES('83ec77df-dcde-4740-be66-218ce708a70f'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n以下为基于您现有企业资料、目标人群、产品特点等信息，整合生成的「海外增长战略蓝图（2024-2026）」草案。如有需要，可随时补充或修改细节；确认“没问题”后，我即可将其存档，并进入下一步执行。\n\nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n• 战略角色：北美 / 欧洲 / EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n• 工程承包商 / EPC：关注认证齐全、交付周期、维护成本  \n• 市政采购方：关注节能指标、质保年限、符合道路标准  \n• 经销 / 分销商：关注利润空间、库存周转、售后配合  \n• 工商业终端：关注 ROI、智能控制集成、安装便利  \n• 共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合规\n\n3. 核心产品 & 差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n• 100 000 h 寿命＋5-10 年质保，减少市政 / EPC 质保压力  \n• 专利散热＋多配光＋高防护 IP66 / IK10，极端环境可靠  \n• 智能兼容（DALI、0-10 V、Zigbee / LoRa），升级无忧  \n• OEM / ODM 快速定制，缩短项目周期\n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n• 欧洲：工矿 / 物流仓储＋体育照明；年销售目标 €800 万  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M\n\n6. 渠道与价格策略  \n• 1 级：核心 EPC＋大型分销商，合同价→项目结算  \n• 2 级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n• 配套服务：样灯 1 周交付，备品备件 48 h 内发货\n\n7. 营销与传播  \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook / Instagram（工程现场短视频）；Google Ads + Bing Ads（项目经理、采购关键词投放）  \nC. 展会 / 活动：每年参加 LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏斗  \nAwareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购 / 升级  \n关键触点：官网 CTA、案例视频、ROI 计算工具  \n转化工具：在线 TCO 计算器、30 天免费样灯计划\n\n9. 关键 KPI（季度）  \n• MQL ≥300 条 • 样灯转化率 ≥35% • 准时交付 ≥95%  \n• 客户复购率 ≥25% • 内容发布 ≥12 篇 / 月 • LinkedIn 粉丝增长 ≥10% / 月\n\n10. 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国\n\n——  \n请您查看上述“海外增长战略蓝图”草案，告知“没问题”或需要调整的部分。如确认无误，我将立即存档并推动后续步骤。",
+    "text": "正文：\n以下为基于您现有企业资料、目标人群、产品特点等信息，整合生成的「海外增长战略蓝图（2024-2026）」草案。如有需要，可随时补充或修改细节；确认“没问题”后，我即可将其存档，并进入下一步执行。\n\nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n�?战略角色：北�?/ 欧洲 / EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n�?工程承包�?/ EPC：关注认证齐全、交付周期、维护成�? \n�?市政采购方：关注节能指标、质保年限、符合道路标�? \n�?经销 / 分销商：关注利润空间、库存周转、售后配�? \n�?工商业终端：关注 ROI、智能控制集成、安装便�? \n�?共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合规\n\n3. 核心产品 & 差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n�?100 000 h 寿命�?-10 年质保，减少市政 / EPC 质保压力  \n�?专利散热＋多配光＋高防护 IP66 / IK10，极端环境可�? \n�?智能兼容（DALI�?-10 V、Zigbee / LoRa），升级无忧  \n�?OEM / ODM 快速定制，缩短项目周期\n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n�?欧洲：工�?/ 物流仓储＋体育照明；年销售目�?�?00 �? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M\n\n6. 渠道与价格策�? \n�?1 级：核心 EPC＋大型分销商，合同价→项目结算  \n�?2 级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n�?配套服务：样�?1 周交付，备品备件 48 h 内发货\n\n7. 营销与传�? \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook / Instagram（工程现场短视频）；Google Ads + Bing Ads（项目经理、采购关键词投放�? \nC. 展会 / 活动：每年参�?LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏�? \nAwareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购 / 升级  \n关键触点：官�?CTA、案例视频、ROI 计算工具  \n转化工具：在�?TCO 计算器�?0 天免费样灯计划\n\n9. 关键 KPI（季度）  \n�?MQL �?00 条 �?样灯转化�?�?5% �?准时交付 �?5%  \n�?客户复购�?�?5% �?内容发布 �?2 �?/ 月 �?LinkedIn 粉丝增长 �?0% / 月\n\n10. 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n�?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ 国\n\n—�? \n请您查看上述“海外增长战略蓝图”草案，告知“没问题”或需要调整的部分。如确认无误，我将立即存档并推动后续步骤�?,
     "data": {
       "video_link": ""
     }
@@ -4966,7 +4968,7 @@ INSERT INTO "redis_queue_messages" VALUES('3f3e474b-5434-4180-ba74-73f8fd6b37f8'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 以下为已为您整理完成的「海外增长战略蓝图（2024-2026）」，内容源自您此前确认的企业资料、产品特点与目标人群信息，现直接呈现：  \n\nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n• 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”  \n\n2. 客户洞察  \n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n• 市政采购方：关注节能指标、质保年限、符合道路标准  \n• 经销/分销商：关注利润空间、库存周转、售后配合  \n• 工商业终端：关注 ROI、智能控制集成、安装便利  \n• 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规  \n\n3. 核心产品 & 差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n• 100 000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力  \n• 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n• 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n• OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n• 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M  \n\n6. 渠道与价格策略  \n• 一级：核心 EPC＋大型分销商，合同价→项目结算  \n• 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n• 配套服务：样灯 1 周交付，备品备件 48 h 内发货  \n\n7. 营销与传播  \nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）  \nC. 展会/活动：每年参加 LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”  \n\n8. 客户旅程与转化漏斗  \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n关键触点：官网 CTA、案例视频、ROI 计算工具  \n转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n9. 关键 KPI（季度）  \n• MQL ≥300 条  \n• 样灯转化率 ≥35%  \n• 准时交付 ≥95%  \n• 客户复购率 ≥25%  \n• 内容发布 ≥12 篇/月  \n• LinkedIn 粉丝增长 ≥10%/月  \n\n10. 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国  \n\n——  \n2. 请您确认上述蓝图是否“没问题”或指出需调整的部分；如确认无误，我将立即存档并推进后续执行。",
+    "text": "1. 以下为已为您整理完成的「海外增长战略蓝图（2024-2026）」，内容源自您此前确认的企业资料、产品特点与目标人群信息，现直接呈现�? \n\nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n�?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家�? \n\n2. 客户洞察  \n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n�?市政采购方：关注节能指标、质保年限、符合道路标�? \n�?经销/分销商：关注利润空间、库存周转、售后配�? \n�?工商业终端：关注 ROI、智能控制集成、安装便�? \n�?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合�? \n\n3. 核心产品 & 差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n�?100 000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力  \n�?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n�?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n�?OEM/ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n�?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M  \n\n6. 渠道与价格策�? \n�?一级：核心 EPC＋大型分销商，合同价→项目结算  \n�?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n�?配套服务：样�?1 周交付，备品备件 48 h 内发�? \n\n7. 营销与传�? \nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放�? \nC. 展会/活动：每年参�?LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day�? \n\n8. 客户旅程与转化漏�? \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n关键触点：官�?CTA、案例视频、ROI 计算工具  \n转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n9. 关键 KPI（季度）  \n�?MQL �?00 �? \n�?样灯转化�?�?5%  \n�?准时交付 �?5%  \n�?客户复购�?�?5%  \n�?内容发布 �?2 �?�? \n�?LinkedIn 粉丝增长 �?0%/�? \n\n10. 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n�?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ �? \n\n—�? \n2. 请您确认上述蓝图是否“没问题”或指出需调整的部分；如确认无误，我将立即存档并推进后续执行�?,
     "data": {
       "video_link": ""
     }
@@ -4983,7 +4985,7 @@ INSERT INTO "redis_queue_messages" VALUES('e93150fe-aed5-4609-9e94-d451df6b61f1'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n以下为 AOK Lighting—海外增长战略蓝图（2024-2026）。\n\n1. 市场定位  \n   • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   • 细分：高光效＋长寿命＋严苛认证的中高端工程 / 项目型照明  \n   • 战略角色：北美 / 欧洲 / EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n   • 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n   • 市政采购方：关注节能指标、质保年限、符合道路标准  \n   • 经销 / 分销商：关注利润空间、库存周转、售后配合  \n   • 工商业终端：关注 ROI、智能控制集成、安装便利  \n   • 共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合规\n\n3. 核心产品 & 差异化  \n   • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n   • 100 000 h 寿命＋5–10 年质保，减少市政 / EPC 质保压力  \n   • 专利散热＋多配光＋高防护 IP66 / IK10，极端环境可靠  \n   • 智能兼容（DALI、0–10 V、Zigbee / LoRa），升级无忧  \n   • OEM / ODM 快速定制，缩短项目周期\n\n4. 品牌价值主张  \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目标  \n   • 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n   • 欧洲：工矿 / 物流仓储＋体育照明；年销售目标 €800 万  \n   • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n   • 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M\n\n6. 渠道与价格策略  \n   • 1 级：核心 EPC＋大型分销商，合同价→项目结算  \n   • 2 级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n   • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n   • 配套服务：样灯 1 周交付，备品备件 48 h 内发货\n\n7. 营销与传播  \n   A. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \n   B. 数字渠道：官网＋LinkedIn＋YouTube；Facebook / Instagram；Google Ads + Bing Ads  \n   C. 展会 / 活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；“High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏斗  \n   Awareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购 / 升级  \n   • 关键触点：官网 CTA、案例视频、ROI 计算工具  \n   • 转化工具：在线 TCO 计算器、30 天免费样灯计划\n\n9. 关键 KPI（季度）  \n   • MQL ≥300 条 • 样灯转化率 ≥35% • 准时交付 ≥95%  \n   • 客户复购率 ≥25% • 内容发布 ≥12 篇 / 月 • LinkedIn 粉丝增长 ≥10% / 月\n\n10. 里程碑  \n    • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n    • 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n    • 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n    • 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n    • 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国\n\n——  \n如需进一步调整，请告诉我具体修改点；若以上蓝图无误，请回复“没问题”，我将立即存档并推进后续执行。",
+    "text": "正文：\n以下�?AOK Lighting—海外增长战略蓝图（2024-2026）。\n\n1. 市场定位  \n   �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n   �?细分：高光效＋长寿命＋严苛认证的中高端工�?/ 项目型照�? \n   �?战略角色：北�?/ 欧洲 / EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n   �?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n   �?市政采购方：关注节能指标、质保年限、符合道路标�? \n   �?经销 / 分销商：关注利润空间、库存周转、售后配�? \n   �?工商业终端：关注 ROI、智能控制集成、安装便�? \n   �?共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合规\n\n3. 核心产品 & 差异�? \n   �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n   �?100 000 h 寿命�?�?0 年质保，减少市政 / EPC 质保压力  \n   �?专利散热＋多配光＋高防护 IP66 / IK10，极端环境可�? \n   �?智能兼容（DALI�?�?0 V、Zigbee / LoRa），升级无忧  \n   �?OEM / ODM 快速定制，缩短项目周期\n\n4. 品牌价值主�? \n   “更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目�? \n   �?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n   �?欧洲：工�?/ 物流仓储＋体育照明；年销售目�?�?00 �? \n   �?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n   �?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M\n\n6. 渠道与价格策�? \n   �?1 级：核心 EPC＋大型分销商，合同价→项目结算  \n   �?2 级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n   �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n   �?配套服务：样�?1 周交付，备品备件 48 h 内发货\n\n7. 营销与传�? \n   A. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \n   B. 数字渠道：官网＋LinkedIn＋YouTube；Facebook / Instagram；Google Ads + Bing Ads  \n   C. 展会 / 活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；“High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏�? \n   Awareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购 / 升级  \n   �?关键触点：官�?CTA、案例视频、ROI 计算工具  \n   �?转化工具：在�?TCO 计算器�?0 天免费样灯计划\n\n9. 关键 KPI（季度）  \n   �?MQL �?00 条 �?样灯转化�?�?5% �?准时交付 �?5%  \n   �?客户复购�?�?5% �?内容发布 �?2 �?/ 月 �?LinkedIn 粉丝增长 �?0% / 月\n\n10. 里程�? \n    �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n    �?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n    �?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n    �?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n    �?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ 国\n\n—�? \n如需进一步调整，请告诉我具体修改点；若以上蓝图无误，请回复“没问题”，我将立即存档并推进后续执行�?,
     "data": {
       "video_link": ""
     }
@@ -5000,7 +5002,7 @@ INSERT INTO "redis_queue_messages" VALUES('bf4f494f-f15d-4430-b660-5898b10f69cc'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 以下内容为 AOK Lighting（深圳市奥科莱特照明有限公司）海外增长战略蓝图（2024-2026），已根据您此前提供／确认的企业资料、目标人群与产品特点整合生成，可直接作为战略执行参考。若需微调，请随时指出。  \n\n2. AOK Lighting — 海外增长战略蓝图（2024-2026）  \n   1) 市场定位  \n      • 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n      • 细分：高光效＋长寿命＋严苛认证的中高端工程／项目型照明  \n      • 战略角色：北美/欧洲/EPC 承包商与市政的 “节能降本光效专家”  \n\n   2) 客户洞察  \n      • 工程承包商 / EPC：关注认证齐全、交付周期、维护成本  \n      • 市政采购方：关注节能指标、质保年限、符合当地道路标准  \n      • 经销／分销商：关注利润空间、库存周转、售后配合  \n      • 工商业终端：关注 ROI、智能控制集成、安装便利  \n      • 共性痛点：节能降本、施工维护成本高、需 UL／DLC／CE 等合规  \n\n   3) 核心产品 & 差异化  \n      • 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n      • 100 000 h 寿命＋5-10 年质保，降低质保与维护压力  \n      • 专利散热＋多配光＋IP66 / IK10，高温、潮湿及冲击环境可靠  \n      • 智能兼容（DALI、0-10 V、Zigbee／LoRa），升级无忧  \n      • OEM／ODM 快速定制，缩短项目周期  \n\n   4) 品牌价值主张  \n      “更高光效，更省成本” —— 以自研光学与散热技术，为全球工程客户提供高效、可靠、节能的 LED 解决方案  \n\n   5) 目标市场与份额目标  \n      • 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n      • 欧洲：工矿／物流仓储＋体育照明；年销售目标 €800 万  \n      • 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n      • 三年合计：海外销售 CAGR ≥35%，2026 年出口额突破 US$30 M  \n\n   6) 渠道与价格策略  \n      • 一级：核心 EPC＋大型分销商，合同价 → 项目结算  \n      • 二级：区域代理＋专业灯具批发商，统一 MSRP −30 % 折扣  \n      • 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n      • 配套服务：样灯 1 周交付；备品备件 48 h 内发货  \n\n   7) 营销与传播  \n      A. 内容/SEO：聚焦 LED street light, DLC Premium, high bay 170 lm/W, outdoor sports lighting, IP66 industrial lighting 等核心关键词，发布案例／ROI 文章  \n      B. 数字渠道：官网＋LinkedIn＋YouTube（技术&案例视频）；Facebook／Instagram（工程短视频）；Google Ads／Bing Ads（项目经理、采购关键词投放）  \n      C. 展会/活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”  \n\n   8) 客户旅程与转化漏斗  \n      Awareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购／升级  \n      • 关键触点：官网 CTA、案例视频、ROI 计算工具  \n      • 转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n   9) 关键 KPI（季度）  \n      • MQL ≥300 条  \n      • 样灯转化率 ≥35 %  \n      • 准时交付 ≥95 %  \n      • 客户复购率 ≥25 %  \n      • 内容发布 ≥12 篇／月  \n      • LinkedIn 粉丝增长 ≥10 %／月  \n\n  10) 里程碑  \n      • 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n      • 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n      • 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n      • 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n      • 2026 Q4：海外营收 ≥US$30 M；代理网覆盖 25+ 国  \n\n3. 如需补充或调整，请告诉我！",
+    "text": "1. 以下内容�?AOK Lighting（深圳市奥科莱特照明有限公司）海外增长战略蓝图（2024-2026），已根据您此前提供／确认的企业资料、目标人群与产品特点整合生成，可直接作为战略执行参考。若需微调，请随时指出�? \n\n2. AOK Lighting �?海外增长战略蓝图�?024-2026�? \n   1) 市场定位  \n      �?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n      �?细分：高光效＋长寿命＋严苛认证的中高端工程／项目型照�? \n      �?战略角色：北�?欧洲/EPC 承包商与市政�?“节能降本光效专家�? \n\n   2) 客户洞察  \n      �?工程承包�?/ EPC：关注认证齐全、交付周期、维护成�? \n      �?市政采购方：关注节能指标、质保年限、符合当地道路标�? \n      �?经销／分销商：关注利润空间、库存周转、售后配�? \n      �?工商业终端：关注 ROI、智能控制集成、安装便�? \n      �?共性痛点：节能降本、施工维护成本高、需 UL／DLC／CE 等合�? \n\n   3) 核心产品 & 差异�? \n      �?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n      �?100 000 h 寿命�?-10 年质保，降低质保与维护压�? \n      �?专利散热＋多配光＋IP66 / IK10，高温、潮湿及冲击环境可靠  \n      �?智能兼容（DALI�?-10 V、Zigbee／LoRa），升级无忧  \n      �?OEM／ODM 快速定制，缩短项目周期  \n\n   4) 品牌价值主�? \n      “更高光效，更省成本�?—�?以自研光学与散热技术，为全球工程客户提供高效、可靠、节能的 LED 解决方案  \n\n   5) 目标市场与份额目�? \n      �?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n      �?欧洲：工矿／物流仓储＋体育照明；年销售目�?�?00 �? \n      �?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n      �?三年合计：海外销�?CAGR �?5%�?026 年出口额突破 US$30 M  \n\n   6) 渠道与价格策�? \n      �?一级：核心 EPC＋大型分销商，合同�?�?项目结算  \n      �?二级：区域代理＋专业灯具批发商，统一 MSRP �?0 % 折扣  \n      �?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n      �?配套服务：样�?1 周交付；备品备件 48 h 内发�? \n\n   7) 营销与传�? \n      A. 内容/SEO：聚�?LED street light, DLC Premium, high bay 170 lm/W, outdoor sports lighting, IP66 industrial lighting 等核心关键词，发布案例／ROI 文章  \n      B. 数字渠道：官网＋LinkedIn＋YouTube（技�?案例视频）；Facebook／Instagram（工程短视频）；Google Ads／Bing Ads（项目经理、采购关键词投放�? \n      C. 展会/活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day�? \n\n   8) 客户旅程与转化漏�? \n      Awareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购／升�? \n      �?关键触点：官�?CTA、案例视频、ROI 计算工具  \n      �?转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n   9) 关键 KPI（季度）  \n      �?MQL �?00 �? \n      �?样灯转化�?�?5 %  \n      �?准时交付 �?5 %  \n      �?客户复购�?�?5 %  \n      �?内容发布 �?2 篇／�? \n      �?LinkedIn 粉丝增长 �?0 %／月  \n\n  10) 里程�? \n      �?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n      �?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n      �?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n      �?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n      �?2026 Q4：海外营�?≥US$30 M；代理网覆盖 25+ �? \n\n3. 如需补充或调整，请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -5017,7 +5019,7 @@ INSERT INTO "redis_queue_messages" VALUES('ab63128f-8a36-4f5c-a0a8-d3b696b2c87c'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位\n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）\n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明\n• 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察\n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本\n• 市政采购方：关注节能指标、质保年限、符合道路标准\n• 经销/分销商：关注利润空间、库存周转、售后配合\n• 工商业终端：关注 ROI、智能控制集成、安装便利\n• 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规\n\n3. 核心产品 & 差异化\n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低\n• 100 000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力\n• 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠\n• 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧\n• OEM/ODM 快速定制，缩短项目周期\n\n4. 品牌价值主张\n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目标\n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套\n• 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万\n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万\n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M\n\n6. 渠道与价格策略\n• 一级：核心 EPC＋大型分销商，合同价→项目结算\n• 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣\n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套\n• 配套服务：样灯 1 周交付，备品备件 48 h 内发货\n\n7. 营销与传播\nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章\nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）\nC. 展会/活动：每年参加 LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏斗\nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级\n关键触点：官网 CTA、案例视频、ROI 计算工具\n转化工具：在线 TCO 计算器、30 天免费样灯计划\n\n9. 关键 KPI（季度）\n• MQL ≥300 条\n• 样灯转化率 ≥35%\n• 准时交付 ≥95%\n• 客户复购率 ≥25%\n• 内容发布 ≥12 篇/月\n• LinkedIn 粉丝增长 ≥10%/月\n\n10. 里程碑\n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线\n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器\n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万\n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天\n• 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国",
+    "text": "正文：\nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位\n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）\n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照明\n�?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察\n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成本\n�?市政采购方：关注节能指标、质保年限、符合道路标准\n�?经销/分销商：关注利润空间、库存周转、售后配合\n�?工商业终端：关注 ROI、智能控制集成、安装便利\n�?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规\n\n3. 核心产品 & 差异化\n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最低\n�?100 000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力\n�?专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠\n�?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧\n�?OEM/ODM 快速定制，缩短项目周期\n\n4. 品牌价值主张\n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目标\n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套\n�?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 万\n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 万\n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M\n\n6. 渠道与价格策略\n�?一级：核心 EPC＋大型分销商，合同价→项目结算\n�?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣\n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套\n�?配套服务：样�?1 周交付，备品备件 48 h 内发货\n\n7. 营销与传播\nA. 内容/SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文章\nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）\nC. 展会/活动：每年参�?LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏斗\nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级\n关键触点：官�?CTA、案例视频、ROI 计算工具\n转化工具：在�?TCO 计算器�?0 天免费样灯计划\n\n9. 关键 KPI（季度）\n�?MQL �?00 条\n�?样灯转化�?�?5%\n�?准时交付 �?5%\n�?客户复购�?�?5%\n�?内容发布 �?2 �?月\n�?LinkedIn 粉丝增长 �?0%/月\n\n10. 里程碑\n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上线\n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算器\n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 万\n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天\n�?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ �?,
     "data": {
       "video_link": ""
     }
@@ -5034,7 +5036,7 @@ INSERT INTO "redis_queue_messages" VALUES('92845dc8-59dd-4c19-8250-45156d3798a2'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 您好！目前您的企业信息、产品特点、目标人群、关键词库及《出海视频获客战略蓝图》都已完整录入并确认。  \n2. 请问关于“战略”您想进一步了解或调整哪些内容？例如：  \n   • 需要细化 30 天发布日历中的脚本或拍摄要点  \n   • 想新增/修改目标 KPI、渠道矩阵或预算  \n   • 希望获取蓝图的执行进度跟踪表  \n   • 其他战略相关问题  \n3. 您可以告诉我具体需求，我将为您进一步处理或调用相应工具。",
+    "text": "1. 您好！目前您的企业信息、产品特点、目标人群、关键词库及《出海视频获客战略蓝图》都已完整录入并确认�? \n2. 请问关于“战略”您想进一步了解或调整哪些内容？例如：  \n   �?需要细�?30 天发布日历中的脚本或拍摄要点  \n   �?想新�?修改目标 KPI、渠道矩阵或预算  \n   �?希望获取蓝图的执行进度跟踪表  \n   �?其他战略相关问题  \n3. 您可以告诉我具体需求，我将为您进一步处理或调用相应工具�?,
     "data": {
       "video_link": ""
     }
@@ -5051,7 +5053,7 @@ INSERT INTO "redis_queue_messages" VALUES('3e2fca24-7ba7-43fa-929f-b5118cc2d9f0'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 您好！目前《AOK LED Light 出海视频获客战略蓝图》已更新至 v2 版本，包含：30 天 6 账号矩阵、每日 180 条裂变视频、预计曝光 50 万+、B2B 线索 200+ 等核心指标。  \n2. 请问关于“战略”您想要进一步查看或调整的具体内容是哪一块？例如：  \n   2.1 想细化 30 天发布日历中的脚本/拍摄要点  \n   2.2 需要新增或修改渠道矩阵、投放预算、KPI  \n   2.3 需要执行进度跟踪表或里程碑分解  \n   2.4 其他战略相关问题  \n3. 您可以直接告诉我具体需求，我将为您进一步处理或输出对应资料。",
+    "text": "1. 您好！目前《AOK LED Light 出海视频获客战略蓝图》已更新�?v2 版本，包含：30 �?6 账号矩阵、每�?180 条裂变视频、预计曝�?50 �?、B2B 线索 200+ 等核心指标�? \n2. 请问关于“战略”您想要进一步查看或调整的具体内容是哪一块？例如�? \n   2.1 想细�?30 天发布日历中的脚�?拍摄要点  \n   2.2 需要新增或修改渠道矩阵、投放预算、KPI  \n   2.3 需要执行进度跟踪表或里程碑分解  \n   2.4 其他战略相关问题  \n3. 您可以直接告诉我具体需求，我将为您进一步处理或输出对应资料�?,
     "data": {
       "video_link": ""
     }
@@ -5068,7 +5070,7 @@ INSERT INTO "redis_queue_messages" VALUES('e27218d4-2d11-4ce6-aaa5-fe4d9515258d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。为了帮助您规划后续的视频拍摄与测试，您是否需要查看当前的作战地图，并确认还需要合成多少个视频？\n\n如果需要，请回复“是”，我将立即为您查询并反馈。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。为了帮助您规划后续的视频拍摄与测试，您是否需要查看当前的作战地图，并确认还需要合成多少个视频？\n\n如果需要，请回复“是”，我将立即为您查询并反馈�?,
     "data": {
       "video_link": ""
     }
@@ -5085,7 +5087,7 @@ INSERT INTO "redis_queue_messages" VALUES('288a5b6e-b3b1-4404-9884-8c083ed15a32'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n1. 当前已为您存档的《AOK LED Light 出海视频获客战略蓝图 v2》核心要点如下：  \n   • 目标：30 天内通过 6 账号矩阵（TikTok/YouTube Shorts/LinkedIn 各 2 账号），累计曝光 ≥ 50 万，B2B 线索 ≥ 200 条。  \n   • 发布节奏：每日每账号 1 条短视频，总计 30 天 × 6 账号 = 180 条。  \n   • 素材需求：每周拍摄 6 大场景 × 3 机位，共 18 组高清素材；4 周累计 72 组。  \n   • 内容支柱：①工厂探秘 ②产品测评 ③客户案例 ④对比实验 ⑤安装指南 ⑥行业科普。  \n   • 制作分工：2 人拍摄（手机+协助），AI 工具（CapCut / Runway）剪辑，预算 ≤ 1 万元。  \n   • 已生成：30 天发布日历、脚本示例、钩子库、旁白模板、节奏建议等，均已入库。\n\n2. 如需执行下列操作，请直接告诉我：  \n   a) 查看完整蓝图或任一模块的详情；  \n   b) 对蓝图进行修改 / 追加新的战略任务；  \n   c) 直接进入制作环节（输出脚本、片段列表、拍摄清单等）；  \n   d) 其他与视频获客相关的需求。  \n\n3. 请告知您接下来的指令，我将立即为您处理！",
+    "text": "正文：\n1. 当前已为您存档的《AOK LED Light 出海视频获客战略蓝图 v2》核心要点如下：  \n   �?目标�?0 天内通过 6 账号矩阵（TikTok/YouTube Shorts/LinkedIn �?2 账号），累计曝光 �?50 万，B2B 线索 �?200 条�? \n   �?发布节奏：每日每账号 1 条短视频，总计 30 �?× 6 账号 = 180 条�? \n   �?素材需求：每周拍摄 6 大场�?× 3 机位，共 18 组高清素材；4 周累�?72 组�? \n   �?内容支柱：①工厂探秘 ②产品测�?③客户案�?④对比实�?⑤安装指�?⑥行业科普�? \n   �?制作分工�? 人拍摄（手机+协助），AI 工具（CapCut / Runway）剪辑，预算 �?1 万元�? \n   �?已生成：30 天发布日历、脚本示例、钩子库、旁白模板、节奏建议等，均已入库。\n\n2. 如需执行下列操作，请直接告诉我：  \n   a) 查看完整蓝图或任一模块的详情；  \n   b) 对蓝图进行修�?/ 追加新的战略任务�? \n   c) 直接进入制作环节（输出脚本、片段列表、拍摄清单等）；  \n   d) 其他与视频获客相关的需求�? \n\n3. 请告知您接下来的指令，我将立即为您处理！",
     "data": {
       "video_link": ""
     }
@@ -5102,7 +5104,7 @@ INSERT INTO "redis_queue_messages" VALUES('d0018870-1ea3-4050-ac2c-df7bb7ec9cb3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已收到您提供的网址 。为了继续推进视频创作流程，请先确认：1) 是否需要我立即根据现有作战地图，统计并告知您当前还需要合成多少条测试视频？如果需要，请回复“是”。如果有其他指令，也请直接告知，我将为您处理。",
+    "text": "已收到您提供的网址 。为了继续推进视频创作流程，请先确认�?) 是否需要我立即根据现有作战地图，统计并告知您当前还需要合成多少条测试视频？如果需要，请回复“是”。如果有其他指令，也请直接告知，我将为您处理�?,
     "data": {
       "video_link": "www.aokledlight.com"
     }
@@ -5119,7 +5121,7 @@ INSERT INTO "redis_queue_messages" VALUES('7acc5604-50ec-4e68-ad57-16f832f1bc74'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n1. 已为您准备好完整的《AOK Lighting—海外增长战略蓝图（2024-2026）》，内容如下：\n\nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位\n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n• 战略角色：北美/欧洲/EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n• 市政采购方：关注节能指标、质保年限、符合道路标准  \n• 经销/分销商：关注利润空间、库存周转、售后配合  \n• 工商业终端：关注 ROI、智能控制集成、安装便利  \n• 共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规\n\n3. 核心产品 & 差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n• 100 000 h 寿命＋5–10 年质保，减少市政/EPC 质保压力  \n• 专利散热＋多配光＋高防护 IP66/IK10，极端环境可靠  \n• 智能兼容（DALI、0–10 V、Zigbee/LoRa），升级无忧  \n• OEM/ODM 快速定制，缩短项目周期\n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 1.2 万套  \n• 欧洲：工矿/物流仓储＋体育照明；年销售目标 €800 万  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$300 万  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M\n\n6. 渠道与价格策略  \n• 一级：核心 EPC＋大型分销商，合同价→项目结算  \n• 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n• 配套服务：样灯 1 周交付，备品备件 48 h 内发货\n\n7. 营销与传播  \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170 lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）  \nC. 展会 / 活动：每年参加 LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举办 “High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏斗  \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n关键触点：官网 CTA、案例视频、ROI 计算工具  \n转化工具：在线 TCO 计算器、30 天免费样灯计划\n\n9. 关键 KPI（季度）  \n• MQL ≥300 条  \n• 样灯转化率 ≥35%  \n• 准时交付 ≥95%  \n• 客户复购率 ≥25%  \n• 内容发布 ≥12 篇/月  \n• LinkedIn 粉丝增长 ≥10%/月\n\n10. 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US & DE）上线；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥US$30 M；代理网覆盖 25+ 国\n\n如需进一步细化某一模块（如视频获客、渠道招募或 KPI 监控），请随时告诉我！",
+    "text": "正文：\n1. 已为您准备好完整的《AOK Lighting—海外增长战略蓝图（2024-2026）》，内容如下：\n\nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位\n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n�?战略角色：北�?欧洲/EPC 承包商与市政的“节能降本光效专家”\n\n2. 客户洞察  \n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n�?市政采购方：关注节能指标、质保年限、符合道路标�? \n�?经销/分销商：关注利润空间、库存周转、售后配�? \n�?工商业终端：关注 ROI、智能控制集成、安装便�? \n�?共性痛点：节能降本、施工维护成本高、需 UL/DLC/CE 等合规\n\n3. 核心产品 & 差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n�?100 000 h 寿命�?�?0 年质保，减少市政/EPC 质保压力  \n�?专利散热＋多配光＋高防护 IP66/IK10，极端环境可�? \n�?智能兼容（DALI�?�?0 V、Zigbee/LoRa），升级无忧  \n�?OEM/ODM 快速定制，缩短项目周期\n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案\n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?1.2 万套  \n�?欧洲：工�?物流仓储＋体育照明；年销售目�?�?00 �? \n�?东南亚：城市基建与园区节能改造；年销售目�?US$300 �? \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M\n\n6. 渠道与价格策�? \n�?一级：核心 EPC＋大型分销商，合同价→项目结算  \n�?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n�?配套服务：样�?1 周交付，备品备件 48 h 内发货\n\n7. 营销与传�? \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170 lm/W, outdoor sports lighting, IP66 industrial lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook/Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放�? \nC. 展会 / 活动：每年参�?LightFair(US)、InterLumi(EU)、Hong Kong Lighting Fair；联合代理举�?“High-Efficacy Lighting Day”\n\n8. 客户旅程与转化漏�? \nAwareness→兴趣→方案咨询→样灯测试→POC 订单→批量采购→复购/升级  \n关键触点：官�?CTA、案例视频、ROI 计算工具  \n转化工具：在�?TCO 计算器�?0 天免费样灯计划\n\n9. 关键 KPI（季度）  \n�?MQL �?00 �? \n�?样灯转化�?�?5%  \n�?准时交付 �?5%  \n�?客户复购�?�?5%  \n�?内容发布 �?2 �?�? \n�?LinkedIn 粉丝增长 �?0%/月\n\n10. 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US & DE）上线；交付周期缩短 5 �? \n�?2026 Q4：海外营�?≥US$30 M；代理网覆盖 25+ 国\n\n如需进一步细化某一模块（如视频获客、渠道招募或 KPI 监控），请随时告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -5136,7 +5138,7 @@ INSERT INTO "redis_queue_messages" VALUES('72e11baf-a790-4921-aff9-7ef8c20989b6'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n1. 以下为《AOK LED Light 出海视频获客战略蓝图 v2》核心内容：  \n   • 目标：30 天内通过 6 账号矩阵（TikTok / YouTube Shorts / LinkedIn 各 2 账号），累计曝光 ≥ 50 万，B2B 线索 ≥ 200 条。  \n   • 发布节奏：每日每账号 1 条短视频，总计 30 天 × 6 账号 = 180 条。  \n   • 素材需求：每周拍摄 6 大场景 × 3 机位，共 18 组高清素材；4 周累计 72 组。  \n   • 内容支柱：① 工厂探秘 ② 产品测评 ③ 客户案例 ④ 对比实验 ⑤ 安装指南 ⑥ 行业科普。  \n   • 制作分工：2 人手机拍摄（+1 人协助），AI 工具（CapCut / Runway）剪辑，整体预算 ≤ 1 万元。  \n   • 已生成支持文件：30 天发布日历、脚本示例、钩子库、旁白模板、节奏建议等，均已存档。  \n\n2. 如果您需要：  \n   a) 获取完整蓝图（含日历、脚本、拍摄清单等）原文件；  \n   b) 对蓝图进行修改 / 追加新的战略任务；  \n   c) 直接进入制作环节（输出脚本、镜头列表、拍摄计划等）；  \n   请直接告诉我，我将立即为您处理！",
+    "text": "正文：\n1. 以下为《AOK LED Light 出海视频获客战略蓝图 v2》核心内容：  \n   �?目标�?0 天内通过 6 账号矩阵（TikTok / YouTube Shorts / LinkedIn �?2 账号），累计曝光 �?50 万，B2B 线索 �?200 条�? \n   �?发布节奏：每日每账号 1 条短视频，总计 30 �?× 6 账号 = 180 条�? \n   �?素材需求：每周拍摄 6 大场�?× 3 机位，共 18 组高清素材；4 周累�?72 组�? \n   �?内容支柱：① 工厂探秘 �?产品测评 �?客户案例 �?对比实验 �?安装指南 �?行业科普�? \n   �?制作分工�? 人手机拍摄（+1 人协助），AI 工具（CapCut / Runway）剪辑，整体预算 �?1 万元�? \n   �?已生成支持文件：30 天发布日历、脚本示例、钩子库、旁白模板、节奏建议等，均已存档�? \n\n2. 如果您需要：  \n   a) 获取完整蓝图（含日历、脚本、拍摄清单等）原文件�? \n   b) 对蓝图进行修�?/ 追加新的战略任务�? \n   c) 直接进入制作环节（输出脚本、镜头列表、拍摄计划等）；  \n   请直接告诉我，我将立即为您处理！",
     "data": {
       "video_link": ""
     }
@@ -5153,7 +5155,7 @@ INSERT INTO "redis_queue_messages" VALUES('4ef2bc62-f1b5-493f-9f53-2b7809d98036'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n1. 《AOK LED Light 出海视频获客战略蓝图 v2》已完整存档，包含：  \n   ① 战略目标（30 天曝光≥50 万、B2B 线索≥200）；  \n   ② 账号矩阵与发布节奏（TikTok / YouTube Shorts / LinkedIn 各 2 账号，30 天共 180 条）；  \n   ③ 每周拍摄方案（6 大场景 × 3 机位，共 18 组素材，4 周累计 72 组）；  \n   ④ 内容支柱 6 类（工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普）；  \n   ⑤ 详细 30 天日历、脚本示例、钩子库、旁白模板、拍摄清单等。  \n\n2. 请告知您接下来需要的具体操作：  \n   a) 查看上述蓝图中的某一模块详情；  \n   b) 对蓝图做修改或追加新的战略任务；  \n   c) 直接进入制作环节（生成脚本、镜头列表、拍摄计划等）；  \n   d) 其它与视频获客相关的指令。  \n\n3. 有任何需求请直接说明，我将立即为您处理！",
+    "text": "正文：\n1. 《AOK LED Light 出海视频获客战略蓝图 v2》已完整存档，包含：  \n   �?战略目标�?0 天曝光≥50 万、B2B 线索�?00）；  \n   �?账号矩阵与发布节奏（TikTok / YouTube Shorts / LinkedIn �?2 账号�?0 天共 180 条）�? \n   �?每周拍摄方案�? 大场�?× 3 机位，共 18 组素材，4 周累�?72 组）�? \n   �?内容支柱 6 类（工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普）�? \n   �?详细 30 天日历、脚本示例、钩子库、旁白模板、拍摄清单等�? \n\n2. 请告知您接下来需要的具体操作�? \n   a) 查看上述蓝图中的某一模块详情�? \n   b) 对蓝图做修改或追加新的战略任务；  \n   c) 直接进入制作环节（生成脚本、镜头列表、拍摄计划等）；  \n   d) 其它与视频获客相关的指令�? \n\n3. 有任何需求请直接说明，我将立即为您处理！",
     "data": {
       "video_link": ""
     }
@@ -5181,7 +5183,7 @@ INSERT INTO "redis_queue_messages" VALUES('0a670bdf-0db3-46c5-bead-da17af2aad56'
   "env": "gray",
   "session_id": "a0c81410-d4c5-4418-91f0-68d6e4229175",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "66646e40-8156-4cdd-ba1b-7e3245f8358b",
   "socket_id": "9nmyRZSW8mbt8b5MAAAV",
   "status": "RUNNING",
@@ -5197,7 +5199,7 @@ INSERT INTO "redis_queue_messages" VALUES('6f0d5096-2856-4c9f-99c7-2f3d0794e90f'
   "request_id": "66646e40-8156-4cdd-ba1b-7e3245f8358b",
   "socket_id": "9nmyRZSW8mbt8b5MAAAV",
   "status": "FINISHED",
-  "content": {"data":"# AOK LED Light 出海视频获客战略蓝图 · Version 3.0  (更新版)\n\n> 依据企业官网 www.aokledlight.com 与已存档信息，结合最新海外短视频趋势，对 v2 版本进行全面升级。\n\n---\n## 1. 战略目标\n1. 时间周期：60 天（2 个月）\n2. 曝光目标：≥ 1,000,000 次（比 v2 提升 100%）\n3. 线索目标：≥ 400 条 B2B 潜在客户（比 v2 提升 100%）\n4. 品牌资产：沉淀 1 套可循环迭代的灯具评测内容库 + 60 条案例素材可长期复用。\n\n---\n## 2. 账号矩阵与发布计划\n| 平台 | 区域/语言 | 账号数量 | 日发量 | 60 天总发量 |\n|------|-----------|---------|--------|--------------|\n| TikTok | 美区 / 欧洲区 / 东南亚区 | 3 | 1/天 | 180 |\n| YouTube Shorts | 英文频道 / 西语频道 / 中文频道 | 3 | 1/天 | 180 |\n| LinkedIn | 公司主页 / 销售 #1 / 销售 #2 | 3 | 1/天 | 180 |\n| 合计 | — | **9** | **9/天** | **540** |\n\n*说明：每天 9 条短视频来自同一批素材的 AI 裂变，确保“原生但高效”。*\n\n---\n## 3. 素材需求估算\n1. AI 可将 1 组原片裂变 ≈ 3–5 条平台适配短视频。\n2. 540 条短视频 → 约需 120–150 组原片（安全冗余 20%）。\n3. 拍摄节奏：\n   • 每周拍摄 8 大场景 × 3 机位 ≈ 24 组原片 / 周。\n   • 60 天 ≈ 9 周，累计拍摄 ≈ 9 周 × 24 ≈ **216 组** 原片（含冗余）。\n4. 拍摄用时：集中拍摄 3 天即可完成 60% 以上原片，其余机动补拍。\n\n---\n## 4. 内容支柱 & 场景脚本\n1. 工厂探秘 (Factory Tour)  \n   • 镜头：SMT 贴片 → 老化测试 → 成品包装线 → 仓库自动立库  \n   • 钩子台词：Looking for a REAL LED factory? 60 seconds to find out!  \n   • 标题示例：60 秒走进 10,000㎡ AOK 工厂  \n   • BGM：电子工业氛围 Lo-Fi\n\n2. 产品测评 (Performance Test)  \n   • 镜头：Integrating Sphere 光效测试 → IP67 喷淋 → IK10 冲击演示  \n   • 钩子：Will your streetlight survive THIS test?  \n   • 标题：IP67 + IK10! 测试现场实拍  \n   • BGM：紧张 Tech Rock\n\n3. 客户案例 (Case Study)  \n   • 镜头：美西港口 800 套投光灯亮灯对比（航拍 + 地面）  \n   • 钩子：From 1000 W HPS → 400 W LED in 7 days  \n   • 标题：港口年省 120 万美元电费的秘密  \n   • BGM：史诗感 Orchestral\n\n4. 对比实验 (A/B Demo)  \n   • 镜头：旧 400 W HPS vs AOK 150 W UFO  12 m 高棚  \n   • 钩子：2 bulbs, same height – 50 % more lux, 60 % less power  \n   • 标题：工厂换灯 ROI 18 个月回本  \n   • BGM：科幻 Synthwave\n\n5. 安装指南 (How-to)  \n   • 镜头：开箱 → 接线 → 智能调光设定 (0-10 V & DALI)  \n   • 钩子：Can you install a 200 W high-bay in 90 seconds?  \n   • 标题：3 步安装，节省 40 % 人工  \n   • BGM：动感 Funk\n\n6. 行业科普 (LED 101)  \n   • 镜头：产品经理 + 动画解释 LM-80 / TM-21 / DLC Premium  \n   • 钩子：What does DLC Premium REALLY mean?  \n   • 标题：3 分钟教你看懂北美照明认证  \n   • BGM：轻快 Acoustic\n\n---\n## 5. 30 天滚动发布日历（示例首周）\n| 周期 | 周一 | 周二 | 周三 | 周四 | 周五 | 周六 | 周日 |\n|------|------|------|------|------|------|------|------|\n| 场景 | 工厂探秘 | 产品测评 | 客户案例 | 对比实验 | 安装指南 | 行业科普 | 高层访谈* |\n| 钩子 | Why choose China LED? | IP67 test — fail or pass? | 1 year ROI | HPS vs LED | 90 sec install | DLC 101 | CEO AMA |\n| 主播 | 员工 Vlog | 工程师 | KOL/客户 | 对比主持人 | 技术员 | 产品经理 | CEO |\n\n*高层访谈每两周 1 次，用于品牌背书与招募分销商。*\n\n---\n## 6. 人员与预算\n• 拍摄团队：2 人（手机 + 云台/无人机）；额外租 1 套补光灯 800 RMB/天  \n• 后期：CapCut Pro、Runway Gen-2、Descript → 订阅合计 ¥1,300 / 月  \n• 推广：TikTok Spark Ads、YouTube Discovery Ads 预算 ¥10,000  \n• 总预算控制：≤ ¥25,000 / 60 天  （含 20% 机动）\n\n---\n## 7. KPI 与数据追踪\n1. 曝光：累计浏览量 ≥ 1,000,000 ；播放完播率 ≥ 25 %\n2. 互动：点赞率 ≥ 4 %，评论 > 3,000，私信 ≥ 600\n3. 线索：表单 + 私信有效询盘 ≥ 400\n4. 跟踪工具：HubSpot + Google Looker Studio 自动看板，每日同步；TikTok Insight & YouTube Analytics API 与 CRM 对接。\n\n---\n## 8. 交付物 & 里程碑\n1. D+3 ：完成 216 组原片拍摄\n2. D+5 ：首批 50 条短视频（含三端封面）\n3. D+7 ：9 账号搭建 + 15 天内容库存入库\n4. D+30：阶段复盘 & 调整 AB 钩子脚本\n5. D+60：交付全量数据报告 + 下一周期规划\n\n---\n## 9. 下一步行动\n1. 核对并确认本蓝图（账号数量 / 目标 / 预算）。\n2. 确认后 → 立即创建拍摄清单 & 首批 30 条脚本。\n3. 如需调整，请备注修改点。\n\n> 请回复 “确认蓝图” 或指出需要修改的部分。确认后我将存档并进入脚本拆解阶段。"},
+  "content": {"data":"# AOK LED Light 出海视频获客战略蓝图 · Version 3.0  (更新�?\n\n> 依据企业官网 www.aokledlight.com 与已存档信息，结合最新海外短视频趋势，对 v2 版本进行全面升级。\n\n---\n## 1. 战略目标\n1. 时间周期�?0 天（2 个月）\n2. 曝光目标：≥ 1,000,000 次（�?v2 提升 100%）\n3. 线索目标：≥ 400 �?B2B 潜在客户（比 v2 提升 100%）\n4. 品牌资产：沉淀 1 套可循环迭代的灯具评测内容库 + 60 条案例素材可长期复用。\n\n---\n## 2. 账号矩阵与发布计划\n| 平台 | 区域/语言 | 账号数量 | 日发�?| 60 天总发�?|\n|------|-----------|---------|--------|--------------|\n| TikTok | 美区 / 欧洲�?/ 东南亚区 | 3 | 1/�?| 180 |\n| YouTube Shorts | 英文频道 / 西语频道 / 中文频道 | 3 | 1/�?| 180 |\n| LinkedIn | 公司主页 / 销�?#1 / 销�?#2 | 3 | 1/�?| 180 |\n| 合计 | �?| **9** | **9/�?* | **540** |\n\n*说明：每�?9 条短视频来自同一批素材的 AI 裂变，确保“原生但高效”�?\n\n---\n## 3. 素材需求估算\n1. AI 可将 1 组原片裂�?�?3�? 条平台适配短视频。\n2. 540 条短视频 �?约需 120�?50 组原片（安全冗余 20%）。\n3. 拍摄节奏：\n   �?每周拍摄 8 大场�?× 3 机位 �?24 组原�?/ 周。\n   �?60 �?�?9 周，累计拍摄 �?9 �?× 24 �?**216 �?* 原片（含冗余）。\n4. 拍摄用时：集中拍�?3 天即可完�?60% 以上原片，其余机动补拍。\n\n---\n## 4. 内容支柱 & 场景脚本\n1. 工厂探秘 (Factory Tour)  \n   �?镜头：SMT 贴片 �?老化测试 �?成品包装�?�?仓库自动立库  \n   �?钩子台词：Looking for a REAL LED factory? 60 seconds to find out!  \n   �?标题示例�?0 秒走�?10,000�?AOK 工厂  \n   �?BGM：电子工业氛�?Lo-Fi\n\n2. 产品测评 (Performance Test)  \n   �?镜头：Integrating Sphere 光效测试 �?IP67 喷淋 �?IK10 冲击演示  \n   �?钩子：Will your streetlight survive THIS test?  \n   �?标题：IP67 + IK10! 测试现场实拍  \n   �?BGM：紧�?Tech Rock\n\n3. 客户案例 (Case Study)  \n   �?镜头：美西港�?800 套投光灯亮灯对比（航�?+ 地面�? \n   �?钩子：From 1000 W HPS �?400 W LED in 7 days  \n   �?标题：港口年�?120 万美元电费的秘密  \n   �?BGM：史诗感 Orchestral\n\n4. 对比实验 (A/B Demo)  \n   �?镜头：旧 400 W HPS vs AOK 150 W UFO  12 m 高棚  \n   �?钩子�? bulbs, same height �?50 % more lux, 60 % less power  \n   �?标题：工厂换�?ROI 18 个月回本  \n   �?BGM：科�?Synthwave\n\n5. 安装指南 (How-to)  \n   �?镜头：开�?�?接线 �?智能调光设定 (0-10 V & DALI)  \n   �?钩子：Can you install a 200 W high-bay in 90 seconds?  \n   �?标题�? 步安装，节省 40 % 人工  \n   �?BGM：动�?Funk\n\n6. 行业科普 (LED 101)  \n   �?镜头：产品经�?+ 动画解释 LM-80 / TM-21 / DLC Premium  \n   �?钩子：What does DLC Premium REALLY mean?  \n   �?标题�? 分钟教你看懂北美照明认证  \n   �?BGM：轻�?Acoustic\n\n---\n## 5. 30 天滚动发布日历（示例首周）\n| 周期 | 周一 | 周二 | 周三 | 周四 | 周五 | 周六 | 周日 |\n|------|------|------|------|------|------|------|------|\n| 场景 | 工厂探秘 | 产品测评 | 客户案例 | 对比实验 | 安装指南 | 行业科普 | 高层访谈* |\n| 钩子 | Why choose China LED? | IP67 test �?fail or pass? | 1 year ROI | HPS vs LED | 90 sec install | DLC 101 | CEO AMA |\n| 主播 | 员工 Vlog | 工程�?| KOL/客户 | 对比主持�?| 技术员 | 产品经理 | CEO |\n\n*高层访谈每两�?1 次，用于品牌背书与招募分销商�?\n\n---\n## 6. 人员与预算\n�?拍摄团队�? 人（手机 + 云台/无人机）；额外租 1 套补光灯 800 RMB/�? \n�?后期：CapCut Pro、Runway Gen-2、Descript �?订阅合计 ¥1,300 / �? \n�?推广：TikTok Spark Ads、YouTube Discovery Ads 预算 ¥10,000  \n�?总预算控制：�?¥25,000 / 60 �? （含 20% 机动）\n\n---\n## 7. KPI 与数据追踪\n1. 曝光：累计浏览量 �?1,000,000 ；播放完播率 �?25 %\n2. 互动：点赞率 �?4 %，评�?> 3,000，私�?�?600\n3. 线索：表�?+ 私信有效询盘 �?400\n4. 跟踪工具：HubSpot + Google Looker Studio 自动看板，每日同步；TikTok Insight & YouTube Analytics API �?CRM 对接。\n\n---\n## 8. 交付�?& 里程碑\n1. D+3 ：完�?216 组原片拍摄\n2. D+5 ：首�?50 条短视频（含三端封面）\n3. D+7 �? 账号搭建 + 15 天内容库存入库\n4. D+30：阶段复�?& 调整 AB 钩子脚本\n5. D+60：交付全量数据报�?+ 下一周期规划\n\n---\n## 9. 下一步行动\n1. 核对并确认本蓝图（账号数�?/ 目标 / 预算）。\n2. 确认�?�?立即创建拍摄清单 & 首批 30 条脚本。\n3. 如需调整，请备注修改点。\n\n> 请回�?“确认蓝图�?或指出需要修改的部分。确认后我将存档并进入脚本拆解阶段�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760326803832
@@ -5212,7 +5214,7 @@ INSERT INTO "redis_queue_messages" VALUES('15e88a65-c4dd-426e-a084-f8358959ca68'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：\n1. 《AOK LED Light 出海视频获客战略蓝图 · Version 3.0》已生成并推送！  \n2. 请您核对，如无修改，即可按照蓝图开干。",
+    "text": "正文：\n1. 《AOK LED Light 出海视频获客战略蓝图 · Version 3.0》已生成并推送！  \n2. 请您核对，如无修改，即可按照蓝图开干�?,
     "data": {
       "video_link": ""
     }
@@ -5237,7 +5239,7 @@ INSERT INTO "redis_queue_messages" VALUES('a4320fe5-f2a3-474d-8193-fcf3f707b320'
   "create_ts": 1760328585355
 }',1760328585,NULL,NULL,NULL,'pending',0,1760328585,1760328585);
 INSERT INTO "redis_queue_messages" VALUES('cd42119d-6fee-4d47-b695-75c6104d4480','ai-conversation-agent-message-queue','{"env": "gray", "session_id": "23e45c2e-bf90-457a-8e04-c37b548e54aa", "user_id": "0086d2b1-1514-4450-8660-29629e27f984", "operate_id": "Blueprint Content", "request_id": "66646e40-8156-4cdd-ba1b-7e3245f8358b", "socket_id": "4D99nArFPgwdM_ofAAAF", "status": "FINISHED", "content": {"data": "# AOK LED Light Video Marketing Strategy Blueprint\n\n## 1. Strategic Goals\n1. Time period: 60 days\n2. Exposure goal: >= 1,000,000 views\n3. Lead goal: >= 400 B2B prospects"}, "content_type": "blue_image_content", "create_ts": 1760326803832}',1760328899,NULL,NULL,NULL,'pending',0,1760328899,1760328899);
-INSERT INTO "redis_queue_messages" VALUES('4ef6bdc1-a890-4e6d-8a84-b9db1e555782','ai-conversation-agent-message-queue','{"env": "gray", "session_id": "23e45c2e-bf90-457a-8e04-c37b548e54aa", "user_id": "0086d2b1-1514-4450-8660-29629e27f984", "operate_id": "蓝图内容", "request_id": "66646e40-8156-4cdd-ba1b-7e3245f8358b", "socket_id": "4D99nArFPgwdM_ofAAAF", "status": "FINISHED", "content": {"data": "# AOK LED Light 出海视频获客战略蓝图 · Version 3.0  (更新版)\n\n> 依据企业官网 www.aokledlight.com 与已存档信息，结合最新海外短视频趋势，对 v2 版本进行全面升级。\n\n---\n## 1. 战略目标\n1. 时间周期：60 天（2 个月）\n2. 曝光目标：≥ 1,000,000 次（比 v2 提升 100%）\n3. 线索目标：≥ 400 条 B2B 潜在客户（比 v2 提升 100%）\n4. 品牌资产：沉淀 1 套可循环迭代的灯具评测内容库 + 60 条案例素材可长期复用。\n\n---\n## 2. 账号矩阵与发布计划\n| 平台 | 区域/语言 | 账号数量 | 日发量 | 60 天总发量 |\n|------|-----------|---------|--------|--------------|\n| TikTok | 美区 / 欧洲区 / 东南亚区 | 3 | 1/天 | 180 |\n| YouTube Shorts | 英文频道 / 西语频道 / 中文频道 | 3 | 1/天 | 180 |\n| LinkedIn | 公司主页 / 销售 #1 / 销售 #2 | 3 | 1/天 | 180 |\n| 合计 | — | **9** | **9/天** | **540** |\n\n*说明：每天 9 条短视频来自同一批素材的 AI 裂变，确保“原生但高效”。*\n\n---\n## 3. 素材需求估算\n1. AI 可将 1 组原片裂变 ≈ 3–5 条平台适配短视频。\n2. 540 条短视频 → 约需 120–150 组原片（安全冗余 20%）。\n3. 拍摄节奏：\n   • 每周拍摄 8 大场景 × 3 机位 ≈ 24 组原片 / 周。\n   • 60 天 ≈ 9 周，累计拍摄 ≈ 9 周 × 24 ≈ **216 组** 原片（含冗余）。\n4. 拍摄用时：集中拍摄 3 天即可完成 60% 以上原片，其余机动补拍。\n\n---\n## 4. 内容支柱 & 场景脚本\n1. 工厂探秘 (Factory Tour)  \n   • 镜头：SMT 贴片 → 老化测试 → 成品包装线 → 仓库自动立库  \n   • 钩子台词：Looking for a REAL LED factory? 60 seconds to find out!  \n   • 标题示例：60 秒走进 10,000㎡ AOK 工厂  \n   • BGM：电子工业氛围 Lo-Fi\n\n2. 产品测评 (Performance Test)  \n   • 镜头：Integrating Sphere 光效测试 → IP67 喷淋 → IK10 冲击演示  \n   • 钩子：Will your streetlight survive THIS test?  \n   • 标题：IP67 + IK10! 测试现场实拍  \n   • BGM：紧张 Tech Rock\n\n3. 客户案例 (Case Study)  \n   • 镜头：美西港口 800 套投光灯亮灯对比（航拍 + 地面）  \n   • 钩子：From 1000 W HPS → 400 W LED in 7 days  \n   • 标题：港口年省 120 万美元电费的秘密  \n   • BGM：史诗感 Orchestral\n\n4. 对比实验 (A/B Demo)  \n   • 镜头：旧 400 W HPS vs AOK 150 W UFO  12 m 高棚  \n   • 钩子：2 bulbs, same height – 50 % more lux, 60 % less power  \n   • 标题：工厂换灯 ROI 18 个月回本  \n   • BGM：科幻 Synthwave\n\n5. 安装指南 (How-to)  \n   • 镜头：开箱 → 接线 → 智能调光设定 (0-10 V & DALI)  \n   • 钩子：Can you install a 200 W high-bay in 90 seconds?  \n   • 标题：3 步安装，节省 40 % 人工  \n   • BGM：动感 Funk\n\n6. 行业科普 (LED 101)  \n   • 镜头：产品经理 + 动画解释 LM-80 / TM-21 / DLC Premium  \n   • 钩子：What does DLC Premium REALLY mean?  \n   • 标题：3 分钟教你看懂北美照明认证  \n   • BGM：轻快 Acoustic\n\n---\n## 5. 30 天滚动发布日历（示例首周）\n| 周期 | 周一 | 周二 | 周三 | 周四 | 周五 | 周六 | 周日 |\n|------|------|------|------|------|------|------|------|\n| 场景 | 工厂探秘 | 产品测评 | 客户案例 | 对比实验 | 安装指南 | 行业科普 | 高层访谈* |\n| 钩子 | Why choose China LED? | IP67 test — fail or pass? | 1 year ROI | HPS vs LED | 90 sec install | DLC 101 | CEO AMA |\n| 主播 | 员工 Vlog | 工程师 | KOL/客户 | 对比主持人 | 技术员 | 产品经理 | CEO |\n\n*高层访谈每两周 1 次，用于品牌背书与招募分销商。*\n\n---\n## 6. 人员与预算\n• 拍摄团队：2 人（手机 + 云台/无人机）；额外租 1 套补光灯 800 RMB/天  \n• 后期：CapCut Pro、Runway Gen-2、Descript → 订阅合计 ¥1,300 / 月  \n• 推广：TikTok Spark Ads、YouTube Discovery Ads 预算 ¥10,000  \n• 总预算控制：≤ ¥25,000 / 60 天  （含 20% 机动）\n\n---\n## 7. KPI 与数据追踪\n1. 曝光：累计浏览量 ≥ 1,000,000 ；播放完播率 ≥ 25 %\n2. 互动：点赞率 ≥ 4 %，评论 > 3,000，私信 ≥ 600\n3. 线索：表单 + 私信有效询盘 ≥ 400\n4. 跟踪工具：HubSpot + Google Looker Studio 自动看板，每日同步；TikTok Insight & YouTube Analytics API 与 CRM 对接。\n\n---\n## 8. 交付物 & 里程碑\n1. D+3 ：完成 216 组原片拍摄\n2. D+5 ：首批 50 条短视频（含三端封面）\n3. D+7 ：9 账号搭建 + 15 天内容库存入库\n4. D+30：阶段复盘 & 调整 AB 钩子脚本\n5. D+60：交付全量数据报告 + 下一周期规划\n\n---\n## 9. 下一步行动\n1. 核对并确认本蓝图（账号数量 / 目标 / 预算）。\n2. 确认后 → 立即创建拍摄清单 & 首批 30 条脚本。\n3. 如需调整，请备注修改点。\n\n> 请回复 “确认蓝图” 或指出需要修改的部分。确认后我将存档并进入脚本拆解阶段。"}, "content_type": "blue_image_content", "create_ts": 1760326803832}',1760328947,NULL,NULL,NULL,'pending',0,1760328947,1760328947);
+INSERT INTO "redis_queue_messages" VALUES('4ef6bdc1-a890-4e6d-8a84-b9db1e555782','ai-conversation-agent-message-queue','{"env": "gray", "session_id": "23e45c2e-bf90-457a-8e04-c37b548e54aa", "user_id": "0086d2b1-1514-4450-8660-29629e27f984", "operate_id": "蓝图内容", "request_id": "66646e40-8156-4cdd-ba1b-7e3245f8358b", "socket_id": "4D99nArFPgwdM_ofAAAF", "status": "FINISHED", "content": {"data": "# AOK LED Light 出海视频获客战略蓝图 · Version 3.0  (更新�?\n\n> 依据企业官网 www.aokledlight.com 与已存档信息，结合最新海外短视频趋势，对 v2 版本进行全面升级。\n\n---\n## 1. 战略目标\n1. 时间周期�?0 天（2 个月）\n2. 曝光目标：≥ 1,000,000 次（�?v2 提升 100%）\n3. 线索目标：≥ 400 �?B2B 潜在客户（比 v2 提升 100%）\n4. 品牌资产：沉淀 1 套可循环迭代的灯具评测内容库 + 60 条案例素材可长期复用。\n\n---\n## 2. 账号矩阵与发布计划\n| 平台 | 区域/语言 | 账号数量 | 日发�?| 60 天总发�?|\n|------|-----------|---------|--------|--------------|\n| TikTok | 美区 / 欧洲�?/ 东南亚区 | 3 | 1/�?| 180 |\n| YouTube Shorts | 英文频道 / 西语频道 / 中文频道 | 3 | 1/�?| 180 |\n| LinkedIn | 公司主页 / 销�?#1 / 销�?#2 | 3 | 1/�?| 180 |\n| 合计 | �?| **9** | **9/�?* | **540** |\n\n*说明：每�?9 条短视频来自同一批素材的 AI 裂变，确保“原生但高效”�?\n\n---\n## 3. 素材需求估算\n1. AI 可将 1 组原片裂�?�?3�? 条平台适配短视频。\n2. 540 条短视频 �?约需 120�?50 组原片（安全冗余 20%）。\n3. 拍摄节奏：\n   �?每周拍摄 8 大场�?× 3 机位 �?24 组原�?/ 周。\n   �?60 �?�?9 周，累计拍摄 �?9 �?× 24 �?**216 �?* 原片（含冗余）。\n4. 拍摄用时：集中拍�?3 天即可完�?60% 以上原片，其余机动补拍。\n\n---\n## 4. 内容支柱 & 场景脚本\n1. 工厂探秘 (Factory Tour)  \n   �?镜头：SMT 贴片 �?老化测试 �?成品包装�?�?仓库自动立库  \n   �?钩子台词：Looking for a REAL LED factory? 60 seconds to find out!  \n   �?标题示例�?0 秒走�?10,000�?AOK 工厂  \n   �?BGM：电子工业氛�?Lo-Fi\n\n2. 产品测评 (Performance Test)  \n   �?镜头：Integrating Sphere 光效测试 �?IP67 喷淋 �?IK10 冲击演示  \n   �?钩子：Will your streetlight survive THIS test?  \n   �?标题：IP67 + IK10! 测试现场实拍  \n   �?BGM：紧�?Tech Rock\n\n3. 客户案例 (Case Study)  \n   �?镜头：美西港�?800 套投光灯亮灯对比（航�?+ 地面�? \n   �?钩子：From 1000 W HPS �?400 W LED in 7 days  \n   �?标题：港口年�?120 万美元电费的秘密  \n   �?BGM：史诗感 Orchestral\n\n4. 对比实验 (A/B Demo)  \n   �?镜头：旧 400 W HPS vs AOK 150 W UFO  12 m 高棚  \n   �?钩子�? bulbs, same height �?50 % more lux, 60 % less power  \n   �?标题：工厂换�?ROI 18 个月回本  \n   �?BGM：科�?Synthwave\n\n5. 安装指南 (How-to)  \n   �?镜头：开�?�?接线 �?智能调光设定 (0-10 V & DALI)  \n   �?钩子：Can you install a 200 W high-bay in 90 seconds?  \n   �?标题�? 步安装，节省 40 % 人工  \n   �?BGM：动�?Funk\n\n6. 行业科普 (LED 101)  \n   �?镜头：产品经�?+ 动画解释 LM-80 / TM-21 / DLC Premium  \n   �?钩子：What does DLC Premium REALLY mean?  \n   �?标题�? 分钟教你看懂北美照明认证  \n   �?BGM：轻�?Acoustic\n\n---\n## 5. 30 天滚动发布日历（示例首周）\n| 周期 | 周一 | 周二 | 周三 | 周四 | 周五 | 周六 | 周日 |\n|------|------|------|------|------|------|------|------|\n| 场景 | 工厂探秘 | 产品测评 | 客户案例 | 对比实验 | 安装指南 | 行业科普 | 高层访谈* |\n| 钩子 | Why choose China LED? | IP67 test �?fail or pass? | 1 year ROI | HPS vs LED | 90 sec install | DLC 101 | CEO AMA |\n| 主播 | 员工 Vlog | 工程�?| KOL/客户 | 对比主持�?| 技术员 | 产品经理 | CEO |\n\n*高层访谈每两�?1 次，用于品牌背书与招募分销商�?\n\n---\n## 6. 人员与预算\n�?拍摄团队�? 人（手机 + 云台/无人机）；额外租 1 套补光灯 800 RMB/�? \n�?后期：CapCut Pro、Runway Gen-2、Descript �?订阅合计 ¥1,300 / �? \n�?推广：TikTok Spark Ads、YouTube Discovery Ads 预算 ¥10,000  \n�?总预算控制：�?¥25,000 / 60 �? （含 20% 机动）\n\n---\n## 7. KPI 与数据追踪\n1. 曝光：累计浏览量 �?1,000,000 ；播放完播率 �?25 %\n2. 互动：点赞率 �?4 %，评�?> 3,000，私�?�?600\n3. 线索：表�?+ 私信有效询盘 �?400\n4. 跟踪工具：HubSpot + Google Looker Studio 自动看板，每日同步；TikTok Insight & YouTube Analytics API �?CRM 对接。\n\n---\n## 8. 交付�?& 里程碑\n1. D+3 ：完�?216 组原片拍摄\n2. D+5 ：首�?50 条短视频（含三端封面）\n3. D+7 �? 账号搭建 + 15 天内容库存入库\n4. D+30：阶段复�?& 调整 AB 钩子脚本\n5. D+60：交付全量数据报�?+ 下一周期规划\n\n---\n## 9. 下一步行动\n1. 核对并确认本蓝图（账号数�?/ 目标 / 预算）。\n2. 确认�?�?立即创建拍摄清单 & 首批 30 条脚本。\n3. 如需调整，请备注修改点。\n\n> 请回�?“确认蓝图�?或指出需要修改的部分。确认后我将存档并进入脚本拆解阶段�?}, "content_type": "blue_image_content", "create_ts": 1760326803832}',1760328947,NULL,NULL,NULL,'pending',0,1760328947,1760328947);
 INSERT INTO "redis_queue_messages" VALUES('491024f6-fe3d-4e6d-b4ca-4d6a2edc1f30','ai-conversation-agent-message-queue','{
   "env": "gray",
   "session_id": "52004162-032e-454e-9088-16c0ea451072",
@@ -5248,7 +5250,7 @@ INSERT INTO "redis_queue_messages" VALUES('491024f6-fe3d-4e6d-b4ca-4d6a2edc1f30'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。现在您是否想了解当前作战地图中还需要合成多少个视频以供测试？如果需要，请回复“是”，我将为您查询并告知。",
+    "text": "您好！欢迎使用智能视频创作助手。现在您是否想了解当前作战地图中还需要合成多少个视频以供测试？如果需要，请回复“是”，我将为您查询并告知�?,
     "data": {
       "video_link": ""
     }
@@ -5263,7 +5265,7 @@ INSERT INTO "redis_queue_messages" VALUES('146beabc-d58d-401d-b23e-376d74c4b9bc'
   "request_id": "35cdbf96-f2c1-4893-b0ab-fee7d3229b94",
   "socket_id": "F6v1YSfHecvbuPbaAAAH",
   "status": "FINISHED",
-  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图》v3.0\n\n> 面向北美 / 欧洲 / 澳洲 / 中东 B2B 工业照明市场\n> 目标周期：首轮 30 天（可滚动复制）\n\n---\n## 1. 核心目标\n1. 30 天内完成 30 条原生短视频拍摄 + AI 裂变 120 条，共 150 条可发布素材。  \n2. 运营 6 个海外账号矩阵（TikTok×2、YouTube Shorts×2、LinkedIn×2）。  \n3. 日均发布 5 条，周期内累计发布 ≈ 150 条，预计总曝光 ≥ 60 万次、互动 ≥ 1.5 万次、有效 B2B 线索 ≥ 250 条。  \n4. 搭建数据闭环：引导至 WhatsApp / 邮件 / 官网表单，30 天后形成可度量 ROI 报表。\n\n---\n## 2. 账号矩阵与发布节奏\n| 平台 | 区域账号 | 调性定位 | 每日更新 | 负责人 |\n|------|---------|---------|---------|-------|\n| TikTok | 美区（主） | 工厂幕后 + 产品对比 | 1 | 市场主管 A |\n| TikTok | 东南亚区（备） | 轻松趣味 + 行业科普 | 1 | 运营专员 B |\n| YouTube Shorts | 英文频道 | 专业测评 + 安装指南 | 1 | 技术工程师 C |\n| YouTube Shorts | 中文字幕 | 产品讲解 + 客户案例 | 0.5 | 剪辑 AI 自动 |\n| LinkedIn | 公司主页 | 品牌故事 + 案例长图 | 0.5 | CEO / Marketing |\n| LinkedIn | 销售个人号 | 行业洞察 + 转化 CTA | 0.5 | Sales Lead |\n\n*合计每日 ≈ 5 条，30 天 ≈ 150 条发布（含裂变同剪切）。*\n\n---\n## 3. 源素材拍摄需求\nAI 可完成批量剪辑与字幕，但高质量源素材需自采：\n1. 周拍 6 大场景 × 每场景 3 机位/角度 × 2 台手机/相机 = 18 组素材 / 周。  \n2. 30 天需 4×18 = **72 组素材**，拍摄 2 天即可完成（建议工厂+项目现场各 1 天）。  \n3. 每组素材时长 30–90 秒，分辨率 ≥ 4K，横竖屏均拍。  \n\n拍摄场景清单：\nA. 工厂生产线（SMT/老化/组装）\nB. 实验室测试（IES/盐雾/高低温）\nC. 户外道路亮灯前后对比\nD. 仓库 12–18 m 高棚灯安装\nE. 包装 & 快速发货流程\nF. CEO / 技术总监讲解选型\n\n---\n## 4. 内容支柱（6 大方向）及脚本示例\n1. 工厂探秘：\n   - Hook：LED 路灯是怎样炼成的？30 秒带你逛中国工厂  \n   - 画面：无人机外景 → 车间走拍 → SMT 贴片特写。  \n   - 旁白：突出“自有工厂、垂直供应链、7 天交付”。\n2. 产品测评：\n   - Hook：“IP67 真防水？直接水下点灯 24h！”  \n   - 画面：透明水桶 + 通电实拍 + 水珠特写。  \n   - CTA：下载完整测试报告。\n3. 客户案例：\n   - Hook：“北美港口替换 1000W 金卤灯，只花 3 天！”  \n   - 画面：现场 before/after 对比 + 客户访谈片段。  \n   - CTA：获取 ROI 计算表。\n4. 对比实验：\n   - Hook：“同功率却省电 60%？光效 170 lm/W vs 90 lm/W”  \n   - 画面：照度计读数并排展示。  \n   - CTA：联系获取样品。\n5. 安装指南：\n   - Hook：“3 分钟完成高棚灯吊装，单人也能操作！”  \n   - 画面：分步骤实操 + 快剪 + 文字要点。  \n   - CTA：下载 PDF 手册。\n6. 行业科普：\n   - Hook：“UL / DLC 有何区别？30 秒搞懂北美认证”  \n   - 画面：主持人 + 动画 icon。  \n   - CTA：留言领取合规清单。\n\n---\n## 5. 30 天发布日历（示例）\n- 周一：工厂探秘 1 + 对比实验 A  \n- 周二：产品测评 1 + 安装指南 A  \n- 周三：客户案例 1 + 行业科普 A  \n- 周四：工厂探秘 2 + 产品测评 2  \n- 周五：对比实验 B + 安装指南 B  \n- 周六：客户案例 2 + 行业科普 B  \n- 周日：高光剪辑混剪（AI）  \n*循环 4 周，脚本自动替换场景与产品参数。*\n\n---\n## 6. 人员 & 预算\n- 拍摄：2 人（手机/相机各 1）—— 5,000 RMB  \n- AI 剪辑/配音工具（CapCut Pro、ElevenLabs）—— 1,000 RMB  \n- 海外静态 IP & 云加速 —— 800 RMB  \n- 推广预算（TikTok Spark Ads / LinkedIn Lead Gen）—— 3,200 RMB  \n- 预留杂费 —— 1,000 RMB  \n**合计：≤ 11,000 RMB / 首月**  \n\n---\n## 7. 成果指标与数据追踪\n1. 曝光（Impression）≥ 600,000  \n2. 点击 / 前往链接 ≥ 12,000  \n3. 留资表单 / 私信 ≥ 250  \n4. 成交（样品/PO）目标 ≥ 15 单  \n\n使用 Google Looker Studio + UTM + CRM 形成仪表盘，周报迭代。"},
+  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图》v3.0\n\n> 面向北美 / 欧洲 / 澳洲 / 中东 B2B 工业照明市场\n> 目标周期：首�?30 天（可滚动复制）\n\n---\n## 1. 核心目标\n1. 30 天内完成 30 条原生短视频拍摄 + AI 裂变 120 条，�?150 条可发布素材�? \n2. 运营 6 个海外账号矩阵（TikTok×2、YouTube Shorts×2、LinkedIn×2）�? \n3. 日均发布 5 条，周期内累计发�?�?150 条，预计总曝�?�?60 万次、互�?�?1.5 万次、有�?B2B 线索 �?250 条�? \n4. 搭建数据闭环：引导至 WhatsApp / 邮件 / 官网表单�?0 天后形成可度�?ROI 报表。\n\n---\n## 2. 账号矩阵与发布节奏\n| 平台 | 区域账号 | 调性定�?| 每日更新 | 负责�?|\n|------|---------|---------|---------|-------|\n| TikTok | 美区（主�?| 工厂幕后 + 产品对比 | 1 | 市场主管 A |\n| TikTok | 东南亚区（备�?| 轻松趣味 + 行业科普 | 1 | 运营专员 B |\n| YouTube Shorts | 英文频道 | 专业测评 + 安装指南 | 1 | 技术工程师 C |\n| YouTube Shorts | 中文字幕 | 产品讲解 + 客户案例 | 0.5 | 剪辑 AI 自动 |\n| LinkedIn | 公司主页 | 品牌故事 + 案例长图 | 0.5 | CEO / Marketing |\n| LinkedIn | 销售个人号 | 行业洞察 + 转化 CTA | 0.5 | Sales Lead |\n\n*合计每日 �?5 条，30 �?�?150 条发布（含裂变同剪切）�?\n\n---\n## 3. 源素材拍摄需求\nAI 可完成批量剪辑与字幕，但高质量源素材需自采：\n1. 周拍 6 大场�?× 每场�?3 机位/角度 × 2 台手�?相机 = 18 组素�?/ 周�? \n2. 30 天需 4×18 = **72 组素�?*，拍�?2 天即可完成（建议工厂+项目现场�?1 天）�? \n3. 每组素材时长 30�?0 秒，分辨�?�?4K，横竖屏均拍�? \n\n拍摄场景清单：\nA. 工厂生产线（SMT/老化/组装）\nB. 实验室测试（IES/盐雾/高低温）\nC. 户外道路亮灯前后对比\nD. 仓库 12�?8 m 高棚灯安装\nE. 包装 & 快速发货流程\nF. CEO / 技术总监讲解选型\n\n---\n## 4. 内容支柱�? 大方向）及脚本示例\n1. 工厂探秘：\n   - Hook：LED 路灯是怎样炼成的？30 秒带你逛中国工�? \n   - 画面：无人机外景 �?车间走拍 �?SMT 贴片特写�? \n   - 旁白：突出“自有工厂、垂直供应链�? 天交付”。\n2. 产品测评：\n   - Hook：“IP67 真防水？直接水下点灯 24h！�? \n   - 画面：透明水桶 + 通电实拍 + 水珠特写�? \n   - CTA：下载完整测试报告。\n3. 客户案例：\n   - Hook：“北美港口替�?1000W 金卤灯，只花 3 天！�? \n   - 画面：现�?before/after 对比 + 客户访谈片段�? \n   - CTA：获�?ROI 计算表。\n4. 对比实验：\n   - Hook：“同功率却省�?60%？光�?170 lm/W vs 90 lm/W�? \n   - 画面：照度计读数并排展示�? \n   - CTA：联系获取样品。\n5. 安装指南：\n   - Hook：�? 分钟完成高棚灯吊装，单人也能操作！�? \n   - 画面：分步骤实操 + 快剪 + 文字要点�? \n   - CTA：下�?PDF 手册。\n6. 行业科普：\n   - Hook：“UL / DLC 有何区别�?0 秒搞懂北美认证�? \n   - 画面：主持人 + 动画 icon�? \n   - CTA：留言领取合规清单。\n\n---\n## 5. 30 天发布日历（示例）\n- 周一：工厂探�?1 + 对比实验 A  \n- 周二：产品测�?1 + 安装指南 A  \n- 周三：客户案�?1 + 行业科普 A  \n- 周四：工厂探�?2 + 产品测评 2  \n- 周五：对比实�?B + 安装指南 B  \n- 周六：客户案�?2 + 行业科普 B  \n- 周日：高光剪辑混剪（AI�? \n*循环 4 周，脚本自动替换场景与产品参数�?\n\n---\n## 6. 人员 & 预算\n- 拍摄�? 人（手机/相机�?1）—�?5,000 RMB  \n- AI 剪辑/配音工具（CapCut Pro、ElevenLabs）—�?1,000 RMB  \n- 海外静�?IP & 云加�?—�?800 RMB  \n- 推广预算（TikTok Spark Ads / LinkedIn Lead Gen）—�?3,200 RMB  \n- 预留杂费 —�?1,000 RMB  \n**合计：≤ 11,000 RMB / 首月**  \n\n---\n## 7. 成果指标与数据追踪\n1. 曝光（Impression）≥ 600,000  \n2. 点击 / 前往链接 �?12,000  \n3. 留资表单 / 私信 �?250  \n4. 成交（样�?PO）目�?�?15 �? \n\n使用 Google Looker Studio + UTM + CRM 形成仪表盘，周报迭代�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760329147446
@@ -5295,7 +5297,7 @@ INSERT INTO "redis_queue_messages" VALUES('532618b4-d858-416f-899a-4a3e55a876a5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。目前我可以先帮您提取作战地图并统计还需要拍摄的测试视频数量。如果您想了解现在还需要合成多少个视频来测试，请告诉我，我将立即为您查询。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。目前我可以先帮您提取作战地图并统计还需要拍摄的测试视频数量。如果您想了解现在还需要合成多少个视频来测试，请告诉我，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -5329,7 +5331,7 @@ INSERT INTO "redis_queue_messages" VALUES('5446f68c-c1be-4b52-964f-b2536030b90e'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。  \n\n2. 以下是根据目前数据库中最新版本整理的《海外增长战略蓝图（2024-2026）》草案。如需调整任何细节，请直接告诉我——确认后我会把最终版本锁定并用于后续动作。  \n\n———————— 蓝图内容 ————————  \nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n• 赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n• 细分：高光效＋长寿命＋严苛认证的中高端工程/项目型照明  \n• 战略角色：北美 / 欧洲 / EPC 承包商与市政的“节能降本光效专家”  \n\n2. 客户洞察  \n• 工程承包商 / EPC：注重认证齐全、交付周期、维护成本  \n• 市政采购方：关注节能指标、质保年限、符合道路标准  \n• 经销 / 分销商：关注利润空间、库存周转、售后配合  \n• 工商业终端：关注 ROI、智能控制集成、安装便利  \n• 共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合规  \n\n3. 核心产品 & 差异化  \n• 整灯光效 150–170 lm/W，TCO（总拥有成本）最低  \n• 100 000 h 寿命＋5-10 年质保，减少市政 / EPC 质保压力  \n• 专利散热＋多配光＋高防护 IP66 / IK10，极端环境可靠  \n• 智能兼容（DALI、0-10 V、Zigbee / LoRa），升级无忧  \n• OEM / ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主张  \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目标  \n• 北美：市政道路＋停车场照明；年销售目标 12,000 套  \n• 欧洲：工矿 / 物流仓储＋体育照明；年销售目标 €8 M  \n• 东南亚：城市基建与园区节能改造；年销售目标 US$3 M  \n• 三年合计：海外销售 CAGR ≥35%，2026 年出口破 US$30 M  \n\n6. 渠道与价格策略  \n• 一级：核心 EPC＋大型分销商，合同价 → 项目结算  \n• 二级：区域代理＋专业灯具批发商，统一 MSRP −30% 折扣  \n• 直销：关键市政标案 & 大型体育场；技术＋金融租赁配套  \n• 配套服务：样灯 1 周交付，备品备件 48 h 内发货  \n\n7. 营销与传播  \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等关键词；输出道路节能改造、仓库 ROI 试算、体育场照明指南等案例文章  \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演示 & 案例视频）；Facebook / Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放）  \nC. 展会 / 活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举办“High-Efficacy Lighting Day”  \n\n8. 客户旅程与转化漏斗  \nAwareness → 兴趣 → 方案咨询 → 样灯测试 → POC 订单 → 批量采购 → 复购 / 升级  \n关键触点：官网 CTA、案例视频、ROI 计算工具  \n转化工具：在线 TCO 计算器、30 天免费样灯计划  \n\n9. 关键 KPI（季度）  \n• MQL ≥300 条  \n• 样灯转化率 ≥35 %  \n• 准时交付 ≥95 %  \n• 客户复购率 ≥25 %  \n• 内容发布 ≥12 篇 / 月  \n• LinkedIn 粉丝增长 ≥10 % / 月  \n\n10. 里程碑  \n• 2024 Q3：北美 DLC Premium 路灯量产；官网多语言版上线  \n• 2024 Q4：东南亚渠道招募完成；上线 ROI 计算器  \n• 2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅破 5 万  \n• 2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 天  \n• 2026 Q4：海外营收 ≥US$30 M；全球代理网覆盖 25+ 国  \n\n———————— 结束 ————————  \n\n请您确认：  \n1) 以上蓝图是否准确、完整？  \n2) 如需修改，请指出具体段落或数据；如无异议，请回复“没问题”或“就这样吧”，我将把最终版本写入数据库，并进入下一步（关键词矩阵 → 视频素材搜集）。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间�? \n\n2. 以下是根据目前数据库中最新版本整理的《海外增长战略蓝图（2024-2026）》草案。如需调整任何细节，请直接告诉我——确认后我会把最终版本锁定并用于后续动作�? \n\n———————�?蓝图内容 ———————�? \nAOK Lighting—海外增长战略蓝图（2024-2026）\n\n1. 市场定位  \n�?赛道：工业及户外高性能 LED 照明（道路、工矿、体育、停车场等）  \n�?细分：高光效＋长寿命＋严苛认证的中高端工�?项目型照�? \n�?战略角色：北�?/ 欧洲 / EPC 承包商与市政的“节能降本光效专家�? \n\n2. 客户洞察  \n�?工程承包�?/ EPC：注重认证齐全、交付周期、维护成�? \n�?市政采购方：关注节能指标、质保年限、符合道路标�? \n�?经销 / 分销商：关注利润空间、库存周转、售后配�? \n�?工商业终端：关注 ROI、智能控制集成、安装便�? \n�?共性痛点：节能降本、施工维护成本高、需 UL / DLC / CE 等合�? \n\n3. 核心产品 & 差异�? \n�?整灯光效 150�?70 lm/W，TCO（总拥有成本）最�? \n�?100 000 h 寿命�?-10 年质保，减少市政 / EPC 质保压力  \n�?专利散热＋多配光＋高防护 IP66 / IK10，极端环境可�? \n�?智能兼容（DALI�?-10 V、Zigbee / LoRa），升级无忧  \n�?OEM / ODM 快速定制，缩短项目周期  \n\n4. 品牌价值主�? \n“更高光效，更省成本”——凭借自研光学与散热技术，为全球工程客户提供长期可靠、节能高效的 LED 解决方案  \n\n5. 目标市场与份额目�? \n�?北美：市政道路＋停车场照明；年销售目�?12,000 �? \n�?欧洲：工�?/ 物流仓储＋体育照明；年销售目�?�? M  \n�?东南亚：城市基建与园区节能改造；年销售目�?US$3 M  \n�?三年合计：海外销�?CAGR �?5%�?026 年出口破 US$30 M  \n\n6. 渠道与价格策�? \n�?一级：核心 EPC＋大型分销商，合同�?�?项目结算  \n�?二级：区域代理＋专业灯具批发商，统一 MSRP �?0% 折扣  \n�?直销：关键市政标�?& 大型体育场；技术＋金融租赁配套  \n�?配套服务：样�?1 周交付，备品备件 48 h 内发�? \n\n7. 营销与传�? \nA. 内容 / SEO：LED street light, DLC Premium, high bay 170lm/W, outdoor sports lighting 等关键词；输出道路节能改造、仓�?ROI 试算、体育场照明指南等案例文�? \nB. 数字渠道：官网＋LinkedIn＋YouTube（技术演�?& 案例视频）；Facebook / Instagram（工程现场短视频）；Google Ads＋Bing Ads（项目经理、采购关键词投放�? \nC. 展会 / 活动：LightFair (US)、InterLumi (EU)、Hong Kong Lighting Fair；联合代理举办“High-Efficacy Lighting Day�? \n\n8. 客户旅程与转化漏�? \nAwareness �?兴趣 �?方案咨询 �?样灯测试 �?POC 订单 �?批量采购 �?复购 / 升级  \n关键触点：官�?CTA、案例视频、ROI 计算工具  \n转化工具：在�?TCO 计算器�?0 天免费样灯计�? \n\n9. 关键 KPI（季度）  \n�?MQL �?00 �? \n�?样灯转化�?�?5 %  \n�?准时交付 �?5 %  \n�?客户复购�?�?5 %  \n�?内容发布 �?2 �?/ �? \n�?LinkedIn 粉丝增长 �?0 % / �? \n\n10. 里程�? \n�?2024 Q3：北�?DLC Premium 路灯量产；官网多语言版上�? \n�?2024 Q4：东南亚渠道招募完成；上�?ROI 计算�? \n�?2025 H1：欧洲体育照明旗舰案例落地；YouTube 订阅�?5 �? \n�?2025 H2：海外仓（US 西岸 & 德国）运营；交付周期缩短 5 �? \n�?2026 Q4：海外营�?≥US$30 M；全球代理网覆盖 25+ �? \n\n———————�?结束 ———————�? \n\n请您确认�? \n1) 以上蓝图是否准确、完整？  \n2) 如需修改，请指出具体段落或数据；如无异议，请回复“没问题”或“就这样吧”，我将把最终版本写入数据库，并进入下一步（关键词矩�?�?视频素材搜集）�?,
     "data": {
       "video_link": ""
     }
@@ -5346,7 +5348,7 @@ INSERT INTO "redis_queue_messages" VALUES('27dddf80-154a-49db-884a-c464563129c5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。您想了解目前还需要合成多少个视频来进行测试吗？如果需要，请回复“是”，我将为您提取最新的作战地图并告诉您当前还缺少的视频数量。",
+    "text": "您好！欢迎使用智能视频创作助手。您想了解目前还需要合成多少个视频来进行测试吗？如果需要，请回复“是”，我将为您提取最新的作战地图并告诉您当前还缺少的视频数量�?,
     "data": {
       "video_link": ""
     }
@@ -5363,7 +5365,7 @@ INSERT INTO "redis_queue_messages" VALUES('beb9286a-c6a8-4661-acad-c2a977ffc1ac'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 战略目标  \n   - 30 天产出 30 条原生短视频，经 AI 裂变后每天多平台发布共 180 条，累计曝光 ≥ 50 万次，收集 B2B 线索 ≥ 200 条。\n\n2. 账号矩阵（共 6 个）  \n   - TikTok：美区账号、东南亚区账号  \n   - YouTube Shorts：英文频道、中文字幕频道  \n   - LinkedIn：公司主页、销售个人号\n\n3. 内容支柱（6 大类）  \n   1) 工厂探秘 / 生产线幕后  \n   2) 产品测评与对比实验  \n   3) 客户案例 & 场景实拍  \n   4) 安装 / 维护指南  \n   5) 行业科普 & 节能 ROI 计算  \n   6) CEO / 技术专家访谈与选型建议\n\n4. 发布节奏  \n   - 每账号每天 1 条，共 6 条/天 → 30 天累计 180 条裂变发布  \n   - 固定发布时间：工作日 10:00 & 20:00（目标市场当地时区），周末 14:00\n\n5. 素材拍摄需求  \n   - 每周拍摄 6 大场景 × 3 机位 = 18 组素材  \n   - 4 周共需 72 组高清素材（2 天集中拍摄完成）  \n   - 典型场景：①工厂自动化生产线 ②实验室光学测试 ③市政道路亮灯对比 ④仓库高棚灯安装 ⑤打样发货包装 ⑥CEO 选型讲解\n\n6. 人力与工具配置  \n   - 拍摄：1 人手机云台拍 + 1 人协助布光 / 场地协调  \n   - 后期：CapCut / Runway AI 快速剪辑、自动加字幕  \n   - 发布与数据监测：Metricool / Hootsuite\n\n7. 预算估算（人民币）  \n   - 拍摄执行：≈ 5,000  \n   - AI / SaaS 工具订阅：≈ 1,000  \n   - 广告投放 & 达人协同：≈ 3,000  \n   - 合计 ≤ 10,000\n\n8. 预期成效  \n   - 曝光 ≥ 500,000  \n   - 视频完播率 ≥ 45%  \n   - 互动（点赞 / 评论 / 转发）≥ 20,000  \n   - B2B 询盘线索 ≥ 200 条  \n   - 目标市场官网跳转流量提升 ≥ 30%\n\n9. 下一步行动  \n   1) 48 小时内完成首批 18 组素材拍摄排期确认  \n   2) 生成首周 10 条脚本 + 分镜头表并启动拍摄  \n   3) 配置 Metricool 账号权限，接入 6 个平台 API  \n   4) 每周一回顾数据并优化脚本钩子、话术及标签  \n   5) 第 30 天汇总成效，准备下一轮迭代蓝图 v3\n\n请确认上述《AOK LED Light 出海视频获客战略蓝图 v2》，如需调整或深入细化任何环节，随时告知！",
+    "text": "1. 战略目标  \n   - 30 天产�?30 条原生短视频，经 AI 裂变后每天多平台发布�?180 条，累计曝光 �?50 万次，收�?B2B 线索 �?200 条。\n\n2. 账号矩阵（共 6 个）  \n   - TikTok：美区账号、东南亚区账�? \n   - YouTube Shorts：英文频道、中文字幕频�? \n   - LinkedIn：公司主页、销售个人号\n\n3. 内容支柱�? 大类�? \n   1) 工厂探秘 / 生产线幕�? \n   2) 产品测评与对比实�? \n   3) 客户案例 & 场景实拍  \n   4) 安装 / 维护指南  \n   5) 行业科普 & 节能 ROI 计算  \n   6) CEO / 技术专家访谈与选型建议\n\n4. 发布节奏  \n   - 每账号每�?1 条，�?6 �?�?�?30 天累�?180 条裂变发�? \n   - 固定发布时间：工作日 10:00 & 20:00（目标市场当地时区），周�?14:00\n\n5. 素材拍摄需�? \n   - 每周拍摄 6 大场�?× 3 机位 = 18 组素�? \n   - 4 周共需 72 组高清素材（2 天集中拍摄完成）  \n   - 典型场景：①工厂自动化生产线 ②实验室光学测试 ③市政道路亮灯对�?④仓库高棚灯安装 ⑤打样发货包�?⑥CEO 选型讲解\n\n6. 人力与工具配�? \n   - 拍摄�? 人手机云台拍 + 1 人协助布�?/ 场地协调  \n   - 后期：CapCut / Runway AI 快速剪辑、自动加字幕  \n   - 发布与数据监测：Metricool / Hootsuite\n\n7. 预算估算（人民币�? \n   - 拍摄执行：≈ 5,000  \n   - AI / SaaS 工具订阅：≈ 1,000  \n   - 广告投放 & 达人协同：≈ 3,000  \n   - 合计 �?10,000\n\n8. 预期成效  \n   - 曝光 �?500,000  \n   - 视频完播�?�?45%  \n   - 互动（点�?/ 评论 / 转发）≥ 20,000  \n   - B2B 询盘线索 �?200 �? \n   - 目标市场官网跳转流量提升 �?30%\n\n9. 下一步行�? \n   1) 48 小时内完成首�?18 组素材拍摄排期确�? \n   2) 生成首周 10 条脚�?+ 分镜头表并启动拍�? \n   3) 配置 Metricool 账号权限，接�?6 个平�?API  \n   4) 每周一回顾数据并优化脚本钩子、话术及标签  \n   5) �?30 天汇总成效，准备下一轮迭代蓝�?v3\n\n请确认上述《AOK LED Light 出海视频获客战略蓝图 v2》，如需调整或深入细化任何环节，随时告知�?,
     "data": {
       "video_link": ""
     }
@@ -5380,7 +5382,7 @@ INSERT INTO "redis_queue_messages" VALUES('461fe2ef-bd49-4754-b163-b5fe24dbfcac'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间�?,
     "data": {
       "video_link": ""
     }
@@ -5391,7 +5393,7 @@ INSERT INTO "redis_queue_messages" VALUES('e546dcfb-d9a1-401a-98b0-a6550b90d11d'
   "env": "gray",
   "session_id": "0ad5f1c4-b748-41f5-ab5c-27dd90bca74a",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "b2ecf8b8-d453-4d2e-9fe0-28f366478932",
   "socket_id": "IQAGLEFfCMhMrULZAAAV",
   "status": "RUNNING",
@@ -5409,7 +5411,7 @@ INSERT INTO "redis_queue_messages" VALUES('32e051d2-b89c-4049-8bcb-2225222fb00b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的智能视频创作与发布助手。您想先了解目前根据作战地图还需要合成多少个测试视频吗？如果需要，请告诉我，我将立即为您查询。",
+    "text": "您好！我是您的智能视频创作与发布助手。您想先了解目前根据作战地图还需要合成多少个测试视频吗？如果需要，请告诉我，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -5426,7 +5428,7 @@ INSERT INTO "redis_queue_messages" VALUES('80053f02-f486-4f61-a690-de0571da8f86'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. 您的企业资料、产品特点、目标人群、关键词库均已完整录入，并已生成并确认《AOK LED Light 出海视频获客战略蓝图 v2》。  \n2. 该蓝图核心要点：  \n   • 30 天内累计发布 180 条裂变视频，覆盖 TikTok/YouTube Shorts/LinkedIn 6 账号矩阵；  \n   • 目标曝光 50 万+，收集 B2B 线索 200 +；  \n   • 每周拍摄 6 大场景 × 3 机位，共 18 组素材，4 周共 72 组；  \n   • 内容支柱 6 类：工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普；  \n   • 已附 30 天发布日历与脚本示例，预算 ≤ 1 万元（拍摄 5000 RMB + AI 工具 1000 RMB + 推广 3000 RMB）。  \n3. 请告诉我接下来需要：  \n   a) 再次查看完整蓝图文档；  \n   b) 对发布节奏 / 内容支柱 / 脚本细节进行调整；  \n   c) 直接进入执行（生成首批脚本、分工、时间表）；  \n   d) 其他需求。",
+    "text": "正文�? \n1. 您的企业资料、产品特点、目标人群、关键词库均已完整录入，并已生成并确认《AOK LED Light 出海视频获客战略蓝图 v2》�? \n2. 该蓝图核心要点：  \n   �?30 天内累计发布 180 条裂变视频，覆盖 TikTok/YouTube Shorts/LinkedIn 6 账号矩阵�? \n   �?目标曝光 50 �?，收�?B2B 线索 200 +�? \n   �?每周拍摄 6 大场�?× 3 机位，共 18 组素材，4 周共 72 组；  \n   �?内容支柱 6 类：工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普；  \n   �?已附 30 天发布日历与脚本示例，预�?�?1 万元（拍�?5000 RMB + AI 工具 1000 RMB + 推广 3000 RMB）�? \n3. 请告诉我接下来需要：  \n   a) 再次查看完整蓝图文档�? \n   b) 对发布节�?/ 内容支柱 / 脚本细节进行调整�? \n   c) 直接进入执行（生成首批脚本、分工、时间表）；  \n   d) 其他需求�?,
     "data": {
       "video_link": ""
     }
@@ -5443,7 +5445,7 @@ INSERT INTO "redis_queue_messages" VALUES('55ff45f7-17b9-49ea-8e99-2f47a23f0185'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "以下为《AOK LED Light 出海视频获客战略蓝图 v2》完整内容，方便您再次查看：\n\n1. 总目标\n   • 30 天内累计发布 180 条裂变视频，覆盖 TikTok / YouTube Shorts / LinkedIn 共 6 个账号矩阵；\n   • 目标曝光 500,000+，收集 B2B 线索 200+。\n\n2. 资源与投入\n   • 总预算 ≤ 10,000 RMB（拍摄 5,000 + AI 工具 1,000 + 推广 3,000）。\n\n3. 发布节奏\n   • 每日每账号 1 条，6 账号 × 30 天 ≈ 180 条。\n   • 每周 6 大场景 × 3 机位，共 18 组素材；4 周共 72 组。\n\n4. 内容支柱（6 类）\n   ① 工厂探秘  ② 产品测评  ③ 客户案例  ④ 对比实验  ⑤ 安装指南  ⑥ 行业科普\n\n5. 账号矩阵\n   • TikTok（3 账号）：主号 + 技术号 + 案例号\n   • YouTube Shorts（2 账号）：产品号 + 技术号\n   • LinkedIn（1 账号）：品牌号\n\n6. 周度执行流程（示例）\n   • 周一：脚本确认 & 场景布置\n   • 周二：拍摄（6 场景 × 3 机位）\n   • 周三：剪辑 & AI 配音、字幕\n   • 周四：初审 & 调整\n   • 周五：定稿 & 批量发布\n\n7. KPI 监控\n   • 曝光、播放完成率、互动率、私信 / 留资量，全链路周报；\n   • 低于目标 80% 的脚本进入淘汰池，高于 120% 的脚本进入爆款池，复用裂变。\n\n8. 关键节点\n   • D+7：完成首周 42 条发布；\n   • D+14：完成 84 条，开始复用爆款变体；\n   • D+21：完成 126 条，复盘并微调战略；\n   • D+30：完成 180 条，交付最终数据报告。\n\n———————————————————————\n您已查看完整蓝图。如果您想继续执行下一步（例如：了解目前还需要合成多少测试视频，并进入脚本生成流程），请告诉我，我将立即为您查询并开始步骤 1。",
+    "text": "以下为《AOK LED Light 出海视频获客战略蓝图 v2》完整内容，方便您再次查看：\n\n1. 总目标\n   �?30 天内累计发布 180 条裂变视频，覆盖 TikTok / YouTube Shorts / LinkedIn �?6 个账号矩阵；\n   �?目标曝光 500,000+，收�?B2B 线索 200+。\n\n2. 资源与投入\n   �?总预�?�?10,000 RMB（拍�?5,000 + AI 工具 1,000 + 推广 3,000）。\n\n3. 发布节奏\n   �?每日每账�?1 条，6 账号 × 30 �?�?180 条。\n   �?每周 6 大场�?× 3 机位，共 18 组素材；4 周共 72 组。\n\n4. 内容支柱�? 类）\n   �?工厂探秘  �?产品测评  �?客户案例  �?对比实验  �?安装指南  �?行业科普\n\n5. 账号矩阵\n   �?TikTok�? 账号）：主号 + 技术号 + 案例号\n   �?YouTube Shorts�? 账号）：产品�?+ 技术号\n   �?LinkedIn�? 账号）：品牌号\n\n6. 周度执行流程（示例）\n   �?周一：脚本确�?& 场景布置\n   �?周二：拍摄（6 场景 × 3 机位）\n   �?周三：剪�?& AI 配音、字幕\n   �?周四：初�?& 调整\n   �?周五：定�?& 批量发布\n\n7. KPI 监控\n   �?曝光、播放完成率、互动率、私�?/ 留资量，全链路周报；\n   �?低于目标 80% 的脚本进入淘汰池，高�?120% 的脚本进入爆款池，复用裂变。\n\n8. 关键节点\n   �?D+7：完成首�?42 条发布；\n   �?D+14：完�?84 条，开始复用爆款变体；\n   �?D+21：完�?126 条，复盘并微调战略；\n   �?D+30：完�?180 条，交付最终数据报告。\n\n———————————————————————\n您已查看完整蓝图。如果您想继续执行下一步（例如：了解目前还需要合成多少测试视频，并进入脚本生成流程），请告诉我，我将立即为您查询并开始步�?1�?,
     "data": {
       "video_link": ""
     }
@@ -5460,7 +5462,7 @@ INSERT INTO "redis_queue_messages" VALUES('ad5f2fba-c985-40cb-9d74-01c00c852ea3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，您希望对发布节奏、内容支柱或脚本细节进行调整。请告诉我：\n1) 具体想调整哪一项？（发布节奏 / 内容支柱 / 脚本细节）\n2) 您希望修改成什么样的方案？\n\n我会先记录并确认您的修改需求；如果您完成调整或暂时无需调整，也可以随时告诉我直接进入执行流程（查询当前还需合成多少测试视频）。",
+    "text": "好的，您希望对发布节奏、内容支柱或脚本细节进行调整。请告诉我：\n1) 具体想调整哪一项？（发布节�?/ 内容支柱 / 脚本细节）\n2) 您希望修改成什么样的方案？\n\n我会先记录并确认您的修改需求；如果您完成调整或暂时无需调整，也可以随时告诉我直接进入执行流程（查询当前还需合成多少测试视频）�?,
     "data": {
       "video_link": ""
     }
@@ -5477,7 +5479,7 @@ INSERT INTO "redis_queue_messages" VALUES('f969aa61-3781-4e4f-b5c0-74b58fe1b4eb'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，让我们调整发布节奏。\n\n请补充以下信息，方便我为您更新方案：\n1) 新的发布总量目标（例如：30 天内发布 120 条 / 90 条 / 60 条等）。\n2) 各账号每日或每周的发布频次（例如：主号每天 2 条，其他账号每天 1 条，或分账号每周固定发布几天）。\n3) 是否需要调整拍摄频次及素材准备量（目前规划：每周 18 组素材，4 周共 72 组）。\n4) 预算是否随之变化，或保持 1 万元以内。\n\n请按 1-4 点回复您的期望或修改意见。如无特别限制，也可以直接告诉我“按照 A 方案”或“按您建议给出一个优化版”，我会先拟一份新的发布节奏供您确认。",
+    "text": "好的，让我们调整发布节奏。\n\n请补充以下信息，方便我为您更新方案：\n1) 新的发布总量目标（例如：30 天内发布 120 �?/ 90 �?/ 60 条等）。\n2) 各账号每日或每周的发布频次（例如：主号每�?2 条，其他账号每天 1 条，或分账号每周固定发布几天）。\n3) 是否需要调整拍摄频次及素材准备量（目前规划：每�?18 组素材，4 周共 72 组）。\n4) 预算是否随之变化，或保持 1 万元以内。\n\n请按 1-4 点回复您的期望或修改意见。如无特别限制，也可以直接告诉我“按�?A 方案”或“按您建议给出一个优化版”，我会先拟一份新的发布节奏供您确认�?,
     "data": {
       "video_link": ""
     }
@@ -5494,7 +5496,7 @@ INSERT INTO "redis_queue_messages" VALUES('766f271d-eefe-4b60-b092-802f2c7824d1'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已为您生成并优化了“发布节奏 A 方案”，请查收：\n\n【发布节奏 A 方案 – 30 天】\n1. 总量\n   • 累计发布 178 条短视频（≈ 原计划 99%），满足高频曝光又兼顾制作余量。\n\n2. 账号 & 频次\n   • TikTok 主号：每日 2 条  → 60 条 /30 天\n   • TikTok 技术号：每日 1 条  → 30 条 /30 天\n   • TikTok 案例号：每日 1 条  → 30 条 /30 天\n   • YouTube Shorts 产品号：每日 1 条  → 30 条 /30 天\n   • YouTube Shorts 技术号：每周 4 条（周一–周四各 1 条）→ 16 条 /30 天\n   • LinkedIn 品牌号：每周 3 条（周二、周四、周六）→ 12 条 /30 天\n   • 合计：178 条\n\n3. 拍摄与制作\n   • 仍保持“每周 6 大场景 × 3 机位＝18 组素材”，4 周共 72 组，可支撑 180+ 条拆分、剪辑、AI 变体。\n   • 如有素材余额，可灵活补位（爆款二次剪、联动贴片、花絮剪影等）。\n\n4. 预算\n   • 总预算保持 ≤ 10,000 RMB。\n   • 推广预算略作调配：TikTok 主号/技术号 2,500 RMB，LinkedIn 品牌号 500 RMB，其余保持。\n\n5. 周度执行节奏（示例）\n   • 周一：脚本确认 & 主号 + 技术号拍摄\n   • 周二：案例号 + LinkedIn 拍摄\n   • 周三：剪辑 & AI 配音、分发至产品/技术账号\n   • 周四：剪辑收尾 & 初审，LinkedIn 推文准备\n   • 周五：定稿 & 主号/案例号补拍或爆款复用\n   • 周六：发布 + 数据监控\n   • 周日：周报 & 选爆款，迭代脚本\n\n============================\n请您确认：\n1) 以上“发布节奏 A 方案”是否符合您的期望？\n2) 若确认无误，我们即可进入执行流程的下一步——查询目前还需合成多少测试视频（步骤 1）。\n\n请回复“确认”以继续执行；如需再调整，请告诉我具体修改点。",
+    "text": "已为您生成并优化了“发布节�?A 方案”，请查收：\n\n【发布节�?A 方案 �?30 天】\n1. 总量\n   �?累计发布 178 条短视频（≈ 原计�?99%），满足高频曝光又兼顾制作余量。\n\n2. 账号 & 频次\n   �?TikTok 主号：每�?2 �? �?60 �?/30 天\n   �?TikTok 技术号：每�?1 �? �?30 �?/30 天\n   �?TikTok 案例号：每日 1 �? �?30 �?/30 天\n   �?YouTube Shorts 产品号：每日 1 �? �?30 �?/30 天\n   �?YouTube Shorts 技术号：每�?4 条（周一–周四各 1 条）�?16 �?/30 天\n   �?LinkedIn 品牌号：每周 3 条（周二、周四、周六）�?12 �?/30 天\n   �?合计�?78 条\n\n3. 拍摄与制作\n   �?仍保持“每�?6 大场�?× 3 机位�?8 组素材”，4 周共 72 组，可支�?180+ 条拆分、剪辑、AI 变体。\n   �?如有素材余额，可灵活补位（爆款二次剪、联动贴片、花絮剪影等）。\n\n4. 预算\n   �?总预算保�?�?10,000 RMB。\n   �?推广预算略作调配：TikTok 主号/技术号 2,500 RMB，LinkedIn 品牌�?500 RMB，其余保持。\n\n5. 周度执行节奏（示例）\n   �?周一：脚本确�?& 主号 + 技术号拍摄\n   �?周二：案例号 + LinkedIn 拍摄\n   �?周三：剪�?& AI 配音、分发至产品/技术账号\n   �?周四：剪辑收�?& 初审，LinkedIn 推文准备\n   �?周五：定�?& 主号/案例号补拍或爆款复用\n   �?周六：发�?+ 数据监控\n   �?周日：周�?& 选爆款，迭代脚本\n\n============================\n请您确认：\n1) 以上“发布节�?A 方案”是否符合您的期望？\n2) 若确认无误，我们即可进入执行流程的下一步——查询目前还需合成多少测试视频（步�?1）。\n\n请回复“确认”以继续执行；如需再调整，请告诉我具体修改点�?,
     "data": {
       "video_link": ""
     }
@@ -5511,7 +5513,7 @@ INSERT INTO "redis_queue_messages" VALUES('ecf8e5c2-74be-49ec-a4c3-1a9aceab2a01'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. 为精准调整《AOK LED Light 出海视频获客战略蓝图》，请您补充下列信息（可写“保持不变”）：  \n   1) 总目标（曝光量 / 线索量 / 时间周期）  \n   2) 发布节奏 & 账号矩阵（各账号频次，是否增删平台）  \n   3) 内容支柱（6 大类是否调整）  \n   4) 资源与预算（总预算及推广 vs. 制作比例）  \n   5) KPI 监控与复盘机制（报表频率、爆款/淘汰阈值）  \n2. 请按 1-5 点回复，或直接说明“按您建议给出优化”。",
+    "text": "正文�? \n1. 为精准调整《AOK LED Light 出海视频获客战略蓝图》，请您补充下列信息（可写“保持不变”）�? \n   1) 总目标（曝光�?/ 线索�?/ 时间周期�? \n   2) 发布节奏 & 账号矩阵（各账号频次，是否增删平台）  \n   3) 内容支柱�? 大类是否调整�? \n   4) 资源与预算（总预算及推广 vs. 制作比例�? \n   5) KPI 监控与复盘机制（报表频率、爆�?淘汰阈值）  \n2. 请按 1-5 点回复，或直接说明“按您建议给出优化”�?,
     "data": {
       "video_link": ""
     }
@@ -5528,7 +5530,7 @@ INSERT INTO "redis_queue_messages" VALUES('70a88b91-1d0c-44ab-a116-6bdc1849e95a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，我们先进行信息收集，以便后续更精准地调整战略蓝图。\n\n请根据以下 6 大维度补充关键信息（可多行作答，若暂时没有信息或保持不变，请写“暂无”或“保持不变”）：\n\n1) 产品与卖点\n   • 主打型号 / 系列：\n   • 核心功能与差异化优势：\n   • 典型应用场景：\n\n2) 目标市场与人群画像\n   • 主要国家 / 地区：\n   • 典型客户类型（批发商 / 工程项目方 / 经销商等）：\n   • 客户痛点与需求：\n\n3) 竞争与行业现状\n   • 主要竞品（品牌 / 型号）：\n   • 竞品常用的视频内容或传播渠道：\n   • 您的竞争优势：\n\n4) 现有内容与素材库\n   • 是否已有工厂/生产线视频或图片：\n   • 客户案例/安装效果素材：\n   • 技术测试或对比实验素材：\n\n5) 资源与团队\n   • 内部可调配拍摄/剪辑人手：\n   • 外部合作方（MCN、KOL、拍摄公司）：\n   • 可投入的时间（每周可投入拍摄/剪辑工时）：\n\n6) 其他补充信息\n   • 特别的品牌故事或核心价值观：\n   • 行业合规/认证信息（CE、UL、RoHS 等）：\n   • 需规避的敏感内容或行业禁区：\n\n请尽量完整填写，上述信息将帮助我们在战略蓝图与脚本中精准定位 USP、选定内容支柱以及拍摄重点。完成后，您可随时告诉我“信息补充完毕”，我们再继续。",
+    "text": "好的，我们先进行信息收集，以便后续更精准地调整战略蓝图。\n\n请根据以�?6 大维度补充关键信息（可多行作答，若暂时没有信息或保持不变，请写“暂无”或“保持不变”）：\n\n1) 产品与卖点\n   �?主打型号 / 系列：\n   �?核心功能与差异化优势：\n   �?典型应用场景：\n\n2) 目标市场与人群画像\n   �?主要国家 / 地区：\n   �?典型客户类型（批发商 / 工程项目�?/ 经销商等）：\n   �?客户痛点与需求：\n\n3) 竞争与行业现状\n   �?主要竞品（品�?/ 型号）：\n   �?竞品常用的视频内容或传播渠道：\n   �?您的竞争优势：\n\n4) 现有内容与素材库\n   �?是否已有工厂/生产线视频或图片：\n   �?客户案例/安装效果素材：\n   �?技术测试或对比实验素材：\n\n5) 资源与团队\n   �?内部可调配拍�?剪辑人手：\n   �?外部合作方（MCN、KOL、拍摄公司）：\n   �?可投入的时间（每周可投入拍摄/剪辑工时）：\n\n6) 其他补充信息\n   �?特别的品牌故事或核心价值观：\n   �?行业合规/认证信息（CE、UL、RoHS 等）：\n   �?需规避的敏感内容或行业禁区：\n\n请尽量完整填写，上述信息将帮助我们在战略蓝图与脚本中精准定位 USP、选定内容支柱以及拍摄重点。完成后，您可随时告诉我“信息补充完毕”，我们再继续�?,
     "data": {
       "video_link": ""
     }
@@ -5545,7 +5547,7 @@ INSERT INTO "redis_queue_messages" VALUES('0980e68d-c2f2-41b0-9859-3c18be3f91b1'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已收到您的官网网址：www.aokledlight.com。\n\n我可以基于官网公开信息为您初步提取以下要点，但为了确保战略蓝图更加精准，仍建议您补充或确认关键信息：\n\n1) 产品与卖点（官网可见）\n   • 主推产品系列：工业高亮 LED 灯、户外防水灯、智能感应灯等；\n   • 差异化优势示例：高光效＞160 lm/W、耐高温散热设计、通过 CE / RoHS 认证；\n   • 应用场景：工厂车间、仓储物流、体育场馆、户外道路照明等。\n\n2) 目标市场与人群画像 – 仍需您确认\n   • 主要地区：欧美 / 东南亚 / 中东？\n   • 典型客户：批发商、工程项目承包商、照明设计公司？\n   • 客户痛点：节能降耗、安装快捷、质保年限？\n\n3) 竞争与行业现状 – 仍需您补充\n   • 主要竞品品牌：如 Philips / Osram / Dialight 等？\n   • 您的领先点：价格 / 定制化 / 交期？\n\n4) 现有内容与素材库\n   • 是否已存工厂实拍 / 客户案例视频？\n   • 是否有实验室测试、对比实验素材？\n\n5) 资源与团队\n   • 内部是否有拍摄摄像师或剪辑师？\n   • 外部合作伙伴情况？\n\n6) 其他补充\n   • 品牌故事、企业使命、认证资质（如 UL / DLC / CB）等。\n\n请您在方便时对以上 1-6 点进行补充或修正（若某些项已覆盖，可写“保持官网信息”），这样我即可把信息整合进调整后的战略蓝图草案，并供您确认后进入下一步。",
+    "text": "已收到您的官网网址：www.aokledlight.com。\n\n我可以基于官网公开信息为您初步提取以下要点，但为了确保战略蓝图更加精准，仍建议您补充或确认关键信息：\n\n1) 产品与卖点（官网可见）\n   �?主推产品系列：工业高�?LED 灯、户外防水灯、智能感应灯等；\n   �?差异化优势示例：高光效＞160 lm/W、耐高温散热设计、通过 CE / RoHS 认证；\n   �?应用场景：工厂车间、仓储物流、体育场馆、户外道路照明等。\n\n2) 目标市场与人群画�?�?仍需您确认\n   �?主要地区：欧�?/ 东南�?/ 中东？\n   �?典型客户：批发商、工程项目承包商、照明设计公司？\n   �?客户痛点：节能降耗、安装快捷、质保年限？\n\n3) 竞争与行业现�?�?仍需您补充\n   �?主要竞品品牌：如 Philips / Osram / Dialight 等？\n   �?您的领先点：价格 / 定制�?/ 交期？\n\n4) 现有内容与素材库\n   �?是否已存工厂实拍 / 客户案例视频？\n   �?是否有实验室测试、对比实验素材？\n\n5) 资源与团队\n   �?内部是否有拍摄摄像师或剪辑师？\n   �?外部合作伙伴情况？\n\n6) 其他补充\n   �?品牌故事、企业使命、认证资质（�?UL / DLC / CB）等。\n\n请您在方便时对以�?1-6 点进行补充或修正（若某些项已覆盖，可写“保持官网信息”），这样我即可把信息整合进调整后的战略蓝图草案，并供您确认后进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -5562,7 +5564,7 @@ INSERT INTO "redis_queue_messages" VALUES('000bc161-1e88-45ed-9e4c-28d177c902db'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，我们先收集必要信息，以便后续精准调整战略蓝图。\n\n请尽量完整填写以下 6 大维度，如暂时没有信息或保持不变，可写“暂无”或“保持不变”：\n\n1) 产品与卖点\n   • 主打型号 / 系列：\n   • 核心功能与差异化优势：\n   • 典型应用场景：\n\n2) 目标市场与人群画像\n   • 主要国家 / 地区：\n   • 典型客户类型（批发商 / 工程项目方 / 经销商等）：\n   • 客户痛点与需求：\n\n3) 竞争与行业现状\n   • 主要竞品（品牌 / 型号）：\n   • 竞品常用的视频内容或传播渠道：\n   • 您的竞争优势：\n\n4) 现有内容与素材库\n   • 是否已有工厂 / 生产线视频或图片：\n   • 客户案例 / 安装效果素材：\n   • 技术测试或对比实验素材：\n\n5) 资源与团队\n   • 内部可调配拍摄 / 剪辑人手：\n   • 外部合作方（MCN、KOL、拍摄公司）：\n   • 每周可投入拍摄 / 剪辑工时：\n\n6) 其他补充信息\n   • 品牌故事或核心价值观：\n   • 行业合规 / 认证信息（CE、UL、RoHS 等）：\n   • 需规避的敏感内容或行业禁区：\n\n请回复以上信息，或注明“暂无 / 保持不变”，我收到后将为您整理并继续。",
+    "text": "好的，我们先收集必要信息，以便后续精准调整战略蓝图。\n\n请尽量完整填写以�?6 大维度，如暂时没有信息或保持不变，可写“暂无”或“保持不变”：\n\n1) 产品与卖点\n   �?主打型号 / 系列：\n   �?核心功能与差异化优势：\n   �?典型应用场景：\n\n2) 目标市场与人群画像\n   �?主要国家 / 地区：\n   �?典型客户类型（批发商 / 工程项目�?/ 经销商等）：\n   �?客户痛点与需求：\n\n3) 竞争与行业现状\n   �?主要竞品（品�?/ 型号）：\n   �?竞品常用的视频内容或传播渠道：\n   �?您的竞争优势：\n\n4) 现有内容与素材库\n   �?是否已有工厂 / 生产线视频或图片：\n   �?客户案例 / 安装效果素材：\n   �?技术测试或对比实验素材：\n\n5) 资源与团队\n   �?内部可调配拍�?/ 剪辑人手：\n   �?外部合作方（MCN、KOL、拍摄公司）：\n   �?每周可投入拍�?/ 剪辑工时：\n\n6) 其他补充信息\n   �?品牌故事或核心价值观：\n   �?行业合规 / 认证信息（CE、UL、RoHS 等）：\n   �?需规避的敏感内容或行业禁区：\n\n请回复以上信息，或注明“暂�?/ 保持不变”，我收到后将为您整理并继续�?,
     "data": {
       "video_link": ""
     }
@@ -5579,7 +5581,7 @@ INSERT INTO "redis_queue_messages" VALUES('bed24e21-db11-43b5-859f-81fae6c60a96'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，您想先收集哪些信息？\n\n如果您想了解当前根据作战地图还需要合成多少测试视频，请直接告诉我，我会立即为您调取最新数据；若您需要其他方面的信息，也请具体说明，我将为您准备。",
+    "text": "好的，您想先收集哪些信息？\n\n如果您想了解当前根据作战地图还需要合成多少测试视频，请直接告诉我，我会立即为您调取最新数据；若您需要其他方面的信息，也请具体说明，我将为您准备�?,
     "data": {
       "video_link": ""
     }
@@ -5596,7 +5598,7 @@ INSERT INTO "redis_queue_messages" VALUES('1939c9a7-5afa-43a2-bbf0-a2f5e6017e72'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已记录：保持官网现有信息，无其他补充。\n\n基于目前资料（官网信息 + 发布节奏 A 方案 + 原战略核心目标），我已整理出《AOK LED Light 出海视频获客战略蓝图 v2.1（草案）》主要更新点如下，可供确认：\n\n1. 总目标（保持不变）\n   • 30 天内累计曝光 500,000+，收集 B2B 线索 200+。\n\n2. 发布节奏（采用 A 方案）\n   • 30 天发布 178 条短视频；账号矩阵与频次已列明（TikTok 主号 2/天，其他账号 1/天 或固定周频）。\n\n3. 内容支柱（保持 6 类）\n   • 工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普。\n\n4. 产品与卖点（引用官网信息）\n   • 高光效工业/户外 LED 灯；耐高温散热、>160 lm/W、CE/RoHS 认证；适用工厂车间、仓储物流、体育场馆、道路照明。\n\n5. 目标市场 & 客户画像\n   • 目标地区：欧美、东南亚、中东（默认）；\n   • 客户类型：批发商、工程项目承包商、照明设计公司；\n   • 客户痛点：节能降耗、安装便捷、质保可靠。\n\n6. 资源与预算（保持 ≤10,000 RMB）\n   • 拍摄/AI 工具/推广费用分配同原计划；\n   • 内部外部团队资源默认维持现状。\n\n7. KPI 监控 & 复盘机制（保持）\n   • 周报、爆款≥120%、淘汰≤80% 等阈值。\n\n———————————————\n请您确认：\n1) 上述蓝图 v2.1 是否 OK？如需再调整，请指出；\n2) 若确认无误，我们即可进入执行流程的下一步——查询当前还需合成多少测试视频，并正式开始脚本生成流程。\n\n如同意继续，请回复“确认”，我将立即为您统计待测试视频数量并进入下一步。",
+    "text": "已记录：保持官网现有信息，无其他补充。\n\n基于目前资料（官网信�?+ 发布节奏 A 方案 + 原战略核心目标），我已整理出《AOK LED Light 出海视频获客战略蓝图 v2.1（草案）》主要更新点如下，可供确认：\n\n1. 总目标（保持不变）\n   �?30 天内累计曝光 500,000+，收�?B2B 线索 200+。\n\n2. 发布节奏（采�?A 方案）\n   �?30 天发�?178 条短视频；账号矩阵与频次已列明（TikTok 主号 2/天，其他账号 1/�?或固定周频）。\n\n3. 内容支柱（保�?6 类）\n   �?工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普。\n\n4. 产品与卖点（引用官网信息）\n   �?高光效工�?户外 LED 灯；耐高温散热�?160 lm/W、CE/RoHS 认证；适用工厂车间、仓储物流、体育场馆、道路照明。\n\n5. 目标市场 & 客户画像\n   �?目标地区：欧美、东南亚、中东（默认）；\n   �?客户类型：批发商、工程项目承包商、照明设计公司；\n   �?客户痛点：节能降耗、安装便捷、质保可靠。\n\n6. 资源与预算（保持 �?0,000 RMB）\n   �?拍摄/AI 工具/推广费用分配同原计划；\n   �?内部外部团队资源默认维持现状。\n\n7. KPI 监控 & 复盘机制（保持）\n   �?周报、爆款≥120%、淘汰≤80% 等阈值。\n\n———————————————\n请您确认：\n1) 上述蓝图 v2.1 是否 OK？如需再调整，请指出；\n2) 若确认无误，我们即可进入执行流程的下一步——查询当前还需合成多少测试视频，并正式开始脚本生成流程。\n\n如同意继续，请回复“确认”，我将立即为您统计待测试视频数量并进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -5613,7 +5615,7 @@ INSERT INTO "redis_queue_messages" VALUES('97e9d01f-a0d6-456e-abe3-df63e8b55c40'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，已记录：所有产品与品牌信息保持以官网为准，不做额外修改。接下来，如需直接进入执行流程，第一步是查询“当前根据战略蓝图还需要合成多少测试视频”。如果您想继续，请回复“查询”或“确定”，我将立即为您调取最新数据；如有其他需求，也请告诉我。",
+    "text": "好的，已记录：所有产品与品牌信息保持以官网为准，不做额外修改。接下来，如需直接进入执行流程，第一步是查询“当前根据战略蓝图还需要合成多少测试视频”。如果您想继续，请回复“查询”或“确定”，我将立即为您调取最新数据；如有其他需求，也请告诉我�?,
     "data": {
       "video_link": "www.aokledlight.com"
     }
@@ -5630,7 +5632,7 @@ INSERT INTO "redis_queue_messages" VALUES('befae499-aa35-42e5-9573-8b5a3c03f5a3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，我们继续信息收集。请您根据以下 6 大维度尽量补充关键信息（如暂时没有或保持不变，可写“暂无”或“保持不变”）：\n\n1) 产品与卖点\n   • 主打型号 / 系列：\n   • 核心功能与差异化优势：\n   • 典型应用场景：\n\n2) 目标市场与人群画像\n   • 主要国家 / 地区：\n   • 典型客户类型（批发商 / 工程项目方 / 经销商等）：\n   • 客户痛点与需求：\n\n3) 竞争与行业现状\n   • 主要竞品（品牌 / 型号）：\n   • 竞品常用的视频内容或传播渠道：\n   • 您的竞争优势：\n\n4) 现有内容与素材库\n   • 工厂/生产线视频或图片：\n   • 客户案例/安装效果素材：\n   • 技术测试或对比实验素材：\n\n5) 资源与团队\n   • 内部拍摄/剪辑人手：\n   • 外部合作方（MCN、KOL、拍摄公司）：\n   • 每周可投入拍摄/剪辑工时：\n\n6) 其他补充信息\n   • 品牌故事或核心价值观：\n   • 认证信息（CE、UL、RoHS 等）：\n   • 需规避的敏感内容或行业禁区：\n\n请按上述格式填写。一旦信息补充完毕，我将为您整合并输出调整后的战略蓝图草案，再供您确认。",
+    "text": "好的，我们继续信息收集。请您根据以�?6 大维度尽量补充关键信息（如暂时没有或保持不变，可写“暂无”或“保持不变”）：\n\n1) 产品与卖点\n   �?主打型号 / 系列：\n   �?核心功能与差异化优势：\n   �?典型应用场景：\n\n2) 目标市场与人群画像\n   �?主要国家 / 地区：\n   �?典型客户类型（批发商 / 工程项目�?/ 经销商等）：\n   �?客户痛点与需求：\n\n3) 竞争与行业现状\n   �?主要竞品（品�?/ 型号）：\n   �?竞品常用的视频内容或传播渠道：\n   �?您的竞争优势：\n\n4) 现有内容与素材库\n   �?工厂/生产线视频或图片：\n   �?客户案例/安装效果素材：\n   �?技术测试或对比实验素材：\n\n5) 资源与团队\n   �?内部拍摄/剪辑人手：\n   �?外部合作方（MCN、KOL、拍摄公司）：\n   �?每周可投入拍�?剪辑工时：\n\n6) 其他补充信息\n   �?品牌故事或核心价值观：\n   �?认证信息（CE、UL、RoHS 等）：\n   �?需规避的敏感内容或行业禁区：\n\n请按上述格式填写。一旦信息补充完毕，我将为您整合并输出调整后的战略蓝图草案，再供您确认�?,
     "data": {
       "video_link": ""
     }
@@ -5647,7 +5649,7 @@ INSERT INTO "redis_queue_messages" VALUES('bc92b7bd-a69e-4a94-8c53-8f6f02e1a3ce'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，已确认：除官网 www.aokledlight.com 上的公开资料外，目前暂不补充额外信息。\n\n接下来我将基于官网信息，结合您此前确认的“发布节奏 A 方案”，快速生成一份《AOK LED Light 出海视频获客战略蓝图（调整版）》草案供您确认。完成后，您可以：\n• 继续微调蓝图；\n• 或直接进入执行流程（步骤 1：查询目前还需合成多少测试视频）。\n\n请告诉我您的偏好：\n1) “请先出蓝图草案”——我会整理并发送调整版蓝图；\n2) “直接进入执行”——我将立即帮您查询当前还需合成多少测试视频并启动视频脚本流程。\n\n期待您的指示！",
+    "text": "好的，已确认：除官网 www.aokledlight.com 上的公开资料外，目前暂不补充额外信息。\n\n接下来我将基于官网信息，结合您此前确认的“发布节�?A 方案”，快速生成一份《AOK LED Light 出海视频获客战略蓝图（调整版）》草案供您确认。完成后，您可以：\n�?继续微调蓝图；\n�?或直接进入执行流程（步骤 1：查询目前还需合成多少测试视频）。\n\n请告诉我您的偏好：\n1) “请先出蓝图草案”——我会整理并发送调整版蓝图；\n2) “直接进入执行”——我将立即帮您查询当前还需合成多少测试视频并启动视频脚本流程。\n\n期待您的指示�?,
     "data": {
       "video_link": ""
     }
@@ -5658,7 +5660,7 @@ INSERT INTO "redis_queue_messages" VALUES('28ac348d-77ff-45ff-9506-8b18eceb899d'
   "env": "gray",
   "session_id": "c15a5b45-2919-414d-bdba-25f787516016",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "fe6835a4-6342-4386-8273-167c6efcd5b7",
   "socket_id": "B59d-kqe3plzPk1xAAAX",
   "status": "RUNNING",
@@ -5674,7 +5676,7 @@ INSERT INTO "redis_queue_messages" VALUES('18ac22d2-ba3e-4011-8ae1-bab950195bbc'
   "request_id": "fe6835a4-6342-4386-8273-167c6efcd5b7",
   "socket_id": "B59d-kqe3plzPk1xAAAX",
   "status": "FINISHED",
-  "content": {"data":"# AOK LED Light – 出海视频获客战略蓝图 V3 （正式草案）\n\n---\n## 1. 战略目标（30 天内）\n- 累计曝光量 ≥ **500,000**\n- 获取 B2B 线索 ≥ **200 条**\n- 覆盖平台：**TikTok / YouTube Shorts / LinkedIn**，共 **6 个账号矩阵**\n\n---\n## 2. 账号矩阵 & 发布节奏（A 方案）\n| 平台 | 账号定位 | 发布频次 | 30 天数量 |\n|------|---------|---------|-----------|\n| TikTok | 主号 (品牌+热点) | **2 条 / 天** | 60 |\n| TikTok | 技术号 (产品+实验) | **1 条 / 天** | 30 |\n| TikTok | 案例号 (客户故事) | **1 条 / 天** | 30 |\n| YouTube Shorts | 产品号 (测评+对比) | **1 条 / 天** | 30 |\n| YouTube Shorts | 技术号 (拆解+科普) | **4 条 / 周 / 周一-周四** | 16 |\n| LinkedIn | 品牌号 (案例+干货) | **3 条 / 周 / 周二·四·六** | 12 |\n| **合计** | | | **178 条 / 30 天** |\n\n---\n## 3. 内容支柱 × 脚本方向（6 大类）\n1. 工厂探秘\n   - 镜头：SMT 贴片线→组装→老化房→成品仓\n   - Hook：60 秒带你走进年产 50 万套的 LED 工厂\n   - 标题示例：From Chip to Ship – How We Build DLC-Premium Lights\n2. 产品测评\n   - 镜头：1 m 防水浸泡、–40 °C 冷冻、高温 80 °C 烘箱\n   - Hook：极端测试 24 小时，看看 AOK 路灯扛不扛得住？\n3. 客户案例\n   - 镜头：北美港口亮灯对比 / 欧洲仓库节能改造前后\n   - Hook：替换 1000 W HID，电费一年省 60%！\n4. 对比实验\n   - 镜头：AOK 150 lm/W vs 传统金卤灯 65 lm/W\n   - Hook：同等亮度，能耗差 3 倍？\n5. 安装指南\n   - 镜头：5 步完成高杆灯快速更换，单人 3 分钟\n   - Hook：高空作业成本降一半的秘诀\n6. 行业科普\n   - 镜头：什么是 DLC Premium？UL 认证有哪些坑？\n   - Hook：2 分钟搞懂北美照明认证\n\n---\n## 4. 每周 72 组素材拍摄拆解\n- **6 大场景** × **3 机位（远景 / 中景 / 特写）** = **18 组 / 周**\n- 4 周 = **72 组高清源素材** → 通过 AI 裂变 ≥ **180 条短视频**\n\n| 场景 | 场景要点 | 建议时长 |\n|------|---------|---------|\n| 工厂生产线 | 远景：全景车间；中景：自动贴片；特写：灯珠回流焊 | 15 s |\n| 实验室测试 | 远：IP 测试箱；中：IK 冲击锤；特：热像仪 | 15 s |\n| 户外道路对比 | 远：整条路；中：灯杆安装；特：照度仪读数 | 15 s |\n| 仓库高棚灯安装 | 远：高空作业车；中：师傅安装；特：即刻点亮 | 15 s |\n| 打样 & 包装 | 远：成品区；中：扫码追溯；特：抗压包装 | 15 s |\n| CEO 访谈 | 远：展厅；中：讲解 USP；特：手持样品 | 15 s |\n\n---\n## 5. 资源 & 预算分配（≤ 10,000 RMB）\n- 拍摄设备租赁 / 外包：**5,000**\n- AI 剪辑 / 配音 / 字幕：**1,000**\n- 推广投流（TikTok Spark Ads / LinkedIn Sponsored）：**3,000**\n- 机动费用：**1,000**（占位）\n\n---\n## 6. 周度执行流程\n| 周期 | Mon | Tue | Wed | Thu | Fri | Sat | Sun |\n|------|-----|-----|-----|-----|-----|-----|-----|\n| 任务 | 脚本确认<br>主号/技术号拍摄 | 案例号 + LinkedIn 拍摄 | 剪辑 + AI 配音 | 复审 + LinkedIn 排程 | 定稿 + 爆款补拍 | 集中发布 + 数据监控 | 周报 + Hook 库更新 |\n\n---\n## 7. KPI 监控 & 迭代机制\n- 指标：曝光 / 完播率 / 互动率 / 私信 & 留资\n- **爆款池**：≥ **120%** 平均表现 → 复制裂变\n- **淘汰池**：≤ **80%** 平均表现 → 调整 / 停止投放\n- 每周数据看板 + 月度复盘，优化脚本、投流与发布时间\n\n---\n## 8. 风险 & 应对\n| 风险 | 预警阈值 | 备选方案 |\n|------|---------|---------|\n| 素材不足 | 周素材完备率 < 90% | 1) 增拍花絮 2) 复用工厂素材做混剪 |\n| 账号限流 | 单条播放 < 500 | 1) 调整首句 Hook 2) 删重发 3) 付费起量 |\n| 预算超支 | 推广 CTR < 0.8% | 及时停掉低转化广告，转向爆款池素材 |\n\n---\n## 9. 下一步行动清单\n1. **D+0（今日）** 蓝图确认 → 建立飞书 & Trello 看板\n2. **D+1** 拉通拍摄排期，完成周 1 脚本\n3. **D+2-3** 集中拍摄 18 组素材\n4. **D+4** AI 批量剪辑 & 配音\n5. **D+5** 首轮 30 条视频发布 + Spark Ads 起量\n6. **D+7** 输出首周数据周报，进入迭代\n\n---\n> Powered by HSAI Video Growth Lab  · 2024-06-19"},
+  "content": {"data":"# AOK LED Light �?出海视频获客战略蓝图 V3 （正式草案）\n\n---\n## 1. 战略目标�?0 天内）\n- 累计曝光�?�?**500,000**\n- 获取 B2B 线索 �?**200 �?*\n- 覆盖平台�?*TikTok / YouTube Shorts / LinkedIn**，共 **6 个账号矩�?*\n\n---\n## 2. 账号矩阵 & 发布节奏（A 方案）\n| 平台 | 账号定位 | 发布频次 | 30 天数�?|\n|------|---------|---------|-----------|\n| TikTok | 主号 (品牌+热点) | **2 �?/ �?* | 60 |\n| TikTok | 技术号 (产品+实验) | **1 �?/ �?* | 30 |\n| TikTok | 案例�?(客户故事) | **1 �?/ �?* | 30 |\n| YouTube Shorts | 产品�?(测评+对比) | **1 �?/ �?* | 30 |\n| YouTube Shorts | 技术号 (拆解+科普) | **4 �?/ �?/ 周一-周四** | 16 |\n| LinkedIn | 品牌�?(案例+干货) | **3 �?/ �?/ 周二·四·六** | 12 |\n| **合计** | | | **178 �?/ 30 �?* |\n\n---\n## 3. 内容支柱 × 脚本方向�? 大类）\n1. 工厂探秘\n   - 镜头：SMT 贴片线→组装→老化房→成品仓\n   - Hook�?0 秒带你走进年�?50 万套�?LED 工厂\n   - 标题示例：From Chip to Ship �?How We Build DLC-Premium Lights\n2. 产品测评\n   - 镜头�? m 防水浸泡、�?0 °C 冷冻、高�?80 °C 烘箱\n   - Hook：极端测�?24 小时，看�?AOK 路灯扛不扛得住？\n3. 客户案例\n   - 镜头：北美港口亮灯对�?/ 欧洲仓库节能改造前后\n   - Hook：替�?1000 W HID，电费一年省 60%！\n4. 对比实验\n   - 镜头：AOK 150 lm/W vs 传统金卤�?65 lm/W\n   - Hook：同等亮度，能耗差 3 倍？\n5. 安装指南\n   - 镜头�? 步完成高杆灯快速更换，单人 3 分钟\n   - Hook：高空作业成本降一半的秘诀\n6. 行业科普\n   - 镜头：什么是 DLC Premium？UL 认证有哪些坑？\n   - Hook�? 分钟搞懂北美照明认证\n\n---\n## 4. 每周 72 组素材拍摄拆解\n- **6 大场�?* × **3 机位（远�?/ 中景 / 特写�?* = **18 �?/ �?*\n- 4 �?= **72 组高清源素材** �?通过 AI 裂变 �?**180 条短视频**\n\n| 场景 | 场景要点 | 建议时长 |\n|------|---------|---------|\n| 工厂生产�?| 远景：全景车间；中景：自动贴片；特写：灯珠回流焊 | 15 s |\n| 实验室测�?| 远：IP 测试箱；中：IK 冲击锤；特：热像�?| 15 s |\n| 户外道路对比 | 远：整条路；中：灯杆安装；特：照度仪读数 | 15 s |\n| 仓库高棚灯安�?| 远：高空作业车；中：师傅安装；特：即刻点�?| 15 s |\n| 打样 & 包装 | 远：成品区；中：扫码追溯；特：抗压包�?| 15 s |\n| CEO 访谈 | 远：展厅；中：讲�?USP；特：手持样�?| 15 s |\n\n---\n## 5. 资源 & 预算分配（≤ 10,000 RMB）\n- 拍摄设备租赁 / 外包�?*5,000**\n- AI 剪辑 / 配音 / 字幕�?*1,000**\n- 推广投流（TikTok Spark Ads / LinkedIn Sponsored）：**3,000**\n- 机动费用�?*1,000**（占位）\n\n---\n## 6. 周度执行流程\n| 周期 | Mon | Tue | Wed | Thu | Fri | Sat | Sun |\n|------|-----|-----|-----|-----|-----|-----|-----|\n| 任务 | 脚本确认<br>主号/技术号拍摄 | 案例�?+ LinkedIn 拍摄 | 剪辑 + AI 配音 | 复审 + LinkedIn 排程 | 定稿 + 爆款补拍 | 集中发布 + 数据监控 | 周报 + Hook 库更�?|\n\n---\n## 7. KPI 监控 & 迭代机制\n- 指标：曝�?/ 完播�?/ 互动�?/ 私信 & 留资\n- **爆款�?*：≥ **120%** 平均表现 �?复制裂变\n- **淘汰�?*：≤ **80%** 平均表现 �?调整 / 停止投放\n- 每周数据看板 + 月度复盘，优化脚本、投流与发布时间\n\n---\n## 8. 风险 & 应对\n| 风险 | 预警阈�?| 备选方�?|\n|------|---------|---------|\n| 素材不足 | 周素材完备率 < 90% | 1) 增拍花絮 2) 复用工厂素材做混�?|\n| 账号限流 | 单条播放 < 500 | 1) 调整首句 Hook 2) 删重�?3) 付费起量 |\n| 预算超支 | 推广 CTR < 0.8% | 及时停掉低转化广告，转向爆款池素�?|\n\n---\n## 9. 下一步行动清单\n1. **D+0（今日）** 蓝图确认 �?建立飞书 & Trello 看板\n2. **D+1** 拉通拍摄排期，完成�?1 脚本\n3. **D+2-3** 集中拍摄 18 组素材\n4. **D+4** AI 批量剪辑 & 配音\n5. **D+5** 首轮 30 条视频发�?+ Spark Ads 起量\n6. **D+7** 输出首周数据周报，进入迭代\n\n---\n> Powered by HSAI Video Growth Lab  · 2024-06-19"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760336476675
@@ -5689,7 +5691,7 @@ INSERT INTO "redis_queue_messages" VALUES('bdce8cea-c68b-4003-8fe5-828a7f1a0ee9'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "正文：  \n1. 《AOK LED Light 出海视频获客战略蓝图 V3（草案）》已整合完成，核心内容如下：  \n   • 30 天曝光≥50 万、B2B 线索≥200；178 条短视频发布；6 账号矩阵；预算≤1 万元。  \n   • 内容支柱6类、产品USP、目标人群画像、执行节奏及KPI监控机制全部列明。  \n2. 请核对蓝图：如确认无误，请回复“确认”，我将写入数据库并查询剩余待合成测试视频数量，正式启动脚本生产；若需修改，请指出具体条目。",
+    "text": "正文�? \n1. 《AOK LED Light 出海视频获客战略蓝图 V3（草案）》已整合完成，核心内容如下：  \n   �?30 天曝光≥50 万、B2B 线索�?00�?78 条短视频发布�? 账号矩阵；预算≤1 万元�? \n   �?内容支柱6类、产品USP、目标人群画像、执行节奏及KPI监控机制全部列明�? \n2. 请核对蓝图：如确认无误，请回复“确认”，我将写入数据库并查询剩余待合成测试视频数量，正式启动脚本生产；若需修改，请指出具体条目�?,
     "data": {
       "video_link": ""
     }
@@ -5706,7 +5708,7 @@ INSERT INTO "redis_queue_messages" VALUES('27cc29c3-0a5b-4914-82ae-6d67ae0b7caf'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 您好！AOK LED Light 的《视频获客战略蓝图》（最新版 V3）已完整存档，核心要点如下：\n   • 目标：30 天发布 178 条短视频，6 账号矩阵（TikTok/YouTube Shorts/LinkedIn 各 2），累计曝光 50 万+，收集 B2B 线索 200+。  \n   • 内容支柱：工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普，共 6 大类。  \n   • 拍摄计划：每周 6 大场景 × 3 机位，共 18 组高清素材；4 周共 72 组。  \n   • 预算：≤ 1 万 RMB（拍摄 5k + AI 工具订阅 1k + 推广 3k）。  \n   • KPI 监控：曝光、互动、询盘三层指标；周报跟进，月末复盘。  \n\n2. 请问您需要：  \n   a) 查看完整蓝图文档链接 / 导出文件；  \n   b) 对蓝图做任何修改或补充；  \n   c) 直接进入执行阶段（脚本细化、排期、项目分配）；  \n   d) 其他？  \n\n3. 欢迎告诉我下一步需求！",
+    "text": "1. 您好！AOK LED Light 的《视频获客战略蓝图》（最新版 V3）已完整存档，核心要点如下：\n   �?目标�?0 天发�?178 条短视频�? 账号矩阵（TikTok/YouTube Shorts/LinkedIn �?2），累计曝光 50 �?，收�?B2B 线索 200+�? \n   �?内容支柱：工厂探秘、产品测评、客户案例、对比实验、安装指南、行业科普，�?6 大类�? \n   �?拍摄计划：每�?6 大场�?× 3 机位，共 18 组高清素材；4 周共 72 组�? \n   �?预算：≤ 1 �?RMB（拍�?5k + AI 工具订阅 1k + 推广 3k）�? \n   �?KPI 监控：曝光、互动、询盘三层指标；周报跟进，月末复盘�? \n\n2. 请问您需要：  \n   a) 查看完整蓝图文档链接 / 导出文件�? \n   b) 对蓝图做任何修改或补充；  \n   c) 直接进入执行阶段（脚本细化、排期、项目分配）�? \n   d) 其他�? \n\n3. 欢迎告诉我下一步需求！",
     "data": {
       "video_link": ""
     }
@@ -5723,7 +5725,7 @@ INSERT INTO "redis_queue_messages" VALUES('b8ddf47c-8ff4-41b2-8906-037847cb662f'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！需要我为您查看作战地图，并告诉您目前还需要合成多少个视频来测试吗？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "您好！需要我为您查看作战地图，并告诉您目前还需要合成多少个视频来测试吗？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -5740,7 +5742,7 @@ INSERT INTO "redis_queue_messages" VALUES('5e3fa36b-f81c-4a6e-b3df-9e86f91b1a48'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。\n接下来，我可以帮您查看当前作战地图，并告诉您还需要合成多少个测试视频。\n请问您现在是否需要了解这一信息？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。\n接下来，我可以帮您查看当前作战地图，并告诉您还需要合成多少个测试视频。\n请问您现在是否需要了解这一信息？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -5757,7 +5759,7 @@ INSERT INTO "redis_queue_messages" VALUES('39b43c24-2b38-4a5e-bfed-cfb6974d922b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用B2B智能视频创作助手。\n\n目前我可以为您检查作战地图，并告诉您接下来还需要合成多少个视频来进行测试。请问您现在是否需要查看需要拍摄的视频数量？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "你好！欢迎使用B2B智能视频创作助手。\n\n目前我可以为您检查作战地图，并告诉您接下来还需要合成多少个视频来进行测试。请问您现在是否需要查看需要拍摄的视频数量？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -5774,7 +5776,7 @@ INSERT INTO "redis_queue_messages" VALUES('2858e153-76e0-4182-80af-e802a23dfd33'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。您想了解目前还需要合成多少个视频来进行测试吗？如果需要，请回复“是”，我将为您查询并告知。",
+    "text": "您好！欢迎使用智能视频创作助手。您想了解目前还需要合成多少个视频来进行测试吗？如果需要，请回复“是”，我将为您查询并告知�?,
     "data": {
       "video_link": ""
     }
@@ -5791,7 +5793,7 @@ INSERT INTO "redis_queue_messages" VALUES('17546993-fd2a-4598-b47f-fd0352ed1e8b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "收到您提供的网站地址 www.aokledlight.com。请问您是否需要我先查询当前还需要合成多少个测试视频？如果需要，请回复“是”。如果有其他需求，也请告知！",
+    "text": "收到您提供的网站地址 www.aokledlight.com。请问您是否需要我先查询当前还需要合成多少个测试视频？如果需要，请回复“是”。如果有其他需求，也请告知�?,
     "data": {
       "video_link": ""
     }
@@ -5808,7 +5810,7 @@ INSERT INTO "redis_queue_messages" VALUES('1cfe1d1c-78aa-48e1-aed1-a33602ead41a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据作战地图，今日需发布的视频为 0 条，当前待制作的视频脚本数量为 1 条。\n\n请在下方选择要制作的脚本文案编号：\n1. 待制作脚本 #1\n\n回复编号即可进入下一步脚本生成。",
+    "text": "根据作战地图，今日需发布的视频为 0 条，当前待制作的视频脚本数量�?1 条。\n\n请在下方选择要制作的脚本文案编号：\n1. 待制作脚�?#1\n\n回复编号即可进入下一步脚本生成�?,
     "data": {
       "video_link": ""
     }
@@ -5819,7 +5821,7 @@ INSERT INTO "redis_queue_messages" VALUES('3f50e4d2-5fad-471a-a2c9-2810bb0cd3f9'
   "env": "gray",
   "session_id": "d3dcbcd5-7647-45a4-a4a0-58bdf45d6739",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "433d3620-8409-44eb-865c-0bf7143b2ca8",
   "socket_id": "9-7wbTmaW46ZJxdvAAAj",
   "status": "RUNNING",
@@ -5835,7 +5837,7 @@ INSERT INTO "redis_queue_messages" VALUES('5cdf78b9-4678-450f-a29f-6756453598bf'
   "request_id": "433d3620-8409-44eb-865c-0bf7143b2ca8",
   "socket_id": "9-7wbTmaW46ZJxdvAAAj",
   "status": "FINISHED",
-  "content": {"data":"# AOK LED LIGHT – 出海视频获客战略蓝图  (Blueprint V4.0)\n\n> 版本日期：2024-10-05  \n> 适用周期：2024-10-10 – 2024-11-09（30 天）  \n> 目标市场：北美 / 欧洲 / 澳大利亚 / 中东  \n> 目标受众：政府市政采购、工程/EPC、经销商、工业 & 商业终端用户  \n> 目标平台：TikTok、YouTube Shorts、LinkedIn  \n\n---\n\n## 1. 核心目标（30 天）\n1. 账号矩阵：6 个账号（TikTok ×2、YouTube Shorts ×2、LinkedIn ×2）。  \n2. 原生短视频：30 条（每日 1 条），AI 裂变分发至 6 账号，共计发布 ≈ 180 条。  \n3. 预期效果：\n   • 累计曝光 ≥ 500,000 次  \n   • 互动（赞 + 评 + 关注）≥ 25,000  \n   • B2B 线索 ≥ 200 条（留言、私信、落地页表单）  \n\n---\n\n## 2. 账号矩阵与发布节奏\n| 平台 | 账号 | 调性 | 发布频次 | 重点指标 |\n|------|------|------|---------|-----------|\n|TikTok|@aok-lighting (美区)|硬核工程/对比实验|每天 1 条|曝光、点赞|\n|TikTok|@aok-lighting-sea (东南亚)|案例 & 走访|每天 1 条|询盘、私信|\n|YouTube Shorts|AOK Lighting EN|长尾教程/案例|每天 1 条|观看时长、订阅|\n|YouTube Shorts|AOK Lighting CN|中文字幕/幕后|每天 1 条|观看时长|\n|LinkedIn Company|AOK LED Light Official|品牌故事 & 成功案例|每工作日 1 条|B2B 线索|\n|LinkedIn Personal|Sales Kevin Li|人设 + 行业洞察|每工作日 1 条|连接请求、私信|\n\n---\n\n## 3. 源素材拍摄需求\nAI 可以无限剪辑，但高质量源素材必须自拍！\n• 周拍摄量：6 大场景 × 3 机位 ≈ 18 组素材 / 周  \n• 拍摄天数：集中 2 天即可完成一周份素材  \n• 4 周合计：72 组素材 ≈ 300 条可剪辑片段  \n\n### 6 大核心场景\n1. 工厂产线（SMT、组装、老化）  \n2. 实验室测试（IES、盐雾、冲击、IP67 淋雨）  \n3. 户外道路亮灯对比（旧灯 vs AOK 路灯）  \n4. 仓库 / 港口案例（高棚灯、投光灯安装）  \n5. 包装 & 发货（打样、成品出货、发货集装箱）  \n6. CEO / 工程师 出镜讲解（选型、ROI、认证）  \n\n---\n\n## 4. 内容支柱 (Pillars) 与脚本库\n\n| Pillar | 目标 | 核心钩子 (Hook) | 脚本示例 (每方向 3 条) |\n|--------|------|---------------|-------------------------|\n|1. 工厂探秘|树立自有工厂 & 质量背书|“中国工厂凌晨 2 点依旧灯火通明”|① 180 秒快速巡厂  \n② SMT 贴片到组装 60 秒极限压缩  \n③ 100% 老化测试走查|\n|2. 产品测评|突出光效 & 质保|“把灯泡浸水 30 分钟还能亮吗？”|① IP67 浸水挑战  \n② 5 米跌落抗冲击  \n③ 150 lm/W vs 市面 100 lm/W 对比|\n|3. 客户案例|社证 + 口碑|“美国芝加哥物流中心省电 68%”|① 改造前后电费账单  \n② 澳大利亚港口 400W 投光灯亮灯  \n③ 市政道路 3000 套替换纪录|\n|4. 对比实验|强化差异化|“160 lm/W 与 90 lm/W 明暗实测”|① 照度计现场测  \n② 热成像散热对比  \n③ 光衰 5000 h 旧灯切片|\n|5. 安装指南|降低决策壁垒|“3 分钟完成 20 米高杆灯更换”|① UFO 高棚灯快速接线  \n② Shoebox 路灯角度调节  \n③ DALI 调光设置|\n|6. 行业科普|吸引搜索流量|“DLC Premium 到底是什么？”|① DLC / UL 认证科普  \n② 0-10V vs DALI  \n③ 如何计算照明 ROI|\n\n— 以上共拉通 6×3 = 18 条脚本示例；结合转场、字幕、多语言，可裂变 ≥ 100 条短视频。\n\n---\n\n## 5. 30 天发布日历 (示意)\n```\nWeek 1  工厂探秘 / 产品测评  × 每日 1 条\nWeek 2  客户案例 / 对比实验  × 每日 1 条\nWeek 3  安装指南 / 行业科普  × 每日 1 条\nWeek 4  六大支柱循环混排      × 每日 1 条\n```\n详版日历（含脚本编号、拍摄日期、负责人）已写入 Airtable – 链接见内部工作表。\n\n---\n\n## 6. KPI & 复盘机制\n• 每日追踪：播放量、互动率、完播率、私信/询盘数  \n• 每周复盘：TOP5 视频拆解 + LOW3 优化  \n• 工具：TikTok Analytics、YouTube Studio、LinkedIn Insight + HubSpot 表单追踪  \n\n---\n\n## 7. 资源 & 预算\n| 项目 | 预算 (RMB) | 说明 |\n|------|------------|------|\n|拍摄设备 & 场租|3,000|现有手机 + 补光灯 + 云台|\n|人力 (2人×2天/周)|4,000|外部兼职拍摄助理|\n|AI 工具订阅|1,000|CapCut Pro / Runway / OpusClip|\n|推广预算 (TikTok ADS)|2,000|冷启加热 & Top 视频放量|\n|合计|≤ 10,000|\n\n---\n\n## 8. 执行里程碑\n1. D-3 (10-07)：脚本确认 & 日历锁定  \n2. D-2 ～ D0：集中拍摄  \n3. Week 1  发布启动 + 数据看板上线  \n4. Week 2  首轮复盘 & 调整钩子  \n5. Week 4  总结报告 + Q2 目标规划  \n\n---\n\n### 👉 下一步\n请确认本蓝图中：\n• 目标 & KPI  \n• 拍摄场景 & 素材量  \n• 预算\n\n如无异议，回复 “确认” 即可进入执行，并自动存档至项目系统。"},
+  "content": {"data":"# AOK LED LIGHT �?出海视频获客战略蓝图  (Blueprint V4.0)\n\n> 版本日期�?024-10-05  \n> 适用周期�?024-10-10 �?2024-11-09�?0 天）  \n> 目标市场：北�?/ 欧洲 / 澳大利亚 / 中东  \n> 目标受众：政府市政采购、工�?EPC、经销商、工�?& 商业终端用户  \n> 目标平台：TikTok、YouTube Shorts、LinkedIn  \n\n---\n\n## 1. 核心目标�?0 天）\n1. 账号矩阵�? 个账号（TikTok ×2、YouTube Shorts ×2、LinkedIn ×2）�? \n2. 原生短视频：30 条（每日 1 条），AI 裂变分发�?6 账号，共计发�?�?180 条�? \n3. 预期效果：\n   �?累计曝光 �?500,000 �? \n   �?互动（赞 + �?+ 关注）≥ 25,000  \n   �?B2B 线索 �?200 条（留言、私信、落地页表单�? \n\n---\n\n## 2. 账号矩阵与发布节奏\n| 平台 | 账号 | 调�?| 发布频次 | 重点指标 |\n|------|------|------|---------|-----------|\n|TikTok|@aok-lighting (美区)|硬核工程/对比实验|每天 1 条|曝光、点赞|\n|TikTok|@aok-lighting-sea (东南�?|案例 & 走访|每天 1 条|询盘、私信|\n|YouTube Shorts|AOK Lighting EN|长尾教程/案例|每天 1 条|观看时长、订阅|\n|YouTube Shorts|AOK Lighting CN|中文字幕/幕后|每天 1 条|观看时长|\n|LinkedIn Company|AOK LED Light Official|品牌故事 & 成功案例|每工作日 1 条|B2B 线索|\n|LinkedIn Personal|Sales Kevin Li|人设 + 行业洞察|每工作日 1 条|连接请求、私信|\n\n---\n\n## 3. 源素材拍摄需求\nAI 可以无限剪辑，但高质量源素材必须自拍！\n�?周拍摄量�? 大场�?× 3 机位 �?18 组素�?/ �? \n�?拍摄天数：集�?2 天即可完成一周份素材  \n�?4 周合计：72 组素�?�?300 条可剪辑片段  \n\n### 6 大核心场景\n1. 工厂产线（SMT、组装、老化�? \n2. 实验室测试（IES、盐雾、冲击、IP67 淋雨�? \n3. 户外道路亮灯对比（旧�?vs AOK 路灯�? \n4. 仓库 / 港口案例（高棚灯、投光灯安装�? \n5. 包装 & 发货（打样、成品出货、发货集装箱�? \n6. CEO / 工程�?出镜讲解（选型、ROI、认证）  \n\n---\n\n## 4. 内容支柱 (Pillars) 与脚本库\n\n| Pillar | 目标 | 核心钩子 (Hook) | 脚本示例 (每方�?3 �? |\n|--------|------|---------------|-------------------------|\n|1. 工厂探秘|树立自有工厂 & 质量背书|“中国工厂凌�?2 点依旧灯火通明”|�?180 秒快速巡�? \n�?SMT 贴片到组�?60 秒极限压�? \n�?100% 老化测试走查|\n|2. 产品测评|突出光效 & 质保|“把灯泡浸水 30 分钟还能亮吗？”|�?IP67 浸水挑战  \n�?5 米跌落抗冲击  \n�?150 lm/W vs 市面 100 lm/W 对比|\n|3. 客户案例|社证 + 口碑|“美国芝加哥物流中心省电 68%”|�?改造前后电费账�? \n�?澳大利亚港口 400W 投光灯亮�? \n�?市政道路 3000 套替换纪录|\n|4. 对比实验|强化差异化|�?60 lm/W �?90 lm/W 明暗实测”|�?照度计现场测  \n�?热成像散热对�? \n�?光衰 5000 h 旧灯切片|\n|5. 安装指南|降低决策壁垒|�? 分钟完成 20 米高杆灯更换”|�?UFO 高棚灯快速接�? \n�?Shoebox 路灯角度调节  \n�?DALI 调光设置|\n|6. 行业科普|吸引搜索流量|“DLC Premium 到底是什么？”|�?DLC / UL 认证科普  \n�?0-10V vs DALI  \n�?如何计算照明 ROI|\n\n�?以上共拉�?6×3 = 18 条脚本示例；结合转场、字幕、多语言，可裂变 �?100 条短视频。\n\n---\n\n## 5. 30 天发布日�?(示意)\n```\nWeek 1  工厂探秘 / 产品测评  × 每日 1 条\nWeek 2  客户案例 / 对比实验  × 每日 1 条\nWeek 3  安装指南 / 行业科普  × 每日 1 条\nWeek 4  六大支柱循环混排      × 每日 1 条\n```\n详版日历（含脚本编号、拍摄日期、负责人）已写入 Airtable �?链接见内部工作表。\n\n---\n\n## 6. KPI & 复盘机制\n�?每日追踪：播放量、互动率、完播率、私�?询盘�? \n�?每周复盘：TOP5 视频拆解 + LOW3 优化  \n�?工具：TikTok Analytics、YouTube Studio、LinkedIn Insight + HubSpot 表单追踪  \n\n---\n\n## 7. 资源 & 预算\n| 项目 | 预算 (RMB) | 说明 |\n|------|------------|------|\n|拍摄设备 & 场租|3,000|现有手机 + 补光�?+ 云台|\n|人力 (2人�?�?�?|4,000|外部兼职拍摄助理|\n|AI 工具订阅|1,000|CapCut Pro / Runway / OpusClip|\n|推广预算 (TikTok ADS)|2,000|冷启加热 & Top 视频放量|\n|合计|�?10,000|\n\n---\n\n## 8. 执行里程碑\n1. D-3 (10-07)：脚本确�?& 日历锁定  \n2. D-2 �?D0：集中拍�? \n3. Week 1  发布启动 + 数据看板上线  \n4. Week 2  首轮复盘 & 调整钩子  \n5. Week 4  总结报告 + Q2 目标规划  \n\n---\n\n### 👉 下一步\n请确认本蓝图中：\n�?目标 & KPI  \n�?拍摄场景 & 素材�? \n�?预算\n\n如无异议，回�?“确认�?即可进入执行，并自动存档至项目系统�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760338761622
@@ -5850,7 +5852,7 @@ INSERT INTO "redis_queue_messages" VALUES('10c187d5-3c56-4896-b838-49a2ae379fe0'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 您的专属《出海视频获客战略蓝图》已生成并发送！  \n2. 确认无误后，请回复“确认”，即可按此计划开干。  \n3. 祝高效出海，订单多多！",
+    "text": "1. 您的专属《出海视频获客战略蓝图》已生成并发送！  \n2. 确认无误后，请回复“确认”，即可按此计划开干�? \n3. 祝高效出海，订单多多�?,
     "data": {
       "video_link": ""
     }
@@ -5867,7 +5869,7 @@ INSERT INTO "redis_queue_messages" VALUES('5cd6a22a-f115-42da-881d-deba9c097e8b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。\n为了开始流程，我需要先为您查询目前还需拍摄多少测试视频。\n如果您想了解，请回复“是”，我将立即为您检查并告知数量。",
+    "text": "您好！欢迎使用智能视频创作助手。\n为了开始流程，我需要先为您查询目前还需拍摄多少测试视频。\n如果您想了解，请回复“是”，我将立即为您检查并告知数量�?,
     "data": {
       "video_link": ""
     }
@@ -5884,7 +5886,7 @@ INSERT INTO "redis_queue_messages" VALUES('47725d2c-bbd7-46fb-af52-c281bdbdf192'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。  \n2.为了帮您打造让客户主动找上门的视频，请先提供以下资料：  \n  • 公司官网链接  \n  • 核心产品介绍（可上传图片 / PDF）  \n  • 公司简介或画册（若有）  \n我会先快速浏览，减少您的输入时间，再给您精准的问题，生成全新视频战略蓝图。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧�? \n2.为了帮您打造让客户主动找上门的视频，请先提供以下资料：  \n  �?公司官网链接  \n  �?核心产品介绍（可上传图片 / PDF�? \n  �?公司简介或画册（若有）  \n我会先快速浏览，减少您的输入时间，再给您精准的问题，生成全新视频战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -5901,7 +5903,7 @@ INSERT INTO "redis_queue_messages" VALUES('26e69f2b-59e2-4d0f-b4c0-7f6a0e4c4021'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "感谢您提供公司官网。为了正式进入视频创作流程，我需要先确认目前还需拍摄多少测试视频。如果您希望我立即为您查询并告知，请回复“是”。如有其他需求，也请告诉我，我会相应调整后续步骤。",
+    "text": "感谢您提供公司官网。为了正式进入视频创作流程，我需要先确认目前还需拍摄多少测试视频。如果您希望我立即为您查询并告知，请回复“是”。如有其他需求，也请告诉我，我会相应调整后续步骤�?,
     "data": {
       "video_link": "http://www.aokledlight.com"
     }
@@ -5912,7 +5914,7 @@ INSERT INTO "redis_queue_messages" VALUES('d9d80d74-9adc-4526-851e-a0a437537ac1'
   "env": "gray",
   "session_id": "7a2cb4e0-2f5d-42a8-8118-e4cacd1d2990",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "b26387f1-f501-4e39-9afc-ae7211e1fa5f",
   "socket_id": "NXAWurTkJz6Ggz9aAAAt",
   "status": "RUNNING",
@@ -5928,7 +5930,7 @@ INSERT INTO "redis_queue_messages" VALUES('94e9efa3-933e-4871-a144-704b9f06d389'
   "request_id": "b26387f1-f501-4e39-9afc-ae7211e1fa5f",
   "socket_id": "NXAWurTkJz6Ggz9aAAAt",
   "status": "FINISHED",
-  "content": {"data":"# AOK LED Light 出海视频获客《战略蓝图 5.0》\n\n> 本版基于历史 4 版蓝图 + 官网最新信息一次性整合升级，直接可落地执行\n\n----------------------------------------------------------------\n## 1. 30 天增长目标 (KPI)\n- 累计曝光 ≥ **600,000** (TikTok / YouTube Shorts / LinkedIn)  \n- B2B 高质量线索 ≥ **250** (邮箱、WhatsApp、LinkedIn DM)  \n- 视频完播率 ≥ **38%**，互动率 ≥ **7%**  \n- 询盘→报价转化率 ≥ **18%**\n\n----------------------------------------------------------------\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 账号 | 地域/语言 | 发布频次 | 30 天合计 |\n| --- | --- | --- | --- | --- |\n| TikTok | 2 | 美区 / 东南亚 | 1 条 / 日 / 号 | 60 |\n| YouTube Shorts | 2 | EN / CN | 1 条 / 日 / 号 | 60 |\n| LinkedIn | 2 | 公司页 / 销售个人号 | 1 条 / 日 / 号 | 60 |\n| **合计** | **6** | | **6 条/天** | **180** |\n\n----------------------------------------------------------------\n## 3. 素材需求计算\n- AI 可裂变剪辑倍数≈ **10×**  \n- 要产出 180 条发布内容 → 需 **18 组原始素材**/周  \n- 拍摄时长：2 天即可完成 4 周所需 **72 组素材**  \n- 每组 = 1 场景 × 3 机位 (横/竖/特写) × 20–30 秒  \n- 设备：手机 4K + 云台 + 领夹麦; 后期用 CapCut / Runway 批量剪字幕、配乐\n\n----------------------------------------------------------------\n## 4. 内容支柱 (6 大方向)\n1. 工厂探秘  \n   - 镜头：SMT 贴片线、老化房、IES 实验室  \n   - Hook：Why our LED lights last 10 years?  \n2. 产品测评  \n   - 镜头：150W 高棚灯 vs 400W 金卤灯 同场对比  \n   - Hook：Save 70% energy in 60 sec  \n3. 客户案例  \n   - 镜头：悉尼港口 400W 投光灯亮灯前后  \n   - Hook：From dark to daylight  \n4. 对比实验  \n   - 镜头：IP66 喷水测试 / IK10 重锤测试  \n   - Hook：Will it survive?  \n5. 安装指南  \n   - 镜头：UFO High Bay 10 分钟更换  \n   - Hook：Install like LEGO  \n6. 行业科普  \n   - 镜头：工程师解读 UL / DLC  \n   - Hook：DLC Premium in 90 sec  \n\n----------------------------------------------------------------\n## 5. 30 天脚本日历 (示例前 7 天)\n| Day | 平台/账号 | 内容支柱 | 视频标题 (英) | 主要镜头 & 配乐 | CTA |\n| --- | --- | --- | --- | --- | --- |\n| 1 | TikTok#US | 工厂探秘 | 10-Year LED Secret | 贴片线+老化房+Logo close-up | Comment PDF |\n| 1 | YT Shorts EN | 产品测评 | 400W to 150W | 对比光通&电表 | Get Free Dialux |\n| 1 | LinkedIn 公司 | 行业科普 | What is DLC P? | 工程师讲解+字幕 | Download Catalog |\n| 2 | ... | 对比实验 | IP66 Water Fight | 高压喷水+慢动作 | Ask Price |\n| 3 | ... | 客户案例 | Port Before/After | 船吊+照度仪 | Book a Call |\n| 4 | ... | 安装指南 | High Bay Swap | 顶装+时钟加速 | WhatsApp Now |\n| 5 | ... | 工厂探秘 | Aging 72H | 老化架跑灯+温度枪 | Free Sample |\n| 6 | ... | 产品测评 | Explosion Test | IK10 重锤+慢镜头 | Get Quote |\n| 7 | ... | 行业科普 | UL vs CE | 标准LOGO + 工程师 | Follow Us |\n\n(完整 30 天日历 & 180 条脚本已写入后台)\n\n----------------------------------------------------------------\n## 6. 推广与转化闭环\n- Spark Ads / Shorts Ads: 预算 **US$500**/月，专投完播率>40%的视频  \n- CTA 统一：评论关键词自动私信 Catalog；Bio Link → WhatsApp & HubSpot 表单  \n- 线索跟进：7 天 3 封邮件 (案例 / 选型指南 / 报价表)\n\n----------------------------------------------------------------\n## 7. 资源&预算 (RMB)\n1. 拍摄 (2 人×2 天) ………………… 5,000  \n2. AI 软件订阅 ………………………… 1,000  \n3. 广告加热 ……………………………… 3,500  \n4. 机动 / 备用 …………………………… 500  \n**Total ≈ 10,000**\n\n----------------------------------------------------------------\n## 8. 里程碑\nDay 1–2  拍摄 & 素材入库  \nDay 3–6  AI 剪辑首批 36 条，投放小预算测试  \nDay 7–14  持续发布 + 数据复盘，放大爆款  \nDay 15–20  二轮拍摄补热点，线索破 150  \nDay 21–30  全面冲刺 KPI & ROI 复盘  \n\n----------------------------------------------------------------\n✅ 以上即为《战略蓝图 5.0》全部要点。"},
+  "content": {"data":"# AOK LED Light 出海视频获客《战略蓝�?5.0》\n\n> 本版基于历史 4 版蓝�?+ 官网最新信息一次性整合升级，直接可落地执行\n\n----------------------------------------------------------------\n## 1. 30 天增长目�?(KPI)\n- 累计曝光 �?**600,000** (TikTok / YouTube Shorts / LinkedIn)  \n- B2B 高质量线�?�?**250** (邮箱、WhatsApp、LinkedIn DM)  \n- 视频完播�?�?**38%**，互动率 �?**7%**  \n- 询盘→报价转化率 �?**18%**\n\n----------------------------------------------------------------\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 账号 | 地域/语言 | 发布频次 | 30 天合�?|\n| --- | --- | --- | --- | --- |\n| TikTok | 2 | 美区 / 东南�?| 1 �?/ �?/ �?| 60 |\n| YouTube Shorts | 2 | EN / CN | 1 �?/ �?/ �?| 60 |\n| LinkedIn | 2 | 公司�?/ 销售个人号 | 1 �?/ �?/ �?| 60 |\n| **合计** | **6** | | **6 �?�?* | **180** |\n\n----------------------------------------------------------------\n## 3. 素材需求计算\n- AI 可裂变剪辑倍数�?**10×**  \n- 要产�?180 条发布内�?�?需 **18 组原始素�?*/�? \n- 拍摄时长�? 天即可完�?4 周所需 **72 组素�?*  \n- 每组 = 1 场景 × 3 机位 (�?�?特写) × 20�?0 �? \n- 设备：手�?4K + 云台 + 领夹�? 后期�?CapCut / Runway 批量剪字幕、配乐\n\n----------------------------------------------------------------\n## 4. 内容支柱 (6 大方�?\n1. 工厂探秘  \n   - 镜头：SMT 贴片线、老化房、IES 实验�? \n   - Hook：Why our LED lights last 10 years?  \n2. 产品测评  \n   - 镜头�?50W 高棚�?vs 400W 金卤�?同场对比  \n   - Hook：Save 70% energy in 60 sec  \n3. 客户案例  \n   - 镜头：悉尼港�?400W 投光灯亮灯前�? \n   - Hook：From dark to daylight  \n4. 对比实验  \n   - 镜头：IP66 喷水测试 / IK10 重锤测试  \n   - Hook：Will it survive?  \n5. 安装指南  \n   - 镜头：UFO High Bay 10 分钟更换  \n   - Hook：Install like LEGO  \n6. 行业科普  \n   - 镜头：工程师解读 UL / DLC  \n   - Hook：DLC Premium in 90 sec  \n\n----------------------------------------------------------------\n## 5. 30 天脚本日�?(示例�?7 �?\n| Day | 平台/账号 | 内容支柱 | 视频标题 (�? | 主要镜头 & 配乐 | CTA |\n| --- | --- | --- | --- | --- | --- |\n| 1 | TikTok#US | 工厂探秘 | 10-Year LED Secret | 贴片�?老化�?Logo close-up | Comment PDF |\n| 1 | YT Shorts EN | 产品测评 | 400W to 150W | 对比光�?电表 | Get Free Dialux |\n| 1 | LinkedIn 公司 | 行业科普 | What is DLC P? | 工程师讲�?字幕 | Download Catalog |\n| 2 | ... | 对比实验 | IP66 Water Fight | 高压喷水+慢动�?| Ask Price |\n| 3 | ... | 客户案例 | Port Before/After | 船吊+照度�?| Book a Call |\n| 4 | ... | 安装指南 | High Bay Swap | 顶装+时钟加�?| WhatsApp Now |\n| 5 | ... | 工厂探秘 | Aging 72H | 老化架跑�?温度�?| Free Sample |\n| 6 | ... | 产品测评 | Explosion Test | IK10 重锤+慢镜�?| Get Quote |\n| 7 | ... | 行业科普 | UL vs CE | 标准LOGO + 工程�?| Follow Us |\n\n(完整 30 天日�?& 180 条脚本已写入后台)\n\n----------------------------------------------------------------\n## 6. 推广与转化闭环\n- Spark Ads / Shorts Ads: 预算 **US$500**/月，专投完播�?40%的视�? \n- CTA 统一：评论关键词自动私信 Catalog；Bio Link �?WhatsApp & HubSpot 表单  \n- 线索跟进�? �?3 封邮�?(案例 / 选型指南 / 报价�?\n\n----------------------------------------------------------------\n## 7. 资源&预算 (RMB)\n1. 拍摄 (2 人�? �? ………………�?5,000  \n2. AI 软件订阅 ………………………�?1,000  \n3. 广告加热 ……………………………�?3,500  \n4. 机动 / 备用 …………………………�?500  \n**Total �?10,000**\n\n----------------------------------------------------------------\n## 8. 里程碑\nDay 1�?  拍摄 & 素材入库  \nDay 3�?  AI 剪辑首批 36 条，投放小预算测�? \nDay 7�?4  持续发布 + 数据复盘，放大爆�? \nDay 15�?0  二轮拍摄补热点，线索�?150  \nDay 21�?0  全面冲刺 KPI & ROI 复盘  \n\n----------------------------------------------------------------\n�?以上即为《战略蓝�?5.0》全部要点�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760340014023
@@ -5943,7 +5945,7 @@ INSERT INTO "redis_queue_messages" VALUES('d3442fc9-fd4a-47f2-a473-8700cecd3a1d'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1.您的专属《AOK LED Light 出海视频获客战略蓝图 5.0》已生成并推送完毕！  \n2.接下来即可按图开干，祝您 30 天快速拿下全球高质量客户！",
+    "text": "1.您的专属《AOK LED Light 出海视频获客战略蓝图 5.0》已生成并推送完毕！  \n2.接下来即可按图开干，祝您 30 天快速拿下全球高质量客户�?,
     "data": {
       "video_link": ""
     }
@@ -5960,7 +5962,7 @@ INSERT INTO "redis_queue_messages" VALUES('dfe2106f-c647-4141-ada2-d47ab5e5a99c'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。\n\n目前我们可以先查看作战地图和待测试/爆款脚本库，了解接下来还需要合成多少个测试视频。请问您是否需要了解这一信息？如果需要，请回复“需要查看”，我将立即为您提取数据。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。\n\n目前我们可以先查看作战地图和待测�?爆款脚本库，了解接下来还需要合成多少个测试视频。请问您是否需要了解这一信息？如果需要，请回复“需要查看”，我将立即为您提取数据�?,
     "data": {
       "video_link": ""
     }
@@ -5977,7 +5979,7 @@ INSERT INTO "redis_queue_messages" VALUES('1b9d0729-e6d0-45f3-88bf-8c647a880a61'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了更快帮您梳理并优化“战略蓝图”，可否先请您提供以下信息？  \n   ① 官网链接  \n   ② 产品/服务介绍文档（PDF、Word、PPT 均可）  \n   ③ 公司简介或宣传册图片  \n\n2. 您可以直接把文件或链接发给我，我会先自动分析，尽量减少您后续输入的时间。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了更快帮您梳理并优化“战略蓝图”，可否先请您提供以下信息？  \n   �?官网链接  \n   �?产品/服务介绍文档（PDF、Word、PPT 均可�? \n   �?公司简介或宣传册图�? \n\n2. 您可以直接把文件或链接发给我，我会先自动分析，尽量减少您后续输入的时间�?,
     "data": {
       "video_link": ""
     }
@@ -5994,7 +5996,7 @@ INSERT INTO "redis_queue_messages" VALUES('77affda2-c1e3-48b6-81a6-9d1ec27b2c46'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "感谢您提供公司官网链接！\n\n接下来，如需继续视频创作流程，我可以先为您提取作战地图和待测试素材数量，计算您目前还需要合成多少测试视频。\n\n请您确认是否需要我执行这一步。如需查看，请回复“需要查看”，我将立即为您提取数据并进入下一步。",
+    "text": "感谢您提供公司官网链接！\n\n接下来，如需继续视频创作流程，我可以先为您提取作战地图和待测试素材数量，计算您目前还需要合成多少测试视频。\n\n请您确认是否需要我执行这一步。如需查看，请回复“需要查看”，我将立即为您提取数据并进入下一步�?,
     "data": {
       "video_link": ""
     }
@@ -6005,7 +6007,7 @@ INSERT INTO "redis_queue_messages" VALUES('d5f31462-a204-4e5c-8516-967a4bdd380a'
   "env": "gray",
   "session_id": "f24ff000-e8f2-4c34-9fce-d4cb64c4e1ec",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "4a28e29b-1909-4cc0-991e-d79201a536d8",
   "socket_id": "Jr1BuzP2E0yP3-1hAAAv",
   "status": "RUNNING",
@@ -6021,7 +6023,7 @@ INSERT INTO "redis_queue_messages" VALUES('55755819-fcbf-48bd-83b1-59450f9b15a6'
   "request_id": "4a28e29b-1909-4cc0-991e-d79201a536d8",
   "socket_id": "Jr1BuzP2E0yP3-1hAAAv",
   "status": "FINISHED",
-  "content": {"data":"# AOK LED Light · 出海视频获客战略蓝图 V6.0\n\n（仅供内部执行，请勿外传）\n\n## 1. 战略目标（60 天）\n1. 视频曝光：≥ 600,000 次\n2. 商机线索：≥ 300 条（邮箱 / WhatsApp / LinkedIn InMail）\n3. 询盘成本（CPL）：≤ 30 RMB / 条\n4. 品牌搜索量：提升 3×（Google & LinkedIn Brand Mentions）\n\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 账号数量 | 账号定位 | 发布频次 | 60 天合计 |\n|------|----------|----------|----------|-----------|\n| TikTok | 2（美区 / 东南亚区） | 技术科普型 / 工厂硬核型 | 1 条 / 天 | 120 条 |\n| YouTube Shorts | 2（英文主频道 / 中文技术频道） | 应用案例型 / 拆机评测型 | 1 条 / 天 | 120 条 |\n| LinkedIn | 2（公司页 / 销售个人号） | 行业洞察型 / 解决方案型 | 1 条 / 天 | 120 条 |\n| 合计 | 6 | —— | —— | **360 条** |\n\n说明：所有账号内容源于同一批原生素材，经 AI 剪辑裂变为不同版本（配音 / 字幕 / 开头钩⼦差异化）。\n\n## 3. 视频产量测算\n• 目标 360 条短视频（15 – 60 秒）\n• AI 裂变系数 ≈ 5×（同一组素材生成 5 个变体）\n➜ 需拍摄原生短片 ≈ 360 ÷ 5 = **72 条原片**\n\n## 4. 源素材拍摄计划\n每周 6 大场景 × 3 机位 × 4 周 ≈ **72 组镜头**\n\n1. 工厂探秘：SMT 产线、老化房、IES 测试\n2. 产品测评：150 lm/W 对比 HPS 灯，热成像散热测试\n3. 客户案例：港口 400 W 投光灯、仓库 150 W UFO 灯\n4. 对比实验：IP66 淋雨、IK10 冲击、耐盐雾 500 h\n5. 安装指南：高杆灯一体吊装、UFO 吊链安装\n6. 行业科普：DLC Premium 解释、ROI 节能计算\n\n执行方式：\n• 拍摄⼯作⽇ 2 天完成 72 组镜头；\n• 2 台手机 + 1 台 GoPro 固定机位；\n• 全程竖屏 4K 30fps；\n• 现场同声录⾳ + 环境音，便于后期降噪提取。\n\n## 5. 内容支柱（6 Pillars）\n1. Factory Insider（工厂硬核幕后）\n2. Product Teardown & Test（拆机测评）\n3. Case Study Spotlight（客户案例）\n4. Energy-Saving Challenge（节能对比实验）\n5. Installation How-to（安装教程）\n6. LED Lighting 101（行业科普 / 术语）\n\n## 6. 核心脚本模板（示例）\n\n### Pillar 2 · Product Teardown\n- 镜头 1 开场钩⼦（0-3 秒）\n  「为什么这盏 240 W 高湾灯可以省电 70%？」\n- 镜头 2 拆解（4-10 秒）\n  近景特写 + 上盖拆卸，展示散热鳍片\n- 镜头 3 数据对比（11-20 秒）\n  表格叠画：AOK 170 lm/W vs 传统 90 lm/W\n- 镜头 4 CTA（21-25 秒）\n  「想获取完整参数表，评论或私信『HB170』！」\n\n### Pillar 3 · Case Study\n- 镜头 1 航拍港口夜景切入\n- 镜头 2 对比亮灯前后\n- 镜头 3 客户采访问答（字幕叠加）\n- 镜头 4 质保 & ROI 展示\n- 镜头 5 CTA：下载案例 PDF\n\n（其余 4 类脚本见附件《Shot-List .xlsx》）\n\n## 7. 30-Day 发布日历（滚动循环两轮）\n周一 Factory Insider 周二 Teardown 周三 Case Study 周四 Challenge 周五 How-to 周六 LED101 周日 混剪回顾 / 直播预告\n\n## 8. 资源配置 & 预算\n• 人员：1 营销运营 + 1 拍摄助理（兼职）\n• 工具：CapCut Pro、Descript、ChatGPT Plus、VidIQ（预算 1,200 RMB/月）\n• 推广：TikTok Spark Ads / LinkedIn Sponsored Post 合计 6,000 RMB\n• 拍摄设备租赁 & 杂费：2,800 RMB\n➜ 总预算 ≈ **10,000 RMB**\n\n## 9. KPI 追踪仪表盘\n1. 曝光 / 播放量（日 & 周）\n2. 完播率、点赞率、评论率、CTR\n3. 私信关键词「报价 / Datasheet」次数\n4. 跳转官网会话数（UTM）\n5. 线索来源拆分（TikTok / YT / LinkedIn）\n\n## 10. 风险 & 备份\n• 账号封禁风险：准备 4 组备用海外 IP 与邮箱\n• 审核风险：避免 “灯珠功率虚标”等敏感 claim\n• 素材不足：如当周拍摄受阻，以库⽤案例照片制作 Motion Video 进行补位\n\n---\n「您的专属视频获客战略已经生成！按照此蓝图，即刻开拍，60 天后收获全球 B2B 商机！」"},
+  "content": {"data":"# AOK LED Light · 出海视频获客战略蓝图 V6.0\n\n（仅供内部执行，请勿外传）\n\n## 1. 战略目标�?0 天）\n1. 视频曝光：≥ 600,000 次\n2. 商机线索：≥ 300 条（邮箱 / WhatsApp / LinkedIn InMail）\n3. 询盘成本（CPL）：�?30 RMB / 条\n4. 品牌搜索量：提升 3×（Google & LinkedIn Brand Mentions）\n\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 账号数量 | 账号定位 | 发布频次 | 60 天合�?|\n|------|----------|----------|----------|-----------|\n| TikTok | 2（美�?/ 东南亚区�?| 技术科普型 / 工厂硬核�?| 1 �?/ �?| 120 �?|\n| YouTube Shorts | 2（英文主频道 / 中文技术频道） | 应用案例�?/ 拆机评测�?| 1 �?/ �?| 120 �?|\n| LinkedIn | 2（公司页 / 销售个人号�?| 行业洞察�?/ 解决方案�?| 1 �?/ �?| 120 �?|\n| 合计 | 6 | —�?| —�?| **360 �?* |\n\n说明：所有账号内容源于同一批原生素材，�?AI 剪辑裂变为不同版本（配音 / 字幕 / 开头钩⼦差异化）。\n\n## 3. 视频产量测算\n�?目标 360 条短视频�?5 �?60 秒）\n�?AI 裂变系数 �?5×（同一组素材生�?5 个变体）\n�?需拍摄原生短片 �?360 ÷ 5 = **72 条原�?*\n\n## 4. 源素材拍摄计划\n每周 6 大场�?× 3 机位 × 4 �?�?**72 组镜�?*\n\n1. 工厂探秘：SMT 产线、老化房、IES 测试\n2. 产品测评�?50 lm/W 对比 HPS 灯，热成像散热测试\n3. 客户案例：港�?400 W 投光灯、仓�?150 W UFO 灯\n4. 对比实验：IP66 淋雨、IK10 冲击、耐盐�?500 h\n5. 安装指南：高杆灯一体吊装、UFO 吊链安装\n6. 行业科普：DLC Premium 解释、ROI 节能计算\n\n执行方式：\n�?拍摄⼯作�?2 天完�?72 组镜头；\n�?2 台手�?+ 1 �?GoPro 固定机位；\n�?全程竖屏 4K 30fps；\n�?现场同声录⾳ + 环境音，便于后期降噪提取。\n\n## 5. 内容支柱�? Pillars）\n1. Factory Insider（工厂硬核幕后）\n2. Product Teardown & Test（拆机测评）\n3. Case Study Spotlight（客户案例）\n4. Energy-Saving Challenge（节能对比实验）\n5. Installation How-to（安装教程）\n6. LED Lighting 101（行业科�?/ 术语）\n\n## 6. 核心脚本模板（示例）\n\n### Pillar 2 · Product Teardown\n- 镜头 1 开场钩⼦（0-3 秒）\n  「为什么这�?240 W 高湾灯可以省�?70%？」\n- 镜头 2 拆解�?-10 秒）\n  近景特写 + 上盖拆卸，展示散热鳍片\n- 镜头 3 数据对比�?1-20 秒）\n  表格叠画：AOK 170 lm/W vs 传统 90 lm/W\n- 镜头 4 CTA�?1-25 秒）\n  「想获取完整参数表，评论或私信『HB170』！」\n\n### Pillar 3 · Case Study\n- 镜头 1 航拍港口夜景切入\n- 镜头 2 对比亮灯前后\n- 镜头 3 客户采访问答（字幕叠加）\n- 镜头 4 质保 & ROI 展示\n- 镜头 5 CTA：下载案�?PDF\n\n（其�?4 类脚本见附件《Shot-List .xlsx》）\n\n## 7. 30-Day 发布日历（滚动循环两轮）\n周一 Factory Insider 周�?Teardown 周�?Case Study 周�?Challenge 周�?How-to 周�?LED101 周�?混剪回顾 / 直播预告\n\n## 8. 资源配置 & 预算\n�?人员�? 营销运营 + 1 拍摄助理（兼职）\n�?工具：CapCut Pro、Descript、ChatGPT Plus、VidIQ（预�?1,200 RMB/月）\n�?推广：TikTok Spark Ads / LinkedIn Sponsored Post 合计 6,000 RMB\n�?拍摄设备租赁 & 杂费�?,800 RMB\n�?总预�?�?**10,000 RMB**\n\n## 9. KPI 追踪仪表盘\n1. 曝光 / 播放量（�?& 周）\n2. 完播率、点赞率、评论率、CTR\n3. 私信关键词「报�?/ Datasheet」次数\n4. 跳转官网会话数（UTM）\n5. 线索来源拆分（TikTok / YT / LinkedIn）\n\n## 10. 风险 & 备份\n�?账号封禁风险：准�?4 组备用海�?IP 与邮箱\n�?审核风险：避�?“灯珠功率虚标”等敏感 claim\n�?素材不足：如当周拍摄受阻，以库⽤案例照片制作 Motion Video 进行补位\n\n---\n「您的专属视频获客战略已经生成！按照此蓝图，即刻开拍，60 天后收获全球 B2B 商机！�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760341112674
@@ -6053,7 +6055,7 @@ INSERT INTO "redis_queue_messages" VALUES('1f4e7a06-aeb6-4192-8103-6d337151318c'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，根据最新作战地图：\n• 待制作视频脚本：1 个\n• 今日已准备发布：0 条视频\n\n现在请您在脚本库中选择要先制作的文案编号（例如 1、2……）。回复编号后，我将为该文案生成 10 份拍摄脚本，供您进一步挑选。",
+    "text": "好的，根据最新作战地图：\n�?待制作视频脚本：1 个\n�?今日已准备发布：0 条视频\n\n现在请您在脚本库中选择要先制作的文案编号（例如 1�?……）。回复编号后，我将为该文案生�?10 份拍摄脚本，供您进一步挑选�?,
     "data": {
       "video_link": ""
     }
@@ -6070,7 +6072,7 @@ INSERT INTO "redis_queue_messages" VALUES('272932ec-b801-432d-9ba8-3019711f8408'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图：\n• 待制作视频脚本：1 个\n• 今日已准备发布：0 条视频\n\n请从脚本库中选择要先制作的文案编号（目前可选编号：1）。\n回复编号后，我将为该文案生成 10 份拍摄脚本供您挑选。",
+    "text": "根据最新作战地图：\n�?待制作视频脚本：1 个\n�?今日已准备发布：0 条视频\n\n请从脚本库中选择要先制作的文案编号（目前可选编号：1）。\n回复编号后，我将为该文案生成 10 份拍摄脚本供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -6087,7 +6089,7 @@ INSERT INTO "redis_queue_messages" VALUES('b7ca0f2f-4ca5-4108-9ee3-8f88fdb3438a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图，目前待合成测试视频数量：1 个。\n\n接下来，请从待制作视频文案中选择要优先合成的编号（目前仅有 1 条可选，回复“1”即可）。收到您的选择后，我将为您生成对应的 10 份拍摄脚本，供您挑选。\n\n请回复编号进行下一步操作。",
+    "text": "根据最新作战地图，目前待合成测试视频数量：1 个。\n\n接下来，请从待制作视频文案中选择要优先合成的编号（目前仅�?1 条可选，回复�?”即可）。收到您的选择后，我将为您生成对应�?10 份拍摄脚本，供您挑选。\n\n请回复编号进行下一步操作�?,
     "data": {
       "video_link": ""
     }
@@ -6104,7 +6106,7 @@ INSERT INTO "redis_queue_messages" VALUES('efb7edd7-08ff-461f-b7e0-ea991619672b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图：\n1) 待制作视频脚本：1 个\n2) 今日已准备发布：0 条视频\n\n也就是说，目前还需要合成 1 个测试视频。\n\n文案库中仅有 1 条待制作文案，若您确认使用，请直接回复数字 “1”。\n\n收到您的编号后，我将为该文案生成 10 份拍摄脚本，供您挑选。",
+    "text": "根据最新作战地图：\n1) 待制作视频脚本：1 个\n2) 今日已准备发布：0 条视频\n\n也就是说，目前还需要合�?1 个测试视频。\n\n文案库中仅有 1 条待制作文案，若您确认使用，请直接回复数�?�?”。\n\n收到您的编号后，我将为该文案生成 10 份拍摄脚本，供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -6121,7 +6123,7 @@ INSERT INTO "redis_queue_messages" VALUES('fec320e5-82fd-408d-8463-ddca6934085c'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案，我已生成拍摄脚本如下：\n\n1. 核心卖点：AOK 深圳智造，专注高功率 LED 13 年；UFO 工矿灯、模组路灯、球场泛光灯光效 170 lm/W；IP66+IK08 防护，0-10 V/DALI 智能调光可接入 Zigbee；5-10 年原厂质保；节能 70%，安装维护成本低，百万套照亮 80+ 国家大型仓储/港口/球场/街区。\n   • 结构：人物出镜（工厂大门/设备/装柜），多段走位镜头，搭配字幕突出技术参数与应用场景。\n   • 配乐：原创音乐。\n   • 话题标签：#aokled #ledlighting #industriallighting #highbay #stadiumlight\n\n目前仅生成 1 份可用脚本。如您满意并希望立即合成视频，请回复“1”。若需重新生成更多脚本，请告诉我，我将为您再次调用脚本生成器。\n\n请回复编号进行下一步操作。",
+    "text": "好的，基于您选择的文案，我已生成拍摄脚本如下：\n\n1. 核心卖点：AOK 深圳智造，专注高功�?LED 13 年；UFO 工矿灯、模组路灯、球场泛光灯光效 170 lm/W；IP66+IK08 防护�?-10 V/DALI 智能调光可接�?Zigbee�?-10 年原厂质保；节能 70%，安装维护成本低，百万套照亮 80+ 国家大型仓储/港口/球场/街区。\n   �?结构：人物出镜（工厂大门/设备/装柜），多段走位镜头，搭配字幕突出技术参数与应用场景。\n   �?配乐：原创音乐。\n   �?话题标签�?aokled #ledlighting #industriallighting #highbay #stadiumlight\n\n目前仅生�?1 份可用脚本。如您满意并希望立即合成视频，请回复�?”。若需重新生成更多脚本，请告诉我，我将为您再次调用脚本生成器。\n\n请回复编号进行下一步操作�?,
     "data": {
       "video_link": ""
     }
@@ -6138,7 +6140,7 @@ INSERT INTO "redis_queue_messages" VALUES('9c9b3492-57a5-47f0-b765-36923ec175d3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案，我已为您生成了 1 份拍摄脚本（因素材限制仅生成 1 份）。请查看脚本摘要并选择是否使用。\n\n1. 【脚本摘要】\n   • 主线：展示 AOK 高功率 LED 照明产品的核心卖点（170lm/W 光效、IP66+IK08 防护、0-10V/DALI 调光、5-10 年质保）。\n   • 场景：工厂大门、生产线、装柜发货、海外项目现场（仓储、球场、港口）。\n   • 分镜：\n     - 开场：品牌 LOGO＋工厂外景，旁白提及 13 年专注 LED 高功率照明。\n     - 中段：UFO 工矿灯、模组路灯、球场灯产品特写，叠加性能参数。\n     - 结尾：全球 80+ 国家项目案例快闪＋ CTA（联系获取免费照明方案）。\n   • 拍摄手法：整体稳拍＋局部推拉，字幕随产品参数出现，背景原创音乐。\n\n如果您满意并希望用此脚本直接合成视频，请回复数字 “1”。\n\n收到您的确认后，我将立即为您合成视频并发送预览链接。",
+    "text": "好的，基于您选择的文案，我已为您生成�?1 份拍摄脚本（因素材限制仅生成 1 份）。请查看脚本摘要并选择是否使用。\n\n1. 【脚本摘要】\n   �?主线：展�?AOK 高功�?LED 照明产品的核心卖点（170lm/W 光效、IP66+IK08 防护�?-10V/DALI 调光�?-10 年质保）。\n   �?场景：工厂大门、生产线、装柜发货、海外项目现场（仓储、球场、港口）。\n   �?分镜：\n     - 开场：品牌 LOGO＋工厂外景，旁白提及 13 年专�?LED 高功率照明。\n     - 中段：UFO 工矿灯、模组路灯、球场灯产品特写，叠加性能参数。\n     - 结尾：全�?80+ 国家项目案例快闪�?CTA（联系获取免费照明方案）。\n   �?拍摄手法：整体稳拍＋局部推拉，字幕随产品参数出现，背景原创音乐。\n\n如果您满意并希望用此脚本直接合成视频，请回复数字 �?”。\n\n收到您的确认后，我将立即为您合成视频并发送预览链接�?,
     "data": {
       "video_link": ""
     }
@@ -6155,7 +6157,7 @@ INSERT INTO "redis_queue_messages" VALUES('389c2be0-1d9e-468d-bbf7-388aa7044d69'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，视频合成时出现网络或服务异常，暂未成功生成可预览的视频链接。\n\n是否需要我立即为您重试视频合成？请回复“重试”或告知其他指示。",
+    "text": "抱歉，视频合成时出现网络或服务异常，暂未成功生成可预览的视频链接。\n\n是否需要我立即为您重试视频合成？请回复“重试”或告知其他指示�?,
     "data": {
       "video_link": ""
     }
@@ -6172,7 +6174,7 @@ INSERT INTO "redis_queue_messages" VALUES('7cb7149e-5f5f-4c4f-bdcf-d8d027f4428f'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "【作战地图更新】\n• 待制作视频脚本：1 个\n• 今日已准备发布：0 条视频\n\n目前仅有 1 条待制作视频文案，编号如下：\n1. 【视频文案 #1】AOK 深圳智造，专注高功率 LED 13 年；UFO 工矿灯、模组路灯、球场泛光灯光效 170 lm/W；IP66+IK08 防护，0-10 V/DALI 智能调光可接入 Zigbee；5-10 年原厂质保；节能 70%，安装维护成本低，百万套照亮 80+ 国家大型仓储/港口/球场/街区。\n\n请回复编号 “1” 确认使用该文案。我将立即为其生成 10 份拍摄脚本，供您挑选。",
+    "text": "【作战地图更新】\n�?待制作视频脚本：1 个\n�?今日已准备发布：0 条视频\n\n目前仅有 1 条待制作视频文案，编号如下：\n1. 【视频文�?#1】AOK 深圳智造，专注高功�?LED 13 年；UFO 工矿灯、模组路灯、球场泛光灯光效 170 lm/W；IP66+IK08 防护�?-10 V/DALI 智能调光可接�?Zigbee�?-10 年原厂质保；节能 70%，安装维护成本低，百万套照亮 80+ 国家大型仓储/港口/球场/街区。\n\n请回复编�?�?�?确认使用该文案。我将立即为其生�?10 份拍摄脚本，供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -6189,7 +6191,7 @@ INSERT INTO "redis_queue_messages" VALUES('633d26fd-4ed7-49bc-9db3-d252287e1ef5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，刚刚在调用后端生成视频时出现网络异常，合成未成功。\n\n是否需要我立即重试视频合成？如需重试，请回复“重试”；如有其他调整需求也请告诉我。",
+    "text": "抱歉，刚刚在调用后端生成视频时出现网络异常，合成未成功。\n\n是否需要我立即重试视频合成？如需重试，请回复“重试”；如有其他调整需求也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -6206,7 +6208,7 @@ INSERT INTO "redis_queue_messages" VALUES('e89e6d6c-7923-4ff9-8f4d-ab0775cd1bf5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，系统在合成视频时出现了网络问题，暂未成功生成视频。\n\n您希望：\n1) 重新尝试合成当前脚本（回复“重试”）\n2) 返回上一步重新选择脚本（回复“返回”）\n\n请告诉我您的选择，我将立即为您处理。",
+    "text": "抱歉，系统在合成视频时出现了网络问题，暂未成功生成视频。\n\n您希望：\n1) 重新尝试合成当前脚本（回复“重试”）\n2) 返回上一步重新选择脚本（回复“返回”）\n\n请告诉我您的选择，我将立即为您处理�?,
     "data": {
       "video_link": ""
     }
@@ -6223,7 +6225,7 @@ INSERT INTO "redis_queue_messages" VALUES('a7365481-5628-4d54-bcf2-4adae69c3ae0'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图：#• 待制作视频脚本：1 个#• 今日已准备发布：0 条视频#因此，目前我们还需要合成 1 个测试视频。#待制作视频文案如下：#1. AOK 深圳智造，专注高功率 LED 13 年；UFO 工矿灯、模组路灯、球场泛光灯光效 170 lm/W；IP66+IK08 防护，0-10 V/DALI 智能调光可接入 Zigbee；5-10 年原厂质保；节能 70%，安装维护成本低，百万套照亮 80+ 国家大型仓储/港口/球场/街区。#请回复编号 “1” 以确认使用该文案。我将为其生成 10 份拍摄脚本供您挑选。",
+    "text": "根据最新作战地图：#�?待制作视频脚本：1 �?�?今日已准备发布：0 条视�?因此，目前我们还需要合�?1 个测试视频�?待制作视频文案如下：#1. AOK 深圳智造，专注高功�?LED 13 年；UFO 工矿灯、模组路灯、球场泛光灯光效 170 lm/W；IP66+IK08 防护�?-10 V/DALI 智能调光可接�?Zigbee�?-10 年原厂质保；节能 70%，安装维护成本低，百万套照亮 80+ 国家大型仓储/港口/球场/街区�?请回复编�?�?�?以确认使用该文案。我将为其生�?10 份拍摄脚本供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -6240,7 +6242,7 @@ INSERT INTO "redis_queue_messages" VALUES('4e43592c-30da-435b-a5b7-88c655ac0d99'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，上一次视频合成因网络或服务异常未能生成预览链接。\n\n如果您希望立即重新尝试，请回复“重试”。\n如需更换脚本或终止本次流程，也请告诉我。",
+    "text": "抱歉，上一次视频合成因网络或服务异常未能生成预览链接。\n\n如果您希望立即重新尝试，请回复“重试”。\n如需更换脚本或终止本次流程，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -6257,7 +6259,7 @@ INSERT INTO "redis_queue_messages" VALUES('d76c077f-6d41-410d-a7b8-10f5b97ddbb3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。现在我可以先为您提取作战地图和待测试脚本库信息，以确定还需要合成多少个视频进行测试。请问您需要我立即执行吗？如果需要，请回复“是”，我将立即查询并告诉您结果；如果暂时不需要，也请告诉我。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。现在我可以先为您提取作战地图和待测试脚本库信息，以确定还需要合成多少个视频进行测试。请问您需要我立即执行吗？如果需要，请回复“是”，我将立即查询并告诉您结果；如果暂时不需要，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -6274,7 +6276,7 @@ INSERT INTO "redis_queue_messages" VALUES('37c3fce6-9cd4-4ca6-a1ba-a3278d2ca735'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介等（PDF、图片、文档都可以）。我会先看一遍，减少您输入的时间。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介等（PDF、图片、文档都可以）。我会先看一遍，减少您输入的时间�?,
     "data": {
       "video_link": ""
     }
@@ -6291,7 +6293,7 @@ INSERT INTO "redis_queue_messages" VALUES('8844aa47-f2f3-4a5b-b02b-0bf414dd6eb5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "查询完成！根据最新的战略蓝图：\n1) 当前待制作视频脚本库共有 1 个文案需要合成视频。\n2) 今日作战地图显示：今天尚未准备发布任何视频。\n\n也就是说，您今天至少还需要合成 1 个视频来完成测试任务。\n\n请问接下来是否要继续？\n如果要开始，请回复“1”，我将为您提取这条待制作文案并生成 10 份拍摄脚本供您选择。",
+    "text": "查询完成！根据最新的战略蓝图：\n1) 当前待制作视频脚本库共有 1 个文案需要合成视频。\n2) 今日作战地图显示：今天尚未准备发布任何视频。\n\n也就是说，您今天至少还需要合�?1 个视频来完成测试任务。\n\n请问接下来是否要继续？\n如果要开始，请回复�?”，我将为您提取这条待制作文案并生成 10 份拍摄脚本供您选择�?,
     "data": {
       "video_link": ""
     }
@@ -6308,7 +6310,7 @@ INSERT INTO "redis_queue_messages" VALUES('b278e11e-c723-48c1-ab79-a33e2befb6ca'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，我已查看当前作战地图：今日任务准备发布 0 条视频；待制作视频脚本 1 个。\n\n这意味着我们还需要合成 1 个视频来完成今天的测试目标。\n\n请问您是否要立即进入脚本选择环节？如果需要，请回复“是”，我将展示可用文案并供您选择。",
+    "text": "好的，我已查看当前作战地图：今日任务准备发布 0 条视频；待制作视频脚�?1 个。\n\n这意味着我们还需要合�?1 个视频来完成今天的测试目标。\n\n请问您是否要立即进入脚本选择环节？如果需要，请回复“是”，我将展示可用文案并供您选择�?,
     "data": {
       "video_link": ""
     }
@@ -6325,7 +6327,7 @@ INSERT INTO "redis_queue_messages" VALUES('05f97f67-798a-434f-9608-0bb56a0ff82e'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "收到您再次提供的公司网址。如果您想了解当前还需要合成多少个视频用于测试，请回复“是”，我将立即为您查询作战地图并告诉您需要完成的数量。如果暂时不需要，请告诉我您的下一步需求。",
+    "text": "收到您再次提供的公司网址。如果您想了解当前还需要合成多少个视频用于测试，请回复“是”，我将立即为您查询作战地图并告诉您需要完成的数量。如果暂时不需要，请告诉我您的下一步需求�?,
     "data": {
       "video_link": "www.aokledlight.com"
     }
@@ -6336,7 +6338,7 @@ INSERT INTO "redis_queue_messages" VALUES('d3dda63b-4ca1-47e3-8b39-145094c7cd8b'
   "env": "gray",
   "session_id": "9f951824-25b9-4e00-806e-82b3bc17049d",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "7f7091cc-9f52-425c-afb1-d32c48dce69d",
   "socket_id": "xsvsCELLwV8EEhlSAAA1",
   "status": "RUNNING",
@@ -6352,7 +6354,7 @@ INSERT INTO "redis_queue_messages" VALUES('7309f3e3-f483-403f-abcf-1dd2b30e894a'
   "request_id": "7f7091cc-9f52-425c-afb1-d32c48dce69d",
   "socket_id": "xsvsCELLwV8EEhlSAAA1",
   "status": "FINISHED",
-  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图 2024 Q4 – V6.0》\n\n---\n## 1. 战略目标\n1) 60 天内通过 12 个海外短视频账号（TikTok/YouTube Shorts/LinkedIn/Instagram Reels 各 3 个地区账号）累计发布 360 条短视频（60 条原创源视频 × AI 裂变 6 倍）。\n2) 达成 ≥ 1,000,000 次曝光、≥ 500 条高意向 B2B 询盘（着陆页或私信收集）。\n3) CPM ≤ US$8，单条询盘成本 ≤ US$15。\n\n## 2. KPI 拆解\n| 周次 | 原创源视频 | AI 裂变产出 | 单账号日均发布 | 全矩阵周总发布 |\n|------|-------------|--------------|----------------|----------------|\n| W1 – W8 | 8 支/周 | 8 × 6 = 48 支/周 | 1 条/天 | 12 账号 × 7 天 = 84 条/周 |\n\n*完成率预警*: 任一账号连续 2 天发布 < 80% 触发红灯提醒；周曝光 < 100k 触发内容迭代。\n\n## 3. 源素材拍摄需求\n1) 拍摄日排期：隔周 1 天集中拍摄（共 5 天）。\n2) 每次拍摄 8 大场景 × 3 机位 ≈ 24 组镜头；60 天需 5 × 24 = 120 组镜头。\n3) 设备：手机 4K＋无线领夹麦＋稳定器＋便携灯；全部自有即可。\n4) 场景清单（示例）\n   - S1 工厂 SMT 晶圆贴片线\n   - S2 IES 光学实验室对比测试\n   - S3 户外道路灯旧灯替换前后对比\n   - S4 12 m 仓库高棚灯安装\n   - S5 IP67 & 10G 冲击防护暴力测试\n   - S6 出口美区打包 & 加贴 UL 标签\n   - S7 客户案例采访 – 澳洲码头\n   - S8 CEO 快问快答（品牌价值）\n\n## 4. 内容支柱 & 脚本创意\nPillar 1 工厂探秘\n- 脚本 #01《90 秒带你逛 SMT 晶圆贴片线》\n  • 镜头① 航拍厂区 3 秒——Hook: “这是灯具背后的百级无尘车间”\n  • 镜头② 贴片机高速运转特写——旁白: “每小时 180,000 颗 LED”\n  • 镜头③ 质检员 AOI 检测——字幕: “100% 全检”\n  • 标题/音乐: 电子鼓点 + “Inside AOK Factory”\n- 脚本 #02《5 层老化线 72 小时满载烧机》……\n\nPillar 2 产品测评 / 对比实验\n- #03《150W UFO VS 400W 金卤灯能耗 PK》\n- #04《IP67 浸水 24h 实测》\n\nPillar 3 客户案例\n- #05《悉尼港口 800 套投光灯亮灯瞬间》\n- #06《芝加哥仓储中心节能 68%》\n\nPillar 4 行业科普\n- #07《DLC Premium 标准 3 个核心指标》\n- #08《什么是光通维持率 L70?》\n\nPillar 5 安装指南\n- #09《5 分钟完成高棚灯吊装》\n- #10《0–10V 调光接线图》\n\nPillar 6 CEO Talk / 品牌故事\n- #11《为什么我们承诺 10 年质保》\n- #12《从 2010 到 2024，AOK 的 3 次产品迭代》\n\n> 以上 12 条脚本为“源视频库”，AI 将基于字幕、B-roll 等自动生成多语种、多节奏版本。\n\n## 5. 60 天发布日历（节选）\n- 周一：工厂探秘 (#01)\n- 周二：产品测评 (#03)\n- 周三：客户案例 (#05)\n- 周四：行业科普 (#07)\n- 周五：安装指南 (#09)\n- 周六：CEO Talk (#11)\n- 周日：Best Performer 二次剪辑\n\n## 6. 制作 & 分发流程\n1) 拍摄 → 2) CapCut AI 剪辑模板 → 3) Descript 自动生成英/西/阿字幕 → 4) Metricool 排程 12 账号 → 5) Data Studio 实时监控 KPI。\n\n## 7. 资源与预算\n- 人员：1 内容负责人 + 1 拍摄助理 + 外包剪辑顾问（一周 5 小时）\n- 工具订阅：CapCut Pro、Descript、Metricool ≈ US$150/mo\n- 推广预算：TikTok Spark Ads & LinkedIn Sponsored InMail 共 US$3,000\n- 软硬件设备折旧：US$800\n- 总投入（60 天）：≈ US$5,000\n\n## 8. 风险 & 应对\n- 平台限流：多账号矩阵 + A/B 脚本快速迭代\n- 生产瓶颈：提前 2 周锁定拍摄排期，原片云端备份\n- 法规合规：产品画面仅展示已获认证型号；脚本经法务复核\n\n---\n**执行口令**：按照此蓝图立即启动拍摄排期 & 脚本库落地。\n\n> 您的专属视频获客战略已经生成！接下来即可按此计划开干！"},
+  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图 2024 Q4 �?V6.0》\n\n---\n## 1. 战略目标\n1) 60 天内通过 12 个海外短视频账号（TikTok/YouTube Shorts/LinkedIn/Instagram Reels �?3 个地区账号）累计发布 360 条短视频�?0 条原创源视频 × AI 裂变 6 倍）。\n2) 达成 �?1,000,000 次曝光、≥ 500 条高意向 B2B 询盘（着陆页或私信收集）。\n3) CPM �?US$8，单条询盘成�?�?US$15。\n\n## 2. KPI 拆解\n| 周次 | 原创源视�?| AI 裂变产出 | 单账号日均发�?| 全矩阵周总发�?|\n|------|-------------|--------------|----------------|----------------|\n| W1 �?W8 | 8 �?�?| 8 × 6 = 48 �?�?| 1 �?�?| 12 账号 × 7 �?= 84 �?�?|\n\n*完成率预�?: 任一账号连续 2 天发�?< 80% 触发红灯提醒；周曝光 < 100k 触发内容迭代。\n\n## 3. 源素材拍摄需求\n1) 拍摄日排期：隔周 1 天集中拍摄（�?5 天）。\n2) 每次拍摄 8 大场�?× 3 机位 �?24 组镜头；60 天需 5 × 24 = 120 组镜头。\n3) 设备：手�?4K＋无线领夹麦＋稳定器＋便携灯；全部自有即可。\n4) 场景清单（示例）\n   - S1 工厂 SMT 晶圆贴片线\n   - S2 IES 光学实验室对比测试\n   - S3 户外道路灯旧灯替换前后对比\n   - S4 12 m 仓库高棚灯安装\n   - S5 IP67 & 10G 冲击防护暴力测试\n   - S6 出口美区打包 & 加贴 UL 标签\n   - S7 客户案例采访 �?澳洲码头\n   - S8 CEO 快问快答（品牌价值）\n\n## 4. 内容支柱 & 脚本创意\nPillar 1 工厂探秘\n- 脚本 #01�?0 秒带你�?SMT 晶圆贴片线》\n  �?镜头�?航拍厂区 3 秒——Hook: “这是灯具背后的百级无尘车间”\n  �?镜头�?贴片机高速运转特写——旁�? “每小时 180,000 �?LED”\n  �?镜头�?质检�?AOI 检测——字�? �?00% 全检”\n  �?标题/音乐: 电子鼓点 + “Inside AOK Factory”\n- 脚本 #02�? 层老化�?72 小时满载烧机》……\n\nPillar 2 产品测评 / 对比实验\n- #03�?50W UFO VS 400W 金卤灯能�?PK》\n- #04《IP67 浸水 24h 实测》\n\nPillar 3 客户案例\n- #05《悉尼港�?800 套投光灯亮灯瞬间》\n- #06《芝加哥仓储中心节能 68%》\n\nPillar 4 行业科普\n- #07《DLC Premium 标准 3 个核心指标》\n- #08《什么是光通维持率 L70?》\n\nPillar 5 安装指南\n- #09�? 分钟完成高棚灯吊装》\n- #10�?�?0V 调光接线图》\n\nPillar 6 CEO Talk / 品牌故事\n- #11《为什么我们承�?10 年质保》\n- #12《从 2010 �?2024，AOK �?3 次产品迭代》\n\n> 以上 12 条脚本为“源视频库”，AI 将基于字幕、B-roll 等自动生成多语种、多节奏版本。\n\n## 5. 60 天发布日历（节选）\n- 周一：工厂探�?(#01)\n- 周二：产品测�?(#03)\n- 周三：客户案�?(#05)\n- 周四：行业科�?(#07)\n- 周五：安装指�?(#09)\n- 周六：CEO Talk (#11)\n- 周日：Best Performer 二次剪辑\n\n## 6. 制作 & 分发流程\n1) 拍摄 �?2) CapCut AI 剪辑模板 �?3) Descript 自动生成�?�?阿字�?�?4) Metricool 排程 12 账号 �?5) Data Studio 实时监控 KPI。\n\n## 7. 资源与预算\n- 人员�? 内容负责�?+ 1 拍摄助理 + 外包剪辑顾问（一�?5 小时）\n- 工具订阅：CapCut Pro、Descript、Metricool �?US$150/mo\n- 推广预算：TikTok Spark Ads & LinkedIn Sponsored InMail �?US$3,000\n- 软硬件设备折旧：US$800\n- 总投入（60 天）：≈ US$5,000\n\n## 8. 风险 & 应对\n- 平台限流：多账号矩阵 + A/B 脚本快速迭代\n- 生产瓶颈：提�?2 周锁定拍摄排期，原片云端备份\n- 法规合规：产品画面仅展示已获认证型号；脚本经法务复核\n\n---\n**执行口令**：按照此蓝图立即启动拍摄排期 & 脚本库落地。\n\n> 您的专属视频获客战略已经生成！接下来即可按此计划开干！"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760344327165
@@ -6367,7 +6369,7 @@ INSERT INTO "redis_queue_messages" VALUES('f73e3d69-6df0-47c6-aab9-4ea2acb4b00f'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 蓝图已生成并上传完毕！祝您拍摄顺利，流量爆单！",
+    "text": "1. 蓝图已生成并上传完毕！祝您拍摄顺利，流量爆单�?,
     "data": {
       "video_link": ""
     }
@@ -6384,7 +6386,7 @@ INSERT INTO "redis_queue_messages" VALUES('aedb9c0d-09a2-4c3f-a9bd-4a36c419c518'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用B2B智能视频创作与发布助手。您想了解当前还需要合成多少个测试视频吗？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "你好！欢迎使用B2B智能视频创作与发布助手。您想了解当前还需要合成多少个测试视频吗？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -6401,7 +6403,7 @@ INSERT INTO "redis_queue_messages" VALUES('0fda4c1b-a584-46ba-8aa3-dae29d874d36'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，请先给我一些公司资料，比如官网链接、产品介绍、公司简介文件或图片都可以。我会先快速浏览，帮您节省输入时间，然后再与您确认关键信息。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，请先给我一些公司资料，比如官网链接、产品介绍、公司简介文件或图片都可以。我会先快速浏览，帮您节省输入时间，然后再与您确认关键信息�?,
     "data": {
       "video_link": ""
     }
@@ -6418,7 +6420,7 @@ INSERT INTO "redis_queue_messages" VALUES('3b77e75a-f14c-42b1-bc81-10e7902b258e'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "感谢您提供官网信息！为了继续视频创作流程，我需要先确认当前还需要合成多少个测试视频。请问您需要我立即为您查询吗？如果需要，请回复“是”。",
+    "text": "感谢您提供官网信息！为了继续视频创作流程，我需要先确认当前还需要合成多少个测试视频。请问您需要我立即为您查询吗？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -6429,7 +6431,7 @@ INSERT INTO "redis_queue_messages" VALUES('842ceff8-8a59-4ade-b694-d02a2a486023'
   "env": "gray",
   "session_id": "ce333bb3-1260-4466-a865-91769a376aa2",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "51a38564-7266-40e3-adcd-26f7d5419f53",
   "socket_id": "xsvsCELLwV8EEhlSAAA1",
   "status": "RUNNING",
@@ -6445,7 +6447,7 @@ INSERT INTO "redis_queue_messages" VALUES('4101b90f-2e73-4f9d-8cb5-8a59abe159bc'
   "request_id": "51a38564-7266-40e3-adcd-26f7d5419f53",
   "socket_id": "xsvsCELLwV8EEhlSAAA1",
   "status": "FINISHED",
-  "content": {"data":"# AOK LED Light 出海视频获客战略蓝图 v6.0\n\n## 1. 战略目标（90 天）\n1. 覆盖曝光：1 200 000 +（TikTok / YouTube Shorts / LinkedIn / Instagram / Facebook Reels / X）\n2. 商机线索：≥ 500 条（含表单、私信、邮箱、WhatsApp）\n3. 视频产量：原创源素材 108 组 → 900 条短视频裂变 & 发布\n4. 转化指标：意向客户跟进成功率 ≥ 15 %，成交额 ≥ USD 600 000\n\n## 2. 账号矩阵（共 9 个）\n| 平台 | 区域/语言 | 账号数 | 备注 |\n|------|-----------|--------|------|\n| TikTok | 美区 EN / 东南亚 EN | 2 | 主打痛点+案例 | \n| YouTube Shorts | EN / 中英双语 | 2 | 长尾搜索 + 案例深耕 |\n| LinkedIn | 公司主页 / 销售个人号 | 2 | 专业背书+内容分发 |\n| Instagram Reels | EN | 1 | 视觉冲击+对比 | \n| Facebook Reels | EN | 1 | 团购 & 行业群渗透 |\n| X（Twitter） | EN | 1 | 话题标签+实时互动 |\n\n发布频次：每日每账号 1 条（9 条 / 天 × 90 天 = 810 条）+ 熔断补贴 90 条 = 900 条\n\n## 3. 素材需求计算\n• AI 可无限剪辑，但源头高清素材必须自拍。\n• 预计需要 90 天 / 2 周一次集中拍摄，共 6 次拍摄日。\n• 每次拍摄：\n  - 6 大场景 × 3 机位 × 3 时段（白天 / 黄昏 / 夜晚）≈ 54 条 RAW 片段。\n• 总计源素材：54 × 6 ≈ 324 条片段 → 108 组可用镜头（删减挑选后）。\n• 108 组素材 × 8 剪辑模板 / 话术裂变 ≈ 864 条短视频（留 10 % 余量）。\n\n## 4. 6 大内容支柱 & 核心脚本\n1. 工厂探秘（Behind the Scenes）\n   - 钩子：60 秒带你逛 30000 ㎡ 工厂，看一盏灯诞生！\n   - 镜头：航拍→SMT 生产线→老化测试→自动灌胶→质检→包装→成品仓库。\n   - 旁白/字幕：We build lights that last 10 years, here’s how.\n   - BGM：动感电子 / 120 BPM。\n\n2. 产品测评（Performance Test）\n   - 钩子：1000 W 金卤灯 vs AOK 150 W LED，高下立判？\n   - 镜头：安装对比→照度计读数→热成像→电表能耗→30 分钟后亮度衰减对比。\n   - 结尾 CTA：Comment “DATA” for full report.\n\n3. 客户案例（Case Study）\n   - 钩子：澳洲悉尼港口如何 70 % 节能？\n   - 镜头：项目前后对比→客户采访→ROI 图表动画。\n   - 文案：Saved AUD 120k/yr power bill, payback < 12 months.\n\n4. 对比实验（Stress Test）\n   - 钩子：IP67 + IK10 真的抗造吗？锤子、喷水枪安排！\n   - 镜头：1) 1 m 水柱冲洗 2) 1 kg 钢球跌落 3) -40 ℃ 冷冻箱→通电即亮。\n   - 结尾：Your lights doing this? #LEDTesting\n\n5. 安装指南（How To Install）\n   - 钩子：3 分钟学会高棚灯快速接线！\n   - 镜头：拆箱→配件展示→吊装→接线→调光设置→点亮。\n   - CTA：Save & Share with your electrician.\n\n6. 行业科普（Lighting 101）\n   - 钩子：UL 与 DLC 有啥区别？一分钟讲明白。\n   - 镜头：字幕 + 图解动画 + 出镜讲解。\n   - 话术：UL = Safety, DLC = Efficiency & Rebate.\n\n## 5. 90 天发布日历（示例）\n• 周一：工厂探秘 / 案例\n• 周二：测评 / 对比实验\n• 周三：安装指南 / 科普\n• 周四：案例 / 测评\n• 周五：工厂 / 对比\n• 周末：剪辑裂变（Top Moments Recap）+ 直播花絮\n\n> 每条视频添加 3 层标签：产品词 + 场景词 + 痛点词，例如：#LEDHighBay #WarehouseLighting #Save60Percent\n\n## 6. KPI & 监控\n1. 平台分析：TikTok Analytics / YouTube Studio / LinkedIn Insight Tag\n2. 报表频次：周报 + 月报；核心指标 VV、ER、CPM、SQL\n3. 迭代机制：每周 TOP 3/Bottom 3 内容复盘 + 钩子 / 时长 / 话术 微调\n\n## 7. 资源配置 & 预算\n• 拍摄：2 人 × 6 次 = 12 人日 ≈ RMB 8 000\n• AI 剪辑&字幕工具（CapCut Pro, Runway, Descript）：RMB 3 000\n• 海外静态 IP / 云代理：RMB 1 500\n• 推广加热（TikTok Spark, LinkedIn InFeed）：RMB 10 000\n• 其他：RMB 1 500\n• 合计预算：≤ RMB 24 000 （≈ USD 3 400）\n\n## 8. 执行里程碑\n1. T + 3 天：账号全部注册并完成企业认证；拍摄清单锁定。\n2. T + 10 天：第一次集中拍摄完成；首批 50 条短视频上线。\n3. T + 30 天：曝光破 30 万；首批 100 条裂变视频上线。\n4. T + 60 天：曝光破 80 万；线索 ≥ 300。\n5. T + 90 天：完成 1.2 M 曝光 & 500 线索；ROI 复盘。\n\n---\n\n**请确认以上《AOK LED Light 出海视频获客战略蓝图 v6.0》，确认后即可按此执行！**"},
+  "content": {"data":"# AOK LED Light 出海视频获客战略蓝图 v6.0\n\n## 1. 战略目标�?0 天）\n1. 覆盖曝光�? 200 000 +（TikTok / YouTube Shorts / LinkedIn / Instagram / Facebook Reels / X）\n2. 商机线索：≥ 500 条（含表单、私信、邮箱、WhatsApp）\n3. 视频产量：原创源素材 108 �?�?900 条短视频裂变 & 发布\n4. 转化指标：意向客户跟进成功率 �?15 %，成交额 �?USD 600 000\n\n## 2. 账号矩阵（共 9 个）\n| 平台 | 区域/语言 | 账号�?| 备注 |\n|------|-----------|--------|------|\n| TikTok | 美区 EN / 东南�?EN | 2 | 主打痛点+案例 | \n| YouTube Shorts | EN / 中英双语 | 2 | 长尾搜索 + 案例深�?|\n| LinkedIn | 公司主页 / 销售个人号 | 2 | 专业背书+内容分发 |\n| Instagram Reels | EN | 1 | 视觉冲击+对比 | \n| Facebook Reels | EN | 1 | 团购 & 行业群渗�?|\n| X（Twitter�?| EN | 1 | 话题标签+实时互动 |\n\n发布频次：每日每账号 1 条（9 �?/ �?× 90 �?= 810 条）+ 熔断补贴 90 �?= 900 条\n\n## 3. 素材需求计算\n�?AI 可无限剪辑，但源头高清素材必须自拍。\n�?预计需�?90 �?/ 2 周一次集中拍摄，�?6 次拍摄日。\n�?每次拍摄：\n  - 6 大场�?× 3 机位 × 3 时段（白�?/ 黄昏 / 夜晚）≈ 54 �?RAW 片段。\n�?总计源素材：54 × 6 �?324 条片�?�?108 组可用镜头（删减挑选后）。\n�?108 组素�?× 8 剪辑模板 / 话术裂变 �?864 条短视频（留 10 % 余量）。\n\n## 4. 6 大内容支�?& 核心脚本\n1. 工厂探秘（Behind the Scenes）\n   - 钩子�?0 秒带你�?30000 �?工厂，看一盏灯诞生！\n   - 镜头：航拍→SMT 生产线→老化测试→自动灌胶→质检→包装→成品仓库。\n   - 旁白/字幕：We build lights that last 10 years, here’s how.\n   - BGM：动感电�?/ 120 BPM。\n\n2. 产品测评（Performance Test）\n   - 钩子�?000 W 金卤�?vs AOK 150 W LED，高下立判？\n   - 镜头：安装对比→照度计读数→热成像→电表能耗→30 分钟后亮度衰减对比。\n   - 结尾 CTA：Comment “DATA�?for full report.\n\n3. 客户案例（Case Study）\n   - 钩子：澳洲悉尼港口如�?70 % 节能？\n   - 镜头：项目前后对比→客户采访→ROI 图表动画。\n   - 文案：Saved AUD 120k/yr power bill, payback < 12 months.\n\n4. 对比实验（Stress Test）\n   - 钩子：IP67 + IK10 真的抗造吗？锤子、喷水枪安排！\n   - 镜头�?) 1 m 水柱冲洗 2) 1 kg 钢球跌落 3) -40 �?冷冻箱→通电即亮。\n   - 结尾：Your lights doing this? #LEDTesting\n\n5. 安装指南（How To Install）\n   - 钩子�? 分钟学会高棚灯快速接线！\n   - 镜头：拆箱→配件展示→吊装→接线→调光设置→点亮。\n   - CTA：Save & Share with your electrician.\n\n6. 行业科普（Lighting 101）\n   - 钩子：UL �?DLC 有啥区别？一分钟讲明白。\n   - 镜头：字�?+ 图解动画 + 出镜讲解。\n   - 话术：UL = Safety, DLC = Efficiency & Rebate.\n\n## 5. 90 天发布日历（示例）\n�?周一：工厂探�?/ 案例\n�?周二：测�?/ 对比实验\n�?周三：安装指�?/ 科普\n�?周四：案�?/ 测评\n�?周五：工�?/ 对比\n�?周末：剪辑裂变（Top Moments Recap�? 直播花絮\n\n> 每条视频添加 3 层标签：产品�?+ 场景�?+ 痛点词，例如�?LEDHighBay #WarehouseLighting #Save60Percent\n\n## 6. KPI & 监控\n1. 平台分析：TikTok Analytics / YouTube Studio / LinkedIn Insight Tag\n2. 报表频次：周�?+ 月报；核心指�?VV、ER、CPM、SQL\n3. 迭代机制：每�?TOP 3/Bottom 3 内容复盘 + 钩子 / 时长 / 话术 微调\n\n## 7. 资源配置 & 预算\n�?拍摄�? �?× 6 �?= 12 人日 �?RMB 8 000\n�?AI 剪辑&字幕工具（CapCut Pro, Runway, Descript）：RMB 3 000\n�?海外静�?IP / 云代理：RMB 1 500\n�?推广加热（TikTok Spark, LinkedIn InFeed）：RMB 10 000\n�?其他：RMB 1 500\n�?合计预算：≤ RMB 24 000 （≈ USD 3 400）\n\n## 8. 执行里程碑\n1. T + 3 天：账号全部注册并完成企业认证；拍摄清单锁定。\n2. T + 10 天：第一次集中拍摄完成；首批 50 条短视频上线。\n3. T + 30 天：曝光�?30 万；首批 100 条裂变视频上线。\n4. T + 60 天：曝光�?80 万；线索 �?300。\n5. T + 90 天：完成 1.2 M 曝光 & 500 线索；ROI 复盘。\n\n---\n\n**请确认以上《AOK LED Light 出海视频获客战略蓝图 v6.0》，确认后即可按此执行！**"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760345677417
@@ -6460,7 +6462,7 @@ INSERT INTO "redis_queue_messages" VALUES('d5c8a908-a004-4c51-8f3e-1e26f09a9d23'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1.《AOK LED Light 出海视频获客战略蓝图 v6.0》已生成并发送！您的专属视频获客战略已经就绪，接下来就可按此计划开干了！",
+    "text": "1.《AOK LED Light 出海视频获客战略蓝图 v6.0》已生成并发送！您的专属视频获客战略已经就绪，接下来就可按此计划开干了�?,
     "data": {
       "video_link": ""
     }
@@ -6477,7 +6479,7 @@ INSERT INTO "redis_queue_messages" VALUES('2394a683-83c7-4bcf-bab9-1c68a8a1b434'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "以下是最新战况：\n1) 作战地图：今天尚未安排任何视频发布。\n2) 待测试视频脚本库：目前还有 1 个脚本需要合成。\n\n因此，今天仍需至少合成 1 个测试视频。\n\n请问您接下来要开始选择文案并生成脚本吗？如果需要，请回复“是”，我将展示可选文案内容。",
+    "text": "以下是最新战况：\n1) 作战地图：今天尚未安排任何视频发布。\n2) 待测试视频脚本库：目前还�?1 个脚本需要合成。\n\n因此，今天仍需至少合成 1 个测试视频。\n\n请问您接下来要开始选择文案并生成脚本吗？如果需要，请回复“是”，我将展示可选文案内容�?,
     "data": {
       "video_link": ""
     }
@@ -6494,7 +6496,7 @@ INSERT INTO "redis_queue_messages" VALUES('60aaa3e6-0df3-413c-b535-7db8a7075577'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "系统提示：目前确认今天还有 1 个视频文案需要合成，但暂时无法自动获取到这 1 条待拍摄文案的具体内容。\n\n请问您希望我：\n1) 重新尝试从素材库拉取待拍摄文案；\n2) 由您直接把这条文案粘贴给我；\n\n请回复“1”或“2”，我将继续为您处理。",
+    "text": "系统提示：目前确认今天还�?1 个视频文案需要合成，但暂时无法自动获取到�?1 条待拍摄文案的具体内容。\n\n请问您希望我：\n1) 重新尝试从素材库拉取待拍摄文案；\n2) 由您直接把这条文案粘贴给我；\n\n请回复�?”或�?”，我将继续为您处理�?,
     "data": {
       "video_link": ""
     }
@@ -6511,7 +6513,7 @@ INSERT INTO "redis_queue_messages" VALUES('54a05171-4668-4144-a46c-02c36d6a01a8'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，根据最新系统查询，今天仍需合成 1 个测试视频。不过当前素材库中暂无可直接调用的待拍摄文案。请直接将您想要拍摄的视频文案（文字内容）粘贴给我，或者告诉我具体的文案编号/文件。我收到后会立即为您生成 10 份不同的拍摄脚本供您挑选。",
+    "text": "好的，根据最新系统查询，今天仍需合成 1 个测试视频。不过当前素材库中暂无可直接调用的待拍摄文案。请直接将您想要拍摄的视频文案（文字内容）粘贴给我，或者告诉我具体的文案编�?文件。我收到后会立即为您生成 10 份不同的拍摄脚本供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -6528,7 +6530,7 @@ INSERT INTO "redis_queue_messages" VALUES('812d6d59-c37f-4ac8-972e-65298204b09f'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您提供的工厂探秘文案，我已为您生成了 1 份可用的拍摄脚本（目前系统仅返回 1 份脚本）。请查看概要并确认是否使用：\n\n1. 【工厂探秘 60 秒版】\n   • 钩子：60 秒带你逛 30000 ㎡ 工厂，看一盏灯诞生！\n   • 镜头顺序：航拍外景 → SMT 生产线 → 老化测试 → 自动灌胶 → 质检 → 包装 → 成品仓库\n   • 旁白/字幕：We build lights that last 10 years, here’s how.\n   • 运镜：航拍 / 推拉 / 平移结合\n   • BGM：动感电子 120 BPM\n   • 视频时长：≈60 s\n\n如果您确认使用此脚本进行视频合成，请回复“1”。\n如需重新生成更多脚本，请告诉我。",
+    "text": "好的，基于您提供的工厂探秘文案，我已为您生成�?1 份可用的拍摄脚本（目前系统仅返回 1 份脚本）。请查看概要并确认是否使用：\n\n1. 【工厂探�?60 秒版】\n   �?钩子�?0 秒带你�?30000 �?工厂，看一盏灯诞生！\n   �?镜头顺序：航拍外�?�?SMT 生产�?�?老化测试 �?自动灌胶 �?质检 �?包装 �?成品仓库\n   �?旁白/字幕：We build lights that last 10 years, here’s how.\n   �?运镜：航�?/ 推拉 / 平移结合\n   �?BGM：动感电�?120 BPM\n   �?视频时长：≈60 s\n\n如果您确认使用此脚本进行视频合成，请回复�?”。\n如需重新生成更多脚本，请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -6545,7 +6547,7 @@ INSERT INTO "redis_queue_messages" VALUES('77e51c07-fd7e-46ba-89b7-24e4d1f268d9'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "很抱歉，系统在合成视频时出现了技术问题，导致视频尚未成功生成。请问您希望我立即重新尝试一次吗？\n\n如果需要重试，请回复“重试”；\n如果您想稍后再试或有其他指示，也请告诉我。",
+    "text": "很抱歉，系统在合成视频时出现了技术问题，导致视频尚未成功生成。请问您希望我立即重新尝试一次吗？\n\n如果需要重试，请回复“重试”；\n如果您想稍后再试或有其他指示，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -6566,7 +6568,7 @@ INSERT INTO "redis_queue_messages" VALUES('82b1bcf2-334f-4751-83a1-d844b29477fd'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。为了帮您规划接下来的拍摄与测试，您是否想了解当前还需要合成多少个视频？如果需要，请回复“是”，我将立即为您查询并告知。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。为了帮您规划接下来的拍摄与测试，您是否想了解当前还需要合成多少个视频？如果需要，请回复“是”，我将立即为您查询并告知�?,
     "data": {
       "video_link": ""
     }
@@ -6587,7 +6589,7 @@ INSERT INTO "redis_queue_messages" VALUES('8089d504-ad04-4bcf-9ea2-519967221940'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图：今日暂无已发布视频；待制作脚本共 2 个。这意味着我们还需要合成 2 条视频来完成今天的测试任务。目前系统已同步到的待制作脚本如下：1. 高效深圳智造照明，自主设计工矿灯、高光效路灯、球场级泛光灯（#aokled #ledlighting #industriallighting #highbay #stadiumlight）请回复脚本编号（例如 “1”），我将为您生成 10 份拍摄脚本供挑选。如需等待其他脚本同步，也请告知。",
+    "text": "最新作战地图：今日暂无已发布视频；待制作脚本共 2 个。这意味着我们还需要合�?2 条视频来完成今天的测试任务。目前系统已同步到的待制作脚本如下：1. 高效深圳智造照明，自主设计工矿灯、高光效路灯、球场级泛光灯（#aokled #ledlighting #industriallighting #highbay #stadiumlight）请回复脚本编号（例�?�?”），我将为您生�?10 份拍摄脚本供挑选。如需等待其他脚本同步，也请告知�?,
     "data": {
       "video_link": ""
     }
@@ -6604,7 +6606,7 @@ INSERT INTO "redis_queue_messages" VALUES('1cd713b3-075d-47b9-916b-0298cac04083'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案，我已生成 1 份拍摄脚本，请您确认想要用于视频合成的脚本编号：#1. 高效深圳智造照明，自主设计工矿灯、高光效路灯、球场级泛光灯。分镜包含：• 开场人物在工厂门前介绍品牌与核心优势；• 展示UFO工矿灯、模组路灯、球场泛光灯等产品实拍；• 强调 170lm/W 高光效、IP66+IK08 防护等级；• 展示 0-10V/DALI 调光、可接入 Zigbee 的智能控制；• 收尾强调 5-10 年原厂质保及 80+ 国家项目案例。#请回复脚本编号（例如 “1”）。确认后我将立即为您合成视频并返回预览链接。",
+    "text": "好的，基于您选择的文案，我已生成 1 份拍摄脚本，请您确认想要用于视频合成的脚本编号：#1. 高效深圳智造照明，自主设计工矿灯、高光效路灯、球场级泛光灯。分镜包含：�?开场人物在工厂门前介绍品牌与核心优势；�?展示UFO工矿灯、模组路灯、球场泛光灯等产品实拍；�?强调 170lm/W 高光效、IP66+IK08 防护等级；�?展示 0-10V/DALI 调光、可接入 Zigbee 的智能控制；�?收尾强调 5-10 年原厂质保及 80+ 国家项目案例�?请回复脚本编号（例如 �?”）。确认后我将立即为您合成视频并返回预览链接�?,
     "data": {
       "video_link": ""
     }
@@ -6625,7 +6627,7 @@ INSERT INTO "redis_queue_messages" VALUES('4606dc86-8ee8-4095-8558-f6aaf156e8b7'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，视频合成时出现系统错误（Bad gateway）。要不要重新尝试合成？\n\n如果需要重试，请回复“重试”。如需更换脚本或有其他指示，也请告诉我。",
+    "text": "抱歉，视频合成时出现系统错误（Bad gateway）。要不要重新尝试合成？\n\n如果需要重试，请回复“重试”。如需更换脚本或有其他指示，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -6766,7 +6768,7 @@ INSERT INTO "redis_queue_messages" VALUES('d03a0d2b-7dea-497c-b23b-cc0c62b031eb'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。为了开始今天的工作，您是否想先了解目前根据作战地图还需要合成多少个视频来进行测试？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。为了开始今天的工作，您是否想先了解目前根据作战地图还需要合成多少个视频来进行测试？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -6800,7 +6802,7 @@ INSERT INTO "redis_queue_messages" VALUES('608c7e9f-c023-4b49-b62b-27d0664af5e6'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用B2B智能视频创作与发布助手。\n\n目前我可以帮您查看作战地图，并计算接下来还需要制作多少支测试视频。请问您现在是否需要了解这一信息？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "您好！欢迎使用B2B智能视频创作与发布助手。\n\n目前我可以帮您查看作战地图，并计算接下来还需要制作多少支测试视频。请问您现在是否需要了解这一信息？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -6902,7 +6904,7 @@ INSERT INTO "redis_queue_messages" VALUES('2b43922a-e7ac-410c-ad97-42d50a5d23f6'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用视频创作与发布助手。是否需要我查看作战地图并告诉您目前还需要合成多少个测试视频？如果需要，请回复“是”。",
+    "text": "你好！欢迎使用视频创作与发布助手。是否需要我查看作战地图并告诉您目前还需要合成多少个测试视频？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -6919,7 +6921,7 @@ INSERT INTO "redis_queue_messages" VALUES('a89ba765-de3b-4849-985d-dddda1846350'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！如果您想了解当前作战地图中还需要合成多少个测试视频，请回复“是”。如果有其他需求，也欢迎告诉我！",
+    "text": "您好！如果您想了解当前作战地图中还需要合成多少个测试视频，请回复“是”。如果有其他需求，也欢迎告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -6970,7 +6972,7 @@ INSERT INTO "redis_queue_messages" VALUES('3277f47d-c6ee-49e3-9670-1c6120c04f2d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作助手。您想先了解接下来还需要制作多少条视频来进行测试吗？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "您好！我是您的B2B智能视频创作助手。您想先了解接下来还需要制作多少条视频来进行测试吗？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -6987,7 +6989,7 @@ INSERT INTO "redis_queue_messages" VALUES('88e756e3-c908-45fa-b69c-57170973fc2a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，根据最新作战地图，当前仍有 35 条视频需要制作并测试。请从待制作视频脚本库中选择您想先制作的文案编号，并回复给我（例如：输入“3”表示选择第 3 条文案）。\n\n收到您的选择后，我将为您生成对应的 10 份可选拍摄脚本。",
+    "text": "好的，根据最新作战地图，当前仍有 35 条视频需要制作并测试。请从待制作视频脚本库中选择您想先制作的文案编号，并回复给我（例如：输入�?”表示选择�?3 条文案）。\n\n收到您的选择后，我将为您生成对应�?10 份可选拍摄脚本�?,
     "data": {
       "video_link": ""
     }
@@ -7004,7 +7006,7 @@ INSERT INTO "redis_queue_messages" VALUES('8e7bf5d6-853e-4e9a-9bf1-c43ac4d898a5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，基于您选择的文案（编号 3），我已为您生成了拍摄脚本。#请查看下方脚本摘要，并选择是否使用该脚本进行视频合成：#1. 【高效深圳智造照明】#• 产品亮点：UFO工矿灯 / 模组路灯 / 球场泛光灯#• 卖点信息：最高光效 170lm/W；IP66+IK08 防护；0-10V/DALI 智能调光；5-10 年原厂质保；节能 70%，安装维护成本低#• 目标场景：大型仓储、港口、球场、街区#• 分镜结构：人物出镜→产品特写→应用场景→核心参数 → 质保承诺#目前仅生成了 1 份脚本。如需更多脚本，请告诉我“再生成”即可。如果您满意这一份，请直接回复“1”，我将为您合成视频。",
+    "text": "好的，基于您选择的文案（编号 3），我已为您生成了拍摄脚本�?请查看下方脚本摘要，并选择是否使用该脚本进行视频合成：#1. 【高效深圳智造照明�?�?产品亮点：UFO工矿�?/ 模组路灯 / 球场泛光�?�?卖点信息：最高光�?170lm/W；IP66+IK08 防护�?-10V/DALI 智能调光�?-10 年原厂质保；节能 70%，安装维护成本低#�?目标场景：大型仓储、港口、球场、街�?�?分镜结构：人物出镜→产品特写→应用场景→核心参数 �?质保承诺#目前仅生成了 1 份脚本。如需更多脚本，请告诉我“再生成”即可。如果您满意这一份，请直接回复�?”，我将为您合成视频�?,
     "data": {
       "video_link": ""
     }
@@ -7021,7 +7023,7 @@ INSERT INTO "redis_queue_messages" VALUES('1e6ed738-2f41-49b0-82fb-b7a402c4d3a6'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，视频合成过程中出现了技术问题，暂未成功生成预览链接。请问您希望我立即重新尝试合成视频吗？如果需要重试，请回复“重试”；如有其他想法，也请告诉我！",
+    "text": "抱歉，视频合成过程中出现了技术问题，暂未成功生成预览链接。请问您希望我立即重新尝试合成视频吗？如果需要重试，请回复“重试”；如有其他想法，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -7038,7 +7040,7 @@ INSERT INTO "redis_queue_messages" VALUES('f2133e15-bdb6-44cd-9e95-bf1b1901c752'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。  \n2. 为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，例如：  \n   • 官网链接  \n   • 产品介绍  \n   • 公司简介或宣传册图片  \n3. 我会先行浏览并整理信息，尽量减少您的输入工作量。  \n4. 请把这些资料发给我，我们即可重新生成最新的视频战略蓝图！",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧�? \n2. 为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，例如�? \n   �?官网链接  \n   �?产品介绍  \n   �?公司简介或宣传册图�? \n3. 我会先行浏览并整理信息，尽量减少您的输入工作量�? \n4. 请把这些资料发给我，我们即可重新生成最新的视频战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -7055,7 +7057,7 @@ INSERT INTO "redis_queue_messages" VALUES('0728dc07-12b9-4c45-8264-f2909b8df6ba'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新战略蓝图已更新：当前仍有 35 条视频需要制作并测试。\n\n请从待测试文案库中选择您想先制作的文案编号（例如：输入“3”表示选择第 3 条文案），我将基于您的选择生成 10 份可选拍摄脚本供您挑选。",
+    "text": "最新战略蓝图已更新：当前仍�?35 条视频需要制作并测试。\n\n请从待测试文案库中选择您想先制作的文案编号（例如：输入�?”表示选择�?3 条文案），我将基于您的选择生成 10 份可选拍摄脚本供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -7066,7 +7068,7 @@ INSERT INTO "redis_queue_messages" VALUES('054e4061-1086-439b-aa72-585801fd07d7'
   "env": "gray",
   "session_id": "64f75d54-0185-4689-9bab-ae8b91a5b8bf",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "d46e1c5d-c2da-4ae5-9831-ae532ff720cb",
   "socket_id": "QzI-B7_RY4YSLGJmAAAV",
   "status": "RUNNING",
@@ -7082,7 +7084,7 @@ INSERT INTO "redis_queue_messages" VALUES('1613973d-7577-46cb-9993-bf758ca27ffa'
   "request_id": "d46e1c5d-c2da-4ae5-9831-ae532ff720cb",
   "socket_id": "QzI-B7_RY4YSLGJmAAAV",
   "status": "FINISHED",
-  "content": {"data":"《AOK LED Light 出海视频获客战略蓝图 6.0》\n\n1. 北极星目标 & 核心 KPI（30 天）\n• 曝光量（TikTok + YouTube Shorts + LinkedIn）：≥ 500,000\n• 有效 B2B 线索（邮箱 / WhatsApp / LinkedIn InMail）：≥ 200 条\n• 视频完播率 ≥ 35 %；点赞率 ≥ 6 %；私信转化率 ≥ 1 %\n\n2. 目标人群画像\n客户类型：\n‒ 政府 / 市政照明采购方\n‒ 工程承包商 / EPC / 建筑安装公司\n‒ 经销商 / 批发商 / 进口商\n‒ 工业与商业终端业主（仓储、工厂、港口、体育场等）\n目标市场：北美、欧洲、澳洲、东南亚、中东\n核心痛点：\n‒ 传统灯具能耗 & 维护成本高\n‒ 项目需满足 UL / DLC / CE 等国际认证\n‒ 工期紧、质保周期长、安全合规复杂\n‒ ROI 评估 & 节能数据缺失\n\n3. 内容支柱（6 Pillars）& 视频主题\n① 工厂探秘：智能生产线、老化测试、IP66 & IK10 试验\n② 产品测评：150–170 lm/W 对比实验、散热对比、光衰测试\n③ 客户案例：北美港口 400 W 投光灯、欧洲仓储 150 W UFO 替换 400 W HPS\n④ 安装 / 维护指南：1 人 5 分钟更换工矿灯、模块化快拆\n⑤ 行业科普：DLC Premium 与 UL 的区别、0-10 V vs DALI vs Zigbee\n⑥ CEO / 工程师访谈：专利散热、10 年质保背后秘诀\n\n4. 账号矩阵 & 发布节奏\nTikTok ×2（美区 / 东南亚区）\nYouTube Shorts ×2（英文 / 中文字幕）\nLinkedIn ×2（公司主页 / 业务员个人号）\n发布频次：每日每账号 1 条 → 30 天共 6 账号 × 30 = 180 条（含 AI 裂变版本）\n\n5. 创意生产 & 拍摄计划\n每周拍摄 6 大场景 × 3 机位 = 18 组原始素材\n4 周共 72 组素材，可裂变出 180 条短视频\n所需人力：1 手机主拍 + 1 协助；后期用 CapCut / Runway 一键模板\n\n6. 推广 & 流量加速\nTikTok Spark Ads：5-10 USD/条（种子流量）\nLinkedIn InMail：定向 EPC / 经销商\nYouTube Shorts TrueView Action：提升完播 & 订阅\n预算：拍摄 5k RMB + AI 工具 1k RMB + 推广 3k RMB ≤ 10k RMB\n\n7. 监测 & 优化机制\n日报：曝光 / 完播 / 点赞 / 询盘\n周报：对比 6 大内容支柱 → 放大 20 % 赢家脚本\n月终：CPL ≤ 50 RMB；超标 20 % 触发脚本+定向 A/B\n\n8. 30 天执行里程碑\nD1-2：拍摄工厂 & 产品测试\nD3-5：剪辑首批 30 条\nD6：6 账号首发 + Spark Ads\nD7：首轮数据回顾\nD8-14：二轮拍摄 & 发布\nD15：半程复盘，重点加码“案例 + 对比实验”\nD16-29：滚动优化\nD30：月度总结 → 下一阶段目标\n\n—— End ——"},
+  "content": {"data":"《AOK LED Light 出海视频获客战略蓝图 6.0》\n\n1. 北极星目�?& 核心 KPI�?0 天）\n�?曝光量（TikTok + YouTube Shorts + LinkedIn）：�?500,000\n�?有效 B2B 线索（邮�?/ WhatsApp / LinkedIn InMail）：�?200 条\n�?视频完播�?�?35 %；点赞率 �?6 %；私信转化率 �?1 %\n\n2. 目标人群画像\n客户类型：\n�?政府 / 市政照明采购方\n�?工程承包�?/ EPC / 建筑安装公司\n�?经销�?/ 批发�?/ 进口商\n�?工业与商业终端业主（仓储、工厂、港口、体育场等）\n目标市场：北美、欧洲、澳洲、东南亚、中东\n核心痛点：\n�?传统灯具能�?& 维护成本高\n�?项目需满足 UL / DLC / CE 等国际认证\n�?工期紧、质保周期长、安全合规复杂\n�?ROI 评估 & 节能数据缺失\n\n3. 内容支柱�? Pillars�? 视频主题\n�?工厂探秘：智能生产线、老化测试、IP66 & IK10 试验\n�?产品测评�?50�?70 lm/W 对比实验、散热对比、光衰测试\n�?客户案例：北美港�?400 W 投光灯、欧洲仓�?150 W UFO 替换 400 W HPS\n�?安装 / 维护指南�? �?5 分钟更换工矿灯、模块化快拆\n�?行业科普：DLC Premium �?UL 的区别�?-10 V vs DALI vs Zigbee\n�?CEO / 工程师访谈：专利散热�?0 年质保背后秘诀\n\n4. 账号矩阵 & 发布节奏\nTikTok ×2（美�?/ 东南亚区）\nYouTube Shorts ×2（英�?/ 中文字幕）\nLinkedIn ×2（公司主�?/ 业务员个人号）\n发布频次：每日每账号 1 �?�?30 天共 6 账号 × 30 = 180 条（�?AI 裂变版本）\n\n5. 创意生产 & 拍摄计划\n每周拍摄 6 大场�?× 3 机位 = 18 组原始素材\n4 周共 72 组素材，可裂变出 180 条短视频\n所需人力�? 手机主拍 + 1 协助；后期用 CapCut / Runway 一键模板\n\n6. 推广 & 流量加速\nTikTok Spark Ads�?-10 USD/条（种子流量）\nLinkedIn InMail：定�?EPC / 经销商\nYouTube Shorts TrueView Action：提升完�?& 订阅\n预算：拍�?5k RMB + AI 工具 1k RMB + 推广 3k RMB �?10k RMB\n\n7. 监测 & 优化机制\n日报：曝�?/ 完播 / 点赞 / 询盘\n周报：对�?6 大内容支�?�?放大 20 % 赢家脚本\n月终：CPL �?50 RMB；超�?20 % 触发脚本+定向 A/B\n\n8. 30 天执行里程碑\nD1-2：拍摄工�?& 产品测试\nD3-5：剪辑首�?30 条\nD6�? 账号首发 + Spark Ads\nD7：首轮数据回顾\nD8-14：二轮拍�?& 发布\nD15：半程复盘，重点加码“案�?+ 对比实验”\nD16-29：滚动优化\nD30：月度总结 �?下一阶段目标\n\n—�?End —�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760437577595
@@ -7114,7 +7116,7 @@ INSERT INTO "redis_queue_messages" VALUES('666af3ca-70e4-403a-9dab-a8c128a378c6'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用 B2B 智能视频创作与发布助手。\n\n目前我可以帮助您了解：\n1) 还需要合成多少个视频进行测试\n2) 选择脚本并生成视频\n3) 预览并发布到 TikTok\n\n如果您想先了解目前还需合成多少视频，请回复“查看任务”。",
+    "text": "你好！欢迎使�?B2B 智能视频创作与发布助手。\n\n目前我可以帮助您了解：\n1) 还需要合成多少个视频进行测试\n2) 选择脚本并生成视频\n3) 预览并发布到 TikTok\n\n如果您想先了解目前还需合成多少视频，请回复“查看任务”�?,
     "data": {
       "video_link": ""
     }
@@ -7131,7 +7133,7 @@ INSERT INTO "redis_queue_messages" VALUES('b1de8a13-4409-4343-8417-b8ed53b51c05'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我以下资料，越详细越好：  \n  • 公司/品牌官网链接  \n  • 主推产品介绍（PDF、图片或文字）  \n  • 典型客户与应用场景  \n  • 任何现成的公司简介或宣传资料（可直接上传）  \n\n2.我会先快速研读这些资料，完善企业信息与产品特点，再为您重新生成最新战略蓝图。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我以下资料，越详细越好：  \n  �?公司/品牌官网链接  \n  �?主推产品介绍（PDF、图片或文字�? \n  �?典型客户与应用场�? \n  �?任何现成的公司简介或宣传资料（可直接上传�? \n\n2.我会先快速研读这些资料，完善企业信息与产品特点，再为您重新生成最新战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -7148,7 +7150,7 @@ INSERT INTO "redis_queue_messages" VALUES('e8c467b5-db57-4679-aafd-ac4992003b71'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "感谢您提供官网链接 www.aokledlight.com！我会先浏览并提取贵公司在 LED 照明领域的核心信息，为您更新战略蓝图。如果有更多资料（产品手册、客户案例、应用场景等），请继续发送，我将一并参考。同时，为了推进视频创作测试流程，您可以随时输入“查看任务”，我将告诉您当前还需要合成多少个视频并为您安排下一步。",
+    "text": "感谢您提供官网链�?www.aokledlight.com！我会先浏览并提取贵公司�?LED 照明领域的核心信息，为您更新战略蓝图。如果有更多资料（产品手册、客户案例、应用场景等），请继续发送，我将一并参考。同时，为了推进视频创作测试流程，您可以随时输入“查看任务”，我将告诉您当前还需要合成多少个视频并为您安排下一步�?,
     "data": {
       "video_link": ""
     }
@@ -7159,7 +7161,7 @@ INSERT INTO "redis_queue_messages" VALUES('bf9d8505-943a-468a-a9dc-a7adce9dac04'
   "env": "gray",
   "session_id": "506d322d-7c09-4a7a-aabb-be4760bf5599",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "4540675e-c560-421b-bc94-c5e45ff004fc",
   "socket_id": "QzI-B7_RY4YSLGJmAAAV",
   "status": "RUNNING",
@@ -7175,7 +7177,7 @@ INSERT INTO "redis_queue_messages" VALUES('61efe859-b7f9-41dd-bb00-e788ecfeb96b'
   "request_id": "4540675e-c560-421b-bc94-c5e45ff004fc",
   "socket_id": "QzI-B7_RY4YSLGJmAAAV",
   "status": "FINISHED",
-  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图·旗舰版 2024》\n\n> 本蓝图基于您最新提供的官网信息与历史确认数据生成，覆盖 30 天起步、可滚动复制的短视频获客打法，直接落地执行即可。\n\n---\n## 1. 北极星目标 (首轮 30 天)\n1. 累计曝光 (TikTok + YouTube Shorts + LinkedIn)：≥ **600,000**\n2. 有效 B2B 线索 (邮箱 / WhatsApp / LinkedIn InMail)：≥ **250 条**\n3. 视频完播率 ≥ **35 %**；点赞率 ≥ **6 %**；私信转化率 ≥ **1 %**\n\n---\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 账号数 | 主要受众 | 发布频次 | 30 天总发布 |\n|------|-------|----------|---------|-------------|\n| TikTok (美区 / 东南亚区) | 2 | 经销商、工程商、终端客户 | 每日 1 条/号 | 60 |\n| YouTube Shorts (英文 / 中文字幕) | 2 | 搜索导向的项目方 | 每日 1 条/号 | 60 |\n| LinkedIn (公司主页 / 销售个人号) | 2 | 采购 / EPC / 政府 & 市政 | 每日 1 条/号 | 60 |\n| **合计** | **6** | – | **6 条/日** | **180** |\n\n> 备注：同一原生视频通过剪辑、字幕、封面差异化 + AI 裂变 (B-roll 调色、Hook 重录) 可扩充 ≥180 条。\n\n---\n## 3. 内容支柱 (6 Pillars) & 主题脚本\n| Pillar | 目的 | 代表脚本示例 | Hook (前3秒) | 配乐 / 字幕建议 |\n|--------|------|--------------|-------------|----------------|\n| ① 工厂探秘 | 建立信任、体现产能 | 3,000㎡ 自动化产线 30 秒速览 | “想看 10 年质保的灯是怎么造的吗？” | 机械节奏鼓点 / 英文动态字幕 |\n| ② 产品测评 | 证明性能 | 150lm/W vs 75lm/W 对比实拍 | “同样 100W，为何这盏灯亮一倍？” | 电子节奏 / 数据弹幕 |\n| ③ 客户案例 | 社会证明 | 美国芝加哥仓库 3000 套改造前后 | “只换灯，电费立省 65%！” | 轻摇滚 / before-after 字幕 |\n| ④ 对比实验 | 制造冲突 | IP66 淋雨 2 小时 VS 普通灯 10 分钟 | “下暴雨照样亮！” | 水声 / 慢动作 |\n| ⑤ 安装指南 | 减少顾虑 | 1 人 5 分钟更换工矿灯 | “安装比换灯泡还快？” | 轻快 ukulele / 中文+英文双语 |\n| ⑥ 行业科普 | 关键词沉淀 | DLC Premium 和 UL 区别 60 秒讲透 | “工程招标必看 3 个认证！” | Lo-fi / 关键字高亮 |\n\n---\n## 4. 源素材拍摄计划 (4 周)\n• 每周 6 大场景 × 3 机位 = **18 组原片**\n• 4 周共 **72 组原片**  → AI 裂变 ≥ **180 条短视频**\n\n| 周次 | 场景 | 机位指引 | 关键台词 / 旁白 |\n|------|------|----------|----------------|\n| Week1 | 工厂 SMT 线 & 老化房 | ① 正面跟拍 ② 俯拍传送带 ③ 特写元件 | “每片灯板上 2835 芯片精准贴装 6000 颗/小时” |\n| Week1 | IP66 淋雨实验室 | ① 慢动作水花 ② 仰拍灯体 ③ 手持解说 | “连淋 2 小时，灯珠无闪烁” |\n| Week2 | 北美港口案例夜景 | ① 无人机空镜 ② 地面对比 ③ 客户采访 | “20 米高灯杆仍达 30lx” |\n| Week2 | 150lm/W 对比老款灯 | ① 同帧亮度对比 ② 功率表读数 ③ 侧拍主持人 | “同功率亮度提升 2 倍” |\n| Week3 | 工矿灯安装教程 | ① 头顶 GoPro ② 正面解说 ③ 特写接线口 | “吊装一步到位， 5 分钟搞定” |\n| Week3 | CEO 访谈 | ① 正面 4K ② 半身侧面 ③ 手势特写 | “为何敢给 10 年质保？” |\n| Week4 | 路灯道路实拍 | ① 往返车流 ② 抬头仰拍 ③ DALI 调光演示 | “光衰 <10% @10,000h” |\n| Week4 | 收发货 & 包装 | ① 高位货架 ② 包装跌落实验 ③ 快速装柜 | “7 天快速交付全球” |\n\n---\n## 5. 30 天发布日历 (示例前 7 天)\n| Day | TikTok | YouTube Shorts | LinkedIn |\n|-----|--------|---------------|----------|\n| 1 | 工厂 SMT 线 | 工厂 SMT 线 (长字幕版) | 同步 + #manufacturing |\n| 2 | IP66 淋雨实验 | IP66 实验 | CEO 转发并评论 |\n| 3 | 150lm/W 对比 | 150lm/W 对比 | 业务员号配数据图 |\n| 4 | 安装教程 1 | 安装教程 1 | 客户痛点帖 |\n| 5 | 港口案例 | 港口案例 | PDF 下载引流 |\n| 6 | 工厂探秘 2 | 工厂探秘 2 | 招募全球代理 |\n| 7 | 行业科普 DLC | 行业科普 DLC | 认证白皮书 CTA |\n…后续依照 Pillar 轮播 + 数据驱动动态调整。\n\n---\n## 6. 预算 & 人力\n1. 拍摄：¥5,000 (两天包干 / 场地自有)\n2. AI 工具订阅：¥1,000 (CapCut Pro, HeyGen, Descript 等)\n3. 流量加速：¥3,000 (TikTok Spark Ads + YouTube TrueView + LinkedIn InMail)\n4. **总计** ≤ **¥10,000**\n\n团队最小配置：\n• 运营 1 人 (脚本&投放)\n• 拍摄 1 人 + 协助 1 人\n• 后期全部交给 AI 模板\n\n---\n## 7. KPI 监测 & 优化\n• 每日看板：曝光 / 完播 / 点赞 / 私信 / 线索\n• 每 3 天：筛选 Top20% 视频，加大投放 + 多语字幕裂变\n• 30 天：若 CPL > ¥50，触发脚本重写 + 定向微调 A/B\n\n---\n## 8. 行动里程碑\n1. D1–D2：完成 72 组源素材拍摄\n2. D3–D5：首批 30 条视频剪辑 & 上字幕\n3. D6：6 账号同步开播 + 种子投放\n4. D7：首轮数据回顾，标记赢家脚本\n5. D8–D14：二轮拍摄 + 发布 + A/B\n6. D15：半程复盘，重点加码案例类内容\n7. D16–D29：滚动“拍–剪–投–测”循环\n8. D30：月度复盘 & 目标迭代\n\n---\n### 结束语\n您的专属《AOK LED Light 出海视频获客战略蓝图》已全部生成，照此执行即可快速触达全球工程项目及经销商，实现高质量 B2B 线索爆发！\n"},
+  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图·旗舰�?2024》\n\n> 本蓝图基于您最新提供的官网信息与历史确认数据生成，覆盖 30 天起步、可滚动复制的短视频获客打法，直接落地执行即可。\n\n---\n## 1. 北极星目�?(首轮 30 �?\n1. 累计曝光 (TikTok + YouTube Shorts + LinkedIn)：≥ **600,000**\n2. 有效 B2B 线索 (邮箱 / WhatsApp / LinkedIn InMail)：≥ **250 �?*\n3. 视频完播�?�?**35 %**；点赞率 �?**6 %**；私信转化率 �?**1 %**\n\n---\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 账号�?| 主要受众 | 发布频次 | 30 天总发�?|\n|------|-------|----------|---------|-------------|\n| TikTok (美区 / 东南亚区) | 2 | 经销商、工程商、终端客�?| 每日 1 �?�?| 60 |\n| YouTube Shorts (英文 / 中文字幕) | 2 | 搜索导向的项目方 | 每日 1 �?�?| 60 |\n| LinkedIn (公司主页 / 销售个人号) | 2 | 采购 / EPC / 政府 & 市政 | 每日 1 �?�?| 60 |\n| **合计** | **6** | �?| **6 �?�?* | **180** |\n\n> 备注：同一原生视频通过剪辑、字幕、封面差异化 + AI 裂变 (B-roll 调色、Hook 重录) 可扩�?�?80 条。\n\n---\n## 3. 内容支柱 (6 Pillars) & 主题脚本\n| Pillar | 目的 | 代表脚本示例 | Hook (�?�? | 配乐 / 字幕建议 |\n|--------|------|--------------|-------------|----------------|\n| �?工厂探秘 | 建立信任、体现产�?| 3,000�?自动化产�?30 秒速览 | “想�?10 年质保的灯是怎么造的吗？�?| 机械节奏鼓点 / 英文动态字�?|\n| �?产品测评 | 证明性能 | 150lm/W vs 75lm/W 对比实拍 | “同�?100W，为何这盏灯亮一倍？�?| 电子节奏 / 数据弹幕 |\n| �?客户案例 | 社会证明 | 美国芝加哥仓�?3000 套改造前�?| “只换灯，电费立�?65%！�?| 轻摇�?/ before-after 字幕 |\n| �?对比实验 | 制造冲�?| IP66 淋雨 2 小时 VS 普通灯 10 分钟 | “下暴雨照样亮！�?| 水声 / 慢动�?|\n| �?安装指南 | 减少顾虑 | 1 �?5 分钟更换工矿�?| “安装比换灯泡还快？�?| 轻快 ukulele / 中文+英文双语 |\n| �?行业科普 | 关键词沉淀 | DLC Premium �?UL 区别 60 秒讲�?| “工程招标必�?3 个认证！�?| Lo-fi / 关键字高�?|\n\n---\n## 4. 源素材拍摄计�?(4 �?\n�?每周 6 大场�?× 3 机位 = **18 组原�?*\n�?4 周共 **72 组原�?*  �?AI 裂变 �?**180 条短视频**\n\n| 周次 | 场景 | 机位指引 | 关键台词 / 旁白 |\n|------|------|----------|----------------|\n| Week1 | 工厂 SMT �?& 老化�?| �?正面跟拍 �?俯拍传送带 �?特写元件 | “每片灯板上 2835 芯片精准贴装 6000 �?小时�?|\n| Week1 | IP66 淋雨实验�?| �?慢动作水�?�?仰拍灯体 �?手持解说 | “连�?2 小时，灯珠无闪烁�?|\n| Week2 | 北美港口案例夜景 | �?无人机空�?�?地面对比 �?客户采访 | �?0 米高灯杆仍达 30lx�?|\n| Week2 | 150lm/W 对比老款�?| �?同帧亮度对比 �?功率表读�?�?侧拍主持�?| “同功率亮度提升 2 倍�?|\n| Week3 | 工矿灯安装教�?| �?头顶 GoPro �?正面解说 �?特写接线�?| “吊装一步到位， 5 分钟搞定�?|\n| Week3 | CEO 访谈 | �?正面 4K �?半身侧面 �?手势特写 | “为何敢�?10 年质保？�?|\n| Week4 | 路灯道路实拍 | �?往返车�?�?抬头仰拍 �?DALI 调光演示 | “光�?<10% @10,000h�?|\n| Week4 | 收发�?& 包装 | �?高位货架 �?包装跌落实验 �?快速装�?| �? 天快速交付全球�?|\n\n---\n## 5. 30 天发布日�?(示例�?7 �?\n| Day | TikTok | YouTube Shorts | LinkedIn |\n|-----|--------|---------------|----------|\n| 1 | 工厂 SMT �?| 工厂 SMT �?(长字幕版) | 同步 + #manufacturing |\n| 2 | IP66 淋雨实验 | IP66 实验 | CEO 转发并评�?|\n| 3 | 150lm/W 对比 | 150lm/W 对比 | 业务员号配数据图 |\n| 4 | 安装教程 1 | 安装教程 1 | 客户痛点�?|\n| 5 | 港口案例 | 港口案例 | PDF 下载引流 |\n| 6 | 工厂探秘 2 | 工厂探秘 2 | 招募全球代理 |\n| 7 | 行业科普 DLC | 行业科普 DLC | 认证白皮�?CTA |\n…后续依�?Pillar 轮播 + 数据驱动动态调整。\n\n---\n## 6. 预算 & 人力\n1. 拍摄：�?,000 (两天包干 / 场地自有)\n2. AI 工具订阅：�?,000 (CapCut Pro, HeyGen, Descript �?\n3. 流量加速：¥3,000 (TikTok Spark Ads + YouTube TrueView + LinkedIn InMail)\n4. **总计** �?**¥10,000**\n\n团队最小配置：\n�?运营 1 �?(脚本&投放)\n�?拍摄 1 �?+ 协助 1 人\n�?后期全部交给 AI 模板\n\n---\n## 7. KPI 监测 & 优化\n�?每日看板：曝�?/ 完播 / 点赞 / 私信 / 线索\n�?�?3 天：筛�?Top20% 视频，加大投�?+ 多语字幕裂变\n�?30 天：�?CPL > ¥50，触发脚本重�?+ 定向微调 A/B\n\n---\n## 8. 行动里程碑\n1. D1–D2：完�?72 组源素材拍摄\n2. D3–D5：首�?30 条视频剪�?& 上字幕\n3. D6�? 账号同步开�?+ 种子投放\n4. D7：首轮数据回顾，标记赢家脚本\n5. D8–D14：二轮拍�?+ 发布 + A/B\n6. D15：半程复盘，重点加码案例类内容\n7. D16–D29：滚动“拍–剪–投–测”循环\n8. D30：月度复�?& 目标迭代\n\n---\n### 结束语\n您的专属《AOK LED Light 出海视频获客战略蓝图》已全部生成，照此执行即可快速触达全球工程项目及经销商，实现高质�?B2B 线索爆发！\n"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760438624994
@@ -7207,7 +7209,7 @@ INSERT INTO "redis_queue_messages" VALUES('f45a3c3a-a13d-4213-afbb-40bd4101d510'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。如果您想了解当前还需要合成多少个视频进行测试，请回复“开始”。我会立即为您查询并告知下一步。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。如果您想了解当前还需要合成多少个视频进行测试，请回复“开始”。我会立即为您查询并告知下一步�?,
     "data": {
       "video_link": ""
     }
@@ -7224,7 +7226,7 @@ INSERT INTO "redis_queue_messages" VALUES('b3677f76-e216-4ecf-b7c8-55502099313d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用B2B智能视频创作与发布助手。\n\n需要我为您统计当前还需要合成多少个视频来测试吗？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "你好！欢迎使用B2B智能视频创作与发布助手。\n\n需要我为您统计当前还需要合成多少个视频来测试吗？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -7241,7 +7243,7 @@ INSERT INTO "redis_queue_messages" VALUES('378c9c7d-b194-4196-86be-8fa94d92c076'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图显示：当前待制作的视频脚本还有 35 个，今天尚未发布视频。\n\n请在待制作脚本库中选择您想要优先制作的视频文案编号，并回复该编号。我将基于您选择的文案生成 10 份不同的拍摄脚本，供您挑选。",
+    "text": "最新作战地图显示：当前待制作的视频脚本还有 35 个，今天尚未发布视频。\n\n请在待制作脚本库中选择您想要优先制作的视频文案编号，并回复该编号。我将基于您选择的文案生�?10 份不同的拍摄脚本，供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -7258,7 +7260,7 @@ INSERT INTO "redis_queue_messages" VALUES('fc766d59-fbc0-49a1-a689-d913a791b72b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，拍摄脚本生成出现异常，系统仅返回 1 条脚本，未达到预期的 10 条。\n\n是否需要我为您重试生成拍摄脚本？如果需要，请回复“重试”；如有其他指示，也请告诉我。",
+    "text": "抱歉，拍摄脚本生成出现异常，系统仅返�?1 条脚本，未达到预期的 10 条。\n\n是否需要我为您重试生成拍摄脚本？如果需要，请回复“重试”；如有其他指示，也请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -7275,7 +7277,7 @@ INSERT INTO "redis_queue_messages" VALUES('daedf0b7-c685-4834-b550-2766061dc7e5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "很抱歉，系统再次仅返回 1 条脚本，可能是该文案的可拆分度较低所致。以下为脚本 1 的核心内容摘要，供您查看：1. 场景以工厂、装柜、设备前为主，人物多次出镜展示产品；- 关键词：高功率 LED、UFO 工矿灯、球场泛光灯、节能 70%、全球 80+ 国家应用- 机位：全景定格为主，配合不同服装与动作；- 亮点：突出 5–10 年质保、智能调光（0-10V / DALI / Zigbee）、IP66+IK08 防护。请确认下一步操作：A. 直接选用此脚本进行视频合成B. 更换其他文案重新生成脚本C. 再次尝试生成 10 条脚本回复“A”、“B”或“C”即可。",
+    "text": "很抱歉，系统再次仅返�?1 条脚本，可能是该文案的可拆分度较低所致。以下为脚本 1 的核心内容摘要，供您查看�?. 场景以工厂、装柜、设备前为主，人物多次出镜展示产品；- 关键词：高功�?LED、UFO 工矿灯、球场泛光灯、节�?70%、全�?80+ 国家应用- 机位：全景定格为主，配合不同服装与动作；- 亮点：突�?5�?0 年质保、智能调光（0-10V / DALI / Zigbee）、IP66+IK08 防护。请确认下一步操作：A. 直接选用此脚本进行视频合成B. 更换其他文案重新生成脚本C. 再次尝试生成 10 条脚本回复“A”、“B”或“C”即可�?,
     "data": {
       "video_link": ""
     }
@@ -7292,7 +7294,7 @@ INSERT INTO "redis_queue_messages" VALUES('1ed4951b-5a44-4230-925a-5cb7174e5610'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击上方链接预览。\n\n您对视频满意吗？如果确认无误，请输入“发布”，我将为您发布到 TikTok。",
+    "text": "视频已合成！请点击上方链接预览。\n\n您对视频满意吗？如果确认无误，请输入“发布”，我将为您发布�?TikTok�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -7309,7 +7311,7 @@ INSERT INTO "redis_queue_messages" VALUES('f8d52240-2c96-4669-95d1-b3994e7205a1'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的视频创作与发布助手。是否需要我先帮您查一下目前根据作战地图还需要合成多少个视频来测试？如果需要，请回复“是”，我将立即为您查询并继续下一步。",
+    "text": "您好！我是您的视频创作与发布助手。是否需要我先帮您查一下目前根据作战地图还需要合成多少个视频来测试？如果需要，请回复“是”，我将立即为您查询并继续下一步�?,
     "data": {
       "video_link": ""
     }
@@ -7326,7 +7328,7 @@ INSERT INTO "redis_queue_messages" VALUES('3b3d5cd7-512d-40bf-8bf1-6d1e7109a330'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新的作战地图：\n1. 待制作视频脚本：35 个\n2. 今日已排期发布视频：0 条\n\n也就是说，目前还需要合成 35 个视频来完成测试。\n\n请您从待制作视频脚本库中选择一个想先制作的视频文案，并告诉我对应的编号。我将基于您选择的文案为您生成 10 份不同的拍摄脚本，供您挑选。",
+    "text": "根据最新的作战地图：\n1. 待制作视频脚本：35 个\n2. 今日已排期发布视频：0 条\n\n也就是说，目前还需要合�?35 个视频来完成测试。\n\n请您从待制作视频脚本库中选择一个想先制作的视频文案，并告诉我对应的编号。我将基于您选择的文案为您生�?10 份不同的拍摄脚本，供您挑选�?,
     "data": {
       "video_link": ""
     }
@@ -7343,7 +7345,7 @@ INSERT INTO "redis_queue_messages" VALUES('e23137d3-7f55-44bf-ad7c-db22e001ef9d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，已根据您选择的文案 #1 生成拍摄脚本，现摘要如下：\n\n1. 脚本 1（示例）\n   • 主题定位：高效深圳智造照明，UFO 工矿灯 / 模组路灯 / 球场泛光灯\n   • 核心台词：高功率 LED，170 lm/W，IP66+IK08，0-10V / DALI 智能调光，可接入 Zigbee，5-10 年原厂质保，节能 70%，已出货百万套，照亮全球 80+ 国家仓储、港口、球场与街区\n   • 主要镜头：\n     1. 工厂大门前全景——品牌/工厂门头\n     2. 产线走拍——大功率 LED 芯片、自动化贴片\n     3. 老化测试特写——设备、温升、寿命\n     4. 场景对比——球场照明前后对比\n     5. 实际应用——仓储 / 码头装灯中 / 街区夜景\n   • 画面风格：工业硬核 + 场景案例穿插，节奏紧凑\n   • 适配音乐：原创鼓点、电音节奏感强\n   • 话题标签：#aokled #ledlighting #industriallighting #highbay #stadiumlight\n\n请在上方脚本中选择一个您最满意的，回复对应编号（例如“1”）。我将基于该脚本为您合成视频。",
+    "text": "好的，已根据您选择的文�?#1 生成拍摄脚本，现摘要如下：\n\n1. 脚本 1（示例）\n   �?主题定位：高效深圳智造照明，UFO 工矿�?/ 模组路灯 / 球场泛光灯\n   �?核心台词：高功率 LED�?70 lm/W，IP66+IK08�?-10V / DALI 智能调光，可接入 Zigbee�?-10 年原厂质保，节能 70%，已出货百万套，照亮全球 80+ 国家仓储、港口、球场与街区\n   �?主要镜头：\n     1. 工厂大门前全景——品�?工厂门头\n     2. 产线走拍——大功率 LED 芯片、自动化贴片\n     3. 老化测试特写——设备、温升、寿命\n     4. 场景对比——球场照明前后对比\n     5. 实际应用——仓�?/ 码头装灯�?/ 街区夜景\n   �?画面风格：工业硬�?+ 场景案例穿插，节奏紧凑\n   �?适配音乐：原创鼓点、电音节奏感强\n   �?话题标签�?aokled #ledlighting #industriallighting #highbay #stadiumlight\n\n请在上方脚本中选择一个您最满意的，回复对应编号（例如�?”）。我将基于该脚本为您合成视频�?,
     "data": {
       "video_link": ""
     }
@@ -7360,7 +7362,7 @@ INSERT INTO "redis_queue_messages" VALUES('c14b988a-cac8-4528-aad3-b7f618465105'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击上方链接预览效果。\n\n您对视频满意吗？如果确认无误，请回复“发布”，我将立即为您发布到 TikTok。",
+    "text": "视频已合成！请点击上方链接预览效果。\n\n您对视频满意吗？如果确认无误，请回复“发布”，我将立即为您发布�?TikTok�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -7377,7 +7379,7 @@ INSERT INTO "redis_queue_messages" VALUES('219c3cf6-229e-44ab-9832-8c126e2bb25e'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用智能视频创作与发布助手。\n\n目前我们可以先查看作战地图，了解还需要拍摄多少条测试视频。请问您是否需要现在获取这个信息？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "你好！欢迎使用智能视频创作与发布助手。\n\n目前我们可以先查看作战地图，了解还需要拍摄多少条测试视频。请问您是否需要现在获取这个信息？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -7411,7 +7413,7 @@ INSERT INTO "redis_queue_messages" VALUES('7888b0bb-8420-492d-b2bb-1db5703ce926'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "统计结果如下：\n1. 待制作视频脚本数量：35 个\n2. 今日已准备发布：0 条视频\n\n也就是说，您目前还有 35 个脚本等待合成视频。\n\n请在脚本库中选择您想要先合成的脚本编号，并回复该编号（如“12”）。收到编号后，我将为您拆解并生成该脚本的详细拍摄方案。",
+    "text": "统计结果如下：\n1. 待制作视频脚本数量：35 个\n2. 今日已准备发布：0 条视频\n\n也就是说，您目前还有 35 个脚本等待合成视频。\n\n请在脚本库中选择您想要先合成的脚本编号，并回复该编号（如�?2”）。收到编号后，我将为您拆解并生成该脚本的详细拍摄方案�?,
     "data": {
       "video_link": ""
     }
@@ -7428,7 +7430,7 @@ INSERT INTO "redis_queue_messages" VALUES('8c3c8dfb-e8ec-4802-9513-2772d2a20e32'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。为了开始今天的工作，请问您想要先了解当前作战地图及仍需测试的视频数量吗？如果需要，请回复“开始”，我会立即为您提取相关信息。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。为了开始今天的工作，请问您想要先了解当前作战地图及仍需测试的视频数量吗？如果需要，请回复“开始”，我会立即为您提取相关信息�?,
     "data": {
       "video_link": ""
     }
@@ -7445,7 +7447,7 @@ INSERT INTO "redis_queue_messages" VALUES('8f78c75f-736c-40f5-9872-034009f9c2f4'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "目前的作战地图显示：今天还没有排定视频发布任务。\n待制作视频脚本库中共有 35 个脚本需要合成视频进行测试。\n\n请您选择要优先制作的视频脚本编号（例如输入“3”），我将为您提取该脚本并拆解成拍摄所需的详细信息。",
+    "text": "目前的作战地图显示：今天还没有排定视频发布任务。\n待制作视频脚本库中共�?35 个脚本需要合成视频进行测试。\n\n请您选择要优先制作的视频脚本编号（例如输入�?”），我将为您提取该脚本并拆解成拍摄所需的详细信息�?,
     "data": {
       "video_link": ""
     }
@@ -7462,7 +7464,7 @@ INSERT INTO "redis_queue_messages" VALUES('888522bc-04c6-43e6-a7d2-a38d2a6eb607'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新的作战地图：\n• 今日已排定待发布视频：0 条 \n• 待测试脚本库剩余：35 条\n\n您选择的脚本【1】已成功拆解，关键拍摄信息如下：\n1) 品牌 / 产品：HSAI\n2) 原始文案：高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发\n3) 优化后文案：高效深圳智造照明 自主设计工矿灯 高光效路灯 球场级泛光灯\n4) 推荐话题标签：#aokled #ledlighting #industriallighting #highbay #stadiumlight\n\n请确认下一步操作：\n• 如果满意并希望立即合成视频，请回复 “合成”。\n• 如果想重新选择脚本，请输入新的脚本编号。",
+    "text": "根据最新的作战地图：\n�?今日已排定待发布视频�? �?\n�?待测试脚本库剩余�?5 条\n\n您选择的脚本�?】已成功拆解，关键拍摄信息如下：\n1) 品牌 / 产品：HSAI\n2) 原始文案：高端中国佛山家�?意大利设计沙�?大户型沙�?别墅沙发\n3) 优化后文案：高效深圳智造照�?自主设计工矿�?高光效路�?球场级泛光灯\n4) 推荐话题标签�?aokled #ledlighting #industriallighting #highbay #stadiumlight\n\n请确认下一步操作：\n�?如果满意并希望立即合成视频，请回�?“合成”。\n�?如果想重新选择脚本，请输入新的脚本编号�?,
     "data": {
       "video_link": ""
     }
@@ -7479,7 +7481,7 @@ INSERT INTO "redis_queue_messages" VALUES('026d2d11-4eb2-4b89-8314-1b82181328fd'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已成功合成！请点击上方链接预览成片。\n\n如果您对视频满意并希望立即发布到 TikTok，请回复“发布”；若需调整或放弃发布，请告诉我您的想法。",
+    "text": "视频已成功合成！请点击上方链接预览成片。\n\n如果您对视频满意并希望立即发布到 TikTok，请回复“发布”；若需调整或放弃发布，请告诉我您的想法�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -7496,7 +7498,7 @@ INSERT INTO "redis_queue_messages" VALUES('8a38f5f7-18d4-410f-a641-a2721ac3f52e'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。#您想了解目前根据作战地图还需要合成多少个视频来进行测试吗？如果需要，请回复“查看”或“是”，我将立即为您查询。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手�?您想了解目前根据作战地图还需要合成多少个视频来进行测试吗？如果需要，请回复“查看”或“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -7513,7 +7515,7 @@ INSERT INTO "redis_queue_messages" VALUES('466f3d46-de7c-4fba-9a8e-7119095f276b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图显示：\n1. 当前待制作视频脚本数量：35 个。\n2. 今日已准备发布的视频数量：0 条。\n\n也就是说，我们今天还有 35 个脚本等待拍摄与测试。\n\n请从脚本库中选择您要优先拍摄的脚本编号（例如输入“3”或“12”）。您也可以一次输入多个编号（例如“3,12,15”），我将为您提取对应脚本内容并进行拆解。",
+    "text": "最新作战地图显示：\n1. 当前待制作视频脚本数量：35 个。\n2. 今日已准备发布的视频数量�? 条。\n\n也就是说，我们今天还�?35 个脚本等待拍摄与测试。\n\n请从脚本库中选择您要优先拍摄的脚本编号（例如输入�?”或�?2”）。您也可以一次输入多个编号（例如�?,12,15”），我将为您提取对应脚本内容并进行拆解�?,
     "data": {
       "video_link": ""
     }
@@ -7530,7 +7532,7 @@ INSERT INTO "redis_queue_messages" VALUES('1c6ece0f-32a3-411e-99f3-68880d0f0b82'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "脚本编号 1 的拆解已完成，信息如下：\n\n1. 原始文案：高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发\n2. 新推荐文案（TTS）：高效深圳智造照明 自主设计工矿灯 高光效路灯 球场级泛光灯\n3. 推荐标签：#aokled #ledlighting #industriallighting #highbay #stadiumlight\n4. 分镜结构：共 5 个镜头（已按时间顺序完成脚本标注）。\n\n目前根据作战地图，今日待测试脚本仍有 35 个。\n\n请确认是否需要立即合成此脚本对应的视频？\n• 如果需要，请回复“合成”。\n• 如果想选择其他脚本，请回复相应编号。\n\n等待您的指令！",
+    "text": "脚本编号 1 的拆解已完成，信息如下：\n\n1. 原始文案：高端中国佛山家�?意大利设计沙�?大户型沙�?别墅沙发\n2. 新推荐文案（TTS）：高效深圳智造照�?自主设计工矿�?高光效路�?球场级泛光灯\n3. 推荐标签�?aokled #ledlighting #industriallighting #highbay #stadiumlight\n4. 分镜结构：共 5 个镜头（已按时间顺序完成脚本标注）。\n\n目前根据作战地图，今日待测试脚本仍有 35 个。\n\n请确认是否需要立即合成此脚本对应的视频？\n�?如果需要，请回复“合成”。\n�?如果想选择其他脚本，请回复相应编号。\n\n等待您的指令�?,
     "data": {
       "video_link": ""
     }
@@ -7547,7 +7549,7 @@ INSERT INTO "redis_queue_messages" VALUES('dc577f10-aed0-456a-9c4c-31f8b1f00679'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击上方链接预览。\n\n视频正文：这套固定式超高光效LED照明方案，160 lm/W 的亮度展现与磁吸轨道灯同级的极简现代感，却无需任何可移动配件。若你想让仓库、体育场或展示墙获得从头到尾无缝衔接的均匀光带，这就是节能 70% 以上的最佳答案。它秉持 AOK“节能·环保·品质可靠”理念，为当代工业与商业空间注入清爽光线。AOK 自有工厂设计制造，UL/DLC 认证，模块化结构易维护，5–10 年质保守护每一盏灯。\n\n标签：#aokled #highbaylight #industriallighting #ledfloodlight #energysaving #ulcertified #ip66 #warehouselighting #lightingdesign #fyp\n\n您对视频满意吗？如果确认无误，请回复“发布”，我将立即为您发布到 TikTok。",
+    "text": "视频已合成！请点击上方链接预览。\n\n视频正文：这套固定式超高光效LED照明方案�?60 lm/W 的亮度展现与磁吸轨道灯同级的极简现代感，却无需任何可移动配件。若你想让仓库、体育场或展示墙获得从头到尾无缝衔接的均匀光带，这就是节能 70% 以上的最佳答案。它秉持 AOK“节能·环保·品质可靠”理念，为当代工业与商业空间注入清爽光线。AOK 自有工厂设计制造，UL/DLC 认证，模块化结构易维护，5�?0 年质保守护每一盏灯。\n\n标签�?aokled #highbaylight #industriallighting #ledfloodlight #energysaving #ulcertified #ip66 #warehouselighting #lightingdesign #fyp\n\n您对视频满意吗？如果确认无误，请回复“发布”，我将立即为您发布�?TikTok�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -7564,7 +7566,7 @@ INSERT INTO "redis_queue_messages" VALUES('c49e845a-559a-400b-b58e-0138b32cf5f7'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "发布成功！您的视频已发布至 TikTok。发布后的视频链接（如需查看数据，您可在后台打开）：感谢您的使用！如需进一步制作其他脚本的视频，请随时告诉我。",
+    "text": "发布成功！您的视频已发布�?TikTok。发布后的视频链接（如需查看数据，您可在后台打开）：感谢您的使用！如需进一步制作其他脚本的视频，请随时告诉我�?,
     "data": {
       "video_link": "https://database.blotato.io/storage/v1/object/public/public_media/38b34a66-db97-4117-9f9f-2ae97e8e0897/37d45950-007e-4984-aaad-69ad38b81f62.mp4#https://database.blotato.io/storage/v1/object/public/public_media/38b34a66-db97-4117-9f9f-2ae97e8e0897/37d45950-007e-4984-aaad-69ad38b81f62.mp4"
     }
@@ -7581,7 +7583,7 @@ INSERT INTO "redis_queue_messages" VALUES('df323280-f031-4373-81a2-a568081ac73c'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用B2B智能视频创作与发布助手。\n\n目前我可以为您查看作战地图，并统计还需要拍摄多少条测试视频。是否需要现在执行该操作？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "你好！欢迎使用B2B智能视频创作与发布助手。\n\n目前我可以为您查看作战地图，并统计还需要拍摄多少条测试视频。是否需要现在执行该操作？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -7598,7 +7600,7 @@ INSERT INTO "redis_queue_messages" VALUES('3e8e6f7d-c6a8-474f-b2d4-9323de818205'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图显示：\n1. 待制作视频脚本：35 个\n2. 今日任务：暂未发布视频\n\n也就是说，我们目前还有 35 个脚本需要依次合成测试。\n\n请从脚本库中选择您想优先拍摄的脚本编号（例如输入“3”或“12”）。收到编号后，我将立即为您提取脚本并进行拆解。",
+    "text": "最新作战地图显示：\n1. 待制作视频脚本：35 个\n2. 今日任务：暂未发布视频\n\n也就是说，我们目前还�?35 个脚本需要依次合成测试。\n\n请从脚本库中选择您想优先拍摄的脚本编号（例如输入�?”或�?2”）。收到编号后，我将立即为您提取脚本并进行拆解�?,
     "data": {
       "video_link": ""
     }
@@ -7615,7 +7617,7 @@ INSERT INTO "redis_queue_messages" VALUES('1cd3b5fb-1945-41de-b40f-5616c1dcd80d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图，当前待制作的视频脚本共有 35 个，今日尚未安排发布任务。接下来，请在脚本库中选择您想优先制作的脚本编号（例如输入“12”）。我将为您提取该脚本的全部信息并进行拆解。",
+    "text": "根据最新作战地图，当前待制作的视频脚本共有 35 个，今日尚未安排发布任务。接下来，请在脚本库中选择您想优先制作的脚本编号（例如输入�?2”）。我将为您提取该脚本的全部信息并进行拆解�?,
     "data": {
       "video_link": ""
     }
@@ -7632,7 +7634,7 @@ INSERT INTO "redis_queue_messages" VALUES('cab6efff-64e9-45f5-af62-22f6b84ecf39'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "作战地图更新：当前待制作的视频脚本共有 35 个，今日尚未安排发布任务。#您已选择脚本编号 1，脚本拆解结果如下：#• 原始文案：高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发#• 新优化文案：高效深圳智造照明 自主设计工矿灯 高光效路灯 球场级泛光灯#• 推荐标签：#aokled #ledlighting #industriallighting #highbay #stadiumlight#请确认是否需要立即合成该视频？#如果需要，请回复“合成”，我将为您开始视频制作；#如果想更换脚本，请直接回复其他脚本编号。",
+    "text": "作战地图更新：当前待制作的视频脚本共�?35 个，今日尚未安排发布任务�?您已选择脚本编号 1，脚本拆解结果如下：#�?原始文案：高端中国佛山家�?意大利设计沙�?大户型沙�?别墅沙发#�?新优化文案：高效深圳智造照�?自主设计工矿�?高光效路�?球场级泛光灯#�?推荐标签�?aokled #ledlighting #industriallighting #highbay #stadiumlight#请确认是否需要立即合成该视频�?如果需要，请回复“合成”，我将为您开始视频制作；#如果想更换脚本，请直接回复其他脚本编号�?,
     "data": {
       "video_link": ""
     }
@@ -7649,7 +7651,7 @@ INSERT INTO "redis_queue_messages" VALUES('32431a09-76eb-4005-97ce-7cdde7ae9488'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图已更新：\n• 待制作视频脚本：35 个\n• 今日任务：0 条视频尚未发布\n\n我已尝试为您提取 12 号脚本，但系统暂未检索到该编号的脚本信息，可能编号有误或脚本已被移除。\n\n请您核对脚本编号后，再告诉我想要拍摄的脚本编号（例如 1、5、18 等）。收到正确编号后，我将立即为您完成脚本拆解并进入合成流程。",
+    "text": "最新作战地图已更新：\n�?待制作视频脚本：35 个\n�?今日任务�? 条视频尚未发布\n\n我已尝试为您提取 12 号脚本，但系统暂未检索到该编号的脚本信息，可能编号有误或脚本已被移除。\n\n请您核对脚本编号后，再告诉我想要拍摄的脚本编号（例如 1�?�?8 等）。收到正确编号后，我将立即为您完成脚本拆解并进入合成流程�?,
     "data": {
       "video_link": ""
     }
@@ -7666,7 +7668,7 @@ INSERT INTO "redis_queue_messages" VALUES('94701026-d568-4645-b152-0ddc1628d833'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击下方链接预览：\n\n请确认您是否满意该视频。\n• 如果确认无误，请直接回复“发布”，我将立即为您发布到 TikTok。\n• 如果需要调整，请告诉我具体修改意见。",
+    "text": "视频已合成！请点击下方链接预览：\n\n请确认您是否满意该视频。\n�?如果确认无误，请直接回复“发布”，我将立即为您发布�?TikTok。\n�?如果需要调整，请告诉我具体修改意见�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4#https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -7683,7 +7685,7 @@ INSERT INTO "redis_queue_messages" VALUES('dd41b3bc-d08b-40d7-af33-2c62fcd5bc23'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "发布成功！您的视频已发布至 TikTok：#您可以登录账号后台查看视频数据。感谢使用，期待下次再为您服务！",
+    "text": "发布成功！您的视频已发布�?TikTok�?您可以登录账号后台查看视频数据。感谢使用，期待下次再为您服务！",
     "data": {
       "video_link": "https://database.blotato.io/storage/v1/object/public/public_media/38b34a66-db97-4117-9f9f-2ae97e8d0897/37d45950-007e-4984-aaad-69ad38b81f62.mp4"
     }
@@ -7700,7 +7702,7 @@ INSERT INTO "redis_queue_messages" VALUES('46f9e891-c827-49da-96c5-b3c73e30e413'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用B2B智能视频创作与发布助手。是否需要查询当前作战地图，以了解还需要合成多少个视频来测试？如果需要，请回复“是”，我将立即为您获取相关信息。",
+    "text": "您好！欢迎使用B2B智能视频创作与发布助手。是否需要查询当前作战地图，以了解还需要合成多少个视频来测试？如果需要，请回复“是”，我将立即为您获取相关信息�?,
     "data": {
       "video_link": ""
     }
@@ -7717,7 +7719,7 @@ INSERT INTO "redis_queue_messages" VALUES('fa7c0e45-c140-47cf-b9d4-1c9311f6f004'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "当前作战地图显示：今日任务准备发布 0 条视频；待制作视频脚本库中还有 35 个脚本需要合成测试。\n\n请从脚本库中选择想要先行测试的脚本编号（例如输入“3”或“12”）。输入编号后，我将为您拆解并生成对应的视频脚本。",
+    "text": "当前作战地图显示：今日任务准备发�?0 条视频；待制作视频脚本库中还�?35 个脚本需要合成测试。\n\n请从脚本库中选择想要先行测试的脚本编号（例如输入�?”或�?2”）。输入编号后，我将为您拆解并生成对应的视频脚本�?,
     "data": {
       "video_link": ""
     }
@@ -7734,7 +7736,7 @@ INSERT INTO "redis_queue_messages" VALUES('e6729a17-0169-47b6-9995-ed272193a196'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用智能视频创作助手。您想先了解当前还需要拍摄多少视频来做测试吗？如果需要，请告诉我，我将为您提取作战地图并计算剩余拍摄数量。",
+    "text": "你好！欢迎使用智能视频创作助手。您想先了解当前还需要拍摄多少视频来做测试吗？如果需要，请告诉我，我将为您提取作战地图并计算剩余拍摄数量�?,
     "data": {
       "video_link": ""
     }
@@ -7751,7 +7753,7 @@ INSERT INTO "redis_queue_messages" VALUES('22bd9ce4-48c6-42e1-948b-a2b0c30cb21a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。如果您想了解目前还需要拍摄多少个视频来进行测试，请告诉我，我将立即为您查询并反馈结果。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。如果您想了解目前还需要拍摄多少个视频来进行测试，请告诉我，我将立即为您查询并反馈结果�?,
     "data": {
       "video_link": ""
     }
@@ -7768,7 +7770,7 @@ INSERT INTO "redis_queue_messages" VALUES('705da61e-c782-4dd0-bff0-48f92ba3323b'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "抱歉，编号 1 的脚本未在待制作列表中。\n当前待制作脚本编号示例：2、24、31、23、28、35、34、29、33、37...\n\n请重新输入一个有效的脚本编号，我将为您拆解对应脚本。",
+    "text": "抱歉，编�?1 的脚本未在待制作列表中。\n当前待制作脚本编号示例：2�?4�?1�?3�?8�?5�?4�?9�?3�?7...\n\n请重新输入一个有效的脚本编号，我将为您拆解对应脚本�?,
     "data": {
       "video_link": ""
     }
@@ -7785,7 +7787,7 @@ INSERT INTO "redis_queue_messages" VALUES('84a61fb1-6295-441d-b50a-537d5bc2e15c'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "当前作战地图显示：今天计划发布0条视频。待制作的视频脚本共有35个，分别是编号：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54。请从以上编号中选择您想先制作的视频脚本编号（例如输入“24”），我将为您提取对应脚本并进行拆解。",
+    "text": "当前作战地图显示：今天计划发�?条视频。待制作的视频脚本共�?5个，分别是编号：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54。请从以上编号中选择您想先制作的视频脚本编号（例如输入�?4”），我将为您提取对应脚本并进行拆解�?,
     "data": {
       "video_link": ""
     }
@@ -7802,7 +7804,7 @@ INSERT INTO "redis_queue_messages" VALUES('a18183dc-baa4-4704-8815-22ac925914ea'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作与发布助手。\n\n我可以先为您提取当前作战地图，并告诉您还需要合成多少个视频用于测试。请问您需要查看吗？如果需要，请回复“是”。",
+    "text": "您好！欢迎使用智能视频创作与发布助手。\n\n我可以先为您提取当前作战地图，并告诉您还需要合成多少个视频用于测试。请问您需要查看吗？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -7819,7 +7821,7 @@ INSERT INTO "redis_queue_messages" VALUES('78fae0a8-4b4e-482e-ae6c-97b703d2cdd2'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新作战地图，今日尚未发布视频；待制作脚本库中目前还有 35 个视频需要合成用于测试。\n\n以下为待合成的脚本编号列表：\n2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从上述编号中选择您想优先制作的视频脚本（例如回复“2”）。",
+    "text": "根据最新作战地图，今日尚未发布视频；待制作脚本库中目前还有 35 个视频需要合成用于测试。\n\n以下为待合成的脚本编号列表：\n2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从上述编号中选择您想优先制作的视频脚本（例如回复�?”）�?,
     "data": {
       "video_link": ""
     }
@@ -7836,7 +7838,7 @@ INSERT INTO "redis_queue_messages" VALUES('5833692f-1d26-4e9c-a399-baa01aa9ae8d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "脚本编号 54 的内容已成功拆解，生成更新后的拍摄脚本与标签如下：#【新版视频文案】#展示 AOK 160 lm/W LED 模组，准备焊接。自动焊锡机将模组焊在专利散热板上。展示 AOK 恒流驱动，待焊接。焊接驱动输入端到 LED，确保 IP66 防护。焊接 0-10 V 调光线到指定位置。焊接微波感应模块到控制端。焊接 NTC 温控探头，防过热。焊接 Zigbee 模块，实现智能联控。焊接红黑 AC 输入线到电路。装上防水电源线并锁紧接头。接入老化电源，为灯具通电。探针测试驱动，蜂鸣器响，质保 10 年。探针点亮 LED，180 lm/W 光束瞬亮厂房，省电 70%。#【建议话题标签】##aok #ledlight #highbay #assembly #industriallighting #energysaving #smartcontrol#请确认是否需要使用该脚本立即合成视频？#如果需要，请回复“合成”或“是”。如需选择其他脚本，请回复新的编号。",
+    "text": "脚本编号 54 的内容已成功拆解，生成更新后的拍摄脚本与标签如下�?【新版视频文案�?展示 AOK 160 lm/W LED 模组，准备焊接。自动焊锡机将模组焊在专利散热板上。展�?AOK 恒流驱动，待焊接。焊接驱动输入端�?LED，确�?IP66 防护。焊�?0-10 V 调光线到指定位置。焊接微波感应模块到控制端。焊�?NTC 温控探头，防过热。焊�?Zigbee 模块，实现智能联控。焊接红�?AC 输入线到电路。装上防水电源线并锁紧接头。接入老化电源，为灯具通电。探针测试驱动，蜂鸣器响，质�?10 年。探针点�?LED�?80 lm/W 光束瞬亮厂房，省�?70%�?【建议话题标签�?#aok #ledlight #highbay #assembly #industriallighting #energysaving #smartcontrol#请确认是否需要使用该脚本立即合成视频�?如果需要，请回复“合成”或“是”。如需选择其他脚本，请回复新的编号�?,
     "data": {
       "video_link": ""
     }
@@ -7853,7 +7855,7 @@ INSERT INTO "redis_queue_messages" VALUES('4ae61e7c-707a-4a65-8a76-94afacd54620'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击下方链接预览：您对视频满意吗？如果确认无误，请输入“发布”，我将为您发布到 TikTok。",
+    "text": "视频已合成！请点击下方链接预览：您对视频满意吗？如果确认无误，请输入“发布”，我将为您发布�?TikTok�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -7870,7 +7872,7 @@ INSERT INTO "redis_queue_messages" VALUES('2155bbd5-3654-4998-b112-b1220ea32674'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "脚本编号 39 已成功拆解！以下是为您生成的视频拍摄脚本概要：\n\n1. 商品/品牌：HSAI – AOK 高光效 LED 工业照明\n2. 核心卖点：160–170 lm/W 高光效、IP66 防护、模块化设计、0-10V/DALI 智能调光，安装即省电 70%，十年质保；支持 OEM/ODM，UL/DLC/CE 认证，7 天快速交付。\n3. 拍摄分镜（示例）：\n   • 00:00-01:00：工人涂胶准备贴墙板（中景定格）\n   • 01:00-03:84：把墙板按到墙面（近景定格）\n   • 03:84-07:68：特写电钻固定件（特写定格）\n   • 07:68-11:52：平移展示接缝细节（近景平移）\n   • 11:52-15:36：整体墙面效果（全景摇摄）\n   • 15:36-17:50：静态图展示防火/防潮/环保特性（特写定格）\n4. 建议文案（15-20 秒口播/字幕）：\n   “免费拿样!!! AOK 160-170 lm/W 高光效 LED 高棚灯、投光灯、路灯来袭！IP66 防护、模块化设计、0-10V/DALI 智能调光，安装即省电 70%。十年质保，仓库、工厂、球场夜如白昼！UL/DLC/CE 认证，7 天快速交付，支持 OEM/ODM。马上联系我们，光效升级、省钱又环保！”\n5. 推荐标签：#ledlight #highbay #floodlight #streetlight #industriallighting #energysaving #smartcontrol #ul #dlc #ce #oem #factory #aok\n\n请确认：是否使用以上脚本立即合成视频？\n• 如果确认，请回复“合成”，我将立即启动视频合成。\n• 如果需要修改，请告诉我具体调整需求。",
+    "text": "脚本编号 39 已成功拆解！以下是为您生成的视频拍摄脚本概要：\n\n1. 商品/品牌：HSAI �?AOK 高光�?LED 工业照明\n2. 核心卖点�?60�?70 lm/W 高光效、IP66 防护、模块化设计�?-10V/DALI 智能调光，安装即省电 70%，十年质保；支持 OEM/ODM，UL/DLC/CE 认证�? 天快速交付。\n3. 拍摄分镜（示例）：\n   �?00:00-01:00：工人涂胶准备贴墙板（中景定格）\n   �?01:00-03:84：把墙板按到墙面（近景定格）\n   �?03:84-07:68：特写电钻固定件（特写定格）\n   �?07:68-11:52：平移展示接缝细节（近景平移）\n   �?11:52-15:36：整体墙面效果（全景摇摄）\n   �?15:36-17:50：静态图展示防火/防潮/环保特性（特写定格）\n4. 建议文案�?5-20 秒口�?字幕）：\n   “免费拿�?!! AOK 160-170 lm/W 高光�?LED 高棚灯、投光灯、路灯来袭！IP66 防护、模块化设计�?-10V/DALI 智能调光，安装即省电 70%。十年质保，仓库、工厂、球场夜如白昼！UL/DLC/CE 认证�? 天快速交付，支持 OEM/ODM。马上联系我们，光效升级、省钱又环保！”\n5. 推荐标签�?ledlight #highbay #floodlight #streetlight #industriallighting #energysaving #smartcontrol #ul #dlc #ce #oem #factory #aok\n\n请确认：是否使用以上脚本立即合成视频？\n�?如果确认，请回复“合成”，我将立即启动视频合成。\n�?如果需要修改，请告诉我具体调整需求�?,
     "data": {
       "video_link": ""
     }
@@ -7887,7 +7889,7 @@ INSERT INTO "redis_queue_messages" VALUES('705a21f8-652e-467f-85bf-388d8ac24e3f'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "发布成功！您的视频已发布至 TikTok：\n\n您可以登录自己的账号后台查看详细的视频数据。感谢您的使用！",
+    "text": "发布成功！您的视频已发布�?TikTok：\n\n您可以登录自己的账号后台查看详细的视频数据。感谢您的使用！",
     "data": {
       "video_link": "https://database.blotato.io/storage/v1/object/public/public_media/38b34a66-db97-4117-9f9f-2ae97e8d0897/37d45950-007e-4984-aaad-69ad38b81f62.mp4#https://database.blotato.io/storage/v1/object/public/public_media/38b34a66-db97-4117-9f9f-2ae97e8d0897/37d45950-007e-4984-aaad-69ad38b81f62.mp4"
     }
@@ -7904,7 +7906,7 @@ INSERT INTO "redis_queue_messages" VALUES('e872d82f-d15a-419e-92c8-cd6880b4c3e6'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击下方链接预览：\n\n您对视频满意吗？如果确认无误，请输入“发布”，我将为您发布到 TikTok。",
+    "text": "视频已合成！请点击下方链接预览：\n\n您对视频满意吗？如果确认无误，请输入“发布”，我将为您发布�?TikTok�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4#https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -7938,7 +7940,7 @@ INSERT INTO "redis_queue_messages" VALUES('9f5e8444-8130-47b8-af7c-afda2d10057e'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作与发布助手。\n目前我可以先为您查看作战地图，统计还需要拍摄和测试多少条视频。请问您是否需要我立即进行统计？\n如果需要，请回复“是”，我将马上为您获取数据。",
+    "text": "您好！欢迎使用智能视频创作与发布助手。\n目前我可以先为您查看作战地图，统计还需要拍摄和测试多少条视频。请问您是否需要我立即进行统计？\n如果需要，请回复“是”，我将马上为您获取数据�?,
     "data": {
       "video_link": ""
     }
@@ -7955,7 +7957,7 @@ INSERT INTO "redis_queue_messages" VALUES('ddcf3c39-a36f-41e3-bfc2-9638a10c109d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "统计完毕！\n当前作战地图显示：\n1. 今日任务准备发布：0 条视频\n2. 待制作（需要测试）的脚本数量：35 条\n3. 可供选择的待合成视频编号如下：\n   2, 24, 31, 23, 28, 35, 34, 29, 33, 37,\n   30, 38, 27, 42, 39, 46, 43, 45, 36, 40,\n   41, 44, 47, 93, 48, 50, 53, 56, 49, 51,\n   57, 58, 55, 52, 54\n\n请从以上编号中选择您想要制作的视频脚本（例如输入“24”或“39”）。\n收到编号后，我将为您拆解并准备拍摄脚本。",
+    "text": "统计完毕！\n当前作战地图显示：\n1. 今日任务准备发布�? 条视频\n2. 待制作（需要测试）的脚本数量：35 条\n3. 可供选择的待合成视频编号如下：\n   2, 24, 31, 23, 28, 35, 34, 29, 33, 37,\n   30, 38, 27, 42, 39, 46, 43, 45, 36, 40,\n   41, 44, 47, 93, 48, 50, 53, 56, 49, 51,\n   57, 58, 55, 52, 54\n\n请从以上编号中选择您想要制作的视频脚本（例如输入�?4”或�?9”）。\n收到编号后，我将为您拆解并准备拍摄脚本�?,
     "data": {
       "video_link": ""
     }
@@ -7972,7 +7974,7 @@ INSERT INTO "redis_queue_messages" VALUES('baff07f9-901f-4c92-a6cf-5ca683305fdf'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已完成脚本拆解！以下是编号 41 的视频脚本关键信息：\n\n1. 新文案（可直接用于 TTS 配音）\n   带你直击 AOK 自有工厂，从 CNC 散热件开模、自动贴片到终极老化测试，见证 ≥170 lm/W、IP66 防护、0-10V 智能调光的 LED 高棚灯诞生全过程。节能 70%+、质保 10 年的硬核实力，一开灯就把整个厂房照成白昼！工业照明就该这么惊艳，也是我们自 2010 年成立以来始终践行“节能、环保、品质可靠”使命的最好证明；百万套产品畅销 80+ 国家，让客户安装省心、维护无忧。\n\n2. 推荐标签（hashtags）\n   #ledlighting #highbaylight #industriallighting #energysaving #manufacturing #fyp\n\n3. 参考分镜（已按场景拆解，可直接用于拍摄/剪辑）\n   • 教学与操作 3 个镜头 ≈ 10.5 秒\n   • 生产制造 13 个镜头 ≈ 51.5 秒\n   详见系统内分镜结构。\n\n请您确认：是否立即根据以上脚本合成视频？\n\n如果需要合成，请回复“合成”；如需修改文案或标签，请告诉我您的调整意见。",
+    "text": "已完成脚本拆解！以下是编�?41 的视频脚本关键信息：\n\n1. 新文案（可直接用�?TTS 配音）\n   带你直击 AOK 自有工厂，从 CNC 散热件开模、自动贴片到终极老化测试，见�?�?70 lm/W、IP66 防护�?-10V 智能调光�?LED 高棚灯诞生全过程。节�?70%+、质�?10 年的硬核实力，一开灯就把整个厂房照成白昼！工业照明就该这么惊艳，也是我们自 2010 年成立以来始终践行“节能、环保、品质可靠”使命的最好证明；百万套产品畅销 80+ 国家，让客户安装省心、维护无忧。\n\n2. 推荐标签（hashtags）\n   #ledlighting #highbaylight #industriallighting #energysaving #manufacturing #fyp\n\n3. 参考分镜（已按场景拆解，可直接用于拍摄/剪辑）\n   �?教学与操�?3 个镜�?�?10.5 秒\n   �?生产制�?13 个镜�?�?51.5 秒\n   详见系统内分镜结构。\n\n请您确认：是否立即根据以上脚本合成视频？\n\n如果需要合成，请回复“合成”；如需修改文案或标签，请告诉我您的调整意见�?,
     "data": {
       "video_link": ""
     }
@@ -7989,7 +7991,7 @@ INSERT INTO "redis_queue_messages" VALUES('1e3d474c-84e0-459a-81d5-f0c2337643f5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击下方链接预览：\n\n请您确认对视频是否满意：\n1. 如果需要调整文案、镜头或配乐，请告诉我具体修改意见。\n2. 如果确认无误，请回复“发布”，我将立即为您发布到 TikTok。",
+    "text": "视频已合成！请点击下方链接预览：\n\n请您确认对视频是否满意：\n1. 如果需要调整文案、镜头或配乐，请告诉我具体修改意见。\n2. 如果确认无误，请回复“发布”，我将立即为您发布�?TikTok�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4#https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -8006,7 +8008,7 @@ INSERT INTO "redis_queue_messages" VALUES('af12d65b-a13c-45ad-909d-d78813fd62cd'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "发布成功！您的视频已成功发布到 TikTok。\n您可以登录账号后台查看实时数据表现。\n\n感谢使用智能视频创作与发布助手，祝您视频爆量！",
+    "text": "发布成功！您的视频已成功发布�?TikTok。\n您可以登录账号后台查看实时数据表现。\n\n感谢使用智能视频创作与发布助手，祝您视频爆量�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -8023,7 +8025,7 @@ INSERT INTO "redis_queue_messages" VALUES('51aeefa7-8c80-4c60-bedd-0a2005a096a7'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用智能视频创作与发布助手。\n\n目前我可以先为您查看作战地图，并告诉您还需要合成多少个视频用于测试。请问您现在是否需要查看？如果需要，请回复“是”。",
+    "text": "你好！欢迎使用智能视频创作与发布助手。\n\n目前我可以先为您查看作战地图，并告诉您还需要合成多少个视频用于测试。请问您现在是否需要查看？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -8040,7 +8042,7 @@ INSERT INTO "redis_queue_messages" VALUES('57d4fe0a-d94b-4a28-87ca-b48b8c695c17'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图信息如下：\n1. 待制作视频脚本数量：35 个\n2. 今日计划已发布视频：0 条\n3. 待合成的视频编号列表：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从上述编号中选择一个您想优先合成的视频脚本，例如输入“24”或“31”等编号。我将为您提取对应脚本并进行拆解。",
+    "text": "最新作战地图信息如下：\n1. 待制作视频脚本数量：35 个\n2. 今日计划已发布视频：0 条\n3. 待合成的视频编号列表�?, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从上述编号中选择一个您想优先合成的视频脚本，例如输入�?4”或�?1”等编号。我将为您提取对应脚本并进行拆解�?,
     "data": {
       "video_link": ""
     }
@@ -8057,7 +8059,7 @@ INSERT INTO "redis_queue_messages" VALUES('4bd799d9-8557-47a3-95df-84d10232542f'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！我是您的B2B智能视频创作与发布助手。\n为了帮助您规划接下来的拍摄任务，您需要先确认是否想查看当前作战地图中还需要合成多少个视频进行测试。\n如果需要，请回复“是”，我将为您统计剩余待测视频数量并继续下一步。",
+    "text": "你好！我是您的B2B智能视频创作与发布助手。\n为了帮助您规划接下来的拍摄任务，您需要先确认是否想查看当前作战地图中还需要合成多少个视频进行测试。\n如果需要，请回复“是”，我将为您统计剩余待测视频数量并继续下一步�?,
     "data": {
       "video_link": ""
     }
@@ -8074,7 +8076,7 @@ INSERT INTO "redis_queue_messages" VALUES('3ed0039e-6d97-4399-9778-219632082ebb'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "根据最新的作战地图，目前：\n• 今日计划发布的视频：0 条\n• 待制作的脚本数量：35 条\n• 待合成的视频编号列表：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从上方编号中选择一个您希望优先拆解并制作的视频编号，并直接回复该编号（如“24”）。我将立即为您提取对应脚本并进行拆解。",
+    "text": "根据最新的作战地图，目前：\n�?今日计划发布的视频：0 条\n�?待制作的脚本数量�?5 条\n�?待合成的视频编号列表�?, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从上方编号中选择一个您希望优先拆解并制作的视频编号，并直接回复该编号（如�?4”）。我将立即为您提取对应脚本并进行拆解�?,
     "data": {
       "video_link": ""
     }
@@ -8091,7 +8093,7 @@ INSERT INTO "redis_queue_messages" VALUES('913408d0-3969-4091-870a-9c2bc770e22a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "编号 24 的脚本已拆解完成，详情如下：#1. 原视频链接：#2. 分镜结构：#• 镜头 1（00:00–00:02.85）女子在工厂车间展示生产线#• 镜头 2（00:02.85–00:04.95）介绍产品质量#• 镜头 3（00:04.95–00:06.95）展示原材料并竖起大拇指#• 镜头 4（00:06.95–00:11.00）仓库货架间行走并做拨电话手势#3. 新英文文案（已针对 TikTok B2B 受众优化）：#想为仓库、工厂或球场换灯？来看看深圳 AOK 自有工厂！150-180 lm/W 超高光效 LED 高棚灯、泛光灯、路灯，一台顶两台，节能 70%+，5-10 年质保，用得放心。专利散热、智能调光，更省心。留言 “Hi” 获取快速报价，7 天出货，全球 80+ 国家都在用，下一位就是你！#4. 新标签：#ledlighting #industriallight #energysaving #highbay #floodlight #streetlight #aok#请确认：您是否需要立即合成该视频？#• 如果确认，请回复“合成”；#• 如需调整文案或标签，请直接告诉我修改意见。",
+    "text": "编号 24 的脚本已拆解完成，详情如下：#1. 原视频链接：#2. 分镜结构�?�?镜头 1�?0:00�?0:02.85）女子在工厂车间展示生产�?�?镜头 2�?0:02.85�?0:04.95）介绍产品质�?�?镜头 3�?0:04.95�?0:06.95）展示原材料并竖起大拇指#�?镜头 4�?0:06.95�?0:11.00）仓库货架间行走并做拨电话手�?3. 新英文文案（已针�?TikTok B2B 受众优化）：#想为仓库、工厂或球场换灯？来看看深圳 AOK 自有工厂�?50-180 lm/W 超高光效 LED 高棚灯、泛光灯、路灯，一台顶两台，节�?70%+�?-10 年质保，用得放心。专利散热、智能调光，更省心。留言 “Hi�?获取快速报价，7 天出货，全球 80+ 国家都在用，下一位就是你�?4. 新标签：#ledlighting #industriallight #energysaving #highbay #floodlight #streetlight #aok#请确认：您是否需要立即合成该视频�?�?如果确认，请回复“合成”；#�?如需调整文案或标签，请直接告诉我修改意见�?,
     "data": {
       "video_link": "https://hsai-hz.oss-cn-hangzhou.aliyuncs.com/%E8%A7%86%E9%A2%91%E7%B4%A0%E6%9D%90%2F%E5%90%8C%E7%B1%BB%E5%9E%8B%E8%A7%86%E9%A2%91%2FDownload%20(39).mp4"
     }
@@ -8108,7 +8110,7 @@ INSERT INTO "redis_queue_messages" VALUES('d4462536-2123-4776-82b4-5e599b2dc6b5'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击上方链接预览。\n\n请确认：您对视频满意吗？如果确认无误，请回复“发布”，我将为您发布到 TikTok；如需修改，请告诉我调整意见。",
+    "text": "视频已合成！请点击上方链接预览。\n\n请确认：您对视频满意吗？如果确认无误，请回复“发布”，我将为您发布�?TikTok；如需修改，请告诉我调整意见�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -8125,7 +8127,7 @@ INSERT INTO "redis_queue_messages" VALUES('66752dde-bbe2-43e8-a8c9-2f836bc73130'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作与发布助手。为了规划接下来的拍摄与测试，是否需要我先帮您查看当前作战地图，并统计还有多少脚本需要合成视频？如果您同意，请回复“是”，我将立即为您提取数据。",
+    "text": "您好！欢迎使用智能视频创作与发布助手。为了规划接下来的拍摄与测试，是否需要我先帮您查看当前作战地图，并统计还有多少脚本需要合成视频？如果您同意，请回复“是”，我将立即为您提取数据�?,
     "data": {
       "video_link": ""
     }
@@ -8142,7 +8144,7 @@ INSERT INTO "redis_queue_messages" VALUES('87a1b20d-170d-427d-90bc-02af1a8d3c44'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已为您提取当前作战地图与待制作脚本信息：\n\n1. 作战地图：今日任务准备发布 0 条视频。\n2. 待制作视频脚本数量：共 35 个。\n3. 待合成的视频编号列表：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54。\n\n请您在以上编号中选择一个脚本编号（如 31），我将为您调取该脚本并进行视频拆解。",
+    "text": "已为您提取当前作战地图与待制作脚本信息：\n\n1. 作战地图：今日任务准备发�?0 条视频。\n2. 待制作视频脚本数量：�?35 个。\n3. 待合成的视频编号列表�?, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54。\n\n请您在以上编号中选择一个脚本编号（�?31），我将为您调取该脚本并进行视频拆解�?,
     "data": {
       "video_link": ""
     }
@@ -8159,7 +8161,7 @@ INSERT INTO "redis_queue_messages" VALUES('e96e3c4b-b454-4556-812a-ffca8bc94438'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "脚本编号 24 已拆解完成，以下为详细信息：\n\n1) 原始台词（已有字幕）\n------------------------------------------------\nAOK灯具工厂，闪耀非凡。\n高棚灯，高光效。梦幻。\n好芯片，好光品质。\n联系AOK，省、省、省、省、省电。\n\n2) 新文案（已针对 TikTok B2B 受众优化）\n------------------------------------------------\n想为仓库、工厂或球场换灯？来看看深圳 AOK 自有工厂！150-180 lm/W 超高光效 LED 高棚灯、泛光灯、路灯，一台顶两台，节能 70%+，5-10 年质保，用得放心。专利散热、智能调光，更省心。留言 “Hi” 获取快速报价，7 天出货，全球 80+ 国家都在用，下一位就是你！\n\n3) Hashtags\n------------------------------------------------\n#ledlighting#industriallight#energysaving#highbay#floodlight#streetlight#aok\n\n4) 镜头拆解示例\n------------------------------------------------\n• 镜头 1（00:00-00:02.85）生产线全景，台词：Chinese factory. Amazing.\n• 镜头 2（00:02.85-00:04.95）产品功能演示，台词：good machine, good quality. Fantasy.\n• 镜头 3（00:04.95-00:06.95）材料细节，台词：good material, good quality.\n• 镜头 4（00:06.95-00:11.00）仓库走位，台词：Call Elena. cut, cut, cut, cut, cut price.\n\n------------------------------------------------\n以上脚本已准备就绪。是否立即根据该脚本合成视频？\n如果需要，请回复 “合成”，我将启动视频合成流程。",
+    "text": "脚本编号 24 已拆解完成，以下为详细信息：\n\n1) 原始台词（已有字幕）\n------------------------------------------------\nAOK灯具工厂，闪耀非凡。\n高棚灯，高光效。梦幻。\n好芯片，好光品质。\n联系AOK，省、省、省、省、省电。\n\n2) 新文案（已针�?TikTok B2B 受众优化）\n------------------------------------------------\n想为仓库、工厂或球场换灯？来看看深圳 AOK 自有工厂�?50-180 lm/W 超高光效 LED 高棚灯、泛光灯、路灯，一台顶两台，节�?70%+�?-10 年质保，用得放心。专利散热、智能调光，更省心。留言 “Hi�?获取快速报价，7 天出货，全球 80+ 国家都在用，下一位就是你！\n\n3) Hashtags\n------------------------------------------------\n#ledlighting#industriallight#energysaving#highbay#floodlight#streetlight#aok\n\n4) 镜头拆解示例\n------------------------------------------------\n�?镜头 1�?0:00-00:02.85）生产线全景，台词：Chinese factory. Amazing.\n�?镜头 2�?0:02.85-00:04.95）产品功能演示，台词：good machine, good quality. Fantasy.\n�?镜头 3�?0:04.95-00:06.95）材料细节，台词：good material, good quality.\n�?镜头 4�?0:06.95-00:11.00）仓库走位，台词：Call Elena. cut, cut, cut, cut, cut price.\n\n------------------------------------------------\n以上脚本已准备就绪。是否立即根据该脚本合成视频？\n如果需要，请回�?“合成”，我将启动视频合成流程�?,
     "data": {
       "video_link": ""
     }
@@ -8176,7 +8178,7 @@ INSERT INTO "redis_queue_messages" VALUES('06ed5303-467c-4421-8285-0a25e616a825'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击上方链接预览。\n\n您对视频满意吗？如果确认无误，请回复“发布”，我将立即为您发布到 TikTok。",
+    "text": "视频已合成！请点击上方链接预览。\n\n您对视频满意吗？如果确认无误，请回复“发布”，我将立即为您发布�?TikTok�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -8193,7 +8195,7 @@ INSERT INTO "redis_queue_messages" VALUES('55b79b03-c13f-4d8d-be9f-561eff48650c'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "发布成功！您的视频已发布至 TikTok。\n您可以登录品牌账号后台查看实时数据表现。\n\n感谢使用智能视频创作与发布助手，祝您业绩长虹！",
+    "text": "发布成功！您的视频已发布�?TikTok。\n您可以登录品牌账号后台查看实时数据表现。\n\n感谢使用智能视频创作与发布助手，祝您业绩长虹�?,
     "data": {
       "video_link": ""
     }
@@ -8210,7 +8212,7 @@ INSERT INTO "redis_queue_messages" VALUES('e454ef7c-a3f9-4bb3-a53e-3bf2a4f1063d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用B2B智能视频创作与发布助手。\n\n当前我们处于“步骤 1：了解还需要合成的视频数量”的阶段。如果您想知道目前还需要制作多少个测试视频，请告诉我，例如输入“查看待测试视频数量”。我将立即为您查询并反馈。\n\n请问您需要我现在进行查询吗？",
+    "text": "你好！欢迎使用B2B智能视频创作与发布助手。\n\n当前我们处于“步�?1：了解还需要合成的视频数量”的阶段。如果您想知道目前还需要制作多少个测试视频，请告诉我，例如输入“查看待测试视频数量”。我将立即为您查询并反馈。\n\n请问您需要我现在进行查询吗？",
     "data": {
       "video_link": ""
     }
@@ -8227,7 +8229,7 @@ INSERT INTO "redis_queue_messages" VALUES('f7df7ae0-4b22-4351-b933-036bb36250db'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。是否需要我查看当前的作战地图，并告诉您还需要合成多少个待测试视频？如果需要，请回复“是”，我将立即为您查询并开始后续流程。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。是否需要我查看当前的作战地图，并告诉您还需要合成多少个待测试视频？如果需要，请回复“是”，我将立即为您查询并开始后续流程�?,
     "data": {
       "video_link": ""
     }
@@ -8261,7 +8263,7 @@ INSERT INTO "redis_queue_messages" VALUES('5d3ee274-8309-4b1f-801d-e7f48da24202'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。  \n2.为了帮您重新生成出海视频获客战略蓝图，请先补充或更新以下信息（您有的直接发链接或文字即可）：  \n   • 企业官网 / 产品手册 / PPT / 画册  \n   • 主推产品型号、差异化优势、典型案例  \n   • 目标客户/市场是否有变化（国家、客户类型、痛点）  \n3.我会先快速整理，随后为您生成新版战略蓝图。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧�? \n2.为了帮您重新生成出海视频获客战略蓝图，请先补充或更新以下信息（您有的直接发链接或文字即可）：  \n   �?企业官网 / 产品手册 / PPT / 画册  \n   �?主推产品型号、差异化优势、典型案�? \n   �?目标客户/市场是否有变化（国家、客户类型、痛点）  \n3.我会先快速整理，随后为您生成新版战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -8278,7 +8280,7 @@ INSERT INTO "redis_queue_messages" VALUES('e6788bba-1174-4c9e-8ef2-40dd9e055f1d'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已收到您提供的官网链接：www.aokledlight.com。#1. 如果您还希望进一步补充信息（如主推产品型号、差异化优势、目标市场等），请随时告诉我，我会据此整理并输出新版战略蓝图。#2. 同时，为了安排具体的视频拍摄计划，您是否需要先了解当前还需要合成多少条测试视频？#如需了解，请回复“是”。如暂不需要，您也可以告诉我下一步想要做的事情。",
+    "text": "已收到您提供的官网链接：www.aokledlight.com�?1. 如果您还希望进一步补充信息（如主推产品型号、差异化优势、目标市场等），请随时告诉我，我会据此整理并输出新版战略蓝图�?2. 同时，为了安排具体的视频拍摄计划，您是否需要先了解当前还需要合成多少条测试视频�?如需了解，请回复“是”。如暂不需要，您也可以告诉我下一步想要做的事情�?,
     "data": {
       "video_link": ""
     }
@@ -8289,7 +8291,7 @@ INSERT INTO "redis_queue_messages" VALUES('a0d94b12-4ff0-4c02-9cbe-0136641c4eed'
   "env": "gray",
   "session_id": "e138dffe-48a1-4c08-9cf7-a2907736357e",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "90fabb27-636c-4ace-b036-5423bcb688df",
   "socket_id": "fSRHm0N1EXE8MQV3AAAn",
   "status": "RUNNING",
@@ -8305,7 +8307,7 @@ INSERT INTO "redis_queue_messages" VALUES('a6a9f26d-e9cf-454c-8bb5-fd923c7e7205'
   "request_id": "90fabb27-636c-4ace-b036-5423bcb688df",
   "socket_id": "fSRHm0N1EXE8MQV3AAAn",
   "status": "FINISHED",
-  "content": {"data":"# AOK LED Light — 出海视频获客战略蓝图 V7.1\n\n> 本蓝图基于最新企业资料（www.aokledlight.com）与既往数据生成，直接落地即可执行。\n\n---\n## 1. 北极星目标（30 天）\n|  指标  | 目标值 | 说明 |\n| :--- | :---: | :--- |\n| 累计曝光量 | **≥ 600,000** | TikTok / YouTube Shorts / LinkedIn 组合 |\n| 有效 B2B 线索 | **≥ 250** | 邮件 / WhatsApp / InMail / 电话 |\n| 视频完播率 | **≥ 35 %** | > 15 s 视频计算 |\n| 点赞率 | **≥ 6 %** | TikTok + YT Shorts |\n| 私信转化率 | **≥ 1.2 %** | 私信 / 观看数 |\n\n---\n## 2. 账号矩阵 & 发布计划\n| 平台 | 账号 | 语言 / 定位 | 发布频次 |\n| :--- | :---: | :--- | :---: |\n| TikTok | 2 个 | 🇺🇸 美区 / 🇸🇬 东南亚区 | 每日 1 条 / 号 |\n| YouTube Shorts | 2 个 | EN 原声 / EN+ZH 字幕 | 每日 1 条 / 号 |\n| LinkedIn | 2 个 | 公司主页 / 销售个人号 | 每日 1 条 / 号 |\n> 30 天总发布量：6 账号 × 30 天 × 1 条 = **180 条**（含 AI 裂变版本）。\n\n---\n## 3. 源素材拍摄需求\nAI 可快速剪辑，但「源头高质量素材」必须自拍。\n\n• **每周拍摄 6 大场景 × 3 机位 = 18 组** 原片。\n• 4 周共 **72 组素材** → 可裂变 180 条短视频。\n• 单次拍摄耗时≈ 1.5 天；后期由 CapCut / Runway 模板一键输出。\n\n---\n## 4. 内容支柱 Pillars（6 大方向）\n| # | 内容方向 | 目标 & 价值 | 场景建议 | 成品时长 |\n| :-: | :--- | :--- | :--- | :-: |\n| P1 | 工厂探秘 | 强化自有工厂、垂直供应链 | SMT 线、老化房、IP66&IK10 实验室 | 25–35 s |\n| P2 | 产品测评 / 对比 | 体现高光效、散热、寿命 | 150 lm/W vs 90 lm/W；40 °C 箱内测试 | 20–30 s |\n| P3 | 客户案例 | 社会证明 & 应用场景 | 北美港口投光灯、欧洲仓库高棚灯 | 30–45 s |\n| P4 | 安装 / 维护指南 | 减少顾虑、显专业 | 1 人 5 分钟更换 UFO 灯 | 15–25 s |\n| P5 | 行业科普 | 获取长尾搜索流量 | DLC Premium vs UL；0-10 V vs DALI | 30–40 s |\n| P6 | CEO / 工程师访谈 | 树立专家权威 | 专利散热、10 年质保背后 | 40–60 s |\n\n---\n## 5. 30 天脚本日历（示例节选）\n| Day | 平台 | Pillar | 钩子开头 (Hook) | 关键镜头 (Shot) | VO / 字幕 (Voice-over) |\n| :-: | :--- | :-: | :--- | :--- | :--- |\n| D1 | 全平台 | P1 | “LED 灯工厂凌晨 2 点在做什么？” | SMT 贴片线特写 + 灯珠高速机 | “24 小时不停产，只为 7 天极速交付。” |\n| D2 | 全平台 | P2 | “这盏灯比传统灯省电 70%” | 同功率对比瓦特计 | “AOK 170 lm/W vs 金卤灯 75 lm/W。” |\n| D3 | 全平台 | P3 | “替换 1000 W 金卤灯，年省 $58,000” | 港口吊机夜景亮灯 | “北美港口实际节能数据公开…” |\n| … | … | … | … | … | … |\n> 完整 30 天日历及 180 条脚本清单已同步到后台，可随时调用。\n\n---\n## 6. 拍摄脚本模版（每条视频=3 镜头）\n### 模版 S-A-V\n1. **S Hook (5 s)：** 开场问题 / 夸张对比\n2. **A Body (15–25 s)：** 场景演示 + 关键数据叠字\n3. **V CTA (5 s)：** “PDF 规格书 & 报价，评论区领取”\n\n示例【P2 产品测评】\n```\n镜头1：同功率旧灯 vs AOK 灯功率计，旁白：“同样 200 W，为何账单差一半？”\n镜头2：热成像仪对比散热，叠字“芯片温度↓ 20 ℃ = 寿命 ↑ 40%”。\n镜头3：拉近品牌 LOGO + DLC 证书，配旁白：“评论区输入『Hi AOK』获取规格书 & 报价”。\nBGM：Action Sport Rock (93 BPM)\n```\n\n---\n## 7. 预算 & 资源配置\n| 分类 | 费用上限 | 说明 |\n| :--- | ---: | :--- |\n| 拍摄设备 & 场地 | ¥5,000 | 手机×2、三脚架、补光灯、麦克风 |\n| AI 工具订阅 | ¥1,000 | CapCut Pro、Runway Standard |\n| 推广流量包 | ¥3,000 | TikTok Spark Ads / LinkedIn InMail |\n| **合计** | **≤ ¥10,000** | 预计 CPL ≤ ¥40 |\n\n---\n## 8. 数据监测 & 优化\n1. **日报**：曝光 / 完播 / 点赞 / 私信  → 看涨跌。\n2. **周报**：P1–P6 支柱对比 → 保留 Top 20 % 赢家脚本并加码投放。\n3. **月报**：线索成本 CPL ≤ ¥40；超标 20 % 即触发脚本 + 定向双重 A/B。\n\n---\n## 9. 执行里程碑\n| 时间 | 关键动作 |\n| :-: | :--- |\n| D1–2 | 工厂 & 测试场景集中拍摄 |\n| D3–5 | 剪辑首批 30 条原生视频 + 双语字幕 |\n| D6 | 6 账号同时上线 + Spark Ads 种子流量 |\n| D7 | 第一次数据回顾 & 赢家脚本标记 |\n| D8–14 | 第二轮拍摄 + 发布 + 创意 A/B |\n| D15 | 半程复盘，重点放大案例类内容 |\n| D16–29 | 滚动迭代；日监控 + 周优化 |\n| D30 | 月度总结 + 下阶段 KPI 调整 |\n\n---\n### 结语\n您的专属《AOK LED Light 出海视频获客战略蓝图》已就绪！立即按照本蓝图开拍，即刻加速拿下全球 B2B 客户。\n\n---\n*本蓝图由「HSAI B2B Video Copilot」自动生成 · 2024-06-XX*"},
+  "content": {"data":"# AOK LED Light �?出海视频获客战略蓝图 V7.1\n\n> 本蓝图基于最新企业资料（www.aokledlight.com）与既往数据生成，直接落地即可执行。\n\n---\n## 1. 北极星目标（30 天）\n|  指标  | 目标�?| 说明 |\n| :--- | :---: | :--- |\n| 累计曝光�?| **�?600,000** | TikTok / YouTube Shorts / LinkedIn 组合 |\n| 有效 B2B 线索 | **�?250** | 邮件 / WhatsApp / InMail / 电话 |\n| 视频完播�?| **�?35 %** | > 15 s 视频计算 |\n| 点赞�?| **�?6 %** | TikTok + YT Shorts |\n| 私信转化�?| **�?1.2 %** | 私信 / 观看�?|\n\n---\n## 2. 账号矩阵 & 发布计划\n| 平台 | 账号 | 语言 / 定位 | 发布频次 |\n| :--- | :---: | :--- | :---: |\n| TikTok | 2 �?| 🇺🇸 美区 / 🇸🇬 东南亚区 | 每日 1 �?/ �?|\n| YouTube Shorts | 2 �?| EN 原声 / EN+ZH 字幕 | 每日 1 �?/ �?|\n| LinkedIn | 2 �?| 公司主页 / 销售个人号 | 每日 1 �?/ �?|\n> 30 天总发布量�? 账号 × 30 �?× 1 �?= **180 �?*（含 AI 裂变版本）。\n\n---\n## 3. 源素材拍摄需求\nAI 可快速剪辑，但「源头高质量素材」必须自拍。\n\n�?**每周拍摄 6 大场�?× 3 机位 = 18 �?* 原片。\n�?4 周共 **72 组素�?* �?可裂�?180 条短视频。\n�?单次拍摄耗时�?1.5 天；后期�?CapCut / Runway 模板一键输出。\n\n---\n## 4. 内容支柱 Pillars�? 大方向）\n| # | 内容方向 | 目标 & 价�?| 场景建议 | 成品时长 |\n| :-: | :--- | :--- | :--- | :-: |\n| P1 | 工厂探秘 | 强化自有工厂、垂直供应链 | SMT 线、老化房、IP66&IK10 实验�?| 25�?5 s |\n| P2 | 产品测评 / 对比 | 体现高光效、散热、寿�?| 150 lm/W vs 90 lm/W�?0 °C 箱内测试 | 20�?0 s |\n| P3 | 客户案例 | 社会证明 & 应用场景 | 北美港口投光灯、欧洲仓库高棚灯 | 30�?5 s |\n| P4 | 安装 / 维护指南 | 减少顾虑、显专业 | 1 �?5 分钟更换 UFO �?| 15�?5 s |\n| P5 | 行业科普 | 获取长尾搜索流量 | DLC Premium vs UL�?-10 V vs DALI | 30�?0 s |\n| P6 | CEO / 工程师访�?| 树立专家权威 | 专利散热�?0 年质保背�?| 40�?0 s |\n\n---\n## 5. 30 天脚本日历（示例节选）\n| Day | 平台 | Pillar | 钩子开�?(Hook) | 关键镜头 (Shot) | VO / 字幕 (Voice-over) |\n| :-: | :--- | :-: | :--- | :--- | :--- |\n| D1 | 全平�?| P1 | “LED 灯工厂凌�?2 点在做什么？�?| SMT 贴片线特�?+ 灯珠高速机 | �?4 小时不停产，只为 7 天极速交付。�?|\n| D2 | 全平�?| P2 | “这盏灯比传统灯省电 70%�?| 同功率对比瓦特计 | “AOK 170 lm/W vs 金卤�?75 lm/W。�?|\n| D3 | 全平�?| P3 | “替�?1000 W 金卤灯，年省 $58,000�?| 港口吊机夜景亮灯 | “北美港口实际节能数据公开…�?|\n| �?| �?| �?| �?| �?| �?|\n> 完整 30 天日历及 180 条脚本清单已同步到后台，可随时调用。\n\n---\n## 6. 拍摄脚本模版（每条视�?3 镜头）\n### 模版 S-A-V\n1. **S Hook (5 s)�?* 开场问�?/ 夸张对比\n2. **A Body (15�?5 s)�?* 场景演示 + 关键数据叠字\n3. **V CTA (5 s)�?* “PDF 规格�?& 报价，评论区领取”\n\n示例【P2 产品测评】\n```\n镜头1：同功率旧灯 vs AOK 灯功率计，旁白：“同�?200 W，为何账单差一半？”\n镜头2：热成像仪对比散热，叠字“芯片温度↓ 20 �?= 寿命 �?40%”。\n镜头3：拉近品�?LOGO + DLC 证书，配旁白：“评论区输入『Hi AOK』获取规格书 & 报价”。\nBGM：Action Sport Rock (93 BPM)\n```\n\n---\n## 7. 预算 & 资源配置\n| 分类 | 费用上限 | 说明 |\n| :--- | ---: | :--- |\n| 拍摄设备 & 场地 | ¥5,000 | 手机×2、三脚架、补光灯、麦克风 |\n| AI 工具订阅 | ¥1,000 | CapCut Pro、Runway Standard |\n| 推广流量�?| ¥3,000 | TikTok Spark Ads / LinkedIn InMail |\n| **合计** | **�?¥10,000** | 预计 CPL �?¥40 |\n\n---\n## 8. 数据监测 & 优化\n1. **日报**：曝�?/ 完播 / 点赞 / 私信  �?看涨跌。\n2. **周报**：P1–P6 支柱对比 �?保留 Top 20 % 赢家脚本并加码投放。\n3. **月报**：线索成�?CPL �?¥40；超�?20 % 即触发脚�?+ 定向双重 A/B。\n\n---\n## 9. 执行里程碑\n| 时间 | 关键动作 |\n| :-: | :--- |\n| D1�? | 工厂 & 测试场景集中拍摄 |\n| D3�? | 剪辑首批 30 条原生视�?+ 双语字幕 |\n| D6 | 6 账号同时上线 + Spark Ads 种子流量 |\n| D7 | 第一次数据回�?& 赢家脚本标记 |\n| D8�?4 | 第二轮拍�?+ 发布 + 创意 A/B |\n| D15 | 半程复盘，重点放大案例类内容 |\n| D16�?9 | 滚动迭代；日监控 + 周优�?|\n| D30 | 月度总结 + 下阶�?KPI 调整 |\n\n---\n### 结语\n您的专属《AOK LED Light 出海视频获客战略蓝图》已就绪！立即按照本蓝图开拍，即刻加速拿下全�?B2B 客户。\n\n---\n*本蓝图由「HSAI B2B Video Copilot」自动生�?· 2024-06-XX*"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760606676312
@@ -8320,7 +8322,7 @@ INSERT INTO "redis_queue_messages" VALUES('0de18c67-504c-488b-98a9-810f183dea73'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1.您的《AOK LED Light 出海视频获客战略蓝图》已生成！接下来就可以按照这份计划开干了！",
+    "text": "1.您的《AOK LED Light 出海视频获客战略蓝图》已生成！接下来就可以按照这份计划开干了�?,
     "data": {
       "video_link": ""
     }
@@ -8337,7 +8339,7 @@ INSERT INTO "redis_queue_messages" VALUES('b4e43a99-c93d-410f-8b44-e90b0e75a84a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！欢迎使用智能视频创作助手。您想了解目前作战地图中还需要合成多少个测试视频吗？如果需要，请回复“是”，我将为您查询并告诉您下一步需要拍摄的数量。",
+    "text": "你好！欢迎使用智能视频创作助手。您想了解目前作战地图中还需要合成多少个测试视频吗？如果需要，请回复“是”，我将为您查询并告诉您下一步需要拍摄的数量�?,
     "data": {
       "video_link": ""
     }
@@ -8354,7 +8356,7 @@ INSERT INTO "redis_queue_messages" VALUES('b5a38572-cbe9-4b31-bce4-bd5027e6431a'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您快速重新生成“出海视频获客战略蓝图”，麻烦您先补充或更新以下信息：\n   • 公司/品牌最新官网或资料链接  \n   • 目前最想推广的核心产品及差异化亮点  \n   • 主要目标市场/客户类型是否有调整  \n   • 现阶段您最关注的核心指标（如曝光量、询盘数、ROI 等）\n\n2.您可以直接粘贴文字、图片链接或发送文件，我会先快速浏览并整理，随后为您输出新版战略蓝图。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧。为了帮您快速重新生成“出海视频获客战略蓝图”，麻烦您先补充或更新以下信息：\n   �?公司/品牌最新官网或资料链接  \n   �?目前最想推广的核心产品及差异化亮点  \n   �?主要目标市场/客户类型是否有调�? \n   �?现阶段您最关注的核心指标（如曝光量、询盘数、ROI 等）\n\n2.您可以直接粘贴文字、图片链接或发送文件，我会先快速浏览并整理，随后为您输出新版战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -8371,7 +8373,7 @@ INSERT INTO "redis_queue_messages" VALUES('df09c236-c257-4da5-abd6-fdd7f0b60fc7'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已收到您提供的官网链接：www.aokledlight.com。\n\n目前我还在“待确认作战地图并统计所需测试视频数量”的阶段。请问您现在是否需要我先查看作战地图，告诉您还需要合成多少个测试视频？如果需要，请回复“是”，我将立即为您查询。",
+    "text": "已收到您提供的官网链接：www.aokledlight.com。\n\n目前我还在“待确认作战地图并统计所需测试视频数量”的阶段。请问您现在是否需要我先查看作战地图，告诉您还需要合成多少个测试视频？如果需要，请回复“是”，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -8388,7 +8390,7 @@ INSERT INTO "redis_queue_messages" VALUES('4a8aa9ff-500a-45c6-b363-777bc229ed48'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.已为您读取到目标人群草稿信息，如下所示，请确认是否准确，或指出需要增删调整的地方：  \n   • 客户类型：照明经销商 / 工程承包商 / 政府与市政采购 / 工商业终端（仓储、工厂、体育场等）  \n   • 目标市场：北美、欧洲、澳大利亚、东南亚  \n   • 常见痛点：  \n     – 节能减排、降低电费  \n     – 传统灯具维护成本高、寿命短  \n     – 需满足 UL / DLC / CE / RoHS 等国际认证  \n     – 大型项目交付周期紧、售后保障要求高  \n\n2.请回复“确认”或告知修改点，确认后我将自动进入下一阶段并继续完善战略蓝图。",
+    "text": "1.已为您读取到目标人群草稿信息，如下所示，请确认是否准确，或指出需要增删调整的地方�? \n   �?客户类型：照明经销�?/ 工程承包�?/ 政府与市政采�?/ 工商业终端（仓储、工厂、体育场等）  \n   �?目标市场：北美、欧洲、澳大利亚、东南亚  \n   �?常见痛点�? \n     �?节能减排、降低电�? \n     �?传统灯具维护成本高、寿命短  \n     �?需满足 UL / DLC / CE / RoHS 等国际认�? \n     �?大型项目交付周期紧、售后保障要求高  \n\n2.请回复“确认”或告知修改点，确认后我将自动进入下一阶段并继续完善战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -8405,7 +8407,7 @@ INSERT INTO "redis_queue_messages" VALUES('13a1ace4-0a56-48bd-9dcf-19efe6cc5d99'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "战略蓝图已确认！接下来，我可以为您查询最新的作战地图与待测试脚本库，计算目前还需合成的视频数量。\n\n是否立即进行查询？如果需要，请回复“是”。",
+    "text": "战略蓝图已确认！接下来，我可以为您查询最新的作战地图与待测试脚本库，计算目前还需合成的视频数量。\n\n是否立即进行查询？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -8416,7 +8418,7 @@ INSERT INTO "redis_queue_messages" VALUES('0c21c275-e5ef-43c4-9733-7951e4871553'
   "env": "gray",
   "session_id": "ae7076c2-53ba-44a2-bb35-afd6f123c2b8",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "8bafb77b-0013-4f09-bbfd-e4b9b68d8825",
   "socket_id": "1R5LckmeFJJZgbLDAAAp",
   "status": "RUNNING",
@@ -8432,7 +8434,7 @@ INSERT INTO "redis_queue_messages" VALUES('9c7d59b4-cb70-46be-beb0-4984b8c3dd10'
   "request_id": "8bafb77b-0013-4f09-bbfd-e4b9b68d8825",
   "socket_id": "1R5LckmeFJJZgbLDAAAp",
   "status": "FINISHED",
-  "content": {"data":"# 《AOK LED Light 全球获客视频战略蓝图 V8.0》\n\n> 本蓝图基于官网 www.aokledlight.com 与您最新确认的信息定制，聚焦 30 天快速获客。按照此规划执行，可在 1 个月内拿到 60 万–80 万次曝光并沉淀 250 条以上 B2B 线索。\n\n---\n## 1. 北极星目标 & 30 天核心 KPI\n| 维度 | 数值 | 说明 |\n| --- | --- | --- |\n| 累计曝光 | ≥ 600,000 | TikTok + YouTube Shorts + LinkedIn |\n| 有效线索 | ≥ 250 | 邮箱 / WhatsApp / InMail |\n| 视频完播率 | ≥ 35 % | 15 秒以上保留 |\n| 点赞率 | ≥ 6 % | |\n| 私信转化率 | ≥ 1 % | 每 100 次点击≥1 条私信 |\n\n---\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 账号 | 定位 | 发布频次 |\n| --- | --- | --- | --- |\n| TikTok | @AOKLighting_US | 痛点+产品对比 | 每日 1 条 |\n| TikTok | @AOKLighting_SEA | 应用案例+科普 | 每日 1 条 |\n| YouTube Shorts | AOK Lighting (EN) | 深度测评+幕后 | 每日 1 条 |\n| YouTube Shorts | AOK Lighting (CN 字幕) | 同步翻译 | 每日 1 条 |\n| LinkedIn | Company Page | 案例+白皮书引流 | 每日 1 条 |\n| LinkedIn | Sales Rep 个人号 | 价值贴+私信跟进 | 每日 1 条 |\n\n> 6 账号 × 30 天 = 180 条发布（含 AI 裂变版本）。\n\n---\n## 3. 素材拍摄需求\n1 周拍摄 6 大场景 × 3 机位 ≈ 18 组原片，4 周合计 72 组。\n\n| 场景 | 拍摄点 | 建议机位 | 关键镜头 |\n| --- | --- | --- | --- |\n| 智能生产线 | 贴片机、回流焊 | 正面滑轨 / 俯拍 / 特写 | LED 芯片上板、自动组装 |\n| 实验室测试 | 高温老化、淋雨房 | 俯拍 / 侧拍 / 手持跟拍 | IP66 冲水、IK10 锤击 |\n| 节能对比实验 | 旧灯 vs AOK 灯 | 全景 / 过肩 / 数据特写 | 电表读数实时变化 |\n| 客户案例现场 | 港口 / 仓储 | 全景航拍 / 地面滑轨 / 采访 | Before vs After 亮度对比 |\n| 安装维护 | 高空作业车 | 广角 / 头戴 / 特写 | 1 人 5 分钟快装拆 |\n| CEO / 工程师访谈 | 展厅 / 办公室 | 正 Cam / 侧 Cam / 字幕稿 | 专利散热、10 年质保揭秘 |\n\n---\n## 4. 内容支柱（Pillars）& 脚本框架\n| 序号 | 支柱 | Hook 开场 | 价值输出 | 行动号召 CTA |\n| --- | --- | --- | --- | --- |\n| P1 | 工厂探秘 | “猜猜这条线 1 小时能产几盏灯？” | 展示产线+品质管控 | 关注了解更多工厂内幕 |\n| P2 | 产品硬核测评 | “150 lm/W 到底比 100 lm/W 亮多少？” | 对比实验实拍 | 私信索取全套测试报告 |\n| P3 | 客户成功案例 | “只换灯，就为港口节省 65 % 电费！” | Before/After、客户证言 | 点击简介下载案例 PDF |\n| P4 | 安装/维护教程 | “2 步完成 12 米高棚灯替换” | 拆装演示+Tips | 保存视频备用+留言领工具清单 |\n| P5 | 行业科普 | “DLC Premium 和 UL 区别在哪？” | 认证科普、痛点解释 | 留言获取认证白皮书 |\n| P6 | CEO/研发访谈 | “10 年质保背后我们做了啥？” | 专利+材料+测试 | 关注+点赞支持中国智造 |\n\n> 每个支柱周产≥ 3 条，30 天共 18 × 3 = 54 原创脚本，AI 裂变生成二次剪辑/多语言字幕至 180 条。\n\n---\n## 5. 30 天发布日历（示意）\n- 周一：P1 工厂探秘 + P5 行业科普\n- 周二：P2 硬核测评 + P4 安装教程\n- 周三：P3 客户案例 + P6 CEO 访谈\n- 周四：P2 测评衍生剪辑 + P5 痛点拆解\n- 周五：P1 工厂 Broll + P4 维护技巧\n- 周六：P3 案例幕后 + P2 对比实验快剪\n- 周日：一周 Top3 内容二次分发 + 直播问答\n\n---\n## 6. 预算估算\n| 项目 | 费用 (RMB) | 备注 |\n| --- | --- | --- |\n| 拍摄 (两人两天) | 5,000 | 场景布置+交通 |\n| AI 工具 (CapCut Pro, Runway) | 1,000 | 月度订阅 |\n| 流量加速 (Spark Ads / InMail) | 3,000 | 种子冷启动 |\n| 合计 | ≤ 9,000 | 控制在 1 万元内 |\n\n---\n## 7. 数据监测 & 迭代机制\n1. 每日监控曝光/完播/点赞/私信 → 次日 10 点前调整标签 & 投放。  \n2. 每周聚焦 Top 20 % 赢家脚本，加大 2–3 倍预算。  \n3. CPL > 50 RMB 或 CTR < 1 % 时触发「脚本 + 定向」双重 A/B。  \n4. 月末复盘，拆解转化最高 3 条视频，沉淀为可复制模板。\n\n---\n## 8. 里程碑排期\n| 日期 | 关键任务 |\n| --- | --- |\n| D1–D2 | 完成 6 大场景拍摄 & 导入素材库 |\n| D3–D5 | 剪辑首批 30 条原生短视频（含字幕） |\n| D6 | 6 账号同步首发 + Spark Ads 100 USD 冷启 |\n| D7 | 第一次数据回顾，标记 5 条winner 脚本 |\n| D8–D14 | 第二轮拍摄 + 发布 + A/B + 案例补强 |\n| D15 | 复盘 & 策略微调（重点加码案例/测评） |\n| D16–D29 | 滚动拍摄 & 发布 & 提效循环 |\n| D30 | KPI 验收 + 续期目标设定 |\n\n---\n## 9. 执行所需资源清单\n- 人员：拍摄 2 人（手机 + 稳定器）、剪辑 1 人（AI 模板）、运营 1 人。  \n- 设备：iPhone 14 Pro、无人机 Mini 3 Pro、领夹麦、补光灯。  \n- 账户：美区/东南亚区 TikTok、YouTube Brand Channel、LinkedIn Page & Profile。  \n- 网络：海外静态 IP 2 组（备用上号 & 上传）。\n\n---\n### 行动号角\n> 素材越快到位，收益越快显现！\n> \n> 1. 本周内锁定拍摄时间 → 2. D1–D2 拉满素材 → 3. D6 六大平台同日首发！\n\n---\n**您的专属视频获客战略已经生成！接下来就可以按照这份计划开干了！**"},
+  "content": {"data":"# 《AOK LED Light 全球获客视频战略蓝图 V8.0》\n\n> 本蓝图基于官�?www.aokledlight.com 与您最新确认的信息定制，聚�?30 天快速获客。按照此规划执行，可�?1 个月内拿�?60 万�?0 万次曝光并沉淀 250 条以�?B2B 线索。\n\n---\n## 1. 北极星目�?& 30 天核�?KPI\n| 维度 | 数�?| 说明 |\n| --- | --- | --- |\n| 累计曝光 | �?600,000 | TikTok + YouTube Shorts + LinkedIn |\n| 有效线索 | �?250 | 邮箱 / WhatsApp / InMail |\n| 视频完播�?| �?35 % | 15 秒以上保�?|\n| 点赞�?| �?6 % | |\n| 私信转化�?| �?1 % | �?100 次点击≥1 条私�?|\n\n---\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 账号 | 定位 | 发布频次 |\n| --- | --- | --- | --- |\n| TikTok | @AOKLighting_US | 痛点+产品对比 | 每日 1 �?|\n| TikTok | @AOKLighting_SEA | 应用案例+科普 | 每日 1 �?|\n| YouTube Shorts | AOK Lighting (EN) | 深度测评+幕后 | 每日 1 �?|\n| YouTube Shorts | AOK Lighting (CN 字幕) | 同步翻译 | 每日 1 �?|\n| LinkedIn | Company Page | 案例+白皮书引�?| 每日 1 �?|\n| LinkedIn | Sales Rep 个人�?| 价值贴+私信跟进 | 每日 1 �?|\n\n> 6 账号 × 30 �?= 180 条发布（�?AI 裂变版本）。\n\n---\n## 3. 素材拍摄需求\n1 周拍�?6 大场�?× 3 机位 �?18 组原片，4 周合�?72 组。\n\n| 场景 | 拍摄�?| 建议机位 | 关键镜头 |\n| --- | --- | --- | --- |\n| 智能生产�?| 贴片机、回流焊 | 正面滑轨 / 俯拍 / 特写 | LED 芯片上板、自动组�?|\n| 实验室测�?| 高温老化、淋雨房 | 俯拍 / 侧拍 / 手持跟拍 | IP66 冲水、IK10 锤击 |\n| 节能对比实验 | 旧灯 vs AOK �?| 全景 / 过肩 / 数据特写 | 电表读数实时变化 |\n| 客户案例现场 | 港口 / 仓储 | 全景航拍 / 地面滑轨 / 采访 | Before vs After 亮度对比 |\n| 安装维护 | 高空作业�?| 广角 / 头戴 / 特写 | 1 �?5 分钟快装�?|\n| CEO / 工程师访�?| 展厅 / 办公�?| �?Cam / �?Cam / 字幕�?| 专利散热�?0 年质保揭�?|\n\n---\n## 4. 内容支柱（Pillars�? 脚本框架\n| 序号 | 支柱 | Hook 开�?| 价值输�?| 行动号召 CTA |\n| --- | --- | --- | --- | --- |\n| P1 | 工厂探秘 | “猜猜这条线 1 小时能产几盏灯？�?| 展示产线+品质管控 | 关注了解更多工厂内幕 |\n| P2 | 产品硬核测评 | �?50 lm/W 到底�?100 lm/W 亮多少？�?| 对比实验实拍 | 私信索取全套测试报告 |\n| P3 | 客户成功案例 | “只换灯，就为港口节�?65 % 电费！�?| Before/After、客户证言 | 点击简介下载案�?PDF |\n| P4 | 安装/维护教程 | �? 步完�?12 米高棚灯替换�?| 拆装演示+Tips | 保存视频备用+留言领工具清�?|\n| P5 | 行业科普 | “DLC Premium �?UL 区别在哪？�?| 认证科普、痛点解�?| 留言获取认证白皮�?|\n| P6 | CEO/研发访谈 | �?0 年质保背后我们做了啥？�?| 专利+材料+测试 | 关注+点赞支持中国智�?|\n\n> 每个支柱周产�?3 条，30 天共 18 × 3 = 54 原创脚本，AI 裂变生成二次剪辑/多语言字幕�?180 条。\n\n---\n## 5. 30 天发布日历（示意）\n- 周一：P1 工厂探秘 + P5 行业科普\n- 周二：P2 硬核测评 + P4 安装教程\n- 周三：P3 客户案例 + P6 CEO 访谈\n- 周四：P2 测评衍生剪辑 + P5 痛点拆解\n- 周五：P1 工厂 Broll + P4 维护技巧\n- 周六：P3 案例幕后 + P2 对比实验快剪\n- 周日：一�?Top3 内容二次分发 + 直播问答\n\n---\n## 6. 预算估算\n| 项目 | 费用 (RMB) | 备注 |\n| --- | --- | --- |\n| 拍摄 (两人两天) | 5,000 | 场景布置+交�?|\n| AI 工具 (CapCut Pro, Runway) | 1,000 | 月度订阅 |\n| 流量加�?(Spark Ads / InMail) | 3,000 | 种子冷启�?|\n| 合计 | �?9,000 | 控制�?1 万元�?|\n\n---\n## 7. 数据监测 & 迭代机制\n1. 每日监控曝光/完播/点赞/私信 �?次日 10 点前调整标签 & 投放�? \n2. 每周聚焦 Top 20 % 赢家脚本，加�?2�? 倍预算�? \n3. CPL > 50 RMB �?CTR < 1 % 时触发「脚�?+ 定向」双�?A/B�? \n4. 月末复盘，拆解转化最�?3 条视频，沉淀为可复制模板。\n\n---\n## 8. 里程碑排期\n| 日期 | 关键任务 |\n| --- | --- |\n| D1–D2 | 完成 6 大场景拍�?& 导入素材�?|\n| D3–D5 | 剪辑首批 30 条原生短视频（含字幕�?|\n| D6 | 6 账号同步首发 + Spark Ads 100 USD 冷启 |\n| D7 | 第一次数据回顾，标记 5 条winner 脚本 |\n| D8–D14 | 第二轮拍�?+ 发布 + A/B + 案例补强 |\n| D15 | 复盘 & 策略微调（重点加码案�?测评�?|\n| D16–D29 | 滚动拍摄 & 发布 & 提效循环 |\n| D30 | KPI 验收 + 续期目标设定 |\n\n---\n## 9. 执行所需资源清单\n- 人员：拍�?2 人（手机 + 稳定器）、剪�?1 人（AI 模板）、运�?1 人�? \n- 设备：iPhone 14 Pro、无人机 Mini 3 Pro、领夹麦、补光灯�? \n- 账户：美�?东南亚区 TikTok、YouTube Brand Channel、LinkedIn Page & Profile�? \n- 网络：海外静�?IP 2 组（备用上号 & 上传）。\n\n---\n### 行动号角\n> 素材越快到位，收益越快显现！\n> \n> 1. 本周内锁定拍摄时�?�?2. D1–D2 拉满素材 �?3. D6 六大平台同日首发！\n\n---\n**您的专属视频获客战略已经生成！接下来就可以按照这份计划开干了�?*"},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760607480985
@@ -8464,7 +8466,7 @@ INSERT INTO "redis_queue_messages" VALUES('efde7ef9-0b4e-4e0f-96a0-50717f0d3945'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！我是您的智能视频创作助手。要先查看当前作战地图并确认还需要合成多少个测试视频吗？如果需要，请回复“是”，我将为您调取数据。",
+    "text": "你好！我是您的智能视频创作助手。要先查看当前作战地图并确认还需要合成多少个测试视频吗？如果需要，请回复“是”，我将为您调取数据�?,
     "data": {
       "video_link": ""
     }
@@ -8481,7 +8483,7 @@ INSERT INTO "redis_queue_messages" VALUES('b3bee14e-fa59-42b3-a528-4bcb72585db7'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了重新生成精准的视频获客战略蓝图，请您先帮我补充或更新以下信息（如有变动请直接回复对应序号＋内容即可）：  \n   1) 企业资料（公司简介 / 官网链接 / 最新核心优势）  \n   2) 主推产品系列 & 差异化卖点  \n   3) 目标人群（客户类型 / 目标市场 / 痛点）  \n   4) 如需新增或调整的关键词（可选）  \n\n2. 您可以只填写有变动的部分，其他保持不变即可。收到后我将快速生成最新战略蓝图！",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了重新生成精准的视频获客战略蓝图，请您先帮我补充或更新以下信息（如有变动请直接回复对应序号＋内容即可）：  \n   1) 企业资料（公司简�?/ 官网链接 / 最新核心优势）  \n   2) 主推产品系列 & 差异化卖�? \n   3) 目标人群（客户类�?/ 目标市场 / 痛点�? \n   4) 如需新增或调整的关键词（可选）  \n\n2. 您可以只填写有变动的部分，其他保持不变即可。收到后我将快速生成最新战略蓝图！",
     "data": {
       "video_link": ""
     }
@@ -8498,7 +8500,7 @@ INSERT INTO "redis_queue_messages" VALUES('a8d17eef-c6a5-434a-992c-0e1ae2236712'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已为您更新战略蓝图！\n\n• 今日已排期发布：0 条视频\n• 待合成测试脚本：35 条\n• 待合成脚本编号：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n接下来，请从以上编号中任选一条脚本编号并回复给我（如“24”），我将立即为您拆解脚本并展示拍摄方案。",
+    "text": "已为您更新战略蓝图！\n\n�?今日已排期发布：0 条视频\n�?待合成测试脚本：35 条\n�?待合成脚本编号：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n接下来，请从以上编号中任选一条脚本编号并回复给我（如�?4”），我将立即为您拆解脚本并展示拍摄方案�?,
     "data": {
       "video_link": ""
     }
@@ -8515,7 +8517,7 @@ INSERT INTO "redis_queue_messages" VALUES('43b8ec30-c8f5-47b2-951e-f7546c6d735a'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 请确认以下目标人群信息是否准确，或告诉我需要修改的点：  \n   ① 客户类型：政府采购 / 市政工程承包商 / 照明工程公司 / 国际经销商 / OEM 定制客户  \n   ② 目标市场：北美、欧洲、澳大利亚、中东、东南亚  \n   ③ 常见痛点：能耗高、维护成本高、光衰衰减快、认证要求严格、项目交期紧  \n\n2. 如信息正确，请直接回复“确认”或“OK”，我将立即锁定并生成新的战略蓝图。",
+    "text": "1. 请确认以下目标人群信息是否准确，或告诉我需要修改的点：  \n   �?客户类型：政府采�?/ 市政工程承包�?/ 照明工程公司 / 国际经销�?/ OEM 定制客户  \n   �?目标市场：北美、欧洲、澳大利亚、中东、东南亚  \n   �?常见痛点：能耗高、维护成本高、光衰衰减快、认证要求严格、项目交期紧  \n\n2. 如信息正确，请直接回复“确认”或“OK”，我将立即锁定并生成新的战略蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -8532,7 +8534,7 @@ INSERT INTO "redis_queue_messages" VALUES('de97cebf-8c78-4705-a694-f0b5b395afc3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "战略蓝图已更新：\n\n1. 今日已排期发布：0 条视频\n2. 待合成测试脚本：35 条\n3. 待合成脚本编号：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从以上编号中任选一条并回复给我（如“24”），我将立即拆解脚本并展示拍摄方案。",
+    "text": "战略蓝图已更新：\n\n1. 今日已排期发布：0 条视频\n2. 待合成测试脚本：35 条\n3. 待合成脚本编号：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从以上编号中任选一条并回复给我（如�?4”），我将立即拆解脚本并展示拍摄方案�?,
     "data": {
       "video_link": ""
     }
@@ -8549,7 +8551,7 @@ INSERT INTO "redis_queue_messages" VALUES('5c91d4cf-a5d9-4e39-9a57-9e5a831ec7f4'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的 B2B 智能视频创作与发布助手。\n\n现在可以为您查询作战地图，并计算还需要合成多少个测试视频。请问您需要我执行该操作吗？如果需要，请回复“是”。",
+    "text": "您好！我是您�?B2B 智能视频创作与发布助手。\n\n现在可以为您查询作战地图，并计算还需要合成多少个测试视频。请问您需要我执行该操作吗？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -8566,7 +8568,7 @@ INSERT INTO "redis_queue_messages" VALUES('15333fdb-dc52-4eaf-ab21-4f57ab10bbc6'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。  \n2.为了帮您重新生成精准的战略蓝图，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片等，我会先看一遍，尽量减少您输入的时间。  \n3.请问您方便先发给我这些资料吗？",
+    "text": "1.老板您好，我是您的专属增长顾问小欧�? \n2.为了帮您重新生成精准的战略蓝图，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片等，我会先看一遍，尽量减少您输入的时间�? \n3.请问您方便先发给我这些资料吗�?,
     "data": {
       "video_link": ""
     }
@@ -8583,7 +8585,7 @@ INSERT INTO "redis_queue_messages" VALUES('5bff31e6-0991-42be-9f9d-b684ff129f9a'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "感谢您提供公司网址：www.aokledlight.com。#我可以根据最新资料提取作战地图，并告诉您当前还需要合成多少个测试视频。是否立即执行？如果需要，请回复“是”。",
+    "text": "感谢您提供公司网址：www.aokledlight.com�?我可以根据最新资料提取作战地图，并告诉您当前还需要合成多少个测试视频。是否立即执行？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -8594,7 +8596,7 @@ INSERT INTO "redis_queue_messages" VALUES('0cd9d258-1b44-4051-ae27-55ae19ef5db2'
   "env": "gray",
   "session_id": "206f799e-b100-44c0-abfb-96e2f2b524ca",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "c2ba0dc7-7d48-4971-b354-fc2e15e24d35",
   "socket_id": "I9-UITjWS-_6ooWCAAI9",
   "status": "RUNNING",
@@ -8612,7 +8614,7 @@ INSERT INTO "redis_queue_messages" VALUES('ede57eef-ac54-4a42-a334-03de613cc9cd'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！我是您的B2B智能视频创作与发布助手。为了帮助您规划下一步拍摄任务，您是否想先了解目前作战地图显示还需要合成多少支测试视频？如果需要，请告诉我，我将立即为您查询。",
+    "text": "你好！我是您的B2B智能视频创作与发布助手。为了帮助您规划下一步拍摄任务，您是否想先了解目前作战地图显示还需要合成多少支测试视频？如果需要，请告诉我，我将立即为您查询�?,
     "data": {
       "video_link": ""
     }
@@ -8629,7 +8631,7 @@ INSERT INTO "redis_queue_messages" VALUES('bbb5327c-cc42-4b27-94c9-40a8a6e7f70a'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1.我已为您初步提炼了“目标人群”模块，请您确认：  \n • 客户类型：灯具品牌商 / 代理商、批发商 / 工程承包商 / 政府照明采购方 / 跨境电商卖家  \n • 目标市场：北美、欧洲、澳洲、中东、东南亚  \n • 常见痛点：节能升级、维护成本高、项目验收标准严格、交期与合规压力、认证要求（UL / DLC / TUV 等）  \n\n2.如果需要调整或补充，请直接告诉我；若确认无误，请回复“确认”，我将继续下一步信息收集。",
+    "text": "1.我已为您初步提炼了“目标人群”模块，请您确认�? \n �?客户类型：灯具品牌商 / 代理商、批发商 / 工程承包�?/ 政府照明采购�?/ 跨境电商卖家  \n �?目标市场：北美、欧洲、澳洲、中东、东南亚  \n �?常见痛点：节能升级、维护成本高、项目验收标准严格、交期与合规压力、认证要求（UL / DLC / TUV 等）  \n\n2.如果需要调整或补充，请直接告诉我；若确认无误，请回复“确认”，我将继续下一步信息收集�?,
     "data": {
       "video_link": ""
     }
@@ -8646,7 +8648,7 @@ INSERT INTO "redis_queue_messages" VALUES('d3d7c39d-53e7-46db-9da6-572dcd6d3c08'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1.老板您好，我是您的专属增长顾问小欧。  \n2.为了帮您重新生成精准的“出海视频获客战略蓝图”，我需要先确认或更新以下信息：  \n   • 企业资料（例如官网链接、主营产品及优势简述）  \n   • 目标市场与核心受众（国家/行业/典型痛点）  \n   • 主打产品与差异化卖点（功率段、认证、质保等）  \n3.您可以直接把已有资料发我链接或文字，我会快速扫描并为您生成新版蓝图。",
+    "text": "1.老板您好，我是您的专属增长顾问小欧�? \n2.为了帮您重新生成精准的“出海视频获客战略蓝图”，我需要先确认或更新以下信息：  \n   �?企业资料（例如官网链接、主营产品及优势简述）  \n   �?目标市场与核心受众（国家/行业/典型痛点�? \n   �?主打产品与差异化卖点（功率段、认证、质保等�? \n3.您可以直接把已有资料发我链接或文字，我会快速扫描并为您生成新版蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -8663,7 +8665,7 @@ INSERT INTO "redis_queue_messages" VALUES('0a962e11-e26e-4693-90d7-5497877158a8'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已收到您提供的公司官网链接，我将先快速浏览以便更好地理解您的产品与优势。您想进一步了解目前作战地图里还需要合成多少支测试视频吗？如果需要，请告诉我，我会立即为您查询并反馈。",
+    "text": "已收到您提供的公司官网链接，我将先快速浏览以便更好地理解您的产品与优势。您想进一步了解目前作战地图里还需要合成多少支测试视频吗？如果需要，请告诉我，我会立即为您查询并反馈�?,
     "data": {
       "video_link": "www.aokledlight.com"
     }
@@ -8680,7 +8682,7 @@ INSERT INTO "redis_queue_messages" VALUES('9a41f2e5-e72d-41f5-9344-35e2303244f4'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作与发布助手。您想知道当前还需要合成多少个视频来进行测试吗？如果需要，请回复“是”。",
+    "text": "您好！欢迎使用智能视频创作与发布助手。您想知道当前还需要合成多少个视频来进行测试吗？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -8697,7 +8699,7 @@ INSERT INTO "redis_queue_messages" VALUES('03182e00-b391-497c-8a71-852c6c6275a6'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 已为您自动提取并罗列「目标人群」模块的关键信息（见上）。  \n2. 请确认是否正确，或指出需补充/修改之处；确认后我将立刻升级生成新版《出海视频获客战略蓝图》。",
+    "text": "1. 已为您自动提取并罗列「目标人群」模块的关键信息（见上）�? \n2. 请确认是否正确，或指出需补充/修改之处；确认后我将立刻升级生成新版《出海视频获客战略蓝图》�?,
     "data": {
       "video_link": ""
     }
@@ -8714,7 +8716,7 @@ INSERT INTO "redis_queue_messages" VALUES('0457a188-e7e2-4ca0-9cc6-974b7c0d595a'
   "status": "FINISHED",
   "content_type": "collect_message",
   "content": {
-    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了重新升级生成最新的视频获客战略蓝图，烦请先把以下信息补充给我：  \n   • 公司官网或简介链接  \n   • 主要产品系列 & 卖点资料（可发 PDF/图片/文字）  \n   • 目标市场&客户类型的最新重点（如需调整请说明）  \n   • 近期销售/曝光目标或 KPI（若与之前不同）  \n\n2. 您可以把现有资料直接复制粘贴或上传截图，我先帮您整理，再快速生成新版蓝图。",
+    "text": "1. 老板您好，我是您的专属增长顾问小欧。为了重新升级生成最新的视频获客战略蓝图，烦请先把以下信息补充给我：  \n   �?公司官网或简介链�? \n   �?主要产品系列 & 卖点资料（可�?PDF/图片/文字�? \n   �?目标市场&客户类型的最新重点（如需调整请说明）  \n   �?近期销�?曝光目标�?KPI（若与之前不同）  \n\n2. 您可以把现有资料直接复制粘贴或上传截图，我先帮您整理，再快速生成新版蓝图�?,
     "data": {
       "video_link": ""
     }
@@ -8731,7 +8733,7 @@ INSERT INTO "redis_queue_messages" VALUES('4385c241-e154-4db0-ae56-2cf15e0e04d7'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "好的，已为您生成最新战略蓝图：\n• 今日已安排发布：0 条视频\n• 待制作视频脚本：35 条\n• 需要合成的视频编号：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n接下来请选择您想优先合成的脚本编号（例如输入“24”）。我将立即为您拆解该脚本并准备合成视频。",
+    "text": "好的，已为您生成最新战略蓝图：\n�?今日已安排发布：0 条视频\n�?待制作视频脚本：35 条\n�?需要合成的视频编号�?, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n接下来请选择您想优先合成的脚本编号（例如输入�?4”）。我将立即为您拆解该脚本并准备合成视频�?,
     "data": {
       "video_link": ""
     }
@@ -8742,7 +8744,7 @@ INSERT INTO "redis_queue_messages" VALUES('c935ab54-08f1-4ab6-8738-e272d617de89'
   "env": "gray",
   "session_id": "e1f2df6b-9633-42d7-890b-cc90633945b0",
   "user_id": "257a5a79-377f-4ebb-b049-db5cc048d111",
-  "operate_id": "开始处理",
+  "operate_id": "开始处�?,
   "request_id": "e45385b4-855e-4d69-ac3d-7c152b3c3046",
   "socket_id": "4jCK2d7yZ6KPdlhaAAJD",
   "status": "RUNNING",
@@ -8758,7 +8760,7 @@ INSERT INTO "redis_queue_messages" VALUES('b77c6ebd-1af9-4245-8eda-d2e6e035f018'
   "request_id": "e45385b4-855e-4d69-ac3d-7c152b3c3046",
   "socket_id": "4jCK2d7yZ6KPdlhaAAJD",
   "status": "FINISHED",
-  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图 V8.0》\n（基于 www.aokledlight.com 最新资料 | 生成日期：2024-10-05）\n\n## 1. 北极星目标（30 天）\n- 累计曝光 ≥ **800,000**（TikTok / YouTube Shorts / Instagram Reels / LinkedIn）\n- 有效 B2B 线索 ≥ **300 条**（邮箱 / WhatsApp / LinkedIn InMail）\n- 视频完播率 ≥ **38%**；点赞率 ≥ **7%**；私信转化率 ≥ **1.2%**\n\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 区域/语言 | 账号数 | 日更频次 | 30 天发布量 |\n|------|-----------|--------|----------|--------------|\n| TikTok | 美区×2, 东南亚×2 | 4 | 1/账号 | 120 |\n| YouTube Shorts | 美区 (EN)×2, 美区 (ES)×1 | 3 | 1/账号 | 90 |\n| Instagram Reels | EN×1, ES×1 | 2 | 1/账号 | 60 |\n| LinkedIn | 公司主页 | 1 | 1 | 30 |\n| **合计** |  | **10** |  | **300** |\n\n组成：原生拍摄 75 支 + AI 裂变 225 支 ＝ 300 条短视频\n\n## 3. 素材拍摄需求\n每周 10 个核心场景 × 2 机位 = **20 组源素材**\n4 周共 80 组 → 足够裂变 300 条视频\n拍摄用时：3 天（2 天工厂 & 测试，1 天案例外景）\n所需设备：\n① 手机×2（4K 60fps） ② 领夹麦×2 ③ 稳定器×1 ④ 补光灯×1\n人员：拍摄 2 人（主拍+协助）\n\n## 4. 内容支柱（8 Directions）\n1. 工厂探秘（Smart Line / 老化房 / IP66 测试）\n2. 产品测评（170 lm/W 对比、散热实验、光衰 5000h）\n3. 客户案例（北美港口 400 W 投光，欧盟仓库 UFO）\n4. 安装指南（1 人 5 分钟换高棚灯）\n5. 对比实验（400 W HPS vs 150 W LED）\n6. 行业科普（DLC Premium vs UL，照度计算）\n7. CEO / 工程师访谈（专利散热、10 年质保）\n8. FAQ 快问快答（质保？交期？MOQ？）\n\n## 5. 30 天脚本日历（片段示例）\nWeek 1\n- D1 工厂 SMT 贴片线 15s（Hook：机器手高速运转）\n- D2 DLC Premium 测试 30s（Hook：测试仪炸闪）\n- D3 北美港口案例夜景 20s（Hook：40% 省电对比画面）\n...\nWeek 4\n- D25 CEO 访谈：10 年质保秘诀 45s\n- D26 高棚灯安装分步骤教程 30s\n- D27 FAQ：UL vs DLC 买家最常问 15s\n- D28 TikTok Live 预热短片 30s\n- D29 案例回访：12 个月光衰 <4% 15s\n- D30 月度成果集锦 60s\n（完整 30 天脚本 & 分镜见附录 XLSX）\n\n## 6. 镜头模板（示例）\n[产品测评] 170 lm/W 对比\n1. CLOSE-UP：两盏灯同时点亮（0-2s）\n2. TEXT OVERLAY：“170 lm/W vs 110 lm/W”\n3. B-ROLL：照度计实时读数（3-6s）\n4. VO：英语旁白：“Save 40% energy instantly.”\n5. CTA：屏幕右下角 WhatsApp 按钮\n\n## 7. 预算 & 资源\n- 拍摄：¥6,000（3 天场地+设备）\n- AI 工具：¥1,200（CapCut Pro / Runway / ChatGPT Plus）\n- 推广：¥2,800（TikTok Spark Ads, YT Shorts TrueView, LI InMail）\n- **Total ≤ ¥10,000**\n\n## 8. 里程碑 & 复盘\nD1-3：拍摄完成 & 首批 30 条剪辑\nD4：10 账号全部上线\nD5-7：首波发布 + Spark Ads 种子流量\nD8：数据复盘 #1 → 赢家脚本放大\nD15：半程复盘 → 加码案例 & 对比实验\nD30：月度总结 & 下阶段 KPI\n\n## 9. KPI 监测 Dashboard（关键指标）\n曝光 / 完播率 / 点赞率 / 私信数 / 线索数 / CPL\n自动化收集：TikTok & YT API + Google Sheets\n\n---\n**行动口令**：立刻安排 3 天拍摄，把 80 组源素材搞定；其余交给 AI！\n\n> 您的专属《AOK LED Light 出海视频获客战略蓝图 V8.0》已生成，祝您 30 天内拿下 300+ 条高意向线索！"},
+  "content": {"data":"# 《AOK LED Light 出海视频获客战略蓝图 V8.0》\n（基�?www.aokledlight.com 最新资�?| 生成日期�?024-10-05）\n\n## 1. 北极星目标（30 天）\n- 累计曝光 �?**800,000**（TikTok / YouTube Shorts / Instagram Reels / LinkedIn）\n- 有效 B2B 线索 �?**300 �?*（邮�?/ WhatsApp / LinkedIn InMail）\n- 视频完播�?�?**38%**；点赞率 �?**7%**；私信转化率 �?**1.2%**\n\n## 2. 账号矩阵 & 发布节奏\n| 平台 | 区域/语言 | 账号�?| 日更频次 | 30 天发布量 |\n|------|-----------|--------|----------|--------------|\n| TikTok | 美区×2, 东南亚�? | 4 | 1/账号 | 120 |\n| YouTube Shorts | 美区 (EN)×2, 美区 (ES)×1 | 3 | 1/账号 | 90 |\n| Instagram Reels | EN×1, ES×1 | 2 | 1/账号 | 60 |\n| LinkedIn | 公司主页 | 1 | 1 | 30 |\n| **合计** |  | **10** |  | **300** |\n\n组成：原生拍�?75 �?+ AI 裂变 225 �?�?300 条短视频\n\n## 3. 素材拍摄需求\n每周 10 个核心场�?× 2 机位 = **20 组源素材**\n4 周共 80 �?�?足够裂变 300 条视频\n拍摄用时�? 天（2 天工�?& 测试�? 天案例外景）\n所需设备：\n�?手机×2�?K 60fps�?�?领夹麦�? �?稳定器�? �?补光灯�?\n人员：拍�?2 人（主拍+协助）\n\n## 4. 内容支柱�? Directions）\n1. 工厂探秘（Smart Line / 老化�?/ IP66 测试）\n2. 产品测评�?70 lm/W 对比、散热实验、光�?5000h）\n3. 客户案例（北美港�?400 W 投光，欧盟仓�?UFO）\n4. 安装指南�? �?5 分钟换高棚灯）\n5. 对比实验�?00 W HPS vs 150 W LED）\n6. 行业科普（DLC Premium vs UL，照度计算）\n7. CEO / 工程师访谈（专利散热�?0 年质保）\n8. FAQ 快问快答（质保？交期？MOQ？）\n\n## 5. 30 天脚本日历（片段示例）\nWeek 1\n- D1 工厂 SMT 贴片�?15s（Hook：机器手高速运转）\n- D2 DLC Premium 测试 30s（Hook：测试仪炸闪）\n- D3 北美港口案例夜景 20s（Hook�?0% 省电对比画面）\n...\nWeek 4\n- D25 CEO 访谈�?0 年质保秘诀 45s\n- D26 高棚灯安装分步骤教程 30s\n- D27 FAQ：UL vs DLC 买家最常问 15s\n- D28 TikTok Live 预热短片 30s\n- D29 案例回访�?2 个月光衰 <4% 15s\n- D30 月度成果集锦 60s\n（完�?30 天脚�?& 分镜见附�?XLSX）\n\n## 6. 镜头模板（示例）\n[产品测评] 170 lm/W 对比\n1. CLOSE-UP：两盏灯同时点亮�?-2s）\n2. TEXT OVERLAY：�?70 lm/W vs 110 lm/W”\n3. B-ROLL：照度计实时读数�?-6s）\n4. VO：英语旁白：“Save 40% energy instantly.”\n5. CTA：屏幕右下角 WhatsApp 按钮\n\n## 7. 预算 & 资源\n- 拍摄：�?,000�? 天场�?设备）\n- AI 工具：�?,200（CapCut Pro / Runway / ChatGPT Plus）\n- 推广：�?,800（TikTok Spark Ads, YT Shorts TrueView, LI InMail）\n- **Total �?¥10,000**\n\n## 8. 里程�?& 复盘\nD1-3：拍摄完�?& 首批 30 条剪辑\nD4�?0 账号全部上线\nD5-7：首波发�?+ Spark Ads 种子流量\nD8：数据复�?#1 �?赢家脚本放大\nD15：半程复�?�?加码案例 & 对比实验\nD30：月度总结 & 下阶�?KPI\n\n## 9. KPI 监测 Dashboard（关键指标）\n曝光 / 完播�?/ 点赞�?/ 私信�?/ 线索�?/ CPL\n自动化收集：TikTok & YT API + Google Sheets\n\n---\n**行动口令**：立刻安�?3 天拍摄，�?80 组源素材搞定；其余交�?AI！\n\n> 您的专属《AOK LED Light 出海视频获客战略蓝图 V8.0》已生成，祝�?30 天内拿下 300+ 条高意向线索�?},
   "content_type": "blue_image_content"
   ,
   "create_ts": 1760609358432
@@ -8773,7 +8775,7 @@ INSERT INTO "redis_queue_messages" VALUES('119e0e60-ec31-4bc8-b659-c3c6a15404eb'
   "status": "FINISHED",
   "content_type": "blue_image",
   "content": {
-    "text": "1. 您的专属视频获客战略已经生成！接下来就可以按照这份计划开干了！",
+    "text": "1. 您的专属视频获客战略已经生成！接下来就可以按照这份计划开干了�?,
     "data": {
       "video_link": ""
     }
@@ -8790,7 +8792,7 @@ INSERT INTO "redis_queue_messages" VALUES('844146c9-b142-4b55-9124-cab0c521b6ae'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。系统已经准备好随时为您提供当前仍需拍摄测试的视频数量详情，并引导您后续选择脚本、合成与发布视频。如果您想了解目前还需要拍摄多少个视频，请告诉我，我将为您进行统计并开始流程。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。系统已经准备好随时为您提供当前仍需拍摄测试的视频数量详情，并引导您后续选择脚本、合成与发布视频。如果您想了解目前还需要拍摄多少个视频，请告诉我，我将为您进行统计并开始流程�?,
     "data": {
       "video_link": ""
     }
@@ -8807,7 +8809,7 @@ INSERT INTO "redis_queue_messages" VALUES('757929a8-3aa5-42ea-8307-2345c5f34946'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已为您整理最新作战地图：\n1) 今日待发布：0 条视频\n2) 待制作脚本：35 条\n3) 仍需合成的视频编号：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从上方编号中选择您想优先合成的视频脚本（例如输入“24”），我将立即拆解并生成脚本。",
+    "text": "已为您整理最新作战地图：\n1) 今日待发布：0 条视频\n2) 待制作脚本：35 条\n3) 仍需合成的视频编号：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从上方编号中选择您想优先合成的视频脚本（例如输入�?4”），我将立即拆解并生成脚本�?,
     "data": {
       "video_link": ""
     }
@@ -8824,7 +8826,7 @@ INSERT INTO "redis_queue_messages" VALUES('e04ffb56-7a20-4c91-9675-b3e0ec9b11d7'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！我是您的B2B智能视频创作与发布助手。接下来，我可以为您提取当前作战地图中还需要合成的视频数量，帮助您规划接下来的拍摄任务。请问您现在需要查看还需要合成多少个测试视频吗？如果需要，请回复“是”，我将立即为您统计。",
+    "text": "您好！我是您的B2B智能视频创作与发布助手。接下来，我可以为您提取当前作战地图中还需要合成的视频数量，帮助您规划接下来的拍摄任务。请问您现在需要查看还需要合成多少个测试视频吗？如果需要，请回复“是”，我将立即为您统计�?,
     "data": {
       "video_link": ""
     }
@@ -8841,7 +8843,7 @@ INSERT INTO "redis_queue_messages" VALUES('a22d3aef-6049-48c4-889c-617cb4c46442'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已为您统计当前作战地图与脚本库情况：\n\n1. 今日作战地图计划：需要发布 0 条视频。\n2. 待制作视频脚本库：共有 35 个脚本尚未合成视频。\n3. 可选脚本编号如下：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从以上编号中选择您要优先合成的视频，直接回复编号即可（如“24”）。我将为您提取该脚本信息并进行视频拆解。",
+    "text": "已为您统计当前作战地图与脚本库情况：\n\n1. 今日作战地图计划：需要发�?0 条视频。\n2. 待制作视频脚本库：共�?35 个脚本尚未合成视频。\n3. 可选脚本编号如下：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54\n\n请从以上编号中选择您要优先合成的视频，直接回复编号即可（如�?4”）。我将为您提取该脚本信息并进行视频拆解�?,
     "data": {
       "video_link": ""
     }
@@ -8858,7 +8860,7 @@ INSERT INTO "redis_queue_messages" VALUES('189eef52-8186-4649-b445-b1de5e5e2fbc'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "脚本编号 33 已拆解完毕，以下是关键信息：\n\n1. 新视频文案（可直接用于字幕 / 旁白）：\n免费拿样！！！用 AOK 高光效 LED 灯升级你的厂房！AOK 超高光效 LED 工矿灯、路灯、投光灯，160 lm/W，节能 70%+；UL、DLC、CE 全认证，IP66 防水防尘，IK08 抗冲击，5–10 年质保；支持 0–10V、DALI 调光，可接入 Zigbee/LoRa 智能系统；专利散热、模块化易维护，7 天极速交付，让车间、仓库、球场一次点亮，省电又安心！\n\n2. 推荐标签：\n#ledlight #highbay #floodlight #streetlight #energysaving #industriallighting #outdoorlighting #smartcontrol #ulcertified #dlc #factoryupgrade #warehouselighting #aok\n\n3. 分镜概览（共 6 镜头）：\n   • 0–1.25 s：中景定格—工人给保温装饰一体板背面涂抹砂浆。\n   • 1.25–3.91 s：近景定格—工人将一体板按压到墙面上安装。\n   • 3.91–7.83 s：特写定格—电钻安装金属固定件。\n   • 7.83–11.75 s：中景摇拍—展示安装完成后的整体效果。\n   • 11.75–15.58 s：全景仰拍—大面积墙面成品展示。\n   • 15.58–17.80 s：中景定格—展示不同饰面样品及其防火、防潮特性。\n\n如果您对以上脚本满意，是否需要立即合成视频？\n\n请回复“是”开始视频合成，如需更改请告诉我修改意见。",
+    "text": "脚本编号 33 已拆解完毕，以下是关键信息：\n\n1. 新视频文案（可直接用于字�?/ 旁白）：\n免费拿样！！！用 AOK 高光�?LED 灯升级你的厂房！AOK 超高光效 LED 工矿灯、路灯、投光灯�?60 lm/W，节�?70%+；UL、DLC、CE 全认证，IP66 防水防尘，IK08 抗冲击，5�?0 年质保；支持 0�?0V、DALI 调光，可接入 Zigbee/LoRa 智能系统；专利散热、模块化易维护，7 天极速交付，让车间、仓库、球场一次点亮，省电又安心！\n\n2. 推荐标签：\n#ledlight #highbay #floodlight #streetlight #energysaving #industriallighting #outdoorlighting #smartcontrol #ulcertified #dlc #factoryupgrade #warehouselighting #aok\n\n3. 分镜概览（共 6 镜头）：\n   �?0�?.25 s：中景定格—工人给保温装饰一体板背面涂抹砂浆。\n   �?1.25�?.91 s：近景定格—工人将一体板按压到墙面上安装。\n   �?3.91�?.83 s：特写定格—电钻安装金属固定件。\n   �?7.83�?1.75 s：中景摇拍—展示安装完成后的整体效果。\n   �?11.75�?5.58 s：全景仰拍—大面积墙面成品展示。\n   �?15.58�?7.80 s：中景定格—展示不同饰面样品及其防火、防潮特性。\n\n如果您对以上脚本满意，是否需要立即合成视频？\n\n请回复“是”开始视频合成，如需更改请告诉我修改意见�?,
     "data": {
       "video_link": ""
     }
@@ -8875,7 +8877,7 @@ INSERT INTO "redis_queue_messages" VALUES('5970d05f-3a47-4d15-9b29-9667153e2e01'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成完成！请点击下方链接预览：如果您对视频满意，请回复 “发布”，我将立即为您发布到 TikTok。如需调整，请告诉我修改意见。",
+    "text": "视频已合成完成！请点击下方链接预览：如果您对视频满意，请回复 “发布”，我将立即为您发布�?TikTok。如需调整，请告诉我修改意见�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4#https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -8892,7 +8894,7 @@ INSERT INTO "redis_queue_messages" VALUES('47fdba42-cdd9-4ba6-b8f6-1404232e2570'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "发布成功！您的视频已成功发布至 TikTok 🎉\n\n您可以登录企业账号后台查看完整数据表现。感谢您的配合，期待下次为您服务！",
+    "text": "发布成功！您的视频已成功发布�?TikTok 🎉\n\n您可以登录企业账号后台查看完整数据表现。感谢您的配合，期待下次为您服务�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -8909,7 +8911,7 @@ INSERT INTO "redis_queue_messages" VALUES('b83152e8-30b1-4210-ba93-a1843a112db9'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！欢迎使用智能视频创作助手。是否需要我先统计当前作战地图和待测试脚本数量，并告诉您还需要合成多少个视频来测试？如果需要，请回复“是”。",
+    "text": "您好！欢迎使用智能视频创作助手。是否需要我先统计当前作战地图和待测试脚本数量，并告诉您还需要合成多少个视频来测试？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -8926,7 +8928,7 @@ INSERT INTO "redis_queue_messages" VALUES('b1a89a9f-2017-4fe5-96ca-6701d05956cc'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "最新作战地图统计结果：今日还需要合成 35 个视频进行测试。#待合成的视频编号如下：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54。#请从上方编号中选择一个您想优先拍摄的脚本编号，并直接回复该编号，我将为您拆解脚本并生成拍摄方案。",
+    "text": "最新作战地图统计结果：今日还需要合�?35 个视频进行测试�?待合成的视频编号如下�?, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54�?请从上方编号中选择一个您想优先拍摄的脚本编号，并直接回复该编号，我将为您拆解脚本并生成拍摄方案�?,
     "data": {
       "video_link": ""
     }
@@ -8943,7 +8945,7 @@ INSERT INTO "redis_queue_messages" VALUES('6691414b-db31-4714-92f8-54fe017560b6'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "已完成脚本拆解，以下是编号 36 的新版拍摄脚本概要：\n\n1. 视频主题：AOK 超高光效 LED 照明，让工厂、球场、道路一次省电 70% 以上。\n2. 拍摄分镜（共 14 个镜头，含产品演示、尺寸讲解、企业 LOGO）：\n   • 0–10s 女子测量隔断高度（中景）\n   • 10–20s 演示卷尺细节（近景）\n   • ……（共 14 个分镜，已全部标注景别、机位与 CODE）\n3. 新文案（上屏字幕 & 旁白）：\n   “我叫 AOK，自 2010 年起专注高功率 LED 照明。160 lm/W 超高光效，让工厂、球场、道路一次省电 70% 以上；\n    IP66 防护、NTC 温控，暴雨酷暑依旧稳定；\n    0-10V / DALI / Zigbee 智能联控，让光随心而动。\n    5-10 年质保，核心机型 7 天发货，安装维护成本低，模块化设计随时升级。\n    想要亮度与省电兼得？跟着我，用一盏灯省下一座发电站的能耗！”\n4. 推荐音乐：Original Sound（TikTok 原声）\n5. 视频标签：#aok #ledlight #industriallighting #outdoorlighting #energysaving #highbay #floodlight #streetlight #stadiumlight #smartlighting\n\n请确认是否立即开始合成视频。如果确认，请回复“合成”；如需修改脚本或换其他编号，请告诉我。",
+    "text": "已完成脚本拆解，以下是编�?36 的新版拍摄脚本概要：\n\n1. 视频主题：AOK 超高光效 LED 照明，让工厂、球场、道路一次省�?70% 以上。\n2. 拍摄分镜（共 14 个镜头，含产品演示、尺寸讲解、企�?LOGO）：\n   �?0�?0s 女子测量隔断高度（中景）\n   �?10�?0s 演示卷尺细节（近景）\n   �?……（�?14 个分镜，已全部标注景别、机位与 CODE）\n3. 新文案（上屏字幕 & 旁白）：\n   “我�?AOK，自 2010 年起专注高功�?LED 照明�?60 lm/W 超高光效，让工厂、球场、道路一次省�?70% 以上；\n    IP66 防护、NTC 温控，暴雨酷暑依旧稳定；\n    0-10V / DALI / Zigbee 智能联控，让光随心而动。\n    5-10 年质保，核心机型 7 天发货，安装维护成本低，模块化设计随时升级。\n    想要亮度与省电兼得？跟着我，用一盏灯省下一座发电站的能耗！”\n4. 推荐音乐：Original Sound（TikTok 原声）\n5. 视频标签�?aok #ledlight #industriallighting #outdoorlighting #energysaving #highbay #floodlight #streetlight #stadiumlight #smartlighting\n\n请确认是否立即开始合成视频。如果确认，请回复“合成”；如需修改脚本或换其他编号，请告诉我�?,
     "data": {
       "video_link": ""
     }
@@ -8960,7 +8962,7 @@ INSERT INTO "redis_queue_messages" VALUES('3dc43fb4-eee5-4b45-89ae-853b49ce4adb'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "视频已合成！请点击上方链接预览。\n\n您对视频满意吗？如果确认无误，请输入“发布”，我将立即为您发布到 TikTok。",
+    "text": "视频已合成！请点击上方链接预览。\n\n您对视频满意吗？如果确认无误，请输入“发布”，我将立即为您发布�?TikTok�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -8977,7 +8979,7 @@ INSERT INTO "redis_queue_messages" VALUES('1674fe51-0ab5-4d37-9539-37a656cd5e01'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "发布成功！您的视频已发布至 TikTok。您可以登录自己的账号后台查看详细的数据表现。感谢您的使用，祝您生意兴隆！",
+    "text": "发布成功！您的视频已发布�?TikTok。您可以登录自己的账号后台查看详细的数据表现。感谢您的使用，祝您生意兴隆�?,
     "data": {
       "video_link": "https://bucket-xuyiyao-01.oss-cn-beijing.aliyuncs.com/Download%20(42).mp4"
     }
@@ -8994,7 +8996,7 @@ INSERT INTO "redis_queue_messages" VALUES('ae63178a-e092-4dab-8cf8-db0d96fb26cb'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "你好！我是您的B2B智能视频创作与发布助手。接下来，我可以帮您查看当前作战地图，计算还需要合成多少个视频进行测试。请问您现在需要查看吗？如果需要，请直接回复“是”。",
+    "text": "你好！我是您的B2B智能视频创作与发布助手。接下来，我可以帮您查看当前作战地图，计算还需要合成多少个视频进行测试。请问您现在需要查看吗？如果需要，请直接回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -9011,7 +9013,7 @@ INSERT INTO "redis_queue_messages" VALUES('b4852185-0dc3-4252-8e2b-4e99e5ca2474'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "当前作战地图显示：今日计划发布 0 条视频。\n待制作的视频脚本共有 35 个，需要继续合成 35 个视频进行测试。\n待合成的视频编号如下：2, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54。\n\n请从以上编号中选择一个视频编号，用于下一步脚本拆解与确认（例如输入 “2”）。",
+    "text": "当前作战地图显示：今日计划发�?0 条视频。\n待制作的视频脚本共有 35 个，需要继续合�?35 个视频进行测试。\n待合成的视频编号如下�?, 24, 31, 23, 28, 35, 34, 29, 33, 37, 30, 38, 27, 42, 39, 46, 43, 45, 36, 40, 41, 44, 47, 93, 48, 50, 53, 56, 49, 51, 57, 58, 55, 52, 54。\n\n请从以上编号中选择一个视频编号，用于下一步脚本拆解与确认（例如输�?�?”）�?,
     "data": {
       "video_link": ""
     }
@@ -9028,7 +9030,7 @@ INSERT INTO "redis_queue_messages" VALUES('2ce38759-4c6d-4cf3-8cf1-c1a412de22eb'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "您好！目前我可以为您提取作战地图并计算出还需要合成多少个测试视频。请问您想现在查看这一信息吗？如果需要，请回复“是”。",
+    "text": "您好！目前我可以为您提取作战地图并计算出还需要合成多少个测试视频。请问您想现在查看这一信息吗？如果需要，请回复“是”�?,
     "data": {
       "video_link": ""
     }
@@ -9045,7 +9047,7 @@ INSERT INTO "redis_queue_messages" VALUES('702c29c2-f608-4d30-a4cf-f37687a973e3'
   "status": "FINISHED",
   "content_type": 1,
   "content": {
-    "text": "当前作战地图显示：今天还未安排发布任何视频；待制作视频脚本共有 35 个。\n待合成的视频编号如下：\n2, 23, 24, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 93\n\n请从以上编号中任选一个（或多个）用于本次视频拆解与拍摄，并回复对应编号。例如：24",
+    "text": "当前作战地图显示：今天还未安排发布任何视频；待制作视频脚本共�?35 个。\n待合成的视频编号如下：\n2, 23, 24, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 93\n\n请从以上编号中任选一个（或多个）用于本次视频拆解与拍摄，并回复对应编号。例如：24",
     "data": {
       "video_link": ""
     }
@@ -9160,3 +9162,4 @@ CREATE INDEX ix_billing_config_key ON [billing_config] (config_key);
 CREATE INDEX ix_billing_config_active ON [billing_config] (is_active)
 ;
 COMMIT;
+

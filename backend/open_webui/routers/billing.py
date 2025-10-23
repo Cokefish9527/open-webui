@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Optional, List
 from decimal import Decimal
@@ -22,6 +23,8 @@ from open_webui.models.api_usage_log import (
     PaginatedAPIUsageLogResponse
 )
 
+from open_webui.models.credits import Credits
+from open_webui.models.hsai_companies import Companies
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
@@ -30,6 +33,52 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 router = APIRouter(prefix="/billing", tags=["计费管理"])
+
+
+############################
+# 用户公司积分
+############################
+
+
+class UserCompanyCreditResponse(BaseModel):
+    user_id: str = Field(description="用户ID")
+    company_id: Optional[str] = Field(default=None, description="公司ID")
+    company_name: Optional[str] = Field(default=None, description="公司名称")
+    credit_balance: Decimal = Field(description="当前积分余额")
+    last_updated: Optional[str] = Field(default=None, description="最后更新时间（UTC ISO8601）")
+
+
+@router.get("/user/credit", response_model=UserCompanyCreditResponse, summary="获取用户所属公司的积分余额")
+async def get_user_company_credit(user=Depends(get_verified_user)) -> UserCompanyCreditResponse:
+    """
+    返回当前登录用户所属公司（若有）的积分余额信息。
+    """
+    credit = Credits.init_credit_by_user_id(user.id)
+    company_id = credit.company_id or getattr(user, "company_id", None)
+    company_name: Optional[str] = None
+
+    if company_id:
+        company = Companies.get_company_by_id(company_id)
+        if company:
+            company_name = company.name
+    last_updated_iso: Optional[str] = None
+    if getattr(credit, "updated_at", None):
+        try:
+            last_updated_iso = (
+                datetime.datetime.utcfromtimestamp(int(credit.updated_at))
+                .replace(tzinfo=datetime.timezone.utc)
+                .isoformat()
+            )
+        except (TypeError, ValueError):
+            last_updated_iso = None
+
+    return UserCompanyCreditResponse(
+        user_id=user.id,
+        company_id=company_id,
+        company_name=company_name,
+        credit_balance=credit.credit,
+        last_updated=last_updated_iso,
+    )
 
 
 ############################

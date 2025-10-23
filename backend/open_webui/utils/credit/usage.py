@@ -186,6 +186,7 @@ class CreditDeduct:
         Credits.add_credit_by_user_id(
             form_data=AddCreditForm(
                 user_id=self.user.id,
+                company_id=self.user.company_id,
                 amount=Decimal(-self.total_price),
                 detail=SetCreditFormDetail(
                     usage={

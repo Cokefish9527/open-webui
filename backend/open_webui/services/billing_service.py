@@ -50,11 +50,15 @@ class BillingService:
             # 在实际实现中，可能需要更复杂的逻辑来确定使用哪个用户
             # 这里简化处理，使用公司负责人的用户ID
             user_id = company.owner_user_id
-            
-            # 更新用户积分余额
+            if not user_id:
+                log.error(f"公司缺少负责人，无法更新积分: company_id={company_id}")
+                return False
+
+            # 更新公司积分余额
             result = self.credits.add_credit_by_user_id(
                 form_data=AddCreditForm(
                     user_id=user_id,
+                    company_id=company.id,
                     amount=amount,
                     detail=SetCreditFormDetail(**detail)
                 )

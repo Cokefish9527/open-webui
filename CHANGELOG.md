@@ -9,10 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Introduced `scripts/sqlite_to_postgres_sync.py` for automated SQLite -> PostgreSQL synchronization with Markdown reporting, batch controls, and optional backups.
+- Added `tool/add_company_credit_columns.py` to backfill `company_id` columns for `credit`/`credit_log` across SQLite and PostgreSQL deployments, ensuring legacy数据迁移平滑可追溯。
 
 ### Changed
 - Updated PROJECTWIKI operations/ADR guidance to align with the new database sync workflow and environment variable conventions.
 - Separated billing usage logging into the dedicated `n8n_workflow` database via new `N8N_DATABASE_*` settings, refactoring associated ORM models and services to use the shared secondary SQLAlchemy engine.
+- Unified积分余额在公司维度存储，新增 `credit.company_id` / `credit_log.company_id` 字段，并调整所有接口改为通过 `/api/v1/billing/user/credit` 返回公司余额。
 
 ## [0.6.15] - 2025-06-16
 
@@ -40,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 📄 **Citation Page Number for Page 1 is Now Displayed**: Corrected an oversight where references for page 1 documents were missing the page number; citations are now always accurate and fully visible.
 - 📒 **Notes Access Restored**: Fixed an issue where some users could not access their notes—everyone can now view and manage their notes reliably, ensuring seamless documentation and workflow continuity.
 - 🛑 **OAuth Callback Double-Slash Issue Resolved**: Fixed rare cases where an extra slash in OAuth callbacks caused failed logins or redirects, making third-party login integrations more reliable.
+- 📝 **PROJECTWIKI 与 576 号设计文档中文乱码修复**：重写 Markdown 内容并统一 UTF-8 编码，移除控制字符和替换符，确保在命令行、VS Code 等环境正确显示。
 
 ### Changed
 

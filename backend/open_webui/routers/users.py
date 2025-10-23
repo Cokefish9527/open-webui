@@ -91,12 +91,11 @@ async def get_users(
 
     user_data = Users.get_users(filter=filter, skip=skip, limit=limit)
     users = user_data.users  # 修复：使用属性访问而不是字典访问
-    credit_map = {
-        credit.user_id: {"credit": "%.4f" % credit.credit}
-        for credit in Credits.list_credits_by_user_id(
-            user_ids=[user.id for user in users]  # 修复：将生成器转换为列表
-        )
-    }
+    credit_map = {}
+    for item in users:
+        credit = Credits.get_credit_by_user_id(item.id)
+        if credit:
+            credit_map[item.id] = {"credit": "%.4f" % credit.credit}
     for user in users:
         setattr(user, "credit", credit_map.get(user.id, {}).get("credit", 0))
     return user_data
@@ -108,12 +107,11 @@ async def get_all_users(
 ):
     user_data = Users.get_users()
     users = user_data.users  # 修复：使用属性访问而不是字典访问
-    credit_map = {
-        credit.user_id: {"credit": "%.4f" % credit.credit}
-        for credit in Credits.list_credits_by_user_id(
-            user_ids=[user.id for user in users]  # 修复：将生成器转换为列表
-        )
-    }
+    credit_map = {}
+    for item in users:
+        credit = Credits.get_credit_by_user_id(item.id)
+        if credit:
+            credit_map[item.id] = {"credit": "%.4f" % credit.credit}
     for user in users:
         setattr(user, "credit", credit_map.get(user.id, {}).get("credit", 0))
     return user_data
@@ -438,6 +436,7 @@ async def update_user_by_id(
             credit = Credits.set_credit_by_user_id(
                 SetCreditForm(
                     user_id=user_id,
+                    company_id=user.company_id,
                     credit=Decimal(form_data.credit),
                     detail=SetCreditFormDetail(
                         api_path=str(request.url),
@@ -489,6 +488,7 @@ async def update_credit_by_user_id(
 
     params = {
         "user_id": user_id,
+        "company_id": user.company_id,
         "detail": SetCreditFormDetail(
             api_path=str(request.url),
             api_params=form_data.model_dump(),
