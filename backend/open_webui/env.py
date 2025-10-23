@@ -382,6 +382,19 @@ N8N_DATABASE_POOL_TIMEOUT = _get_n8n_int(
 N8N_DATABASE_POOL_RECYCLE = _get_n8n_int(
     "N8N_DATABASE_POOL_RECYCLE", DATABASE_POOL_RECYCLE
 )
+ENV_REQUIRE_N8N = os.environ.get("ENV_REQUIRE_N8N", "true").lower() not in {
+    "false",
+    "0",
+    "no",
+}
+_raw_required_tables = os.environ.get(
+    "N8N_REQUIRED_TABLES", "hsai_business_api_usage_log,hsai_business_good_video_v1"
+)
+N8N_REQUIRED_TABLES = [
+    table.strip()
+    for table in _raw_required_tables.split(",")
+    if table.strip()
+]
 
 
 RESET_CONFIG_ON_START = (

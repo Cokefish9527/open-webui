@@ -3,10 +3,11 @@
 import logging
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import QueuePool, NullPool
+from sqlalchemy.exc import SQLAlchemyError
 
 from open_webui.env import (
     SRC_LOG_LEVELS,
@@ -16,6 +17,8 @@ from open_webui.env import (
     N8N_DATABASE_POOL_MAX_OVERFLOW,
     N8N_DATABASE_POOL_TIMEOUT,
     N8N_DATABASE_POOL_RECYCLE,
+    ENV_REQUIRE_N8N,
+    N8N_REQUIRED_TABLES,
 )
 
 log = logging.getLogger(__name__)
@@ -60,6 +63,46 @@ else:
             pool_pre_ping=True,
             poolclass=NullPool,
         )
+
+
+def _validate_required_tables() -> None:
+    if not ENV_REQUIRE_N8N:
+        log.debug("ENV_REQUIRE_N8N is false; skipping n8n schema validation.")
+        return
+    if "sqlite" in SQLALCHEMY_DATABASE_URL.lower():
+        log.debug("Detected sqlite n8n backend; skipping schema validation.")
+        return
+    required_tables = [table for table in N8N_REQUIRED_TABLES if table]
+    if not required_tables:
+        log.debug("No required tables configured for n8n; skipping validation.")
+        return
+    try:
+        with engine.connect() as connection:
+            inspector = inspect(connection)
+            available_tables = set(
+                inspector.get_table_names(schema=N8N_DATABASE_SCHEMA)
+            )
+    except SQLAlchemyError as exc:
+        raise RuntimeError(
+            "无法连接到 n8n_workflow 数据库，请检查 N8N_DATABASE_URL / N8N_DATABASE_SCHEMA 配置。"
+        ) from exc
+
+    missing = [
+        table for table in required_tables if table not in available_tables
+    ]
+    if missing:
+        raise RuntimeError(
+            "n8n_workflow 数据库缺少必要数据表："
+            f"{', '.join(missing)}（schema={N8N_DATABASE_SCHEMA or '默认'}）。"
+            "请确认已经在目标库中创建这些表，或通过 ENV_REQUIRE_N8N=false 临时跳过校验。"
+        )
+    log.info(
+        "n8n_workflow 数据库校验通过，已检测到数据表：%s",
+        ", ".join(sorted(required_tables)),
+    )
+
+
+_validate_required_tables()
 
 
 SessionLocal = sessionmaker(

@@ -1,7 +1,7 @@
 ﻿# HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
 > 一等公民 · 与主干代码保持持续一致（UTF-8）
 
-更新时间：2025-10-22（与 main 同步）
+更新时间：2025-10-23（与 main 同步）
 
 ## 项目概述
 
@@ -57,6 +57,31 @@ flowchart LR
   SYNC --> DB
   SYNC --> REPORT
 ```
+
+#### 视频学习 / 计费双数据库路由校验
+```mermaid
+flowchart TD
+  subgraph FastAPI
+    VL[routers/hsai_video_learning.py]
+    BS[services/billing_service.py]
+  end
+  subgraph DBPools
+    MainDB[(DATABASE_URL\nOwen_ai)]
+    N8NDB[(N8N_DATABASE_URL\nn8n_workflow)]
+  end
+  subgraph Guard
+    Check[ENV_REQUIRE_N8N\nbackend/open_webui/internal/db_n8n.py]
+  end
+
+  VL -->|get_n8n_db| N8NDB
+  BS -->|get_n8n_db| N8NDB
+  Check --> N8NDB
+  Check -->|校验表| VideoTable[hsai_business_good_video_v1]
+  Check -->|校验表| UsageTable[hsai_business_api_usage_log]
+  VL -.状态同步.-> MainDB
+```
+
+> 说明：ENV_REQUIRE_N8N=true 时，启动期会校验 n8n_workflow 数据库是否存在上述两张表，缺失将阻断启动并提示修复或显式关闭自检。
 
 节点与代码路径映射（节选）：
 - FastAPI 装载与路由挂载：`backend/open_webui/main.py:1224`
@@ -296,7 +321,7 @@ flowchart TB
    �ԱȾ���ͳ�ƣ�״̬������������ WIKI Ǩ�Ʊ����¾���
 ### 监控与运维要点
 - PostgreSQL 连接池参数由 `DATABASE_POOL_*` 环境变量控制（见 `open_webui/internal/db.py`），默认 NullPool，生产环境建议显式配置。
-- n8n_workflow ???/?????????????? `N8N_DATABASE_*` ?????????????????????????? `DATABASE_*` ??????????????? `hsai_business_api_usage_log` ?? `hsai_business_good_video_v1` ???? 2PC ????????????
+- n8n_workflow ???/?????????????? `N8N_DATABASE_*` ?????????????????????????? `DATABASE_*` ??????????????? `hsai_business_api_usage_log` ?? `hsai_business_good_video_v1` ???? 2PC ????????????（默认由 .env / backend/.env 指向 n8n_workflow，配合 ENV_REQUIRE_N8N 与 N8N_REQUIRED_TABLES 自检，详见 ADR-2025-10-23-006）
 - `session_replication_role` 在迁移期间切换为 `replica`；若迁移异常退出，请确认已手动恢复为 `origin`。
 - 保留 `backend/data/webui.db` 仅用于旧数据分析脚本；后续脚本应通过 SQLAlchemy/psycopg2 直接访问 PostgreSQL。
 
@@ -326,6 +351,12 @@ flowchart TB
   - ??????????????????????????????????? n8n ????????????
   - ???`python -m compileall backend/open_webui/models/api_usage_log.py backend/open_webui/models/hsai_business_good_video_v1.py backend/open_webui/internal/db_n8n.py`?
 
+- ADR-2025-10-23-006：N8N 双库连接自检与环境变量收敛
+  - 背景：2025-10-23 `/api/v1/hsai/video-learning/videos` 因连接主库缺少 `hsai_business_good_video_v1` 触发 `UndefinedTable`，暴露 `N8N_DATABASE_URL` 未显式配置导致的漂移。
+  - 决策：`.env` 与 `backend/.env` 默认指向 `n8n_workflow`，并新增 `ENV_REQUIRE_N8N` / `N8N_REQUIRED_TABLES`，在 `internal/db_n8n.py` 启动期校验关键表，缺失立即阻断。
+  - 影响：视频学习、计费模块依赖 n8n 库的接口获得一致的连接池配置；若需跳过校验，可显式设置 `ENV_REQUIRE_N8N=false`。
+  - 验证：本地/CI 启动 FastAPI 时必须检测到两张表；运行 `python -m compileall backend/open_webui/internal/db_n8n.py backend/open_webui/models/{api_usage_log.py,hsai_business_good_video_v1.py}` 通过。
+  - 回滚：如目标环境尚未初始化 n8n 库，临时关闭自检或回退 `.env` 版本，并使用 `n8n_workflow` 建表示例补齐后再恢复。
 - FIX-2025-10-21-Function-Boolean：`function.is_active`/`is_global` ORM 布尔定义统一
   - 根因：SQLite 初始化脚本遗留 `INTEGER`，在 PostgreSQL 中与 SQLAlchemy 的 `BOOLEAN` 定义冲突。
   - 脚本调整：`backend/sql/postgresql_init_from_sqlite.sql` 现将 `meta`/`valves` 列定义为 JSON，`created_at`/`updated_at` 改为 BIGINT，并将 `is_active`/`is_global` 改为 BOOLEAN，全面与 ORM 模型保持一致。
@@ -420,6 +451,7 @@ flowchart TB
 - Changed：对齐为 FastAPI 架构 `/api/v1` 端点；补齐 HSAI 核心 API（ADR-2025-10-17-003）。
 - Removed：过时的 Flask/Blueprint `/system/*` 模板描述。
 - Fixed：更新 PostgreSQL 初始化脚本 `function` 表列类型，与 ORM 保持一致并消除布尔比较错误（参见 FIX-2025-10-21-Function-Boolean）。
+- Fixed：ENV_REQUIRE_N8N 自检阻断缺失 n8n 表导致的视频学习 500（ADR-2025-10-23-006）。
 ### [2025-10-21]
 - Added��`scripts/sqlite_to_postgres_sync.py` �� SQLite -> PostgreSQL ͬ���ű��������ɱ��� Markdown ���桢Batch/Backup/Strict ѡ�
 - Added��WIKI ��运维/ADR/E2E SOP �����и���，������ͬ���ű�ʹ��·����ļ��ԱȽű����ع��淶��
