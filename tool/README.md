@@ -427,6 +427,55 @@ cd c:\work\open-webui
 python tool/fix_websocket_issues.py
 ```
 
+### 34. add_correlation_id_column.py
+**功能**: 为Redis队列消息表添加correlation_id列
+**用途**:
+- 修复数据库表结构缺失correlation_id列的问题
+- 使数据库表结构与模型定义保持一致
+- 解决因列缺失导致的插入错误
+**使用方法**:
+```bash
+cd c:\work\open-webui\backend
+python ../tool/add_correlation_id_column.py
+```
+
+### 35. verify_redis_queue_structure.py
+**功能**: 验证Redis队列消息表结构完整性
+**用途**:
+- 检查数据库表结构与模型定义是否一致
+- 显示表中所有字段信息
+- 验证是否存在缺失字段
+- 显示表中数据示例
+**使用方法**:
+```bash
+cd c:\work\open-webui\backend
+python ../tool/verify_redis_queue_structure.py
+```
+
+### 36. add_correlation_id_column_postgres.py
+**功能**: 为PostgreSQL数据库中的Redis队列消息表添加correlation_id列
+**用途**:
+- 修复PostgreSQL数据库表结构缺失correlation_id列的问题
+- 使数据库表结构与模型定义保持一致
+- 解决因列缺失导致的插入错误
+**使用方法**:
+```bash
+cd c:\work\open-webui
+python tool/add_correlation_id_column_postgres.py
+```
+
+### 37. fix_redis_queue_table.py
+**功能**: 通用Redis队列消息表修复工具
+**用途**:
+- 自动检测数据库类型（SQLite或PostgreSQL）
+- 为Redis队列消息表添加缺失的correlation_id列
+- 支持多种数据库环境下的表结构修复
+**使用方法**:
+```bash
+cd c:\work\open-webui
+python tool/fix_redis_queue_table.py
+```
+
 ## 添加新脚本的规范
 
 1. 所有脚本应具有明确的功能描述和使用说明
