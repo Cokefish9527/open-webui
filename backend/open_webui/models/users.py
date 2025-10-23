@@ -3,6 +3,7 @@ from typing import List, Optional, Any, Dict
 from datetime import datetime
 
 from open_webui.internal.db import Base, JSONField, get_db
+from ._timestamp_utils import EpochTimestamp
 
 
 from open_webui.models.chats import Chats
@@ -10,7 +11,7 @@ from open_webui.models.groups import Groups
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Boolean, Column, String, Text, ForeignKey
+from sqlalchemy import Boolean, Column, String, Text, ForeignKey
 from sqlalchemy import or_
 
 
@@ -29,9 +30,9 @@ class User(Base):
     role = Column(String)
     profile_image_url = Column(Text)
 
-    last_active_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
-    created_at = Column(BigInteger)
+    last_active_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
+    created_at = Column(EpochTimestamp())
 
     api_key = Column(String, nullable=True, unique=True)
     settings = Column(JSONField, nullable=True)

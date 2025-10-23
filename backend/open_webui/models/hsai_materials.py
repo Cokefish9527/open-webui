@@ -14,6 +14,7 @@ from sqlalchemy.orm import relationship
 from ._timestamp_utils import (
     normalize_optional_timestamp,
     normalize_required_timestamp,
+    EpochTimestamp,
 )
 
 log = logging.getLogger(__name__)
@@ -44,8 +45,8 @@ class HSAIMaterialFolder(Base):
     # 排序权重
     sort_order = Column(BigInteger, default=0)
     
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 class HSAIMaterial(Base):
@@ -82,7 +83,7 @@ class HSAIMaterial(Base):
     
     # 使用统计
     usage_count = Column(BigInteger, default=0)  # 使用次数
-    last_used_at = Column(BigInteger, nullable=True)  # 最后使用时间
+    last_used_at = Column(EpochTimestamp(), nullable=True)  # 最后使用时间
     
     # 状态管理
     status = Column(String, default="active")  # active, archived, deleted
@@ -106,11 +107,11 @@ class HSAIMaterial(Base):
     # 回收站功能相关字段
     is_deleted = Column(Boolean, default=False)     # 删除标志位（true表示已删除）
     original_directory = Column(String, nullable=True)  # 原始目录（软删除时保存文件原始所在目录）
-    deleted_at = Column(BigInteger, nullable=True)      # 删除时间（软删除时间）
+    deleted_at = Column(EpochTimestamp(), nullable=True)      # 删除时间（软删除时间）
     deleted_by = Column(String, nullable=True)          # 删除人ID（软删除操作人）
     
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 class HSAIMaterialTag(Base):
@@ -128,8 +129,8 @@ class HSAIMaterialTag(Base):
     # 使用统计
     usage_count = Column(BigInteger, default=0)
     
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 class HSAIMaterialCategory(Base):
@@ -143,8 +144,8 @@ class HSAIMaterialCategory(Base):
     description = Column(Text, nullable=True)    # 描述
     is_active = Column(Boolean, default=True)    # 是否启用
     
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 class HSAIFileOperationLog(Base):
@@ -161,8 +162,8 @@ class HSAIFileOperationLog(Base):
     details = Column(JSON, nullable=True)            # 操作详情
     enterprise_id = Column(String, nullable=True)    # 企业ID（用于企业级过滤）
     
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 ####################

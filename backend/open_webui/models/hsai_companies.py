@@ -7,9 +7,9 @@ from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey
+from sqlalchemy import Column, String, Text, JSON, ForeignKey
 
-from ._timestamp_utils import normalize_required_timestamp
+from ._timestamp_utils import normalize_required_timestamp, EpochTimestamp
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -30,8 +30,8 @@ class Company(Base):
     company_info = Column(JSON, nullable=True)
     status = Column(String, default="active")
     config = Column(JSON, nullable=True)
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 ####################

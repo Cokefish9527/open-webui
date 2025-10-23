@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import JSON, BigInteger, Column, Numeric, String, ForeignKey
+from sqlalchemy import JSON, Column, Numeric, String, ForeignKey
 
 import importlib.util
 import os
@@ -17,7 +17,7 @@ config_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(config_module)
 CREDIT_EXCHANGE_RATIO = config_module.CREDIT_EXCHANGE_RATIO
 from open_webui.internal.db import Base, get_db
-from ._timestamp_utils import normalize_required_timestamp
+from ._timestamp_utils import normalize_required_timestamp, EpochTimestamp
 from .hsai_companies import Companies
 from .users import Users
 
@@ -35,8 +35,8 @@ class Credit(Base):
     company_id = Column(String, ForeignKey("companies.id"), nullable=True, index=True)
     credit = Column(Numeric(precision=24, scale=12))
 
-    updated_at = Column(BigInteger)
-    created_at = Column(BigInteger)
+    updated_at = Column(EpochTimestamp())
+    created_at = Column(EpochTimestamp())
 
 
 class CreditLog(Base):
@@ -48,7 +48,7 @@ class CreditLog(Base):
     credit = Column(Numeric(precision=24, scale=12))
     detail = Column(JSON, nullable=True)
 
-    created_at = Column(BigInteger, index=True)
+    created_at = Column(EpochTimestamp(), index=True)
 
 
 class TradeTicket(Base):
@@ -59,7 +59,7 @@ class TradeTicket(Base):
     amount = Column(Numeric(precision=24, scale=12))
     detail = Column(JSON, nullable=True)
 
-    created_at = Column(BigInteger, index=True)
+    created_at = Column(EpochTimestamp(), index=True)
 
 
 ####################
@@ -107,7 +107,7 @@ class CreditLogModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     user_id: str
-     company_id: Optional[str] = None
+    company_id: Optional[str] = None
     credit: Decimal = Field(default_factory=lambda: Decimal("0"))
     detail: dict = Field(default_factory=lambda: {})
     created_at: int = Field(default_factory=lambda: int(time.time()))
