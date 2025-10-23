@@ -28,13 +28,16 @@ flowchart LR
     MC[models/hsai_companies.py]
     MP[models/hsai_projects.py]
     MT[models/hsai_tasks.py]
+    MA[models/api_usage_log.py]
+    MV[models/hsai_business_good_video_v1.py]
   end
   RC --> MC
   RP --> MP
   RT --> MT
   subgraph Infra
     DB[(SQLAlchemy / PostgreSQL)]
-    REDIS[(Redis �ź�/����)]
+    N8NDB[(PostgreSQL / n8n_workflow)]
+    REDIS[(Redis ???/????)]
   end
   subgraph Migration
     SQLITE[(SQLite backend/data/webui.db)]
@@ -44,6 +47,10 @@ flowchart LR
   MC --> DB
   MP --> DB
   MT --> DB
+  MA --> N8NDB
+  MV --> N8NDB
+  API --> MA
+  API --> MV
   API --> QH[utils/conversation_queue_handler.py\n���д���/�¼�]
   QH --> REDIS
   SQLITE --> SYNC
@@ -59,6 +66,8 @@ flowchart LR
 - 公司模型：`backend/open_webui/models/hsai_companies.py:1`
 - 项目模型：`backend/open_webui/models/hsai_projects.py:1`
 - 任务模型：`backend/open_webui/models/hsai_tasks.py:1`
+- API ???????`backend/open_webui/models/api_usage_log.py:1`
+- n8n ???????`backend/open_webui/models/hsai_business_good_video_v1.py:1`
 - 鉴权与当前用户：`backend/open_webui/utils/auth.py:210`
 - SQLite 数据库文件：`backend/data/webui.db`
 - 同步脚本：`scripts/sqlite_to_postgres_sync.py`
@@ -287,6 +296,7 @@ flowchart TB
    �ԱȾ���ͳ�ƣ�״̬������������ WIKI Ǩ�Ʊ����¾���
 ### 监控与运维要点
 - PostgreSQL 连接池参数由 `DATABASE_POOL_*` 环境变量控制（见 `open_webui/internal/db.py`），默认 NullPool，生产环境建议显式配置。
+- n8n_workflow ???/?????????????? `N8N_DATABASE_*` ?????????????????????????? `DATABASE_*` ??????????????? `hsai_business_api_usage_log` ?? `hsai_business_good_video_v1` ???? 2PC ????????????
 - `session_replication_role` 在迁移期间切换为 `replica`；若迁移异常退出，请确认已手动恢复为 `origin`。
 - 保留 `backend/data/webui.db` 仅用于旧数据分析脚本；后续脚本应通过 SQLAlchemy/psycopg2 直接访问 PostgreSQL。
 
@@ -310,6 +320,11 @@ flowchart TB
   - ??????`GET /api/v1/billing/billing/usage-logs`?`GET /api/v1/billing/billing/usage-logs/session/{session_id}`?`GET /api/v1/billing/billing/usage-logs/session/{session_id}/total`????? `backend/open_webui/routers/billing.py:246`?`backend/open_webui/routers/billing.py:332`?`backend/open_webui/routers/billing.py:366`?
   - ????? `await`??????? `get_admin_user(user)` ???????????????????????
   - ???`python -m compileall backend/open_webui/routers/billing.py`?
+- ADR-2025-10-22-005?????? n8n_workflow ???
+  - ???`hsai_business_api_usage_log` ? `hsai_business_good_video_v1` ?????? n8n_workflow ????????????????????????????
+  - ????? `open_webui/internal/db_n8n.py` ?? `N8NBase`/`get_n8n_db()`?`APIUsageLog` ? `HSAIBusinessGoodVideoV1` ???? Base??? `N8N_DATABASE_*` ?????? `.env` ??????
+  - ??????????????????????????????????? n8n ????????????
+  - ???`python -m compileall backend/open_webui/models/api_usage_log.py backend/open_webui/models/hsai_business_good_video_v1.py backend/open_webui/internal/db_n8n.py`?
 
 - FIX-2025-10-21-Function-Boolean：`function.is_active`/`is_global` ORM 布尔定义统一
   - 根因：SQLite 初始化脚本遗留 `INTEGER`，在 PostgreSQL 中与 SQLAlchemy 的 `BOOLEAN` 定义冲突。

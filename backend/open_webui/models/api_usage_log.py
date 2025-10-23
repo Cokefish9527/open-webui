@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Optional, List
 from datetime import datetime
 
-from open_webui.internal.db import Base, get_db
+from open_webui.internal.db_n8n import N8NBase, get_n8n_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -20,7 +20,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 ####################
 
 
-class APIUsageLog(Base):
+class APIUsageLog(N8NBase):
     """API使用记录表 - 用于记录第三方API调用的使用情况"""
     __tablename__ = "hsai_business_api_usage_log"
 
@@ -102,7 +102,7 @@ class APIUsageLogsTable:
     def insert_new_log(
         self, form_data: APIUsageLogForm
     ) -> Optional[APIUsageLogModel]:
-        with get_db() as db:
+        with get_n8n_db() as db:
             try:
                 # 创建API使用记录
                 api_log = APIUsageLog(
@@ -127,7 +127,7 @@ class APIUsageLogsTable:
         self, session_id: str
     ) -> List[APIUsageLogModel]:
         """根据会话ID获取API使用记录"""
-        with get_db() as db:
+        with get_n8n_db() as db:
             try:
                 logs = db.query(APIUsageLog).filter_by(session_id=session_id).all()
                 return [APIUsageLogModel.model_validate(log) for log in logs]
@@ -139,7 +139,7 @@ class APIUsageLogsTable:
         self, session_id: str
     ) -> Decimal:
         """根据会话ID获取总消耗积分"""
-        with get_db() as db:
+        with get_n8n_db() as db:
             try:
                 result = db.query(func.sum(APIUsageLog.credits_consumed)).filter_by(session_id=session_id).scalar()
                 return result if result else Decimal("0")
@@ -154,7 +154,7 @@ class APIUsageLogsTable:
         offset: int = 0
     ) -> List[APIUsageLogModel]:
         """根据用户ID获取API使用记录"""
-        with get_db() as db:
+        with get_n8n_db() as db:
             try:
                 logs = db.query(APIUsageLog).filter_by(user_id=user_id).order_by(
                     APIUsageLog.consumed_at.desc()
@@ -168,7 +168,7 @@ class APIUsageLogsTable:
         self, user_id: str
     ) -> int:
         """获取用户API使用记录总数"""
-        with get_db() as db:
+        with get_n8n_db() as db:
             try:
                 return db.query(APIUsageLog).filter_by(user_id=user_id).count()
             except Exception as e:

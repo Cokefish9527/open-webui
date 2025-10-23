@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Updated PROJECTWIKI operations/ADR guidance to align with the new database sync workflow and environment variable conventions.
+- Separated billing usage logging into the dedicated `n8n_workflow` database via new `N8N_DATABASE_*` settings, refactoring associated ORM models and services to use the shared secondary SQLAlchemy engine.
 
 ## [0.6.15] - 2025-06-16
 

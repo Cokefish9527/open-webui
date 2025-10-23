@@ -352,6 +352,38 @@ else:
     except Exception:
         DATABASE_POOL_RECYCLE = 3600
 
+
+def _get_n8n_int(name: str, fallback: int) -> int:
+    value = os.environ.get(name, "")
+    if value == "":
+        return fallback
+    try:
+        return int(value)
+    except Exception:
+        return fallback
+
+
+N8N_DATABASE_URL = os.environ.get("N8N_DATABASE_URL", "")
+
+if not N8N_DATABASE_URL:
+    N8N_DATABASE_URL = DATABASE_URL
+
+if "postgres://" in N8N_DATABASE_URL:
+    N8N_DATABASE_URL = N8N_DATABASE_URL.replace("postgres://", "postgresql://")
+
+N8N_DATABASE_SCHEMA = os.environ.get("N8N_DATABASE_SCHEMA", DATABASE_SCHEMA)
+N8N_DATABASE_POOL_SIZE = _get_n8n_int("N8N_DATABASE_POOL_SIZE", DATABASE_POOL_SIZE)
+N8N_DATABASE_POOL_MAX_OVERFLOW = _get_n8n_int(
+    "N8N_DATABASE_POOL_MAX_OVERFLOW", DATABASE_POOL_MAX_OVERFLOW
+)
+N8N_DATABASE_POOL_TIMEOUT = _get_n8n_int(
+    "N8N_DATABASE_POOL_TIMEOUT", DATABASE_POOL_TIMEOUT
+)
+N8N_DATABASE_POOL_RECYCLE = _get_n8n_int(
+    "N8N_DATABASE_POOL_RECYCLE", DATABASE_POOL_RECYCLE
+)
+
+
 RESET_CONFIG_ON_START = (
     os.environ.get("RESET_CONFIG_ON_START", "False").lower() == "true"
 )

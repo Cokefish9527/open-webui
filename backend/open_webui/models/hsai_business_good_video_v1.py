@@ -2,62 +2,22 @@ import logging
 from typing import Optional, List
 from datetime import datetime
 
-from open_webui.internal.db import Base, JSONField, get_db
+from open_webui.internal.db import get_db
+from open_webui.internal.db_n8n import N8NBase, get_n8n_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import BigInteger, Column, String, Text, Boolean, DateTime
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-from sqlalchemy.pool import QueuePool, NullPool
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
-
-# PostgreSQL数据库连接配置
-# 数据库连接信息：pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432
-# 用户名：hsai
-# 密码：c5agLR)ah28vnA3+%Yyn
-# 数据库名：n8n_workflow
-
-# 创建PostgreSQL数据库引擎
-POSTGRES_DATABASE_URL = "postgresql://hsai:c5agLR)ah28vnA3+%Yyn@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/n8n_workflow"
-
-# 创建PostgreSQL引擎，确保不执行SQLite特有的PRAGMA命令
-postgres_engine = create_engine(
-    POSTGRES_DATABASE_URL,
-    pool_pre_ping=True,
-    poolclass=NullPool,
-    # 确保不执行SQLite特有的PRAGMA命令
-    connect_args={
-        "options": "-c statement_timeout=60000"  # 设置语句超时为60秒
-    }
-)
-
-# 创建PostgreSQL会话
-PostgresSessionLocal = sessionmaker(
-    autocommit=False, autoflush=False, bind=postgres_engine, expire_on_commit=False
-)
-
-class PostgresSessionManager:
-    def __enter__(self):
-        self.db = PostgresSessionLocal()
-        return self.db
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if hasattr(self, 'db'):
-            self.db.close()
-
-def get_postgres_session():
-    """获取PostgreSQL数据库会话"""
-    return PostgresSessionManager()
 
 ####################
 # HSAI Business Good Video V1 DB Schema
 ####################
 
 
-class HSAIBusinessGoodVideoV1(Base):
+class HSAIBusinessGoodVideoV1(N8NBase):
     """HSAI优质视频表 (PostgreSQL)"""
     __tablename__ = "hsai_business_good_video_v1"
 
@@ -119,7 +79,7 @@ class HSAIBusinessGoodVideoV1Table:
     
     def get_videos(self, skip: int = 0, limit: int = 50) -> List[HSAIBusinessGoodVideoV1Model]:
         """分页获取视频列表"""
-        with get_postgres_session() as db:
+        with get_n8n_db() as db:
             videos = db.query(HSAIBusinessGoodVideoV1).offset(skip).limit(limit).all()
             return [HSAIBusinessGoodVideoV1Model.model_validate(video) for video in videos]
     
@@ -127,7 +87,7 @@ class HSAIBusinessGoodVideoV1Table:
         """分页获取视频列表，支持按学习状态筛选"""
         from open_webui.models.hsai_video_learning_status import HSAIVideoLearningStatus
         
-        with get_postgres_session() as postgres_db:
+        with get_n8n_db() as postgres_db:
             if status_filter == "all":
                 # 不筛选状态，直接分页查询
                 videos = postgres_db.query(HSAIBusinessGoodVideoV1).offset(skip).limit(limit).all()
@@ -164,7 +124,7 @@ class HSAIBusinessGoodVideoV1Table:
         """获取按状态筛选后的视频总数"""
         from open_webui.models.hsai_video_learning_status import HSAIVideoLearningStatus
         
-        with get_postgres_session() as postgres_db:
+        with get_n8n_db() as postgres_db:
             if status_filter == "all":
                 # 不筛选状态，返回所有视频总数
                 return postgres_db.query(HSAIBusinessGoodVideoV1).count()
@@ -198,13 +158,13 @@ class HSAIBusinessGoodVideoV1Table:
     
     def get_video_by_id(self, video_id: int) -> Optional[HSAIBusinessGoodVideoV1Model]:
         """根据ID获取视频"""
-        with get_postgres_session() as db:
+        with get_n8n_db() as db:
             video = db.query(HSAIBusinessGoodVideoV1).filter(HSAIBusinessGoodVideoV1.id == video_id).first()
             return HSAIBusinessGoodVideoV1Model.model_validate(video) if video else None
     
     def get_total_count(self) -> int:
         """获取视频总数"""
-        with get_postgres_session() as db:
+        with get_n8n_db() as db:
             return db.query(HSAIBusinessGoodVideoV1).count()
 
 
