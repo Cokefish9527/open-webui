@@ -195,6 +195,7 @@ erDiagram
 - **单元测试**：后端核心模块使用 `pytest`；计费相关测试见 `backend/test/test_billing_system.py`。
 - **脚本验证**：`tool/` 目录提供数据库列校验、Redis 队列修复脚本，运行前需确认 `.env` 指向正确环境。
 - **监控建议**：重点观测 `credit`/`credit_log` 同步延迟、Redis Stream 消费积压、n8n 数据库链路。
+- **调试工具**：websocket-test.html 调试页与 static/ws-tester.js 客户端脚本；操作手册更新至 docs/410_websocket_test_page_manual.md（2025-10-24 重写，支持中文界面与调试流程）。
 
 ## 术语表
 | 术语 | 说明 |
@@ -212,6 +213,7 @@ erDiagram
 - 提示：将数据库回滚校准步骤纳入运维清单，避免再次遗漏。
 - 修复：回滚至提交 2c82f3694 后 `CreditLogModel.company_id` 一行缩进异常触发 `IndentationError`，已整理缩进并通过 `python -m py_compile backend/open_webui/models/credits.py` 验证。
 - 文档：在“设计决策 & 技术债务”补充该回滚复盘条目，提醒回滚后执行静态语法检查。
+- 前端：websocket-test.html 与 static/ws-tester.js 中文化更新，新增登录/调试工具改进；同步重写 docs/410_websocket_test_page_manual.md 并建立互链。
 ### 2025-10-23
 - 更新：统一 ORM 时间字段使用 `EpochTimestamp` 装饰器持久化，修复 PostgreSQL `timestamptz` 类型写入错误，并补充 Redis 队列修复验证脚本。
 - 修复：Markdown 中文乱码问题，重写 PROJECTWIKI 信息结构，确保控制字符与替换符清零。

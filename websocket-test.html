@@ -3,958 +3,553 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenWebUI Socket.IO 测试页面</title>
-    <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
+    <title>OpenWebUI Socket.IO 调试面板</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-jiVTwEy4v6SPAOV0rb7nWFrp6AXU5W5Mk3KgYO9nFA3d5JJChfhfwm0afX8xj6t4" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-            height: calc(100vh - 40px);
-            overflow: hidden;
+        :root {
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+            --radius: 14px;
         }
-        .container {
-            display: flex;
-            gap: 20px;
-            height: 100%;
-        }
-        .left-panel {
-            width: 40%;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .right-panel {
-            width: 60%;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            height: 100%;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-top: 0;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, textarea, select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+
+        * {
             box-sizing: border-box;
         }
-        textarea {
-            min-height: 100px;
-            font-family: monospace;
-            resize: both; /* 允许拖拽调整大小 */
+
+        body {
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
-        .button-group {
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: linear-gradient(135deg, #eff6ff, #fdf2f8);
+            padding: 18px 28px;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 {
+            margin: 0 0 6px;
+            font-size: 22px;
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 18px;
+            padding: 20px 28px 28px;
+        }
+
+        @media (max-width: 1200px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+            outline: none;
+        }
+
+        textarea {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        button.primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        button.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        button.secondary {
+            background: #e2e8f0;
+            color: var(--text);
+        }
+
+        button.secondary:hover {
+            background: #d1d9e6;
+        }
+
+        button.danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        button:disabled {
+            background: #cbd5f5;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .button-row {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 15px;
         }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            flex: 1;
-            min-width: 120px;
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
         }
-        button:hover {
-            background-color: #0056b3;
+
+        .toggle-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
         }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+
+        .toggle-line input {
+            margin: 0;
+            width: auto;
         }
-        .btn-secondary {
-            background-color: #6c757d;
+
+        aside {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
         }
-        .btn-secondary:hover {
-            background-color: #5a6268;
+
+        .main-panel {
+            display: grid;
+            grid-template-rows: auto 230px auto;
+            gap: 18px;
         }
-        .btn-success {
-            background-color: #28a745;
-        }
-        .btn-success:hover {
-            background-color: #218838;
-        }
-        .btn-danger {
-            background-color: #dc3545;
-        }
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-        .status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        .connected {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .disconnected {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .message {
-            padding: 8px;
-            margin: 5px 0;
-            border-radius: 4px;
-            border-left: 4px solid #007bff;
-            background-color: #f8f9fa;
-        }
-        .message-received {
-            border-left-color: #28a745;
-        }
-        .message-sent {
-            border-left-color: #ffc107;
-        }
-        .message-error {
-            border-left-color: #dc3545;
-        }
-        .message-display-text {
-            border-left-color: #6f42c1;
-            background-color: #f0f8ff;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 8px;
-        }
-        .modal-header {
+
+        .conversation-toolbar {
             display: flex;
             justify-content: space-between;
+            gap: 12px;
             align-items: center;
-            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close:hover {
-            color: black;
-        }
-        pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        .controls {
+
+        .filters {
             display: flex;
-            flex-wrap: nowrap;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 10px;
-            width: 100%;
-        }
-        .filter-container {
-            display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 10px;
-            white-space: nowrap;
         }
-        .connection-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
+
+        .conversation-body {
+            height: 420px;
+            overflow-y: auto;
+            padding-right: 8px;
         }
-        .connected-indicator {
-            background-color: #28a745;
+
+        .message-group {
+            margin-bottom: 18px;
         }
-        .disconnected-indicator {
-            background-color: #dc3545;
-        }
-        .auto-scroll-container {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-        }
-        .message-stats {
+
+        .message-group header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
-            font-weight: bold;
         }
-        /* 右侧面板布局优化 */
-        .right-panel-content {
+
+        .message-group header span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .message-list {
             display: flex;
             flex-direction: column;
-            height: 100%;
-            overflow: hidden;
+            gap: 12px;
         }
-        .messages-container {
-            flex: 1;
+
+        .bubble {
+            max-width: 72%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            background: #f8fafc;
+            line-height: 1.6;
+        }
+
+        .bubble.sent {
+            margin-left: auto;
+            background: rgba(37, 99, 235, 0.12);
+        }
+
+        .bubble.error {
+            background: rgba(220, 38, 38, 0.12);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .bubble .meta {
             display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            margin-bottom: 10px;
-            height: calc(100% - 50px); /* 为底部按钮留出空间 */
+            justify-content: space-between;
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 8px;
         }
-        #messagesOutput {
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background-color: #f8f9fa;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            height: 300px; /* 固定高度，根据用户偏好 */
-        }
-        .fixed-buttons {
-            flex-shrink: 0;
+
+        details.raw {
+            background: #0f172a;
+            color: #f8fafc;
+            border-radius: 10px;
+            padding: 10px 14px;
             margin-top: 10px;
         }
-        /* 优化消息类型、入口类型、任务ID的布局 */
-        .message-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+
+        details.raw summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
         }
-        .message-controls .form-group {
-            flex: 1;
-            margin-bottom: 0;
+
+        details.raw pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin: 10px 0 0;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .metric-card {
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .metric-card h4 {
+            margin: 0 0 6px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .metric-card strong {
+            font-size: 20px;
+        }
+
+        .status-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #94a3b8;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+        }
+
+        .scrollable {
+            overflow-y: auto;
+        }
+
+        .helper-text {
+            margin: -12px 0 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .token-box {
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px dashed #cbd5e1;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            word-break: break-all;
+        }
+
+        .link-button {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .link-button:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 左侧面板 - 配置和操作 -->
-        <div class="left-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1>OpenWebUI Socket.IO 测试</h1>
-                <div style="display: flex; align-items: center;">
-                    <span id="connectionIndicator" class="connection-indicator disconnected-indicator"></span>
-                    <span id="connectionText" style="margin-left: 5px;">未连接</span>
+    <header>
+        <h1>OpenWebUI Socket.IO 调试面板</h1>
+        <p>覆盖登录、事件订阅、消息收发、重放与性能统计的一体化测试工具，适用于本地 8080 HSAI 服务。</p>
+    </header>
+
+    <main>
+        <aside>
+            <section class="card">
+                <h2>连接与登录</h2>
+                <div class="grid-2">
+                    <div>
+                        <label for="serverUrl">服务器地址</label>
+                        <input id="serverUrl" type="text" placeholder="http://localhost:8080">
+                    </div>
+                    <div>
+                        <label for="loginEmail">账号邮箱</label>
+                        <input id="loginEmail" type="text" placeholder="saiter2306001@163.com">
+                    </div>
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="userId">用户ID:</label>
-                <input type="text" id="userId" placeholder="请输入用户ID" value="user_123">
-            </div>
-            
-            <div class="form-group">
-                <label for="token">JWT令牌:</label>
-                <input type="text" id="token" placeholder="请输入JWT令牌">
-            </div>
-            
-            <div class="form-group">
-                <label for="serverUrl">服务器地址:</label>
-                <input type="text" id="serverUrl" placeholder="请输入服务器地址" value="http://localhost:8080">
-            </div>
-            
-            <div class="button-group">
-                <button id="connectBtn">连接Socket.IO</button>
-                <button id="disconnectBtn" disabled>断开连接</button>
-            </div>
-            
-            <!-- 将消息类型、入口类型、任务ID移到发送消息内容上方并放在一行 -->
-            <div class="message-controls">
-                <div class="form-group">
-                    <label for="messageType">消息类型:</label>
-                    <select id="messageType">
-                        <option value="chat" selected>chat (聊天消息)</option>
-                        <option value="workflow_trigger">workflow_trigger (工作流触发)</option>
-                        <option value="welcome">welcome (欢迎消息)</option>
-                    </select>
+                <div class="grid-2">
+                    <div>
+                        <label for="loginPassword">登录密码</label>
+                        <input id="loginPassword" type="password" placeholder="hsai1234">
+                    </div>
+                    <div>
+                        <label for="userId">用户 ID（登录成功自动填充）</label>
+                        <input id="userId" type="text" placeholder="登录后自动同步" readonly>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="entryType">入口类型:</label>
-                    <select id="entryType">
-                        <option value="chat" selected>chat (主工作流)</option>
-                        <option value="company">company (公司信息收集)</option>
-                        <option value="video_crawl">video_crawl (触发爆款抓取)</option>
-                        <option value="viral_learning">viral_learning (爆款学习)</option>
-                    </select>
+                <div class="toggle-line">
+                    <input id="autoLogin" type="checkbox">
+                    <label for="autoLogin">页面加载后自动登录</label>
                 </div>
-                
-                <div class="form-group">
-                    <label for="taskId">任务ID (task_id):</label>
-                    <input type="text" id="taskId" placeholder="请输入任务ID（可选）">
+                <div class="toggle-line">
+                    <input id="autoConnect" type="checkbox">
+                    <label for="autoConnect">登录成功后自动连接 Socket</label>
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="messageInput">发送消息内容:</label>
-                <textarea id="messageInput" placeholder='请输入要发送的消息内容，例如：
-测试HSAI chat 消息'></textarea>
-            </div>
-            
-            <div class="button-group">
-                <button id="sendBtn" disabled>发送消息</button>
-            </div>
-            
-            <div class="button-group">
-                <button id="sendChatTestBtn" disabled>发送聊天测试消息</button>
-                <button id="sendWorkflowTestBtn" disabled>发送工作流测试消息</button>
-                <button id="sendWelcomeTestBtn" disabled>发送欢迎测试消息</button>
-            </div>
-            
-            <!-- 移除了原来的连接状态指示器 -->
-        </div>
-        
-        <!-- 右侧面板 - 消息显示和过滤 -->
-        <div class="right-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1>消息监控</h1>
-                <!-- 可以在这里添加右侧的状态指示器或其他控件 -->
-            </div>
-            
-            <div class="right-panel-content">
-                <div class="controls">
-                    <div class="filter-container">
-                        <label for="messageFilter">消息过滤:</label>
-                        <select id="messageFilter">
-                            <option value="all">全部消息</option>
-                            <option value="hsai_response">hsai_response</option>
-                            <option value="hsai_error">hsai_error</option>
-                            <option value="hsai_workflow_started">hsai_workflow_started</option>
-                            <option value="hsai_workflow_progress">hsai_workflow_progress</option>
-                            <option value="hsai_workflow_completed">hsai_workflow_completed</option>
-                            <option value="hsai_workflow_failed">hsai_workflow_failed</option>
-                            <option value="other">其他事件</option>
+                <div class="button-row">
+                    <button id="loginBtn" class="primary">登录</button>
+                    <button id="refreshTokenBtn" class="secondary">刷新 Token</button>
+                    <button id="logoutBtn" class="secondary">清除 Token</button>
+                </div>
+                <div class="button-row">
+                    <button id="connectBtn" class="primary">连接 Socket</button>
+                    <button id="disconnectBtn" class="secondary">断开连接</button>
+                    <button id="clearStorageBtn" class="secondary">清空本地配置</button>
+                </div>
+                <div class="status-line">
+                    <span id="connectionDot" class="status-dot"></span>
+                    <span id="connectionStatus">未连接</span>
+                </div>
+                <div class="grid-2">
+                    <div>
+                        <label>Socket ID</label>
+                        <input id="socketId" type="text" placeholder="连接后显示" readonly>
+                    </div>
+                    <div>
+                        <label>当前 Token 信息</label>
+                        <div id="tokenInfo" class="token-box">尚未登录。</div>
+                    </div>
+                </div>
+                <div class="button-row">
+                    <button id="importConfigBtn" class="secondary">导入配置</button>
+                    <button id="exportConfigBtn" class="secondary">导出配置</button>
+                    <input id="configFileInput" type="file" accept="application/json" style="display:none;">
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>消息调试</h2>
+                <div class="grid-2">
+                    <div>
+                        <label for="messageType">消息类型</label>
+                        <select id="messageType">
+                            <option value="chat">chat</option>
+                            <option value="welcome">welcome</option>
+                            <option value="workflow_trigger">workflow_trigger</option>
+                            <option value="hsai_status">hsai_status</option>
                         </select>
                     </div>
-                    <div class="auto-scroll-container">
-                        <input type="checkbox" id="autoScroll" checked>
-                        <label for="autoScroll">自动滚动</label>
+                    <div>
+                        <label for="entryType">入口类型</label>
+                        <input id="entryType" type="text" placeholder="chat / company_info">
                     </div>
                 </div>
-                
-                <div class="message-stats">
-                    <div>当前消息: <span id="currentMessageCount">0</span></div>
-                    <div>历史消息: <span id="historyMessageCount">0</span></div>
-                </div>
-                
-                <div class="messages-container">
-                    <div class="form-group">
-                        <label for="messagesOutput">接收到的消息:</label>
-                        <div id="messagesOutput"></div>
+                <div class="grid-2">
+                    <div>
+                        <label for="sessionId">Session ID</label>
+                        <input id="sessionId" type="text" placeholder="留空自动生成">
+                    </div>
+                    <div class="toggle-line" style="margin-top: 28px;">
+                        <input id="lockSession" type="checkbox">
+                        <label for="lockSession">锁定当前会话</label>
                     </div>
                 </div>
-                
-                <div class="fixed-buttons">
-                    <div class="button-group">
-                        <button id="clearBtn" class="btn-danger">清空消息</button>
-                        <button id="viewDetailsBtn" class="btn-secondary">查看完整信息</button>
+                <div>
+                    <label for="messageContent">消息正文</label>
+                    <textarea id="messageContent" placeholder="请输入发送内容"></textarea>
+                </div>
+                <div>
+                    <label for="metadataInput">附加元数据（JSON）</label>
+                    <textarea id="metadataInput" placeholder='{"test_mode": true}'></textarea>
+                    <p class="helper-text">留空将发送空对象；无效 JSON 会自动忽略并提示。</p>
+                </div>
+                <div>
+                    <label for="taskId">任务 ID（可选）</label>
+                    <input id="taskId" type="text" placeholder="task_xxx">
+                </div>
+                <div class="button-row">
+                    <button id="sendMessageBtn" class="primary">发送消息</button>
+                    <button id="sendWelcomeBtn" class="secondary">发送欢迎语</button>
+                    <button id="sendStatusBtn" class="secondary">查询系统状态</button>
+                </div>
+                <div>
+                    <strong>模板快捷填充</strong>
+                    <div id="templateList" class="scrollable" style="max-height: 140px; font-size: 13px; color: var(--muted);"></div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>事件订阅</h2>
+                <div id="subscriptionList" class="scrollable" style="max-height: 220px;"></div>
+                <div class="button-row">
+                    <button id="selectAllSubscriptionsBtn" class="secondary">全选</button>
+                    <button id="clearSubscriptionsBtn" class="secondary">全不选</button>
+                </div>
+                <div>
+                    <strong>Engine.IO 心跳</strong>
+                    <p id="pingInfo" style="margin: 0; color: var(--muted); font-size: 12px;">等待连接...</p>
+                </div>
+            </section>
+        </aside>
+
+        <div class="main-panel">
+            <section class="card">
+                <div class="conversation-toolbar">
+                    <div>
+                        <h2 style="margin: 0;">会话记录</h2>
+                        <small style="color: var(--muted);">按会话分组，支持展开查看原始 JSON。</small>
+                    </div>
+                    <div class="filters">
+                        <select id="conversationFilter">
+                            <option value="all">全部会话</option>
+                        </select>
+                        <select id="eventFilter">
+                            <option value="all">全部事件</option>
+                            <option value="sent">仅发送</option>
+                            <option value="hsai_response">仅响应</option>
+                            <option value="hsai_error">仅错误</option>
+                        </select>
+                        <button id="clearMessagesBtn" class="secondary">清空记录</button>
+                        <button id="exportLogsBtn" class="secondary">导出记录</button>
                     </div>
                 </div>
-            </div>
+                <div id="conversationContainer" class="conversation-body"></div>
+            </section>
+
+            <section class="card">
+                <h2>指标统计</h2>
+                <div class="metrics">
+                    <div class="metric-card">
+                        <h4>发送次数</h4>
+                        <strong id="statSent">0</strong>
+                    </div>
+                    <div class="metric-card">
+                        <h4>接收次数</h4>
+                        <strong id="statReceived">0</strong>
+                    </div>
+                    <div class="metric-card">
+                        <h4>错误次数</h4>
+                        <strong id="statErrors">0</strong>
+                    </div>
+                    <div class="metric-card">
+                        <h4>平均往返 (ms)</h4>
+                        <strong id="statAvgLatency">-</strong>
+                    </div>
+                    <div class="metric-card">
+                        <h4>最小 / 最大 (ms)</h4>
+                        <strong id="statLatencyRange">-</strong>
+                    </div>
+                    <div class="metric-card">
+                        <h4>最近往返 (ms)</h4>
+                        <strong id="statLatestLatency">-</strong>
+                    </div>
+                </div>
+                <div>
+                    <strong>最近事件</strong>
+                    <div id="recentEvents" class="scrollable" style="max-height: 140px; font-size: 12px; color: var(--muted);"></div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>请求重放队列</h2>
+                <div id="replayContainer" class="scrollable" style="max-height: 240px;"></div>
+            </section>
         </div>
-    </div>
+    </main>
 
-    <!-- 模态框 -->
-    <div id="detailsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>完整Socket消息明细</h2>
-                <span class="close">&times;</span>
-            </div>
-            <div id="modalContent"></div>
-        </div>
-    </div>
-
-    <script>
-        const DEFAULT_LOGIN_CREDENTIALS = Object.freeze({
-            email: "saiter2306001@163.com",
-            password: "hsai1234"
-        });
-
-        class SocketIOClient {
-            constructor() {
-                this.socket = null;
-                this.isConnected = false;
-                this.token = null;
-                this.userId = null;
-                this.serverBaseUrl = "http://localhost:8080";
-                this.messageHistory = []; // 存储完整消息历史
-                this.displayedMessages = []; // 存储已显示的消息类型
-                this.currentMessageCount = 0; // 当前显示的消息数量
-                
-                // 预设的登录凭据（保持与 auth 表默认管理员一致）
-                this.loginCredentials = { ...DEFAULT_LOGIN_CREDENTIALS };
-                
-                // 获取DOM元素
-                this.userIdInput = document.getElementById('userId');
-                this.tokenInput = document.getElementById('token');
-                this.serverUrlInput = document.getElementById('serverUrl');
-                this.connectBtn = document.getElementById('connectBtn');
-                this.disconnectBtn = document.getElementById('disconnectBtn');
-                this.sendBtn = document.getElementById('sendBtn');
-                this.sendChatTestBtn = document.getElementById('sendChatTestBtn');
-                this.sendWorkflowTestBtn = document.getElementById('sendWorkflowTestBtn');
-                this.sendWelcomeTestBtn = document.getElementById('sendWelcomeTestBtn');
-                this.messageInput = document.getElementById('messageInput');
-                this.messagesOutput = document.getElementById('messagesOutput');
-                this.clearBtn = document.getElementById('clearBtn');
-                this.viewDetailsBtn = document.getElementById('viewDetailsBtn');
-                this.detailsModal = document.getElementById('detailsModal');
-                this.modalContent = document.getElementById('modalContent');
-                this.messageFilter = document.getElementById('messageFilter');
-                this.autoScroll = document.getElementById('autoScroll');
-                this.connectionIndicator = document.getElementById('connectionIndicator');
-                this.connectionText = document.getElementById('connectionText');
-                this.currentMessageCountElement = document.getElementById('currentMessageCount');
-                this.historyMessageCountElement = document.getElementById('historyMessageCount');
-                
-                // 设置默认服务器URL
-                this.serverUrlInput.value = this.serverBaseUrl;
-                
-                // 页面加载时自动登录
-                this.autoLogin();
-                
-                // 绑定事件
-                this.bindEvents();
-            }
-            
-            // 自动登录函数
-            async autoLogin() {
-                try {
-                    this.showMessage('正在自动登录...', 'info');
-                    
-                    // 确保服务器URL已设置
-                    this.serverBaseUrl = this.serverUrlInput.value.trim() || this.serverBaseUrl;
-                    
-                    const response = await fetch(`${this.serverBaseUrl}/api/v1/auths/signin`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(this.loginCredentials)
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        this.token = data.token;
-                        this.userId = data.id;
-                        
-                        // 更新UI
-                        this.tokenInput.value = this.token;
-                        this.userIdInput.value = this.userId;
-                        
-                        this.showMessage('自动登录成功', 'info');
-                        console.log('Auto login successful, token:', this.token);
-                    } else {
-                        const errorData = await response.json();
-                        this.showMessage(`自动登录失败: ${errorData.detail || response.statusText}`, 'error');
-                        console.error('Auto login failed:', errorData);
-                    }
-                } catch (error) {
-                    this.showMessage(`登录请求失败: ${error.message}`, 'error');
-                    console.error('Login request failed:', error);
-                }
-            }
-            
-            bindEvents() {
-                this.connectBtn.addEventListener('click', () => this.connect());
-                this.disconnectBtn.addEventListener('click', () => this.disconnect());
-                this.sendBtn.addEventListener('click', () => this.sendMessage());
-                this.sendChatTestBtn.addEventListener('click', () => this.sendTestMessage('chat'));
-                this.sendWorkflowTestBtn.addEventListener('click', () => this.sendTestMessage('workflow_trigger'));
-                this.sendWelcomeTestBtn.addEventListener('click', () => this.sendTestMessage('welcome'));
-                this.clearBtn.addEventListener('click', () => this.clearMessages());
-                this.viewDetailsBtn.addEventListener('click', () => this.viewDetails());
-                this.messageFilter.addEventListener('change', () => this.filterMessages());
-                
-                // 模态框关闭事件
-                const closeBtn = this.detailsModal.querySelector('.close');
-                closeBtn.addEventListener('click', () => this.closeModal());
-                window.addEventListener('click', (event) => {
-                    if (event.target === this.detailsModal) {
-                        this.closeModal();
-                    }
-                });
-            }
-            
-            connect() {
-                // 如果没有token，先尝试获取
-                if (!this.token) {
-                    this.showMessage('请先登录获取token', 'error');
-                    return;
-                }
-                
-                const userId = this.userIdInput.value.trim();
-                const token = this.tokenInput.value.trim();
-                const serverUrl = this.serverUrlInput.value.trim();
-                
-                if (!userId || !token || !serverUrl) {
-                    this.showMessage('请填写所有必填字段', 'error');
-                    return;
-                }
-                
-                try {
-                    // 创建Socket.IO连接
-                    this.socket = io(serverUrl, {
-                        path: '/ws/socket.io',
-                        auth: {
-                            token: token
-                        },
-                        query: {
-                            user_id: userId
-                        },
-                        transports: ['websocket', 'polling']
-                    });
-                    
-                    // 连接事件
-                    this.socket.on('connect', () => {
-                        this.isConnected = true;
-                        this.updateConnectionStatus('已连接', true);
-                        this.showMessage('Socket.IO连接已建立', 'info');
-                        this.addMessageToHistory('connect', {message: 'Socket.IO连接已建立', socketId: this.socket.id});
-                    });
-                    
-                    // 断开连接事件
-                    this.socket.on('disconnect', (reason) => {
-                        this.isConnected = false;
-                        this.updateConnectionStatus(`已断开连接 (${reason})`, false);
-                        this.showMessage(`Socket.IO连接已断开，原因: ${reason}`, 'info');
-                        this.addMessageToHistory('disconnect', {reason: reason});
-                    });
-                    
-                    // 连接错误事件
-                    this.socket.on('connect_error', (error) => {
-                        this.isConnected = false;
-                        this.updateConnectionStatus(`连接错误: ${error.message}`, false);
-                        this.showMessage(`Socket.IO连接错误: ${error.message}`, 'error');
-                        this.addMessageToHistory('connect_error', {error: error.message});
-                    });
-                    
-                    // 监听HSAI响应事件
-                    this.socket.on('hsai_response', (data) => {
-                        this.displayReceivedMessage('hsai_response', data);
-                        this.addMessageToHistory('hsai_response', data);
-                    });
-                    
-                    // 监听HSAI错误事件
-                    this.socket.on('hsai_error', (data) => {
-                        this.displayReceivedMessage('hsai_error', data);
-                        this.addMessageToHistory('hsai_error', data);
-                    });
-                    
-                    // 监听HSAI工作流事件
-                    this.socket.on('hsai_workflow_started', (data) => {
-                        this.displayReceivedMessage('hsai_workflow_started', data);
-                        this.addMessageToHistory('hsai_workflow_started', data);
-                    });
-                    
-                    this.socket.on('hsai_workflow_progress', (data) => {
-                        this.displayReceivedMessage('hsai_workflow_progress', data);
-                        this.addMessageToHistory('hsai_workflow_progress', data);
-                    });
-                    
-                    this.socket.on('hsai_workflow_completed', (data) => {
-                        this.displayReceivedMessage('hsai_workflow_completed', data);
-                        this.addMessageToHistory('hsai_workflow_completed', data);
-                    });
-                    
-                    this.socket.on('hsai_workflow_failed', (data) => {
-                        this.displayReceivedMessage('hsai_workflow_failed', data);
-                        this.addMessageToHistory('hsai_workflow_failed', data);
-                    });
-                    
-                    // 监听其他可能的事件
-                    this.socket.on('status', (data) => {
-                        this.displayReceivedMessage('status', data);
-                        this.addMessageToHistory('status', data);
-                    });
-                    
-                    this.socket.on('error', (data) => {
-                        this.displayReceivedMessage('error', data);
-                        this.addMessageToHistory('error', data);
-                    });
-                    
-                    // 监听所有事件（用于调试）
-                    this.socket.onAny((eventName, ...args) => {
-                        console.log(`收到事件: ${eventName}`, args);
-                        this.showMessage(`收到事件: ${eventName}`, 'info');
-                        this.addMessageToHistory(`any_${eventName}`, args);
-                    });
-                    
-                } catch (error) {
-                    this.showMessage(`连接失败: ${error.message}`, 'error');
-                    console.error('Connection failed:', error);
-                }
-            }
-            
-            disconnect() {
-                if (this.socket) {
-                    this.socket.disconnect();
-                    this.socket = null;
-                }
-                this.isConnected = false;
-                this.updateConnectionStatus('已断开连接', false);
-            }
-            
-            // 发送测试消息
-            sendTestMessage(messageType) {
-                if (!this.isConnected || !this.socket) {
-                    this.showMessage('未连接到服务器', 'error');
-                    return;
-                }
-                
-                // 构造标准HSAI消息
-                let content = `测试HSAI ${messageType} 消息`;
-                if (messageType === 'welcome') {
-                    content = ''; // welcome消息不需要内容
-                }
-                
-                const message = this.buildMessage(content, messageType);
-                
-                try {
-                    // 使用正确的事件名称发送消息到服务器
-                    console.log('Sending HSAI test message:', message);
-                    this.socket.emit('message', message);
-                    this.displaySentMessage(message);
-                    this.addMessageToHistory('sent_message', message);
-                    this.showMessage(`HSAI ${messageType} 测试消息已发送`, 'info');
-                } catch (error) {
-                    this.showMessage(`发送失败: ${error.message}`, 'error');
-                    console.error('Send message failed:', error);
-                }
-            }
-            
-            // 构建符合规范的消息结构
-            buildMessage(content, type = "chat") {
-                const userId = this.userIdInput.value.trim() || this.userId;
-                const entryType = document.getElementById('entryType')?.value || "chat";
-                const taskId = document.getElementById('taskId')?.value.trim();
-                const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp
-                
-                // 生成唯一的会话ID (使用UUID方式而不是时间戳)
-                const sessionId = `test_${type}_${this.generateUUID()}`;
-                
-                // 严格按照服务端消息结构规范文档构建消息
-                const message = {
-                    "type": type,
-                    "content": content,
-                    "user_id": userId,
-                    "session_id": sessionId,
-                    "entry_type": entryType,
-                    "metadata": {
-                        "timestamp": timestamp,
-                        "client_version": "1.0.0"
-                    }
-                };
-                
-                // 如果用户提供了task_id，添加到消息中
-                if (taskId) {
-                    message.task_id = taskId;
-                }
-                
-                return message;
-            }
-            
-            // 生成UUID-like字符串
-            generateUUID() {
-                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                    const r = Math.random() * 16 | 0;
-                    const v = c == 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                }).substr(0, 8);
-            }
-            
-            sendMessage() {
-                if (!this.isConnected || !this.socket) {
-                    this.showMessage('未连接到服务器', 'error');
-                    return;
-                }
-                
-                const content = this.messageInput.value.trim();
-                const messageType = document.getElementById('messageType')?.value || "chat";
-                
-                // welcome消息不需要内容
-                if (messageType !== 'welcome' && !content) {
-                    this.showMessage('请输入要发送的消息内容', 'error');
-                    return;
-                }
-                
-                try {
-                    const message = this.buildMessage(content, messageType);
-                    
-                    // 使用正确的事件名称发送消息到服务器
-                    console.log('Sending HSAI message:', message);
-                    this.socket.emit('message', message);
-                    this.displaySentMessage(message);
-                    this.addMessageToHistory('sent_message', message);
-                    this.showMessage('HSAI消息已发送', 'info');
-                    
-                    // 清空输入框（welcome消息除外）
-                    if (messageType !== 'welcome') {
-                        this.messageInput.value = '';
-                    }
-                } catch (error) {
-                    this.showMessage(`发送失败: ${error.message}`, 'error');
-                    console.error('Send message failed:', error);
-                }
-            }
-            
-            displaySentMessage(message) {
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message message-sent';
-                messageElement.innerHTML = `
-                    <strong>发送的消息:</strong> ${message.content || `[${message.type}消息]`}
-                    <small>${new Date().toLocaleString()}</small>
-                `;
-                this.messagesOutput.appendChild(messageElement);
-                this.currentMessageCount++;
-                this.updateMessageCount();
-                this.scrollToBottom();
-            }
-            
-            displayReceivedMessage(eventType, data) {
-                // 检查是否应该显示此消息类型
-                const filterValue = this.messageFilter.value;
-                const isWorkflowEvent = eventType.startsWith('hsai_workflow');
-                const isOtherEvent = !eventType.startsWith('hsai_') && eventType !== 'status' && eventType !== 'error';
-                
-                let shouldDisplay = false;
-                if (filterValue === 'all') {
-                    shouldDisplay = true;
-                } else if (filterValue === 'other') {
-                    shouldDisplay = isOtherEvent;
-                } else {
-                    shouldDisplay = eventType === filterValue;
-                }
-                
-                if (!shouldDisplay) {
-                    // 仍然添加到历史记录但不显示
-                    return;
-                }
-                
-                // 只显示displayText信息的简化版本
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message message-display-text';
-                
-                let displayText = '';
-                if (data && typeof data === 'object') {
-                    // 优先显示displayText字段
-                    if (data.displayText) {
-                        displayText = data.displayText;
-                    } else if (data.message) {
-                        displayText = data.message;
-                    } else if (data.content) {
-                        displayText = data.content;
-                    } else if (data.error) {
-                        displayText = `错误: ${data.error}`;
-                    } else {
-                        // 如果没有displayText，显示事件类型
-                        displayText = `收到 ${eventType} 事件`;
-                    }
-                } else {
-                    displayText = String(data);
-                }
-                
-                messageElement.innerHTML = `
-                    <strong>${eventType}:</strong> ${displayText}
-                    <small>${new Date().toLocaleString()}</small>
-                `;
-                this.messagesOutput.appendChild(messageElement);
-                this.currentMessageCount++;
-                this.updateMessageCount();
-                this.scrollToBottom();
-            }
-            
-            showMessage(message, type) {
-                const messageElement = document.createElement('div');
-                messageElement.className = `message message-${type}`;
-                messageElement.innerHTML = `
-                    <strong>${type === 'error' ? '错误' : type === 'info' ? '信息' : '消息'}:</strong> ${message}
-                    <small>${new Date().toLocaleString()}</small>
-                `;
-                this.messagesOutput.appendChild(messageElement);
-                this.currentMessageCount++;
-                this.updateMessageCount();
-                this.scrollToBottom();
-            }
-            
-            updateConnectionStatus(message, connected) {
-                this.connectionText.textContent = message;
-                this.connectionIndicator.className = `connection-indicator ${connected ? 'connected-indicator' : 'disconnected-indicator'}`;
-                this.connectBtn.disabled = connected;
-                this.disconnectBtn.disabled = !connected;
-                this.sendBtn.disabled = !connected;
-                this.sendChatTestBtn.disabled = !connected;
-                this.sendWorkflowTestBtn.disabled = !connected;
-                this.sendWelcomeTestBtn.disabled = !connected;
-            }
-            
-            clearMessages() {
-                this.messagesOutput.innerHTML = '';
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message';
-                messageElement.innerHTML = '<div class="message" style="display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px; text-align: center; padding: 20px; width: 100%;">消息记录已清空</div>';
-                this.messagesOutput.appendChild(messageElement);
-                this.currentMessageCount = 1;
-                this.updateMessageCount();
-            }
-
-            
-            // 添加消息到历史记录
-            addMessageToHistory(eventType, data) {
-                this.messageHistory.push({
-                    timestamp: new Date().toISOString(),
-                    eventType: eventType,
-                    data: data
-                });
-                this.historyMessageCountElement.textContent = this.messageHistory.length;
-            }
-            
-            // 更新消息计数器
-            updateMessageCount() {
-                this.currentMessageCountElement.textContent = this.currentMessageCount;
-                this.historyMessageCountElement.textContent = this.messageHistory.length;
-            }
-            
-            // 过滤消息显示
-            filterMessages() {
-                // 清空当前显示
-                this.messagesOutput.innerHTML = '';
-                this.currentMessageCount = 0;
-                
-                // 根据过滤器重新显示消息
-                const filterValue = this.messageFilter.value;
-                
-                // 重新处理所有历史消息
-                this.messageHistory.forEach(item => {
-                    if (item.eventType === 'sent_message') {
-                        // 重新显示发送的消息
-                        this.displaySentMessage(item.data);
-                    } else if (item.eventType === 'connect' || item.eventType === 'disconnect' || item.eventType === 'connect_error') {
-                        // 重新显示连接状态消息
-                        this.showMessage(item.data.message || item.data.reason || item.data.error, 'info');
-                    } else {
-                        // 重新显示接收的消息
-                        this.displayReceivedMessage(item.eventType.replace('any_', ''), item.data);
-                    }
-                });
-                
-                // 如果没有消息，显示提示
-                if (this.messagesOutput.children.length === 0) {
-                    const noMessageElement = document.createElement('div');
-                    noMessageElement.className = 'message';
-                    noMessageElement.innerHTML = '<div class="message" style="display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px; text-align: center; padding: 20px; width: 100%;">没有匹配的消息</div>';
-                    this.messagesOutput.innerHTML = '';
-                    this.messagesOutput.appendChild(noMessageElement);
-                    this.currentMessageCount = 1;
-                }
-                this.updateMessageCount();
-            }
-            
-            
-            // 滚动到底部
-            scrollToBottom() {
-                if (this.autoScroll.checked) {
-                    // 使用requestAnimationFrame确保在DOM更新后滚动
-                    requestAnimationFrame(() => {
-                        this.messagesOutput.scrollTop = this.messagesOutput.scrollHeight;
-                    });
-                }
-            }
-            
-            // 查看完整信息
-            viewDetails() {
-                if (this.messageHistory.length === 0) {
-                    this.modalContent.innerHTML = '<p>暂无消息记录</p>';
-                } else {
-                    let html = '<h3>完整Socket消息明细</h3>';
-                    html += '<div style="text-align: right; margin-bottom: 10px;">';
-                    html += `<button onclick="socketClient.exportHistory()" style="margin-left: 10px;" class="btn-secondary">导出历史记录</button>`;
-                    html += '</div>';
-                    html += '<div style="max-height: 60vh; overflow-y: auto;">';
-                    
-                    // 按时间倒序显示
-                    const sortedHistory = [...this.messageHistory].reverse();
-                    
-                    sortedHistory.forEach((item, index) => {
-                        html += `
-                            <div style="border: 1px solid #ddd; margin: 10px 0; padding: 10px; border-radius: 4px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                    <strong>${item.eventType}</strong>
-                                    <span>${new Date(item.timestamp).toLocaleString()}</span>
-                                </div>
-                                <pre style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word;">${JSON.stringify(item.data, null, 2)}</pre>
-                            </div>
-                        `;
-                    });
-                    
-                    html += '</div>';
-                    this.modalContent.innerHTML = html;
-                }
-                
-                this.detailsModal.style.display = 'block';
-            }
-            
-            // 关闭模态框
-            closeModal() {
-                this.detailsModal.style.display = 'none';
-            }
-            
-            // 导出历史记录
-            exportHistory() {
-                const dataStr = JSON.stringify(this.messageHistory, null, 2);
-                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                
-                const exportFileDefaultName = `socket_messages_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-                
-                const linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click();
-            }
-        }
-        
-        // 页面加载完成后初始化客户端
-        document.addEventListener('DOMContentLoaded', () => {
-            const client = new SocketIOClient();
-            window.socketClient = client; // 便于调试
-        });
-    </script>
+    <script type="module" src="static/ws-tester.js"></script>
 </body>
 </html>
