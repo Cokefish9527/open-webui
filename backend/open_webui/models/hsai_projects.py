@@ -7,10 +7,10 @@ from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Integer
+from sqlalchemy import Column, String, Text, JSON, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
-from ._timestamp_utils import normalize_required_timestamp
+from ._timestamp_utils import normalize_required_timestamp, EpochTimestamp
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -36,8 +36,8 @@ class HSAIProject(Base):
     company_id = Column(String, ForeignKey("companies.id"), nullable=True)
     # 添加组织关联字段
     organization_id = Column(String, ForeignKey("organizations.id"), nullable=True)
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 ####################

@@ -4,8 +4,9 @@ from typing import Dict, List, Optional
 
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
+from ._timestamp_utils import EpochTimestamp
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Column, String, Text, JSON
+from sqlalchemy import Column, String, Text, JSON
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -31,8 +32,8 @@ class File(Base):
 
     access_control = Column(JSON, nullable=True)
 
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 class FileModel(BaseModel):

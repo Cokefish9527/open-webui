@@ -1,6 +1,8 @@
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional, Union
+
+from sqlalchemy.types import DateTime, TypeDecorator
 
 try:
     from dateutil import parser as dateutil_parser  # type: ignore
@@ -69,3 +71,32 @@ def normalize_optional_timestamp(value: TimestampInput) -> Optional[int]:
     if value is None:
         return None
     return normalize_timestamp(value, allow_none=True)
+
+class EpochTimestamp(TypeDecorator):
+    """
+    Transparently persist epoch seconds into a timezone-aware timestamp column.
+
+    Accepts int/float/datetime/date/ISO strings on input and stores them as UTC timestamps.
+    Returns epoch seconds (int) when reading from the database.
+    """
+
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_bind_param(self, value: TimestampInput, dialect):
+        normalized = normalize_optional_timestamp(value)
+        if normalized is None:
+            return None
+        return datetime.fromtimestamp(normalized, tz=timezone.utc)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=timezone.utc)
+            return int(value.timestamp())
+        if isinstance(value, (int, float)):
+            return int(value)
+        raise ValueError(f"Unsupported database timestamp type: {type(value)!r}")
+

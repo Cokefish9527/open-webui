@@ -11,6 +11,7 @@ from sqlalchemy import BigInteger, Column, String, Text, JSON
 from ._timestamp_utils import (
     normalize_optional_timestamp,
     normalize_required_timestamp,
+    EpochTimestamp,
 )
 
 log = logging.getLogger(__name__)
@@ -29,14 +30,14 @@ class RedisQueueMessage(Base):
     queue_name = Column(String, nullable=False)  # Redis队列名称
     correlation_id = Column(String, nullable=True)  # 关联ID（request_id/reply_id）
     raw_data = Column(Text, nullable=False)      # 获取到的原始数据
-    fetched_at = Column(BigInteger, nullable=False)  # 获取时间
+    fetched_at = Column(EpochTimestamp(), nullable=False)  # 获取时间
     execution_result = Column(Text, nullable=True)   # 执行结果
     error_message = Column(Text, nullable=True)      # 异常信息
     last_executed_at = Column(BigInteger, nullable=True)  # 最后一次执行时间
     status = Column(String, nullable=False, default="pending")  # 消息处理状态
     retry_count = Column(BigInteger, default=0)  # 重试次数
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 ####################

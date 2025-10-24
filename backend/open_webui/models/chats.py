@@ -9,11 +9,11 @@ from open_webui.models.tags import TagModel, Tag, Tags
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import BigInteger, Boolean, Column, String, Text, JSON
+from sqlalchemy import Boolean, Column, String, Text, JSON
 from sqlalchemy import or_, func, select, and_, text
 from sqlalchemy.sql import exists
 
-from ._timestamp_utils import normalize_required_timestamp
+from ._timestamp_utils import normalize_required_timestamp, EpochTimestamp
 
 ####################
 # Chat DB Schema
@@ -32,8 +32,8 @@ class Chat(Base):
     title = Column(Text)
     chat = Column(JSON)
 
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
     share_id = Column(Text, unique=True, nullable=True)
     archived = Column(Boolean, default=False)

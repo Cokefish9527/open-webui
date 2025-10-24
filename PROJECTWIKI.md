@@ -71,8 +71,8 @@ erDiagram
     json company_info
     string status
     json config
-    bigint created_at
-    bigint updated_at
+    timestamptz created_at
+    timestamptz updated_at
   }
   hsai_projects {
     string id PK
@@ -82,8 +82,8 @@ erDiagram
     string company_id FK companies.id
     string status
     json config
-    bigint created_at
-    bigint updated_at
+    timestamptz created_at
+    timestamptz updated_at
   }
   hsai_tasks {
     string id PK
@@ -93,16 +93,16 @@ erDiagram
     string user_id FK users.id
     string project_id FK hsai_projects.id
     bigint progress
-    bigint created_at
-    bigint updated_at
+    timestamptz created_at
+    timestamptz updated_at
   }
   credit {
     string id PK
     string user_id FK users.id UNIQUE
     string company_id FK companies.id
     numeric credit
-    bigint created_at
-    bigint updated_at
+    timestamptz created_at
+    timestamptz updated_at
   }
   credit_log {
     string id PK
@@ -110,7 +110,7 @@ erDiagram
     string company_id FK companies.id
     numeric credit
     json detail
-    bigint created_at
+    timestamptz created_at
   }
 ```
 
@@ -180,6 +180,7 @@ erDiagram
 - **初始化脚本**：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 用于数据库引导；执行后需运行 `tool/add_company_credit_columns.py` 修复旧表结构。
 
 ## 设计决策 & 技术债务
+- **时间戳持久化策略（2025-10-23）**：引入 `EpochTimestamp` TypeDecorator，将 ORM 层时间字段统一转换为 PostgreSQL `timestamptz`，业务仍以整型 Epoch 秒读写；此次覆盖 redis_queue_messages、billing_config、chats、files、hsai_*、credits、users 等核心模型，并配套更新校验脚本，消除 `DatatypeMismatch` 报错并锁定未来扩展范围。
 - **积分统一于公司维度**：通过 `company_id` 将同公司用户余额合并，BillingService 与 CreditsTable 保持一致；后续需要对前端展示（个人额度）做差额提示。
 - **双数据库架构**：业务主库与 n8n_workflow 分离，计费日志与视频学习读取使用二级连接池；需监控跨库事务失败的补偿逻辑。
 - **任务模板自动化**：项目创建时批量生成默认任务，当前模板硬编码在 `PROJECT_MAIN_TASK_TEMPLATES`，未来应移至可配置存储。
@@ -212,5 +213,6 @@ erDiagram
 - 修复：回滚至提交 2c82f3694 后 `CreditLogModel.company_id` 一行缩进异常触发 `IndentationError`，已整理缩进并通过 `python -m py_compile backend/open_webui/models/credits.py` 验证。
 - 文档：在“设计决策 & 技术债务”补充该回滚复盘条目，提醒回滚后执行静态语法检查。
 ### 2025-10-23
+- 更新：统一 ORM 时间字段使用 `EpochTimestamp` 装饰器持久化，修复 PostgreSQL `timestamptz` 类型写入错误，并补充 Redis 队列修复验证脚本。
 - 修复：Markdown 中文乱码问题，重写 PROJECTWIKI 信息结构，确保控制字符与替换符清零。
 - 更新：新增公司积分统一说明、`tool/add_company_credit_columns.py` 使用指引、`GET /billing/user/credit` 接口文档。

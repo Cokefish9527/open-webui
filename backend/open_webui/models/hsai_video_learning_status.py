@@ -7,8 +7,8 @@ from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import BigInteger, Column, String, Text, Integer
-from ._timestamp_utils import normalize_required_timestamp
+from sqlalchemy import Column, String, Text, Integer
+from ._timestamp_utils import normalize_required_timestamp, EpochTimestamp
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -36,8 +36,8 @@ class HSAIVideoLearningStatus(Base):
     status = Column(String, nullable=False)                     # 学习状态
     
     # 时间戳
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 ####################

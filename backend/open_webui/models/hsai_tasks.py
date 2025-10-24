@@ -14,6 +14,7 @@ from sqlalchemy.orm import relationship
 from ._timestamp_utils import (
     normalize_optional_timestamp,
     normalize_required_timestamp,
+    EpochTimestamp,
 )
 
 log = logging.getLogger(__name__)
@@ -83,13 +84,13 @@ class HSAITask(Base):
     # 进度和时间
     progress = Column(BigInteger, default=0)  # 进度百分比(0-100)
     started_at = Column(BigInteger, nullable=True)
-    completed_at = Column(BigInteger, nullable=True)
+    completed_at = Column(EpochTimestamp(), nullable=True)
     
     # 优先级
     priority = Column(BigInteger, default=0)  # 优先级，数字越大越优先
     
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 class HSAIWorkflow(Base):
@@ -119,8 +120,8 @@ class HSAIWorkflow(Base):
     category = Column(String, nullable=True)
     tags = Column(JSON, nullable=True)
     
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 class HSAICard(Base):
@@ -156,8 +157,8 @@ class HSAICard(Base):
     # 排序和显示
     sort_order = Column(BigInteger, default=0)
     
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 class HSAIWorkflowExecution(Base):
@@ -182,13 +183,13 @@ class HSAIWorkflowExecution(Base):
     
     # 时间信息
     started_at = Column(BigInteger, nullable=True)
-    completed_at = Column(BigInteger, nullable=True)
+    completed_at = Column(EpochTimestamp(), nullable=True)
     
     # 错误处理
     error_message = Column(Text, nullable=True)
     
-    created_at = Column(BigInteger)
-    updated_at = Column(BigInteger)
+    created_at = Column(EpochTimestamp())
+    updated_at = Column(EpochTimestamp())
 
 
 ####################
