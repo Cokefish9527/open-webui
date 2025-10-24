@@ -184,6 +184,8 @@ erDiagram
 - **双数据库架构**：业务主库与 n8n_workflow 分离，计费日志与视频学习读取使用二级连接池；需监控跨库事务失败的补偿逻辑。
 - **任务模板自动化**：项目创建时批量生成默认任务，当前模板硬编码在 `PROJECT_MAIN_TASK_TEMPLATES`，未来应移至可配置存储。
 - **技术债务**：
+  - [2025-10-24] 回滚至提交 2c82f3694 后 `backend/open_webui/models/credits.py` 的 `CreditLogModel.company_id` 缩进异常导致后端无法启动；已修复并将回滚后的语法校验纳入标准流程。
+  - [2025-10-24] 回滚后生产库 `credit`/`credit_log` 保持旧 schema，缺失 `company_id` 列且时间戳仍为 TIMESTAMP，导致 `credit initialize failed`。已执行 `tool/add_company_credit_columns.py` 补列，并通过 SQL 将 `credit.updated_at`/`credit.created_at`/`credit_log.created_at`/`trade_ticket.created_at` 统一转换为 BIGINT（UNIX 时间戳）。回滚或数据迁移时需同步执行上述脚本与列类型转换。
   - 缺少对公司层面积分消费的并发锁，短期通过数据库事务满足，但高并发下需引入悲观锁或分布式锁。
   - 计费日志缺乏聚合索引（company_id + created_at），大体量数据时分页可能退化。
   - Redis 队列脚本散落在 `tool/` 目录，建议统一为 CLI。
@@ -204,6 +206,11 @@ erDiagram
 | Trade Ticket | 充值工单，结合第三方支付回调自动入账。 |
 
 ## 变更日志
+### 2025-10-24
+- 数据：运行 `tool/add_company_credit_columns.py` 并手动执行列类型转换（TIMESTAMP → BIGINT），修复登录触发的 `credit initialize failed`。
+- 提示：将数据库回滚校准步骤纳入运维清单，避免再次遗漏。
+- 修复：回滚至提交 2c82f3694 后 `CreditLogModel.company_id` 一行缩进异常触发 `IndentationError`，已整理缩进并通过 `python -m py_compile backend/open_webui/models/credits.py` 验证。
+- 文档：在“设计决策 & 技术债务”补充该回滚复盘条目，提醒回滚后执行静态语法检查。
 ### 2025-10-23
 - 修复：Markdown 中文乱码问题，重写 PROJECTWIKI 信息结构，确保控制字符与替换符清零。
 - 更新：新增公司积分统一说明、`tool/add_company_credit_columns.py` 使用指引、`GET /billing/user/credit` 接口文档。

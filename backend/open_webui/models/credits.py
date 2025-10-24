@@ -107,7 +107,7 @@ class CreditLogModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     user_id: str
-     company_id: Optional[str] = None
+    company_id: Optional[str] = None
     credit: Decimal = Field(default_factory=lambda: Decimal("0"))
     detail: dict = Field(default_factory=lambda: {})
     created_at: int = Field(default_factory=lambda: int(time.time()))
