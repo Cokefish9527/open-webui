@@ -195,7 +195,7 @@ erDiagram
 - **单元测试**：后端核心模块使用 `pytest`；计费相关测试见 `backend/test/test_billing_system.py`。
 - **脚本验证**：`tool/` 目录提供数据库列校验、Redis 队列修复脚本，运行前需确认 `.env` 指向正确环境。
 - **监控建议**：重点观测 `credit`/`credit_log` 同步延迟、Redis Stream 消费积压、n8n 数据库链路。
-- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-26 更新，新增主会话聚焦、消息弹窗与按钮多状态说明）。
+- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；支持消息发送卡片化布局、会话 Markdown/JSON 双模态查看与忽略 `workflow_started` 的延迟统计；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-26 更新）。
 
 ## 术语表
 | 术语 | 说明 |
@@ -209,9 +209,9 @@ erDiagram
 
 ## 变更日志
 ### 2025-10-26
-- 前端：完善 WebSocket 调试台 UI，支持主会话聚焦、消息卡片弹窗、按钮多状态反馈；同步刷新 `static/ws-tester.js`，新增会话聚焦逻辑、按钮状态机、模态框键盘交互。
-- 文档：`docs/410_websocket_test_page_manual.md` 更新聚焦流程、弹窗说明与验收清单；调试工具章节更新到 2025-10-26 版本。
-- 追踪：在 `PROJECTWIKI.md` “调试工具” 段落补充聚焦与弹窗能力，保持代码 ↔ 文档一致。
+- 前端：调整消息发送卡片为单卡片布局，新增会话 Markdown/JSON 双模态查看，工作流 `workflow_started` 中间态不再参与响应时延；同步完善按钮状态与模态交互。
+- 文档：`docs/410_websocket_test_page_manual.md` 刷新布局描述、Markdown 弹窗说明及延迟计算策略，补充最新验收清单。
+- 追踪：在 `PROJECTWIKI.md` “调试工具” 段落与变更日志中记录 Markdown/JSON 双模态及延迟策略，保持代码 ↔ 文档一致。
 
 ### 2025-10-24
 - 数据：运行 `tool/add_company_credit_columns.py` 并手动执行列类型转换（TIMESTAMP → BIGINT），修复登录触发的 `credit initialize failed`。

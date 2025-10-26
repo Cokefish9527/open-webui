@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenWebUI Socket.IO 调试面板</title>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" defer></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
     <style>
         :root {
@@ -139,6 +140,50 @@
 
         .panel-grid .span-2 {
             grid-column: span 2;
+        }
+
+        .messaging-grid {
+            grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
+        }
+
+        .message-form-card {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-form-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .message-form-group .form-field {
+            flex: 1 1 180px;
+            min-width: 0;
+        }
+
+        .message-form-group.compact .form-field {
+            flex: 1 1 140px;
+        }
+
+        .message-form-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message-form-footer .button-row {
+            margin: 0;
+        }
+
+        .message-form-card textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .message-form-card .scrollable {
+            max-height: 140px;
         }
 
         @media (max-width: 1024px) {
@@ -451,6 +496,21 @@
             margin: 8px 0;
             font-size: 14px;
             color: var(--text);
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            text-align: left;
+            line-height: 1.55;
+        }
+
+        .conversation-card__preview:hover:not([disabled]) {
+            color: var(--primary-dark);
+        }
+
+        .conversation-card__preview[disabled] {
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
         .conversation-card__footer {
@@ -603,6 +663,35 @@
             overflow: auto;
         }
 
+        .markdown-body {
+            max-height: 50vh;
+            overflow: auto;
+            padding: 0 24px 24px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3 {
+            margin-top: 1.2em;
+        }
+
+        .markdown-body pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 10px;
+            overflow: auto;
+        }
+
+        .markdown-body code {
+            background: rgba(15, 23, 42, 0.08);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Segoe UI Mono', monospace;
+        }
+
         .metrics {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -717,11 +806,11 @@
             </div>
         </section>
         <section class="tab-panel" data-tab-panel="messaging" role="tabpanel" aria-label="消息调试" hidden>
-            <div class="panel-grid">
-                <section class="card">
+            <div class="panel-grid messaging-grid">
+                <section class="card message-form-card">
                     <h2>消息发送</h2>
-                    <div class="grid-2">
-                        <div>
+                    <div class="message-form-group compact">
+                        <div class="form-field">
                             <label for="messageType">消息类型</label>
                             <select id="messageType">
                                 <option value="chat">chat</option>
@@ -730,17 +819,17 @@
                                 <option value="hsai_status">hsai_status</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="form-field">
                             <label for="entryType">入口类型</label>
                             <input id="entryType" type="text" placeholder="chat / company_info">
                         </div>
                     </div>
-                    <div class="grid-2">
-                        <div>
+                    <div class="message-form-group compact">
+                        <div class="form-field">
                             <label for="sessionId">Session ID</label>
                             <input id="sessionId" type="text" placeholder="留空自动生成">
                         </div>
-                        <div class="toggle-line" style="margin-top: 28px;">
+                        <div class="toggle-line" style="align-items: center;">
                             <input id="lockSession" type="checkbox">
                             <label for="lockSession">锁定当前会话</label>
                         </div>
@@ -758,17 +847,19 @@
                         <label for="taskId">任务 ID（可选）</label>
                         <input id="taskId" type="text" placeholder="task_xxx">
                     </div>
-                    <div class="button-row">
-                        <button id="sendMessageBtn" class="primary">发送消息</button>
-                        <button id="sendWelcomeBtn" class="secondary">发送欢迎语</button>
-                        <button id="sendStatusBtn" class="secondary">查询系统状态</button>
-                    </div>
-                    <div>
-                        <strong>模板快捷填充</strong>
-                        <div id="templateList" class="scrollable" style="max-height: 140px; font-size: 13px; color: var(--muted);"></div>
+                    <div class="message-form-footer">
+                        <div class="button-row">
+                            <button id="sendMessageBtn" class="primary">发送消息</button>
+                            <button id="sendWelcomeBtn" class="secondary">发送欢迎语</button>
+                            <button id="sendStatusBtn" class="secondary">查询系统状态</button>
+                        </div>
+                        <div>
+                            <strong>模板快捷填充</strong>
+                            <div id="templateList" class="scrollable" style="font-size: 13px; color: var(--muted);"></div>
+                        </div>
                     </div>
                 </section>
-                <section class="card span-2">
+                <section class="card message-log-card">
                     <div class="conversation-toolbar">
                         <div class="conversation-toolbar__heading">
                             <div>
@@ -845,6 +936,18 @@
                 </section>
             </div>
         </section>
+    </div>
+    <div id="markdownModal" class="dialog-backdrop" hidden>
+        <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="markdownModalTitle">
+            <div class="dialog-header">
+                <div>
+                    <h3 id="markdownModalTitle">对话内容</h3>
+                    <p id="markdownModalMeta" class="dialog-meta"></p>
+                </div>
+                <button id="markdownModalClose" class="dialog-close" aria-label="关闭">×</button>
+            </div>
+            <div id="markdownModalBody" class="markdown-body"></div>
+        </div>
     </div>
     <div id="messageModal" class="dialog-backdrop" hidden>
         <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="messageModalTitle">

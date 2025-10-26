@@ -50,6 +50,7 @@ class WebSocketTester {
     this.handleKeydown = this.handleKeydown.bind(this);
     this.activeModalMessage = null;
     this.primarySession = null;
+    this.activeMarkdownMessage = null;
     this.loginButtonResetTimer = null;
     this.connectButtonResetTimer = null;
 
@@ -170,6 +171,11 @@ class WebSocketTester {
       "messageModalMeta",
       "messageModalBody",
       "messageModalClose",
+      "markdownModal",
+      "markdownModalTitle",
+      "markdownModalMeta",
+      "markdownModalBody",
+      "markdownModalClose",
       "primarySessionIndicator",
       "primarySessionLabel",
       "focusSessionBtn",
@@ -342,9 +348,20 @@ class WebSocketTester {
           this.hideMessageModal();
         }
       });
-      document.addEventListener("keydown", this.handleKeydown);
     }
 
+    if (this.el.markdownModal) {
+      this.el.markdownModalClose.addEventListener("click", () =>
+        this.hideMarkdownModal()
+      );
+      this.el.markdownModal.addEventListener("click", (event) => {
+        if (event.target === this.el.markdownModal) {
+          this.hideMarkdownModal();
+        }
+      });
+    }
+
+    document.addEventListener("keydown", this.handleKeydown);
     this.updateFocusControls();
   }
 
@@ -574,14 +591,20 @@ class WebSocketTester {
       payload?.sessionId ||
       payload?.context?.session_id ||
       "未标识会话";
-    const latency = this.consumePendingMetric(sessionId);
+    const subtype = payload?.subtype;
+    let latency = null;
     this.stats.received += 1;
+    if (subtype !== "workflow_started") {
+      latency = this.consumePendingMetric(sessionId);
+    }
     this.updateMetrics(latency);
     this.appendConversationMessage("received", "hsai_response", payload, {
       sessionId,
       latency,
-      sessionId,
     });
+    if (subtype === "workflow_started") {
+      this.appendSystemEvent("工作流开始执行，等待最终结果…");
+    }
   }
 
   handleError(payload) {
@@ -762,8 +785,7 @@ class WebSocketTester {
 
   renderMessageCard(message) {
     const card = document.createElement("article");
-    card.className = "conversation-card is-clickable";
-    card.tabIndex = 0;
+    card.className = "conversation-card";
     if (message.direction === "sent") {
       card.classList.add("conversation-card--sent");
     } else if (message.direction === "error") {
@@ -776,9 +798,19 @@ class WebSocketTester {
       message
     )}</span><span>${this.formatTimestamp(message)}</span>`;
 
-    const preview = document.createElement("div");
-    preview.className = "conversation-card__preview";
-    preview.textContent = this.getMessagePreview(message);
+    const previewButton = document.createElement("button");
+    previewButton.type = "button";
+    previewButton.className = "conversation-card__preview";
+    const previewText = this.getMessagePreview(message);
+    previewButton.textContent = previewText || "（无可显示内容，点击查看 JSON）";
+    const markdownSource = this.getMarkdownSource(message);
+    if (markdownSource) {
+      previewButton.addEventListener("click", () =>
+        this.showMarkdownModal(message, markdownSource)
+      );
+    } else {
+      previewButton.addEventListener("click", () => this.showMessageModal(message));
+    }
 
     const footer = document.createElement("div");
     footer.className = "conversation-card__footer";
@@ -791,16 +823,8 @@ class WebSocketTester {
       this.showMessageModal(message);
     });
 
-    card.addEventListener("click", () => this.showMessageModal(message));
-    card.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        this.showMessageModal(message);
-      }
-    });
-
     footer.appendChild(viewBtn);
-    card.append(header, preview, footer);
+    card.append(header, previewButton, footer);
     return card;
   }
 
@@ -860,6 +884,18 @@ class WebSocketTester {
     return `${text.slice(0, maxLength - 1)}…`;
   }
 
+  getMarkdownSource(message) {
+    const payload = message?.payload;
+    if (!payload) return "";
+    if (typeof payload.displayText === "string" && payload.displayText.trim()) {
+      return payload.displayText.trim();
+    }
+    if (typeof payload.content === "string" && payload.content.trim()) {
+      return payload.content.trim();
+    }
+    return "";
+  }
+
   showMessageModal(message) {
     if (!this.el.messageModal) return;
     this.activeModalMessage = message;
@@ -881,9 +917,47 @@ class WebSocketTester {
     this.activeModalMessage = null;
   }
 
+  showMarkdownModal(message, markdownSource) {
+    if (!this.el.markdownModal) {
+      this.showMessageModal(message);
+      return;
+    }
+    this.activeMarkdownMessage = message;
+    this.el.markdownModalTitle.textContent = this.getEventLabel(message);
+    this.el.markdownModalMeta.textContent = `${message.sessionId || "未标识会话"} · ${this.formatTimestamp(
+      message
+    )}`;
+    if (window.marked && typeof window.marked.parse === "function") {
+      this.el.markdownModalBody.innerHTML = window.marked.parse(markdownSource);
+    } else {
+      this.el.markdownModalBody.textContent = markdownSource;
+    }
+    this.el.markdownModal.removeAttribute("hidden");
+  }
+
+  hideMarkdownModal() {
+    if (!this.el.markdownModal) return;
+    this.el.markdownModal.setAttribute("hidden", "");
+    this.activeMarkdownMessage = null;
+    if (this.el.markdownModalBody) {
+      this.el.markdownModalBody.innerHTML = "";
+    }
+  }
+
   handleKeydown(event) {
-    if (event.key === "Escape" && !this.el.messageModal?.hasAttribute("hidden")) {
-      this.hideMessageModal();
+    if (event.key === "Escape") {
+      let handled = false;
+      if (this.el.messageModal && !this.el.messageModal.hasAttribute("hidden")) {
+        this.hideMessageModal();
+        handled = true;
+      }
+      if (this.el.markdownModal && !this.el.markdownModal.hasAttribute("hidden")) {
+        this.hideMarkdownModal();
+        handled = true;
+      }
+      if (handled) {
+        event.preventDefault();
+      }
     }
   }
 
