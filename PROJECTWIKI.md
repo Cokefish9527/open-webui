@@ -220,3 +220,36 @@ erDiagram
 - 更新：新增公司积分统一说明、`tool/add_company_credit_columns.py` 使用指引、`GET /billing/user/credit` 接口文档。
 
 - 项目汇报：docs/pm/report_20251025.md（方案A口径，含问题与改进/路线图）。
+
+## 运维/故障
+
+### 故障指纹：pytest 启动即崩溃（_pytest.debugging / 第三方插件）
+- 触发命令：`pytest -q tests_e2e_smoke`
+- 典型症状：
+  - `ModuleNotFoundError: No module named '_pytest.debugging'`
+  - `ModuleNotFoundError: No module named 'langsmith.pytest_plugin'`
+- 环境指纹（2025-10-26）：
+  - Python 3.11.9（venv），pytest 8.3.5；Windows 10
+  - langsmith 0.4.21；langfuse 2.44.0（需 packaging < 24.0）
+- 处置摘要：
+  - 强制重装 pytest 并清理 `pytest*` / `_pytest*` 残留
+  - 在 venv 的 `site-packages/sitecustomize.py` 设置 `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`
+  - 将 packaging 降至 `< 24.0`，通过 `pip check`
+  - `pytest.ini` 增加 `-p no:langsmith.pytest_plugin`
+- 验证：`pytest --version`、`pytest --collect-only -q tests_e2e_smoke/test_health_endpoints.py`、`pytest -q tests_e2e_smoke`
+
+```mermaid
+flowchart TD
+  A[运行 pytest] -->|ImportError| B{缺失模块}
+  B -->|_pytest.debugging| C[强制重装 pytest + 清理残留]
+  B -->|langsmith.pytest_plugin| D[关闭自动加载\nPYTEST_DISABLE_PLUGIN_AUTOLOAD=1]
+  C --> E[pytest 可启动?]
+  D --> E
+  E -->|否| F[检查其他 entry points\n或 -p no:xxx 明确屏蔽]
+  E -->|是| G[pip check 依赖一致性]
+  G -->|冲突| H[按约束修正版本]
+  G -->|通过| I[执行测试]
+```
+
+## 测试手册（E2E）
+- 参见：docs/tests/e2e_guide.md（pytest 驱动的端到端冒烟/主流程验证手册）。
