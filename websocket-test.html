@@ -318,10 +318,53 @@
             flex-wrap: wrap;
         }
 
+        .conversation-toolbar__heading {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 240px;
+        }
+
+        .conversation-toolbar__controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+            min-width: 260px;
+        }
+
         .filters {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+        }
+
+        .focus-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .primary-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--primary-dark);
+            background: rgba(37, 99, 235, 0.12);
+            border-radius: 999px;
+            padding: 4px 10px;
+            width: fit-content;
+        }
+
+        .primary-indicator code {
+            font-family: 'Segoe UI Mono', 'Fira Code', monospace;
+            font-size: 12px;
+            color: var(--primary-dark);
+            background: rgba(255, 255, 255, 0.6);
+            padding: 2px 6px;
+            border-radius: 6px;
         }
 
         .conversation-body {
@@ -330,6 +373,234 @@
             max-height: 420px;
             overflow-y: auto;
             padding-right: 8px;
+        }
+
+        .message-group {
+            background: #ffffff;
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+            transition: box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+        }
+
+        .message-group.primary {
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.36);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(236, 72, 153, 0.06));
+        }
+
+        .message-group.muted {
+            opacity: 0.45;
+            filter: saturate(0.45);
+        }
+
+        .message-group__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .message-group__header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .message-group__header span {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .conversation-card {
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 10px;
+            padding: 12px;
+            background: #ffffff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .conversation-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .conversation-card:focus-visible {
+            outline: 2px solid rgba(37, 99, 235, 0.65);
+            outline-offset: 2px;
+        }
+
+        .conversation-card.is-clickable {
+            cursor: pointer;
+        }
+
+        .conversation-card__header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .conversation-card__preview {
+            margin: 8px 0;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .conversation-card__footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .conversation-card--sent {
+            border-color: rgba(34, 197, 94, 0.45);
+        }
+
+        .conversation-card--error {
+            border-color: rgba(248, 113, 113, 0.55);
+        }
+
+        .message-group__actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .message-focus {
+            border-radius: 999px;
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            background: rgba(37, 99, 235, 0.08);
+            color: var(--primary-dark);
+            font-size: 12px;
+            padding: 6px 14px;
+            cursor: pointer;
+        }
+
+        .message-focus:hover:not([disabled]) {
+            background: rgba(37, 99, 235, 0.16);
+        }
+
+        .message-focus[disabled] {
+            opacity: 0.8;
+            cursor: default;
+        }
+
+        .link-button {
+            border: none;
+            background: transparent;
+            color: var(--primary-dark);
+            cursor: pointer;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .link-button:hover {
+            text-decoration: underline;
+        }
+
+        .link-button[disabled] {
+            opacity: 0.4;
+            pointer-events: none;
+            text-decoration: none;
+        }
+
+        button.is-loading {
+            position: relative;
+            opacity: 0.75;
+            cursor: progress;
+        }
+
+        @media (max-width: 1024px) {
+            .conversation-toolbar__controls {
+                align-items: flex-start;
+                width: 100%;
+            }
+
+            .focus-controls {
+                justify-content: flex-start;
+            }
+        }
+
+        .dialog-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            z-index: 100;
+        }
+
+        .dialog-backdrop[hidden] {
+            display: none;
+        }
+
+        .dialog-backdrop:not([hidden]) {
+            display: flex;
+        }
+
+        .dialog-panel {
+            width: min(720px, 90vw);
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+        }
+
+        .dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 24px 24px 12px;
+        }
+
+        .dialog-header h3 {
+            margin: 0;
+        }
+
+        .dialog-meta {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .dialog-close {
+            border: none;
+            background: #f1f5f9;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .dialog-close:hover {
+            background: #e2e8f0;
+        }
+
+        .dialog-body {
+            padding: 0 24px 24px;
+        }
+
+        .dialog-body pre {
+            margin: 0;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 50vh;
+            overflow: auto;
         }
 
         .metrics {
@@ -499,22 +770,34 @@
                 </section>
                 <section class="card span-2">
                     <div class="conversation-toolbar">
-                        <div>
-                            <h2 style="margin: 0;">会话记录</h2>
-                            <small style="color: var(--muted);">按会话分组，支持展开查看原始 JSON。</small>
+                        <div class="conversation-toolbar__heading">
+                            <div>
+                                <h2 style="margin: 0;">会话记录</h2>
+                                <small style="color: var(--muted);">按会话分组，通过弹窗查看原始 JSON。</small>
+                            </div>
+                            <div id="primarySessionIndicator" class="primary-indicator" hidden>
+                                当前主会话：<code id="primarySessionLabel"></code>
+                            </div>
                         </div>
-                        <div class="filters">
-                            <select id="conversationFilter">
-                                <option value="all">全部会话</option>
-                            </select>
-                            <select id="eventFilter">
-                                <option value="all">全部事件</option>
-                                <option value="sent">仅发送</option>
-                                <option value="hsai_response">仅响应</option>
-                                <option value="hsai_error">仅错误</option>
-                            </select>
-                            <button id="clearMessagesBtn" class="secondary">清空记录</button>
-                            <button id="exportLogsBtn" class="secondary">导出记录</button>
+                        <div class="conversation-toolbar__controls">
+                            <div class="filters">
+                                <select id="conversationFilter">
+                                    <option value="all">全部会话</option>
+                                </select>
+                                <select id="eventFilter">
+                                    <option value="all">全部事件</option>
+                                    <option value="sent">仅发送</option>
+                                    <option value="hsai_response">仅响应</option>
+                                    <option value="hsai_error">仅错误</option>
+                                </select>
+                                <button id="clearMessagesBtn" class="secondary">清空记录</button>
+                                <button id="exportLogsBtn" class="secondary">导出记录</button>
+                            </div>
+                            <div class="focus-controls">
+                                <button id="focusSessionBtn" class="secondary message-focus" type="button">聚焦输入 Session</button>
+                                <button id="focusLatestBtn" class="secondary message-focus" type="button">聚焦最新会话</button>
+                                <button id="clearFocusBtn" class="link-button" type="button">取消聚焦</button>
+                            </div>
                         </div>
                     </div>
                     <div id="conversationContainer" class="conversation-body"></div>
@@ -562,6 +845,20 @@
                 </section>
             </div>
         </section>
+    </div>
+    <div id="messageModal" class="dialog-backdrop" hidden>
+        <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="messageModalTitle">
+            <div class="dialog-header">
+                <div>
+                    <h3 id="messageModalTitle">消息详情</h3>
+                    <p id="messageModalMeta" class="dialog-meta"></p>
+                </div>
+                <button id="messageModalClose" class="dialog-close" aria-label="关闭">×</button>
+            </div>
+            <div class="dialog-body">
+                <pre id="messageModalBody"></pre>
+            </div>
+        </div>
     </div>
 </main>
     <script defer src="static/ws-tester.js"></script>

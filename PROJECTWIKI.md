@@ -195,7 +195,7 @@ erDiagram
 - **单元测试**：后端核心模块使用 `pytest`；计费相关测试见 `backend/test/test_billing_system.py`。
 - **脚本验证**：`tool/` 目录提供数据库列校验、Redis 队列修复脚本，运行前需确认 `.env` 指向正确环境。
 - **监控建议**：重点观测 `credit`/`credit_log` 同步延迟、Redis Stream 消费积压、n8n 数据库链路。
-- **调试工具**：websocket-test.html 调试页与 static/ws-tester.js 客户端脚本；操作手册更新至 docs/410_websocket_test_page_manual.md（2025-10-24 重写，支持中文界面与调试流程）。
+- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-26 更新，新增主会话聚焦、消息弹窗与按钮多状态说明）。
 
 ## 术语表
 | 术语 | 说明 |
@@ -208,6 +208,11 @@ erDiagram
 | Trade Ticket | 充值工单，结合第三方支付回调自动入账。 |
 
 ## 变更日志
+### 2025-10-26
+- 前端：完善 WebSocket 调试台 UI，支持主会话聚焦、消息卡片弹窗、按钮多状态反馈；同步刷新 `static/ws-tester.js`，新增会话聚焦逻辑、按钮状态机、模态框键盘交互。
+- 文档：`docs/410_websocket_test_page_manual.md` 更新聚焦流程、弹窗说明与验收清单；调试工具章节更新到 2025-10-26 版本。
+- 追踪：在 `PROJECTWIKI.md` “调试工具” 段落补充聚焦与弹窗能力，保持代码 ↔ 文档一致。
+
 ### 2025-10-24
 - 数据：运行 `tool/add_company_credit_columns.py` 并手动执行列类型转换（TIMESTAMP → BIGINT），修复登录触发的 `credit initialize failed`。
 - 提示：将数据库回滚校准步骤纳入运维清单，避免再次遗漏。

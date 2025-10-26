@@ -1,4 +1,4 @@
-const STORAGE_KEY = "openwebui_ws_tester_config_v2";
+﻿const STORAGE_KEY = "openwebui_ws_tester_config_v2";
 
 const DEFAULT_CONFIG = {
   serverBaseUrl: "http://localhost:8080",
@@ -47,6 +47,11 @@ class WebSocketTester {
     this.socket = null;
     this.token = null;
     this.userId = null;
+    this.handleKeydown = this.handleKeydown.bind(this);
+    this.activeModalMessage = null;
+    this.primarySession = null;
+    this.loginButtonResetTimer = null;
+    this.connectButtonResetTimer = null;
 
     this.pendingMetrics = [];
     this.conversations = new Map();
@@ -66,12 +71,15 @@ class WebSocketTester {
 
     this.config = this.loadConfig();
     this.bindElements();
+    this.setLoginButtonState("idle");
+    this.setConnectButtonState("idle");
     this.applyConfigToUI();
     this.bindEvents();
     this.renderSubscriptions();
     this.renderTemplates();
     this.updateMetrics();
     this.appendSystemEvent("页面加载完成，等待操作。");
+    this.updateAuthControls();
 
     if (this.config.autoLogin) {
       this.autoLogin();
@@ -157,9 +165,100 @@ class WebSocketTester {
       "statLatestLatency",
       "recentEvents",
       "replayContainer",
+      "messageModal",
+      "messageModalTitle",
+      "messageModalMeta",
+      "messageModalBody",
+      "messageModalClose",
+      "primarySessionIndicator",
+      "primarySessionLabel",
+      "focusSessionBtn",
+      "focusLatestBtn",
+      "clearFocusBtn",
     ];
 
     this.el = Object.fromEntries(ids.map((id) => [id, $(id)]));
+  }
+
+  setLoginButtonState(state = "idle") {
+    const btn = this.el.loginBtn;
+    if (!btn) return;
+    const labels = {
+      idle: "登录",
+      loading: "登录中…",
+      success: "已登录",
+      error: "重新登录",
+    };
+    btn.textContent = labels[state] || labels.idle;
+    const isLoading = state === "loading";
+    btn.classList.toggle("is-loading", isLoading);
+    btn.disabled = isLoading;
+    this.loginButtonState = state;
+
+    if (this.loginButtonResetTimer) {
+      clearTimeout(this.loginButtonResetTimer);
+      this.loginButtonResetTimer = null;
+    }
+    if (state === "success" || state === "error") {
+      this.loginButtonResetTimer = setTimeout(() => {
+        this.setLoginButtonState("idle");
+      }, 1500);
+    }
+  }
+
+  setConnectButtonState(state = "idle") {
+    const btn = this.el.connectBtn;
+    if (!btn) return;
+    const labels = {
+      idle: "连接 Socket",
+      loading: "连接中…",
+      success: "已连接",
+      error: "重新连接",
+    };
+    btn.textContent = labels[state] || labels.idle;
+    const isLoading = state === "loading";
+    btn.classList.toggle("is-loading", isLoading);
+    const shouldDisable = isLoading || state === "success" || !this.token;
+    btn.disabled = shouldDisable;
+    this.connectButtonState = state;
+
+    if (this.el.disconnectBtn) {
+      if (state === "success") {
+        this.el.disconnectBtn.disabled = false;
+      } else if (state === "loading") {
+        this.el.disconnectBtn.disabled = true;
+      } else {
+        this.el.disconnectBtn.disabled = true;
+      }
+    }
+  }
+
+  updateAuthControls() {
+    const hasToken = !!this.token;
+    if (this.el.refreshTokenBtn) {
+      this.el.refreshTokenBtn.disabled = !hasToken;
+    }
+    if (this.el.logoutBtn) {
+      this.el.logoutBtn.disabled = !hasToken;
+    }
+    if (this.el.connectBtn) {
+      const forbidClick =
+        !hasToken ||
+        this.connectButtonState === "loading" ||
+        (this.connectButtonState === "success" && this.socket?.connected);
+      this.el.connectBtn.disabled = forbidClick;
+      if (!hasToken) {
+        this.el.connectBtn.classList.remove("is-loading");
+        this.connectButtonState = "idle";
+        this.el.connectBtn.textContent = "连接 Socket";
+      }
+    }
+    if (this.el.disconnectBtn && (!this.socket || !this.socket.connected)) {
+      this.el.disconnectBtn.disabled = true;
+    }
+    if (this.el.loginBtn && this.loginButtonState !== "loading") {
+      this.el.loginBtn.disabled = false;
+    }
   }
 
   applyConfigToUI() {
@@ -206,14 +305,26 @@ class WebSocketTester {
     });
     this.el.sendStatusBtn.addEventListener("click", () => this.sendStatusRequest());
 
-    this.el.conversationFilter.addEventListener("change", () =>
-      this.renderConversations()
+    this.el.sessionId.addEventListener("input", () =>
+      this.updateFocusControls()
     );
-    this.el.eventFilter.addEventListener("change", () =>
-      this.renderConversations()
-    );
+    this.el.conversationFilter.addEventListener("change", () => {
+      this.renderConversations();
+    });
+    this.el.eventFilter.addEventListener("change", () => {
+      this.renderConversations();
+    });
     this.el.clearMessagesBtn.addEventListener("click", () => this.clearMessages());
     this.el.exportLogsBtn.addEventListener("click", () => this.exportLogs());
+    this.el.focusSessionBtn.addEventListener("click", () =>
+      this.focusByEditorSession()
+    );
+    this.el.focusLatestBtn.addEventListener("click", () =>
+      this.focusByLatestSession()
+    );
+    this.el.clearFocusBtn.addEventListener("click", () =>
+      this.setPrimarySession(null)
+    );
 
     this.el.selectAllSubscriptionsBtn.addEventListener("click", () =>
       this.setAllSubscriptions(true)
@@ -221,6 +332,20 @@ class WebSocketTester {
     this.el.clearSubscriptionsBtn.addEventListener("click", () =>
       this.setAllSubscriptions(false)
     );
+
+    if (this.el.messageModal) {
+      this.el.messageModalClose.addEventListener("click", () =>
+        this.hideMessageModal()
+      );
+      this.el.messageModal.addEventListener("click", (event) => {
+        if (event.target === this.el.messageModal) {
+          this.hideMessageModal();
+        }
+      });
+      document.addEventListener("keydown", this.handleKeydown);
+    }
+
+    this.updateFocusControls();
   }
 
   autoLogin() {
@@ -241,6 +366,18 @@ class WebSocketTester {
       this.appendSystemEvent("请填写服务器地址、账号和密码。");
       return;
     }
+
+    const refreshBtn = this.el.refreshTokenBtn;
+    if (isRefresh && refreshBtn) {
+      refreshBtn.dataset.originalText = refreshBtn.textContent;
+      refreshBtn.textContent = "刷新中…";
+      refreshBtn.classList.add("is-loading");
+      refreshBtn.disabled = true;
+    } else {
+      this.setLoginButtonState("loading");
+    }
+
+    let loginResult = "error";
 
     try {
       const response = await fetch(`${baseUrl}/api/v1/auths/signin`, {
@@ -270,6 +407,7 @@ class WebSocketTester {
       this.appendSystemEvent(
         isRefresh ? "Token 已刷新。" : "登录成功，Token 已更新。"
       );
+      loginResult = "success";
 
       if (this.config.autoConnect) {
         this.connectSocket();
@@ -277,6 +415,20 @@ class WebSocketTester {
     } catch (error) {
       console.error(error);
       this.appendSystemEvent(`登录失败：${error.message}`);
+      this.token = null;
+      this.userId = null;
+      this.el.userId.value = "";
+    } finally {
+      if (isRefresh && refreshBtn) {
+        refreshBtn.classList.remove("is-loading");
+        refreshBtn.disabled = !this.token;
+        refreshBtn.textContent =
+          refreshBtn.dataset.originalText || "刷新 Token";
+        delete refreshBtn.dataset.originalText;
+      } else {
+        this.setLoginButtonState(loginResult);
+      }
+      this.updateAuthControls();
     }
   }
 
@@ -313,16 +465,22 @@ class WebSocketTester {
     this.el.userId.value = "";
     this.el.tokenInfo.textContent = "Token 已清除";
     this.appendSystemEvent("Token 已清空，需要重新登录。");
+    this.setConnectButtonState("idle");
+    this.updateAuthControls();
   }
 
   connectSocket() {
     if (!this.token) {
       this.appendSystemEvent("请先登录获取 Token。");
+      this.setConnectButtonState("idle");
+      this.updateAuthControls();
       return;
     }
     const baseUrl = this.el.serverUrl.value.trim() || this.config.serverBaseUrl;
     if (!baseUrl) {
       this.appendSystemEvent("请填写服务器地址。");
+      this.setConnectButtonState("idle");
+      this.updateAuthControls();
       return;
     }
 
@@ -331,6 +489,7 @@ class WebSocketTester {
     }
 
     this.appendSystemEvent("正在建立 Socket 连接…");
+    this.setConnectButtonState("loading");
     this.socket = io(baseUrl, {
       path: "/ws/socket.io",
       auth: { token: this.token },
@@ -349,6 +508,8 @@ class WebSocketTester {
       this.el.connectionStatus.textContent = "已连接";
       this.el.socketId.textContent = this.socket.id;
       this.appendSystemEvent("Socket 连接成功。");
+      this.setConnectButtonState("success");
+      this.updateAuthControls();
     });
 
     this.socket.on("disconnect", (reason) => {
@@ -356,10 +517,14 @@ class WebSocketTester {
       this.el.connectionStatus.textContent = `已断开（${reason}）`;
       this.el.socketId.textContent = "";
       this.appendSystemEvent(`连接断开：${reason}`);
+      this.setConnectButtonState("idle");
+      this.updateAuthControls();
     });
 
     this.socket.on("connect_error", (error) => {
       this.appendSystemEvent(`连接错误：${error.message}`);
+      this.setConnectButtonState("error");
+      this.updateAuthControls();
     });
 
     ["hsai_response", "hsai_error", "channel-events", "connect_error", "disconnect"].forEach(
@@ -380,6 +545,8 @@ class WebSocketTester {
     this.el.connectionStatus.textContent = "尚未连接";
     this.el.socketId.textContent = "";
     this.appendSystemEvent("已手动断开 Socket 连接。");
+    this.setConnectButtonState("idle");
+    this.updateAuthControls();
   }
 
   handleEvent(eventName, payload) {
@@ -413,6 +580,7 @@ class WebSocketTester {
     this.appendConversationMessage("received", "hsai_response", payload, {
       sessionId,
       latency,
+      sessionId,
     });
   }
 
@@ -425,6 +593,7 @@ class WebSocketTester {
     this.appendConversationMessage("error", "hsai_error", payload, {
       sessionId,
       latency,
+      sessionId,
     });
   }
 
@@ -456,7 +625,11 @@ class WebSocketTester {
       payload,
       timestamp: new Date(),
       latency,
+      sessionId,
     });
+    if (!this.primarySession && sessionId) {
+      this.primarySession = sessionId;
+    }
     this.renderConversations();
   }
 
@@ -468,6 +641,16 @@ class WebSocketTester {
     return this.conversations.get(sessionId);
   }
 
+  getSortedConversations() {
+    return Array.from(this.conversations.entries())
+      .map(([session, messages]) => ({ session, messages }))
+      .sort(
+        (a, b) =>
+          (b.messages.at(-1)?.timestamp?.getTime() || 0) -
+          (a.messages.at(-1)?.timestamp?.getTime() || 0)
+      );
+  }
+
   renderConversations() {
     const container = this.el.conversationContainer;
     container.innerHTML = "";
@@ -475,85 +658,294 @@ class WebSocketTester {
     const filterSession = this.el.conversationFilter.value;
     const filterEvent = this.el.eventFilter.value;
 
-    const groups = Array.from(this.conversations.entries())
-      .map(([session, messages]) => ({ session, messages }))
-      .sort(
-        (a, b) =>
-          (b.messages.at(-1)?.timestamp?.getTime() || 0) -
-          (a.messages.at(-1)?.timestamp?.getTime() || 0)
-      );
+    const groups = this.getSortedConversations();
 
     if (!groups.length) {
       container.innerHTML =
         "<p style='color:var(--muted);'>暂无消息，请先发送测试请求。</p>";
+      this.updateFocusControls(null);
       return;
     }
 
+    const configuredPrimary = this.primarySession;
+    let resolvedPrimary =
+      configuredPrimary && this.conversations.has(configuredPrimary)
+        ? configuredPrimary
+        : null;
+
+    const lockedSession =
+      this.el.lockSession.checked && this.el.sessionId.value.trim();
+
+    if (!configuredPrimary) {
+      if (lockedSession && this.conversations.has(lockedSession)) {
+        resolvedPrimary = lockedSession;
+        this.primarySession = lockedSession;
+      } else if (
+        filterSession !== "all" &&
+        this.conversations.has(filterSession)
+      ) {
+        resolvedPrimary = filterSession;
+        this.primarySession = filterSession;
+      } else if (!resolvedPrimary && groups.length) {
+        resolvedPrimary = groups[0].session;
+        this.primarySession = resolvedPrimary;
+      }
+    }
+
+    let renderedCount = 0;
+
     for (const { session, messages } of groups) {
-      if (filterSession !== "all" && filterSession !== session) continue;
+      if (filterSession !== "all" && filterSession !== session) {
+        continue;
+      }
+
+      const visibleMessages = messages.filter((msg) => {
+        if (filterEvent === "all") return true;
+        if (filterEvent === "sent") return msg.direction === "sent";
+        return msg.eventName === filterEvent;
+      });
+
+      if (!visibleMessages.length) {
+        continue;
+      }
+
+      renderedCount += 1;
+
       const group = document.createElement("div");
-      group.className = "message-group";
-      const header = document.createElement("header");
-      header.innerHTML = `<h3>${session}</h3><span>${messages.length} 条消息</span>`;
+      const classes = ["message-group"];
+      const isPrimary = resolvedPrimary && session === resolvedPrimary;
+      if (isPrimary) {
+        classes.push("primary");
+      } else if (resolvedPrimary) {
+        classes.push("muted");
+      }
+      group.className = classes.join(" ");
+      group.dataset.sessionId = session;
+
+      const header = document.createElement("div");
+      header.className = "message-group__header";
+
+      const meta = document.createElement("div");
+      meta.innerHTML = `<h3>${session}</h3><span>${visibleMessages.length} 条可见事件</span>`;
+
+      const actions = document.createElement("div");
+      actions.className = "message-group__actions";
+
+      const focusBtn = document.createElement("button");
+      focusBtn.type = "button";
+      focusBtn.className = "message-focus";
+      focusBtn.textContent = isPrimary ? "主会话" : "设为主会话";
+      focusBtn.disabled = isPrimary;
+      focusBtn.addEventListener("click", () => this.setPrimarySession(session));
+
+      actions.appendChild(focusBtn);
+      header.append(meta, actions);
+
       const listEl = document.createElement("div");
       listEl.className = "message-list";
 
-      for (const msg of messages) {
-        if (filterEvent !== "all") {
-          if (filterEvent === "sent" && msg.direction !== "sent") continue;
-          if (filterEvent !== "sent" && msg.eventName !== filterEvent) continue;
-        }
-        listEl.appendChild(this.renderMessageBubble(msg));
+      for (const message of visibleMessages) {
+        listEl.appendChild(this.renderMessageCard(message));
       }
 
-      if (!listEl.children.length) continue;
       group.append(header, listEl);
       container.appendChild(group);
     }
-  }
 
-  renderMessageBubble(msg) {
-    const bubble = document.createElement("div");
-    const cls =
-      msg.direction === "sent"
-        ? "sent"
-        : msg.direction === "error"
-        ? "error"
-        : "received";
-    bubble.className = `bubble ${cls}`;
-
-    const body = document.createElement("div");
-    if (msg.direction === "sent") {
-      body.textContent = msg.payload.content || `[${msg.payload.type || "message"}]`;
-    } else if (msg.eventName === "hsai_response") {
-      body.textContent =
-        msg.payload.displayText ||
-        msg.payload.content ||
-        JSON.stringify(msg.payload);
-    } else if (msg.eventName === "hsai_error") {
-      body.textContent = `错误：${
-        msg.payload.displayText || msg.payload.message || msg.payload.content || "未知"
-      }`;
-    } else {
-      body.textContent = JSON.stringify(msg.payload);
+    if (!renderedCount) {
+      container.innerHTML =
+        "<p style='color:var(--muted);'>当前筛选条件下没有消息。</p>";
     }
 
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.innerHTML = `<span>${msg.eventName}</span><span>${msg.timestamp.toLocaleTimeString()}${
-      msg.latency != null ? ` · ${msg.latency} ms` : ""
-    }</span>`;
+    this.updateFocusControls(configuredPrimary || resolvedPrimary);
+  }
 
-    const details = document.createElement("details");
-    details.className = "raw";
-    details.innerHTML = `<summary>查看原始 JSON</summary><pre>${JSON.stringify(
-      msg.payload,
+  renderMessageCard(message) {
+    const card = document.createElement("article");
+    card.className = "conversation-card is-clickable";
+    card.tabIndex = 0;
+    if (message.direction === "sent") {
+      card.classList.add("conversation-card--sent");
+    } else if (message.direction === "error") {
+      card.classList.add("conversation-card--error");
+    }
+
+    const header = document.createElement("div");
+    header.className = "conversation-card__header";
+    header.innerHTML = `<span>${this.getEventLabel(
+      message
+    )}</span><span>${this.formatTimestamp(message)}</span>`;
+
+    const preview = document.createElement("div");
+    preview.className = "conversation-card__preview";
+    preview.textContent = this.getMessagePreview(message);
+
+    const footer = document.createElement("div");
+    footer.className = "conversation-card__footer";
+    const viewBtn = document.createElement("button");
+    viewBtn.type = "button";
+    viewBtn.className = "link-button";
+    viewBtn.textContent = "查看 JSON";
+    viewBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.showMessageModal(message);
+    });
+
+    card.addEventListener("click", () => this.showMessageModal(message));
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        this.showMessageModal(message);
+      }
+    });
+
+    footer.appendChild(viewBtn);
+    card.append(header, preview, footer);
+    return card;
+  }
+
+  getEventLabel(message) {
+    if (message.direction === "sent") {
+      const type = message.payload?.type || message.eventName || "message";
+      return `发送 · ${type}`;
+    }
+    if (message.direction === "error") {
+      return `错误 · ${message.eventName || "unknown"}`;
+    }
+    return `接收 · ${message.eventName || "message"}`;
+  }
+
+  formatTimestamp(message) {
+    const time =
+      message.timestamp instanceof Date
+        ? message.timestamp.toLocaleTimeString()
+        : "-";
+    if (message.latency != null) {
+      return `${time} · ${message.latency} ms`;
+    }
+    return time;
+  }
+
+  getMessagePreview(message) {
+    const payload = message?.payload;
+    if (!payload) return "";
+
+    const pickString = (value) =>
+      typeof value === "string" && value.trim() ? value.trim() : null;
+
+    const candidates = [
+      pickString(payload.displayText),
+      pickString(payload.content),
+      pickString(payload.message),
+      pickString(payload.error),
+    ].filter(Boolean);
+
+    if (candidates.length) {
+      return this.truncate(candidates[0]);
+    }
+
+    if (typeof payload === "string") {
+      return this.truncate(payload);
+    }
+
+    try {
+      return this.truncate(JSON.stringify(payload));
+    } catch {
+      return "[无法渲染的对象]";
+    }
+  }
+
+  truncate(text, maxLength = 120) {
+    if (!text || text.length <= maxLength) return text || "";
+    return `${text.slice(0, maxLength - 1)}…`;
+  }
+
+  showMessageModal(message) {
+    if (!this.el.messageModal) return;
+    this.activeModalMessage = message;
+    this.el.messageModalTitle.textContent = this.getEventLabel(message);
+    this.el.messageModalMeta.textContent = `${message.sessionId || "未标识会话"} · ${this.formatTimestamp(
+      message
+    )}`;
+    this.el.messageModalBody.textContent = JSON.stringify(
+      message.payload,
       null,
       2
-    )}</pre>`;
+    );
+    this.el.messageModal.removeAttribute("hidden");
+  }
 
-    bubble.append(body, meta, details);
-    return bubble;
+  hideMessageModal() {
+    if (!this.el.messageModal) return;
+    this.el.messageModal.setAttribute("hidden", "");
+    this.activeModalMessage = null;
+  }
+
+  handleKeydown(event) {
+    if (event.key === "Escape" && !this.el.messageModal?.hasAttribute("hidden")) {
+      this.hideMessageModal();
+    }
+  }
+
+  focusByEditorSession() {
+    const session = this.el.sessionId.value.trim();
+    if (!session) {
+      this.appendSystemEvent("请输入 Session ID 后再聚焦。");
+      return;
+    }
+    this.setPrimarySession(session);
+  }
+
+  focusByLatestSession() {
+    const latest = this.getLatestSessionId();
+    if (!latest) {
+      this.appendSystemEvent("暂无会话可聚焦，先发送或接收一条消息吧。");
+      return;
+    }
+    this.setPrimarySession(latest);
+  }
+
+  getLatestSessionId() {
+    const [first] = this.getSortedConversations();
+    return first?.session || null;
+  }
+
+  setPrimarySession(sessionId) {
+    const normalized = sessionId ? String(sessionId).trim() : "";
+    this.primarySession = normalized || null;
+    const hasConversation =
+      normalized && this.conversations.has(normalized);
+    this.renderConversations();
+    if (this.primarySession) {
+      const tip = hasConversation
+        ? `已聚焦会话：${this.primarySession}`
+        : `已设置聚焦会话 ${this.primarySession}，待消息写入后自动高亮。`;
+      this.appendSystemEvent(tip);
+    } else {
+      this.appendSystemEvent("已取消聚焦，所有会话恢复正常对比。");
+    }
+  }
+
+  updateFocusControls(focusedSession = this.primarySession) {
+    if (this.el.focusSessionBtn) {
+      this.el.focusSessionBtn.disabled = !this.el.sessionId.value.trim();
+    }
+    if (this.el.focusLatestBtn) {
+      this.el.focusLatestBtn.disabled = !this.getLatestSessionId();
+    }
+    if (this.el.clearFocusBtn) {
+      const disabled = !focusedSession;
+      this.el.clearFocusBtn.disabled = disabled;
+    }
+    if (this.el.primarySessionIndicator) {
+      if (focusedSession) {
+        this.el.primarySessionIndicator.hidden = false;
+        this.el.primarySessionLabel.textContent = focusedSession;
+      } else {
+        this.el.primarySessionIndicator.hidden = true;
+        this.el.primarySessionLabel.textContent = "";
+      }
+    }
   }
 
   updateConversationFilterOptions() {
@@ -569,6 +961,7 @@ class WebSocketTester {
     if (current && this.conversations.has(current)) {
       select.value = current;
     }
+    this.updateFocusControls();
   }
 
   addRecentEvent(text) {
@@ -840,6 +1233,7 @@ class WebSocketTester {
     this.pendingMetrics = [];
     this.rawLogs = [];
     this.replayQueue = [];
+    this.primarySession = null;
     this.updateConversationFilterOptions();
     this.renderConversations();
     this.renderReplayQueue();
@@ -998,3 +1392,4 @@ class WebSocketTester {
 }
 
 document.addEventListener("DOMContentLoaded", () => new WebSocketTester());
+
