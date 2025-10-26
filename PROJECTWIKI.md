@@ -1,4 +1,4 @@
-# HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
+﻿# HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
 > 一等公民 · 与主干代码保持持续一致（UTF-8）
 
 更新日期：2025-10-23（与 main 同步）
@@ -218,3 +218,5 @@ erDiagram
 - 更新：统一 ORM 时间字段使用 `EpochTimestamp` 装饰器持久化，修复 PostgreSQL `timestamptz` 类型写入错误，并补充 Redis 队列修复验证脚本。
 - 修复：Markdown 中文乱码问题，重写 PROJECTWIKI 信息结构，确保控制字符与替换符清零。
 - 更新：新增公司积分统一说明、`tool/add_company_credit_columns.py` 使用指引、`GET /billing/user/credit` 接口文档。
+
+- 项目汇报：docs/pm/report_20251025.md（方案A口径，含问题与改进/路线图）。
