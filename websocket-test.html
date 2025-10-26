@@ -144,12 +144,33 @@
 
         .messaging-grid {
             grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
+            align-items: flex-start;
         }
 
         .message-form-card {
+            align-self: flex-start;
+            max-height: calc(100vh - 220px);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             gap: 16px;
+        }
+
+        .message-form-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .message-form-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .message-form-body::-webkit-scrollbar-thumb {
+            background: rgba(15, 23, 42, 0.2);
+            border-radius: 999px;
         }
 
         .message-form-group {
@@ -171,6 +192,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            flex-shrink: 0;
         }
 
         .message-form-footer .button-row {
@@ -180,10 +202,41 @@
         .message-form-card textarea {
             min-height: 120px;
             resize: vertical;
+            flex: 0 0 auto;
         }
 
         .message-form-card .scrollable {
             max-height: 140px;
+        }
+
+        .message-lock {
+            border-radius: 999px;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            background: rgba(15, 23, 42, 0.06);
+            color: var(--text);
+            font-size: 12px;
+            padding: 6px 14px;
+            cursor: pointer;
+        }
+
+        .message-lock:hover:not([disabled]) {
+            background: rgba(37, 99, 235, 0.12);
+            color: var(--primary-dark);
+            border-color: rgba(37, 99, 235, 0.18);
+        }
+
+        .message-lock[disabled] {
+            opacity: 0.7;
+            cursor: default;
+        }
+
+        .message-form-card .toggle-line.form-field {
+            align-items: center;
+            flex: 0 1 180px;
+        }
+
+        .message-form-card .toggle-line.form-field label {
+            margin: 0;
         }
 
         @media (max-width: 1024px) {
@@ -809,43 +862,40 @@
             <div class="panel-grid messaging-grid">
                 <section class="card message-form-card">
                     <h2>消息发送</h2>
-                    <div class="message-form-group compact">
-                        <div class="form-field">
-                            <label for="messageType">消息类型</label>
-                            <select id="messageType">
-                                <option value="chat">chat</option>
-                                <option value="welcome">welcome</option>
-                                <option value="workflow_trigger">workflow_trigger</option>
-                                <option value="hsai_status">hsai_status</option>
-                            </select>
+                    <div class="message-form-body">
+                        <div class="message-form-group compact">
+                            <div class="form-field">
+                                <label for="messageType">消息类型</label>
+                                <select id="messageType">
+                                    <option value="chat">chat</option>
+                                    <option value="welcome">welcome</option>
+                                    <option value="workflow_trigger">workflow_trigger</option>
+                                    <option value="hsai_status">hsai_status</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="entryType">入口类型</label>
+                                <input id="entryType" type="text" placeholder="chat / company_info">
+                            </div>
                         </div>
-                        <div class="form-field">
-                            <label for="entryType">入口类型</label>
-                            <input id="entryType" type="text" placeholder="chat / company_info">
+                        <div class="message-form-group compact">
+                            <div class="form-field">
+                                <label for="sessionId">Session ID</label>
+                                <input id="sessionId" type="text" placeholder="留空自动生成">
+                            </div>
+                            <div class="form-field">
+                                <label for="taskId">任务 ID（可选）</label>
+                                <input id="taskId" type="text" placeholder="task_xxx">
+                            </div>
                         </div>
-                    </div>
-                    <div class="message-form-group compact">
-                        <div class="form-field">
-                            <label for="sessionId">Session ID</label>
-                            <input id="sessionId" type="text" placeholder="留空自动生成">
+                        <div>
+                            <label for="messageContent">消息正文</label>
+                            <textarea id="messageContent" placeholder="请输入发送内容"></textarea>
                         </div>
-                        <div class="toggle-line" style="align-items: center;">
-                            <input id="lockSession" type="checkbox">
-                            <label for="lockSession">锁定当前会话</label>
+                        <div>
+                            <label for="metadataInput">附加元数据（JSON）</label>
+                            <textarea id="metadataInput" placeholder='{"test_mode": true}'></textarea>
                         </div>
-                    </div>
-                    <div>
-                        <label for="messageContent">消息正文</label>
-                        <textarea id="messageContent" placeholder="请输入发送内容"></textarea>
-                    </div>
-                    <div>
-                        <label for="metadataInput">附加元数据（JSON）</label>
-                        <textarea id="metadataInput" placeholder='{"test_mode": true}'></textarea>
-                        <p class="helper-text">留空将发送空对象；无效 JSON 会自动忽略并提示。</p>
-                    </div>
-                    <div>
-                        <label for="taskId">任务 ID（可选）</label>
-                        <input id="taskId" type="text" placeholder="task_xxx">
                     </div>
                     <div class="message-form-footer">
                         <div class="button-row">

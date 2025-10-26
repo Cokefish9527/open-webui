@@ -140,7 +140,6 @@ class WebSocketTester {
       "messageType",
       "entryType",
       "sessionId",
-      "lockSession",
       "messageContent",
       "metadataInput",
       "userId",
@@ -311,9 +310,10 @@ class WebSocketTester {
     });
     this.el.sendStatusBtn.addEventListener("click", () => this.sendStatusRequest());
 
-    this.el.sessionId.addEventListener("input", () =>
-      this.updateFocusControls()
-    );
+    this.el.sessionId.addEventListener("input", () => {
+      this.updateFocusControls();
+      this.renderConversations();
+    });
     this.el.conversationFilter.addEventListener("change", () => {
       this.renderConversations();
     });
@@ -696,8 +696,7 @@ class WebSocketTester {
         ? configuredPrimary
         : null;
 
-    const lockedSession =
-      this.el.lockSession.checked && this.el.sessionId.value.trim();
+    const lockedSession = this.el.sessionId.value.trim();
 
     if (!configuredPrimary) {
       if (lockedSession && this.conversations.has(lockedSession)) {
@@ -737,6 +736,7 @@ class WebSocketTester {
       const group = document.createElement("div");
       const classes = ["message-group"];
       const isPrimary = resolvedPrimary && session === resolvedPrimary;
+      const isLockedForSend = lockedSession && session === lockedSession;
       if (isPrimary) {
         classes.push("primary");
       } else if (resolvedPrimary) {
@@ -754,6 +754,13 @@ class WebSocketTester {
       const actions = document.createElement("div");
       actions.className = "message-group__actions";
 
+      const lockBtn = document.createElement("button");
+      lockBtn.type = "button";
+      lockBtn.className = "message-lock";
+      lockBtn.textContent = isLockedForSend ? "已写入发送框" : "锁定到发送框";
+      lockBtn.disabled = isLockedForSend;
+      lockBtn.addEventListener("click", () => this.setSessionInput(session));
+
       const focusBtn = document.createElement("button");
       focusBtn.type = "button";
       focusBtn.className = "message-focus";
@@ -761,7 +768,7 @@ class WebSocketTester {
       focusBtn.disabled = isPrimary;
       focusBtn.addEventListener("click", () => this.setPrimarySession(session));
 
-      actions.appendChild(focusBtn);
+      actions.append(lockBtn, focusBtn);
       header.append(meta, actions);
 
       const listEl = document.createElement("div");
@@ -894,6 +901,20 @@ class WebSocketTester {
       return payload.content.trim();
     }
     return "";
+  }
+
+  setSessionInput(sessionId, silent = false) {
+    const normalized = sessionId ? String(sessionId).trim() : "";
+    this.el.sessionId.value = normalized;
+    if (!silent) {
+      this.appendSystemEvent(
+        normalized
+          ? `已锁定会话 ${normalized} 到消息输入框。`
+          : "已清除消息输入框中的会话。"
+      );
+    }
+    this.updateFocusControls();
+    this.renderConversations();
   }
 
   showMessageModal(message) {
@@ -1118,9 +1139,6 @@ class WebSocketTester {
     let sessionId = this.el.sessionId.value.trim();
     if (!sessionId) {
       sessionId = `${type}_${Math.random().toString(16).slice(2, 10)}`;
-      if (this.el.lockSession.checked) {
-        this.el.sessionId.value = sessionId;
-      }
     }
 
     const metadata = this.safeParseJSON(this.el.metadataInput.value) || {};
@@ -1167,6 +1185,7 @@ class WebSocketTester {
 
   sendMessage(typeOverride) {
     const type = typeOverride || this.el.messageType.value;
+    const initialSessionValue = this.el.sessionId.value.trim();
     const payload = this.buildPayload(type);
     if (!payload) return;
 
@@ -1186,10 +1205,18 @@ class WebSocketTester {
     this.addRawLog("out", "message", payload, { sessionId: payload.session_id });
     this.appendSystemEvent("消息已发送。");
 
-    if (type !== "welcome" && !this.el.lockSession.checked) {
+    if (type !== "welcome") {
       this.el.messageContent.value = "";
-      this.el.sessionId.value = "";
     }
+
+    if (!initialSessionValue) {
+      this.el.sessionId.value = "";
+    } else {
+      this.el.sessionId.value = initialSessionValue;
+    }
+
+    this.updateFocusControls();
+    this.renderConversations();
   }
 
   sendStatusRequest() {
@@ -1275,8 +1302,7 @@ class WebSocketTester {
     if (item.payload.type) this.el.messageType.value = item.payload.type;
     if (item.payload.entry_type) this.el.entryType.value = item.payload.entry_type;
     if (item.payload.session_id) {
-      this.el.sessionId.value = item.payload.session_id;
-      this.el.lockSession.checked = true;
+      this.setSessionInput(item.payload.session_id, true);
     }
     this.el.messageContent.value = item.payload.content || "";
     this.el.metadataInput.value = JSON.stringify(
@@ -1441,8 +1467,7 @@ class WebSocketTester {
       2
     );
     if (template.payload.session_id) {
-      this.el.sessionId.value = template.payload.session_id;
-      this.el.lockSession.checked = true;
+      this.setSessionInput(template.payload.session_id, true);
     }
     this.appendSystemEvent(`已载入模板：${template.label}`);
   }
