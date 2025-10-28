@@ -552,10 +552,8 @@ class PlaywrightMCPService:
             path_obj = Path(profile_path).expanduser().resolve()
             try:
                 if path_obj.is_dir() and str(path_obj).startswith(str(self._profile_root)):
-                    for child in path_obj.glob("**/*"):
-                        if child.is_file():
-                            child.unlink(missing_ok=True)
-                    path_obj.rmdir()
+                    import shutil
+                    shutil.rmtree(path_obj, ignore_errors=True)
             except Exception as exc:
                 log.warning("删除浏览器配置目录失败: %s", exc)
 

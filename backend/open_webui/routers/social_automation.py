@@ -119,6 +119,26 @@ async def create_account(payload: CreateAccountRequest, user=Depends(get_verifie
         )
 
 
+@router.delete("/accounts/{account_id}", response_model=bool, summary="删除社交账号")
+async def delete_account(account_id: str, user=Depends(get_verified_user)):
+    try:
+        deleted = playwright_mcp_service.delete_account(_tenant_id(user), account_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="账号不存在",
+            )
+        return True
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.exception("删除社交账号失败: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT(),
+        )
+
+
 @router.post(
     "/accounts/{account_id}/prepare",
     response_model=MCPExecutionResponse,
