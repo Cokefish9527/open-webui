@@ -684,6 +684,45 @@
 			</div>
 		{/if}
 
+		{#if $user?.role === 'admin'}
+			<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
+				<a
+					class="grow flex items-center space-x-3 rounded-lg px-2 py-[7px] hover:bg-gray-100 dark:hover:bg-gray-900 transition"
+					href="/social-automation"
+					on:click={() => {
+						selectedChatId = null;
+						chatId.set('');
+
+						if ($mobile) {
+							showSidebar.set(false);
+						}
+					}}
+					draggable="false"
+				>
+					<div class="self-center">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="1.8"
+							stroke="currentColor"
+							class="size-[1.1rem]"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								d="M3.75 6.75h16.5m-16.5 5.25h16.5m-16.5 5.25h16.5"
+							/>
+						</svg>
+					</div>
+
+					<div class="flex self-center translate-y-[0.5px]">
+						<div class=" self-center font-medium text-sm font-primary">社交账号自动化</div>
+					</div>
+				</a>
+			</div>
+		{/if}
+
 		<div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
 			{#if ($models ?? []).length > 0 && ($settings?.pinnedModels ?? []).length > 0}
 				<div class="mt-0.5">

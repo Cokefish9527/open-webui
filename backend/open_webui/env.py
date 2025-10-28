@@ -126,6 +126,9 @@ WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
 
 TRUSTED_SIGNATURE_KEY = os.environ.get("TRUSTED_SIGNATURE_KEY", "")
 
+# CORS configuration (semicolon separated list or "*")
+CORS_ALLOW_ORIGIN = os.environ.get("CORS_ALLOW_ORIGIN", "*")
+
 ####################################
 # ENV (dev,test,prod)
 ####################################

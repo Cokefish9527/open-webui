@@ -1,5 +1,6 @@
 import time
-from typing import List, Optional
+from datetime import datetime
+from typing import List, Optional, Union
 
 from open_webui.internal.db import Base, JSONField, get_db
 
@@ -8,7 +9,7 @@ from open_webui.models.chats import Chats
 from open_webui.models.groups import Groups
 
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Boolean, Column, String, Text, ForeignKey
 from sqlalchemy import or_
 
@@ -85,6 +86,30 @@ class UserModel(BaseModel):
     oauth_sub: Optional[str] = Field(default=None, description="OAuth子标识符")
 
     model_config = ConfigDict(from_attributes=True, extra="allow")
+
+    @field_validator("created_at", "updated_at", "last_active_at", mode="before")
+    @classmethod
+    def _coerce_timestamp(cls, value: Optional[Union[int, float, str, datetime]]) -> Optional[int]:
+        """允许从 PostgreSQL timestamp 或字符串转换为 Unix 时间戳整数。"""
+        if value is None:
+            return None
+
+        if isinstance(value, datetime):
+            return int(value.timestamp())
+
+        if isinstance(value, (int, float)):
+            return int(value)
+
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return None
+            try:
+                return int(float(stripped))
+            except ValueError:
+                raise ValueError(f"Invalid timestamp string '{value}'") from None
+
+        raise ValueError(f"Unsupported timestamp type: {type(value)}")
 
 
 ####################

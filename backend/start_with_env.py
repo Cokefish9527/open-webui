@@ -1,13 +1,29 @@
 import os
 import sys
+from pathlib import Path
 
-# 设置数据库URL环境变量
-os.environ['DATABASE_URL'] = 'sqlite:///webui.db'
+BASE_DIR = Path(__file__).resolve().parent.parent
+ENV_PATH = BASE_DIR / ".env"
 
-# 添加当前目录到Python路径
+if "DATABASE_URL" not in os.environ:
+    if ENV_PATH.exists():
+        with ENV_PATH.open("r", encoding="utf-8") as env_file:
+            for line in env_file:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if line.startswith("DATABASE_URL="):
+                    value = line.split("=", 1)[1].strip().strip("'\"")
+                    if value:
+                        os.environ["DATABASE_URL"] = value
+                    break
+
+if "DATABASE_URL" not in os.environ:
+    default_db_path = Path(__file__).resolve().parent / "data" / "webui.db"
+    os.environ["DATABASE_URL"] = f"sqlite:///{default_db_path.as_posix()}"
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# 导入并运行uvicorn
 import uvicorn
 
 if __name__ == "__main__":

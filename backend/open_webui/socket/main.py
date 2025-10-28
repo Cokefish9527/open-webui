@@ -23,6 +23,7 @@ from open_webui.env import (
     WEBSOCKET_REDIS_LOCK_TIMEOUT,
     WEBSOCKET_SENTINEL_PORT,
     WEBSOCKET_SENTINEL_HOSTS,
+    CORS_ALLOW_ORIGIN,
 )
 from open_webui.utils.auth import decode_token
 from open_webui.socket.utils import RedisDict, RedisLock
@@ -40,6 +41,16 @@ log.setLevel(SRC_LOG_LEVELS["SOCKET"])
 sio: Optional[socketio.AsyncServer] = None
 mgr: Optional[socketio.AsyncRedisManager] = None
 
+def _parse_cors_origins() -> Union[str, List[str]]:
+    """Convert the semicolon-separated CORS env value into socket.io friendly format."""
+    if not CORS_ALLOW_ORIGIN or CORS_ALLOW_ORIGIN == "*":
+        return "*"
+    origins = [origin.strip() for origin in CORS_ALLOW_ORIGIN.split(";") if origin.strip()]
+    return origins or "*"
+
+
+socket_cors_origins = _parse_cors_origins()
+
 if WEBSOCKET_MANAGER == "redis":
     if WEBSOCKET_SENTINEL_HOSTS:
         mgr = socketio.AsyncRedisManager(
@@ -50,7 +61,7 @@ if WEBSOCKET_MANAGER == "redis":
     else:
         mgr = socketio.AsyncRedisManager(WEBSOCKET_REDIS_URL)
     sio = socketio.AsyncServer(
-        cors_allowed_origins=[],
+        cors_allowed_origins=socket_cors_origins,
         async_mode="asgi",
         transports=(["websocket"] if ENABLE_WEBSOCKET_SUPPORT else ["polling"]),
         allow_upgrades=ENABLE_WEBSOCKET_SUPPORT,
@@ -59,7 +70,7 @@ if WEBSOCKET_MANAGER == "redis":
     )
 else:
     sio = socketio.AsyncServer(
-        cors_allowed_origins=[],
+        cors_allowed_origins=socket_cors_origins,
         async_mode="asgi",
         transports=(["websocket"] if ENABLE_WEBSOCKET_SUPPORT else ["polling"]),
         allow_upgrades=ENABLE_WEBSOCKET_SUPPORT,

@@ -11,7 +11,8 @@ from open_webui.models.files import FileMetadataResponse
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import BigInteger, Column, String, Text, JSON, func, ForeignKey
+from sqlalchemy import BigInteger, Column, String, Text, JSON, func, ForeignKey, cast
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 log = logging.getLogger(__name__)
@@ -140,10 +141,20 @@ class GroupTable:
 
     def get_groups_by_member_id(self, user_id: str, organization_id: Optional[str] = None) -> List[GroupModel]:
         with get_db() as db:
+            dialect = db.bind.dialect.name if db.bind else "sqlite"
+
+            if dialect == "sqlite":
+                length_filter = func.json_array_length(Group.user_ids) > 0
+                membership_filter = Group.user_ids.cast(String).like(f'%\"{user_id}\"%')
+            else:
+                jsonb_user_ids = cast(Group.user_ids, JSONB)
+                length_filter = func.jsonb_array_length(jsonb_user_ids) > 0
+                membership_filter = jsonb_user_ids.contains([user_id])
+
             query = db.query(Group).filter(
-                func.json_array_length(Group.user_ids) > 0
-            ).filter(
-                Group.user_ids.cast(String).like(f'%"{user_id}"%')
+                Group.user_ids.isnot(None),
+                length_filter,
+                membership_filter,
             )
             
             # 如果指定了组织ID，只返回该组织的组

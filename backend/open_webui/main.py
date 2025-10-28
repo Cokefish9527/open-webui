@@ -97,6 +97,7 @@ from open_webui.routers import (
     # hsai_websocket,
     # 根据新流程说明，不再需要爆款视频路由
     # hsai_viral_videos,  # 移除爆款视频路由导入
+    social_automation,
 )
 
 from open_webui.routers.retrieval import (
@@ -1263,6 +1264,7 @@ app.include_router(hsai_video_learning.router, prefix="/api/v1")  # 添加视频
 # 根据新流程说明，不再需要爆款视频路由
 # app.include_router(hsai_viral_videos.router, prefix="/api/v1")  # 添加爆款视频路由
 app.include_router(hsai_projects.router, prefix="/api/v1")  # 添加项目管理路由
+app.include_router(social_automation.router, prefix="/api/v1")
 
 # 添加组织管理路由
 app.include_router(

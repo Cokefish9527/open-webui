@@ -4,6 +4,21 @@
 
 ## 脚本列表
 
+### Playwright MCP 自动化
+**路径**: `tool/playwright_mcp_scripts/`  
+**内容**:
+- `shared.js`：Playwright 执行上下文、代理、凭证与截图工具封装。
+- `tiktok_login.js`：自动化完成 TikTok 登录、模拟人工输入、记录截图与 Cookie。
+- `tiktok_fetch_creator.js`：获取 TikTok 创作者主页信息（粉丝数、简介、头像等）。
+- `tiktok_fetch_video.js`：抓取 TikTok 视频播放页元数据（互动量、标签、封面等）。
+- `tiktok_publish_video.js`：上传视频、填写文案并尝试自动发布，产出执行证据。
+
+按需在 `.env` / 系统环境中配置：
+- `PLAYWRIGHT_CREDENTIAL_ROOT`：账号凭证 JSON 所在目录。
+- `SOCIAL_VPN_PROXY_DIR`：账号专属代理/VPN 配置目录。
+- `PLAYWRIGHT_ARTIFACT_DIR`：执行截图与日志输出目录。
+- `PLAYWRIGHT_HEADLESS`：是否启用无头模式（默认 `true`）。
+
 ### 1. rename_sql_files.py
 **功能**: 重命名 SQL 文件，将日期部分移到文件名开头
 **用途**: 

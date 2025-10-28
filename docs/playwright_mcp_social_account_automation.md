@@ -136,4 +136,33 @@ sequenceDiagram
 2. 对高风险操作（VPN 切换、指纹重置）提供审计记录与人工确认接口。
 3. 建立失败告警策略：连续失败次数触发暂停账号、通知安全团队检查风险。
 4. 定期更新 Playwright MCP 脚本，适配 TikTok 页面变更及风险控制策略。
+
+## 9. 参考实现资源
+- **后端接口**：`/api/v1/social/*` 路由已在 `backend/open_webui/routers/social_automation.py` 中实现，可完成账号管理、TikTok 登录检测、创作者信息获取、视频信息获取及视频发布。
+- **前端入口**：WebUI 侧新增 `src/routes/(app)/social-automation/+page.svelte`，在侧边栏“社交账号自动化”入口访问，可完成账号配置、任务创建与执行查看。
+- **Playwright MCP 脚本示例**：位于 `tool/playwright_mcp_scripts/` 目录，包含 `tiktok_login.js`、`tiktok_fetch_creator.js`、`tiktok_fetch_video.js`、`tiktok_publish_video.js` 以及共用工具 `shared.js`，默认约定：
+  - `PLAYWRIGHT_CREDENTIAL_ROOT` 指向凭证 JSON 文件目录，文件名为 `{credentials_ref}.json`。
+  - `SOCIAL_VPN_PROXY_DIR`（或 `PLAYWRIGHT_PROXY_DIR`）存放 VPN/代理配置，用于为账号注入专属出口。
+  - `PLAYWRIGHT_ARTIFACT_DIR` 定位执行截图及 HAR 文件输出目录（默认为 `playwright-mcp-artifacts/`）。
+- **凭证格式样例**：
+  ```json
+  {
+    "username": "account@example.com",
+    "password": "StrongPassword!",
+    "cookies_path": "/secrets/tiktok/account_cookies.json"
+  }
 ```
+
+- **代理配置样例** (`SOCIAL_VPN_PROXY_DIR/{vpn_profile_id}.json`)：
+  
+  ```json
+  {
+    "server": "http://127.0.0.1:9020",
+    "username": "proxy-user",
+    "password": "proxy-pass"
+  }
+  ```
+  
+  ```
+  
+  ```

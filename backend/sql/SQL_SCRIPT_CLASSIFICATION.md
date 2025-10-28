@@ -133,3 +133,9 @@ HSAI项目的主业务表：
 用于跟踪数据库迁移历史的表：
 
 - [migratehistory_create_2025-10-04.sql](init_scripts/migratehistory_create_2025-10-04.sql) - 数据库迁移历史表
+
+## 18. 社交自动化核心表
+
+为 Playwright MCP 社交账号自动化提供基础表结构：
+
+- [2025-10-24_social_automation_create.sql](init_scripts/2025-10-24_social_automation_create.sql) - 账号、排期、发布运行记录表
