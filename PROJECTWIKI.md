@@ -114,8 +114,25 @@ erDiagram
   }
 ```
 
+### 视频学习状态（hsai_video_learning_status）
+- 支撑视频学习进度的多租户隔离存储，使用联合唯一键 `business_name + video_id` 防止跨公司覆盖。
+- 数据访问层新增 `get_status_map_for_business`、`list_video_ids_by_business`，方便批量映射和筛选。
+- 业务索引 `(business_name, status)` 缓解按状态过滤的分页压力。
+```mermaid
+erDiagram
+  hsai_video_learning_status {
+    integer id PK
+    string business_name
+    string video_id
+    string status
+    timestamptz created_at
+    timestamptz updated_at
+  }
+```
+
 ## 模块文档
 ### backend/open_webui/routers
+- **hsai_video_learning.py**：按登录用户解析 `business_name`，分页聚合各视频学习状态，启动学习时调用 n8n 并写入 `learning` 状态；复用联合唯一约束避免重复写入。
 - **hsai_companies.py**：公司 CRUD、分页、项目列表过滤；依赖 `get_verified_user`，输出 `PaginatedCompanyResponse`。
 - **hsai_projects.py**：项目 CRUD、任务模板初始化；创建时自动注入默认任务；支撑分页与状态过滤。
 - **hsai_tasks.py**：任务查询、指派、进度更新、统计，统一调用 `check_credit_by_user_id` 校验额度。
@@ -128,11 +145,14 @@ erDiagram
 - **conversation_queue_handler.py**：对话队列消费与任务触发；依赖 Redis Streams。
 
 ### backend/open_webui/models
+- **hsai_video_learning_status.py**：联合唯一约束保障 `business_name + video_id` 唯一，提供租户级批量查询与状态列表接口，写入阶段捕获自增序列异常并回滚。
+- **hsai_business_good_video_v1.py**：视频列表与统计接口透传 `business_name` 参数，结合学习状态表完成 pending / learning / learned / abandoned 过滤。
 - **credits.py**：定义 `Credit`, `CreditLog`, `TradeTicket` ORM 表及 `CreditsTable` 操作。新增 `company_id` 字段后，`_resolve_credit_owner` 负责基于用户推导公司负责人。
 - **hsai_companies.py / hsai_projects.py / hsai_tasks.py**：提供 Pydantic 校验与 SQLAlchemy 表结构（含时间戳归一化）。
 - **billing_config.py / api_usage_log.py**：计费费率配置与日志模型。
 
 ### 工具与脚本
+- **tool/fix_hsai_video_learning_status_sequence.py**：检测 `business_name + video_id` 重复、补齐联合唯一约束/索引，并重置 PostgreSQL/SQLite 自增序列，支持 `--apply` 执行修复。
 - **tool/add_company_credit_columns.py**：为 `credit` 与 `credit_log` 表补齐 `company_id` 列并回填历史数据，支持 SQLite 与 PostgreSQL。
 - **tool/test_redis_queue_insert.py** 等：用于 Redis 队列结构校验与修复。
 
@@ -177,7 +197,7 @@ erDiagram
 - **数据库**：默认 PostgreSQL（`DATABASE_URL`），可配置 `DATABASE_SCHEMA`；某些日志写入 `N8N_DATABASE_URL`。
 - **缓存/队列**：Redis 用于对话/任务排队。
 - **环境变量关键项**：`WEBUI_AUTH_*`（鉴权）、`CREDIT_*`（积分策略）、`USAGE_CALCULATE_*`（计费单价）。
-- **初始化脚本**：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 用于数据库引导；执行后需运行 `tool/add_company_credit_columns.py` 修复旧表结构。
+- **初始化脚本**：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 已加入视频学习状态表的联合唯一约束与索引；导入历史数据后需运行 `tool/fix_hsai_video_learning_status_sequence.py --apply` 重置序列，必要时再执行 `tool/add_company_credit_columns.py` 修复旧表结构。
 
 ## 设计决策 & 技术债务
 - **时间戳持久化策略（2025-10-23）**：引入 `EpochTimestamp` TypeDecorator，将 ORM 层时间字段统一转换为 PostgreSQL `timestamptz`，业务仍以整型 Epoch 秒读写；此次覆盖 redis_queue_messages、billing_config、chats、files、hsai_*、credits、users 等核心模型，并配套更新校验脚本，消除 `DatatypeMismatch` 报错并锁定未来扩展范围。
@@ -194,8 +214,9 @@ erDiagram
 ## 测试与运维
 - **单元测试**：后端核心模块使用 `pytest`；计费相关测试见 `backend/test/test_billing_system.py`。
 - **脚本验证**：`tool/` 目录提供数据库列校验、Redis 队列修复脚本，运行前需确认 `.env` 指向正确环境。
+- **数据库修复脚本**：`tool/fix_hsai_video_learning_status_sequence.py` 支持 dry-run / --apply，两步完成重复检测与联合唯一约束/序列补齐。
 - **监控建议**：重点观测 `credit`/`credit_log` 同步延迟、Redis Stream 消费积压、n8n 数据库链路。
-- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；支持消息发送卡片化布局、会话 Markdown/JSON 双模态查看与忽略 `workflow_started` 的延迟统计；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-26 更新）。
+- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；除消息发送卡片、Markdown/JSON 双模态与 `workflow_started` 延迟过滤外，新增任务快照刷新、事件流筛选与操作按钮状态机；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-27 更新）。
 
 ## 术语表
 | 术语 | 说明 |
@@ -208,6 +229,16 @@ erDiagram
 | Trade Ticket | 充值工单，结合第三方支付回调自动入账。 |
 
 ## 变更日志
+### 2025-10-28
+- 后端：`backend/open_webui/models/hsai_video_learning_status.py` 引入联合唯一约束、租户级批量查询方法；`backend/open_webui/routers/hsai_video_learning.py` 依据 `business_name` 返回/写入学习状态；`backend/open_webui/models/hsai_business_good_video_v1.py` 增强租户过滤与状态筛选。
+- 数据脚本：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 同步加入联合唯一约束与索引；新增 `tool/fix_hsai_video_learning_status_sequence.py`，支持序列重置与约束补齐。
+- 测试：新增 `backend/test/test_video_learning_status.py` 覆盖跨租户插入、联合唯一约束及状态筛选逻辑。
+- 文档：数据模型、模块说明、运维脚本段落同步记录视频学习状态设计，更新初始化/运维指引。
+### 2025-10-27
+- 前端：`websocket-test.html` 新增“任务调试”标签页，提供任务上下文/事件流/操作面板；`static/ws-tester.js` 实现快照拉取、任务事件订阅、按钮状态联动与任务模板批量创建。
+- 文档：`docs/410_websocket_test_page_manual.md` 补充任务调试流程、事件筛选与验证清单，保持与代码更新同步。
+- 追踪：`PROJECTWIKI.md` 调试工具段落扩充任务调试功能描述，并在变更日志登记 2025-10-27 版本。
+
 ### 2025-10-26
 - 前端：调整消息发送卡片为单卡片布局，新增会话 Markdown/JSON 双模态查看，工作流 `workflow_started` 中间态不再参与响应时延；同步完善按钮状态与模态交互。
 - 文档：`docs/410_websocket_test_page_manual.md` 刷新布局描述、Markdown 弹窗说明及延迟计算策略，补充最新验收清单。
@@ -258,3 +289,6 @@ flowchart TD
 
 ## 测试手册（E2E）
 - 参见：docs/tests/e2e_guide.md（pytest 驱动的端到端冒烟/主流程验证手册）。
+
+
+

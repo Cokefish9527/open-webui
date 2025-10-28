@@ -1,62 +1,74 @@
 import logging
 import time
-from typing import Optional, List
+from typing import Optional, List, Dict
 from enum import Enum
 
-from open_webui.internal.db import Base, JSONField, get_db
+from open_webui.internal.db import Base, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import Column, String, Text, Integer
+from sqlalchemy import Column, String, Integer, UniqueConstraint, Index
+from sqlalchemy.exc import IntegrityError
+
 from ._timestamp_utils import normalize_required_timestamp, EpochTimestamp
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 ####################
-# HSAI Video Learning Status DB Schema
+# ORM definitions
 ####################
 
 
 class HSAIVideoLearningStatusEnum(str, Enum):
-    """视频学习状态枚举"""
-    LEARNING = "learning"      # Learning
-    LEARNED = "learned"       # Learned
-    ABANDONED = "abandoned"     # Abandoned
-    # Note: Pending status is not stored in the table, but determined during query
+    """Valid learning status values."""
+
+    LEARNING = "learning"
+    LEARNED = "learned"
+    ABANDONED = "abandoned"
 
 
 class HSAIVideoLearningStatus(Base):
-    """HSAI视频学习状态表"""
-    __tablename__ = "hsai_video_learning_status"
+    """ORM model for hsai_video_learning_status."""
 
-    id = Column(Integer, primary_key=True, autoincrement=True)  # 自增主键
-    business_name = Column(String, nullable=False)              # 公司名称
-    video_id = Column(String, nullable=False)                   # 学习的视频ID
-    status = Column(String, nullable=False)                     # 学习状态
-    
-    # 时间戳
+    __tablename__ = "hsai_video_learning_status"
+    __table_args__ = (
+        UniqueConstraint(
+            "business_name",
+            "video_id",
+            name="uq_hsai_video_learning_status_business_video",
+        ),
+        Index(
+            "idx_hsai_video_learning_status_business_status",
+            "business_name",
+            "status",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    business_name = Column(String, nullable=False)
+    video_id = Column(String, nullable=False)
+    status = Column(String, nullable=False)
     created_at = Column(EpochTimestamp())
     updated_at = Column(EpochTimestamp())
 
 
 ####################
-# Pydantic Models
+# Pydantic models
 ####################
 
 
 class HSAIVideoLearningStatusModel(BaseModel):
-    """HSAI视频学习状态模型"""
+    """Read model for video learning status."""
+
     model_config = ConfigDict(from_attributes=True)
 
-    id: int = Field(description="Auto-increment primary key")
-    business_name: str = Field(description="Business name")
-    video_id: str = Field(description="Video ID")
-    status: str = Field(description="Learning status: learning, learned, abandoned")
-    
-    # Timestamps
-    created_at: int = Field(description="Creation timestamp")
-    updated_at: int = Field(description="Update timestamp")
+    id: int = Field(description="Primary key")
+    business_name: str = Field(description="Company or tenant name")
+    video_id: str = Field(description="Video identifier")
+    status: str = Field(description="Learning status value")
+    created_at: int = Field(description="Creation timestamp (epoch seconds)")
+    updated_at: int = Field(description="Update timestamp (epoch seconds)")
 
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
@@ -70,71 +82,135 @@ class HSAIVideoLearningStatusModel(BaseModel):
 
 
 class HSAIVideoLearningStatusForm(BaseModel):
-    """HSAI视频学习状态表单模型"""
+    """Write model for inserting a video learning status."""
+
     model_config = ConfigDict(from_attributes=True)
 
-    business_name: str = Field(description="Business name")
-    video_id: str = Field(description="Video ID")
-    status: str = Field(description="Learning status: learning, learned, abandoned")
+    business_name: str = Field(description="Company or tenant name")
+    video_id: str = Field(description="Video identifier")
+    status: str = Field(description="Learning status value")
 
 
 class HSAIVideoLearningStatusTable:
-    """HSAI视频学习状态表操作类"""
-    
+    """Table operations for hsai_video_learning_status."""
+
     def insert_new_status(self, form_data: dict) -> Optional[HSAIVideoLearningStatusModel]:
-        """插入新的视频学习状态记录"""
+        """Insert a new learning status entry."""
         with get_db() as db:
+            now_ts = int(time.time())
             status = HSAIVideoLearningStatus(
                 **{
                     **form_data,
-                    "created_at": int(time.time()),
-                    "updated_at": int(time.time()),
+                    "created_at": now_ts,
+                    "updated_at": now_ts,
                 }
             )
-            
+
             db.add(status)
-            db.commit()
+            try:
+                db.commit()
+            except IntegrityError as exc:
+                db.rollback()
+                log.error("Failed to insert video learning status, data=%s", form_data, exc_info=True)
+                raise exc
+
             db.refresh(status)
-            
             return HSAIVideoLearningStatusModel.model_validate(status) if status else None
-    
-    def get_status_by_video_id(self, video_id: str) -> Optional[HSAIVideoLearningStatusModel]:
-        """根据视频ID获取学习状态"""
+
+    def get_status_by_video_id(
+        self,
+        video_id: str,
+        business_name: str,
+    ) -> Optional[HSAIVideoLearningStatusModel]:
+        """Retrieve status by video id and business name."""
+        if not business_name:
+            raise ValueError("business_name is required to query learning status")
+
         with get_db() as db:
-            status = db.query(HSAIVideoLearningStatus).filter(HSAIVideoLearningStatus.video_id == video_id).first()
+            status = (
+                db.query(HSAIVideoLearningStatus)
+                .filter(
+                    HSAIVideoLearningStatus.business_name == business_name,
+                    HSAIVideoLearningStatus.video_id == video_id,
+                )
+                .first()
+            )
             return HSAIVideoLearningStatusModel.model_validate(status) if status else None
-    
-    def get_status_by_business_and_video(self, business_name: str, video_id: str) -> Optional[HSAIVideoLearningStatusModel]:
-        """根据公司名称和视频ID获取学习状态"""
+
+    def get_status_by_business_and_video(
+        self,
+        business_name: str,
+        video_id: str,
+    ) -> Optional[HSAIVideoLearningStatusModel]:
+        """Compatibility wrapper for querying by business and video."""
+        return self.get_status_by_video_id(video_id=video_id, business_name=business_name)
+
+    def get_status_map_for_business(
+        self,
+        business_name: str,
+        video_ids: List[str],
+    ) -> Dict[str, HSAIVideoLearningStatusModel]:
+        """Return a mapping of video_id -> status model for the given business."""
+        if not video_ids:
+            return {}
+
         with get_db() as db:
-            status = db.query(HSAIVideoLearningStatus).filter(
-                HSAIVideoLearningStatus.business_name == business_name,
-                HSAIVideoLearningStatus.video_id == video_id
-            ).first()
-            return HSAIVideoLearningStatusModel.model_validate(status) if status else None
-    
+            statuses = (
+                db.query(HSAIVideoLearningStatus)
+                .filter(
+                    HSAIVideoLearningStatus.business_name == business_name,
+                    HSAIVideoLearningStatus.video_id.in_(video_ids),
+                )
+                .all()
+            )
+            return {
+                status.video_id: HSAIVideoLearningStatusModel.model_validate(status)
+                for status in statuses
+            }
+
+    def list_video_ids_by_business(
+        self,
+        business_name: str,
+        status_filter: Optional[str] = None,
+    ) -> List[str]:
+        """List video ids for the given tenant and (optional) status filter."""
+        with get_db() as db:
+            query = db.query(HSAIVideoLearningStatus.video_id).filter(
+                HSAIVideoLearningStatus.business_name == business_name
+            )
+            if status_filter and status_filter != "all":
+                query = query.filter(HSAIVideoLearningStatus.status == status_filter)
+
+            return [row[0] for row in query.all()]
+
     def update_status(self, id: int, form_data: dict) -> Optional[HSAIVideoLearningStatusModel]:
-        """更新学习状态"""
+        """Update a learning status entry by id."""
         with get_db() as db:
-            status = db.query(HSAIVideoLearningStatus).filter(HSAIVideoLearningStatus.id == id).first()
+            status = (
+                db.query(HSAIVideoLearningStatus)
+                .filter(HSAIVideoLearningStatus.id == id)
+                .first()
+            )
             if status:
-                # 更新字段
                 for key, value in form_data.items():
                     if hasattr(status, key):
                         setattr(status, key, value)
-                
-                setattr(status, 'updated_at', int(time.time()))
-                
+                status.updated_at = int(time.time())
+
                 db.commit()
                 db.refresh(status)
-                
+
                 return HSAIVideoLearningStatusModel.model_validate(status)
             return None
-    
+
     def delete_status_by_id(self, id: int) -> bool:
-        """根据ID删除学习状态"""
+        """Delete a learning status entry by id."""
         with get_db() as db:
-            status = db.query(HSAIVideoLearningStatus).filter(HSAIVideoLearningStatus.id == id).first()
+            status = (
+                db.query(HSAIVideoLearningStatus)
+                .filter(HSAIVideoLearningStatus.id == id)
+                .first()
+            )
             if status:
                 db.delete(status)
                 db.commit()
@@ -142,5 +218,5 @@ class HSAIVideoLearningStatusTable:
             return False
 
 
-# 全局实例
+# Global table helper
 HSAIVideoLearningStatuses = HSAIVideoLearningStatusTable()
