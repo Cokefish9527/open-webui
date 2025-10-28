@@ -101,6 +101,74 @@ def _ensure_postgres_constraints(engine: Engine, apply: bool) -> None:
         else:
             _log("警告：未能获取 id 序列名称，请确认表结构。")
 
+        # 确保日志表存在自增序列
+        log_default = conn.execute(
+            text(
+                """
+                SELECT column_default
+                FROM information_schema.columns
+                WHERE table_name = 'hsai_video_learning_logs'
+                  AND column_name = 'id'
+                  AND table_schema = current_schema()
+                """
+            )
+        ).scalar()
+
+        if not log_default:
+            if apply:
+                _log("为 hsai_video_learning_logs.id 创建序列并设置默认值 ...")
+                conn.execute(
+                    text(
+                        """
+                        DO $$
+                        BEGIN
+                            IF NOT EXISTS (
+                                SELECT 1 FROM pg_class
+                                WHERE relname = 'hsai_video_learning_logs_id_seq'
+                            ) THEN
+                                CREATE SEQUENCE hsai_video_learning_logs_id_seq;
+                            END IF;
+                        END
+                        $$;
+                        """
+                    )
+                )
+                conn.execute(
+                    text(
+                        """
+                        ALTER TABLE hsai_video_learning_logs
+                        ALTER COLUMN id SET DEFAULT nextval('hsai_video_learning_logs_id_seq');
+                        """
+                    )
+                )
+            else:
+                _log("[dry-run] 将为 hsai_video_learning_logs.id 创建序列并设置默认值。")
+
+        if apply:
+            _log("重置 hsai_video_learning_logs 序列 ...")
+            conn.execute(
+                text(
+                    """
+                    DO $$
+                    DECLARE
+                        seq_name text := 'hsai_video_learning_logs_id_seq';
+                    BEGIN
+                        IF EXISTS (
+                            SELECT 1 FROM pg_class WHERE relname = seq_name
+                        ) THEN
+                            EXECUTE format(
+                                'SELECT setval(''%s'', GREATEST((SELECT COALESCE(MAX(id), 0) FROM hsai_video_learning_logs), 1))',
+                                seq_name
+                            );
+                        END IF;
+                    END
+                    $$;
+                    """
+                )
+            )
+        else:
+            _log("[dry-run] 将校准 hsai_video_learning_logs 序列至当前最大 id。")
+
 
 def _ensure_sqlite_constraints(engine: Engine, apply: bool) -> None:
     with engine.begin() as conn:

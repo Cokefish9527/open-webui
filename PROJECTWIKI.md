@@ -152,7 +152,7 @@ erDiagram
 - **billing_config.py / api_usage_log.py**：计费费率配置与日志模型。
 
 ### 工具与脚本
-- **tool/fix_hsai_video_learning_status_sequence.py**：检测 `business_name + video_id` 重复、补齐联合唯一约束/索引，并重置 PostgreSQL/SQLite 自增序列，支持 `--apply` 执行修复。
+- **tool/fix_hsai_video_learning_status_sequence.py**：检测 `business_name + video_id` 重复、补齐联合唯一约束/索引，并同步 `hsai_video_learning_status` / `hsai_video_learning_logs` 自增序列（支持 PostgreSQL/SQLite），`--apply` 可一键执行修复。
 - **tool/add_company_credit_columns.py**：为 `credit` 与 `credit_log` 表补齐 `company_id` 列并回填历史数据，支持 SQLite 与 PostgreSQL。
 - **tool/test_redis_queue_insert.py** 等：用于 Redis 队列结构校验与修复。
 
@@ -231,7 +231,7 @@ erDiagram
 ## 变更日志
 ### 2025-10-28
 - 后端：`backend/open_webui/models/hsai_video_learning_status.py` 引入联合唯一约束、租户级批量查询方法；`backend/open_webui/routers/hsai_video_learning.py` 依据 `business_name` 返回/写入学习状态；`backend/open_webui/models/hsai_business_good_video_v1.py` 在视频列表无租户匹配时回退到全局视图，并结合学习状态完成筛选。
-- 数据脚本：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 同步加入联合唯一约束与索引；新增 `tool/fix_hsai_video_learning_status_sequence.py`，支持序列重置与约束补齐。
+- 数据脚本：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 同步加入联合唯一约束与索引；新增 `tool/fix_hsai_video_learning_status_sequence.py`，一并校准 `hsai_video_learning_status` / `hsai_video_learning_logs` 序列并补齐约束。
 - 测试：新增 `backend/test/test_video_learning_status.py` 覆盖跨租户插入、联合唯一约束及状态筛选逻辑。
 - 文档：数据模型、模块说明、运维脚本段落同步记录视频学习状态设计，更新初始化/运维指引。
 ### 2025-10-27
