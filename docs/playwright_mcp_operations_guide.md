@@ -41,6 +41,7 @@
      PLAYWRIGHT_HEADLESS=true
      ```
    - 以上目录需提前创建，确保服务有读写权限。
+   - 若需在本机观察登录过程，可将 `PLAYWRIGHT_HEADLESS` 设为 `false`，或在社交账号向导中选择“交互式登录”，系统会自动以非 Headless 模式拉起浏览器窗口。
 
 ---
 
@@ -237,6 +238,44 @@
    - 手动请求 Runner `/tools`、`/execute` 接口确认服务在线。
 
 ---
+
+## 9. TikTok 登录授权标准流程（供 Playwright 脚本遵循）
+
+1. **准备凭证文件**  
+   - 在 `PLAYWRIGHT_CREDENTIAL_ROOT/<credential_ref>.json` 中补全：  
+     ```json
+     {
+       "username": "your_email@domain.com",
+       "password": "StrongPassword!",
+       "cookies_path": "D:/data/credentials/tenant_x_handle_y_cookies.json",
+       "notes": "可选：记录验证码或风险提示"
+     }
+     ```  
+   - 若希望脚本自动填写账号，`username`/`password` 必填；缺失时 Runner 仅会打开登录页等待人工操作。
+
+2. **浏览器 Profile 目录**  
+   - `playwright_profile_path` 指向独立文件夹，确保具备读写权限。脚本会在此持久化缓存、LocalStorage。
+
+3. **启动方式选择**  
+   - 自动登录：凭证完整且在向导中选择“尝试自动登录”。  
+   - 交互式登录：选择“交互式登录”或在 API 请求中传 `interactive=true`。脚本将强制以非 Headless 方式启动浏览器，方便人工处理短信/验证码。
+
+4. **标准自动化步骤**  
+   1. 打开 `https://www.tiktok.com/login/phone-or-email/email`。  
+   2. 输入用户名、密码并提交。  
+   3. 若检测到额外验证（滑块/短信），脚本截图并抛出错误，等待人工介入。  
+   4. 登录成功后回到首页，检测导航栏头像元素确认 Session 生效。  
+   5. 将 Cookie 写入凭证文件中的 `cookies_path`，供后续采集/发布工具共用。
+
+5. **人工配合场景**  
+   - 没有密码或遇到风控时，脚本停留在登录页并在终端输出提示。  
+   - 请在窗口中完成所有验证（含短信验证码），脚本会在默认的 5 分钟等待窗口内持续检测是否登录成功。成功后自动保存 Cookie 和截图。
+
+6. **结果核对**  
+   - 成功返回时 `artifacts` 应包含：`screenshot_path`、`cookies_path`、`health_status: "healthy"`。  
+   - 若截图仍停留在登录页，请检查凭证是否为空、代理是否可用，或根据最新页面结构更新 `tool/playwright_mcp_scripts/tiktok_login.js` 中的选择器。
+
+遵循以上标准，Playwright MCP 可以在无人值守与人工辅助两种模式下稳定完成 TikTok 授权。
 
 ## 8. 补充建议
 

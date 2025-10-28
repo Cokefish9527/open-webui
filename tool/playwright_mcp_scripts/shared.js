@@ -57,7 +57,7 @@ async function resolveProxy(vpnProfileId) {
 	}
 }
 
-async function createContext(account, metadata = {}) {
+async function createContext(account, metadata = {}, options = {}) {
 	if (!account?.playwright_profile_path) {
 		throw new Error('缺失 account.playwright_profile_path 配置');
 	}
@@ -66,8 +66,16 @@ async function createContext(account, metadata = {}) {
 		throw new Error(`VPN 代理加载失败：${err.message}`);
 	});
 
+	const envHeadless = process.env.PLAYWRIGHT_HEADLESS;
+	let headless = envHeadless ? envHeadless !== 'false' : true;
+	if (Object.prototype.hasOwnProperty.call(options, 'headless')) {
+		headless = options.headless;
+	} else if (metadata?.force_headful) {
+		headless = false;
+	}
+
 	const context = await chromium.launchPersistentContext(account.playwright_profile_path, {
-		headless: process.env.PLAYWRIGHT_HEADLESS !== 'false',
+		headless,
 		viewport: { width: 1280, height: 720 },
 		locale: 'en-US',
 		userAgent: process.env.PLAYWRIGHT_DESKTOP_UA || DEFAULT_UA,

@@ -100,7 +100,14 @@ async function execute(request) {
 			300000
 	);
 
-	const { context, page } = await createContext(account, metadata);
+	const runtimeMetadata = { ...metadata };
+	if (interactive) {
+		runtimeMetadata.force_headful = true;
+	}
+
+	const { context, page } = await createContext(account, runtimeMetadata, {
+		headless: interactive ? false : undefined
+	});
 
 	try {
 		// 使用历史 cookie 提升成功率
