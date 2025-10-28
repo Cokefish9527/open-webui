@@ -85,11 +85,9 @@ class HSAIBusinessGoodVideoV1Table:
         limit: int = 50,
         business_name: Optional[str] = None,
     ) -> List[HSAIBusinessGoodVideoV1Model]:
-        """Return videos with optional tenant filtering."""
+        """Return videos. business_name is preserved for compatibility but not used for filtering."""
         with get_n8n_db() as db:
             query = db.query(HSAIBusinessGoodVideoV1)
-            if business_name:
-                query = query.filter(HSAIBusinessGoodVideoV1.businessname == business_name)
             videos = query.offset(skip).limit(limit).all()
             return [HSAIBusinessGoodVideoV1Model.model_validate(video) for video in videos]
 
@@ -108,8 +106,6 @@ class HSAIBusinessGoodVideoV1Table:
 
         with get_n8n_db() as postgres_db:
             query = postgres_db.query(HSAIBusinessGoodVideoV1)
-            if business_name:
-                query = query.filter(HSAIBusinessGoodVideoV1.businessname == business_name)
 
             if status_filter == "all":
                 videos = query.offset(skip).limit(limit).all()
@@ -159,8 +155,6 @@ class HSAIBusinessGoodVideoV1Table:
 
         with get_n8n_db() as postgres_db:
             query = postgres_db.query(HSAIBusinessGoodVideoV1)
-            if business_name:
-                query = query.filter(HSAIBusinessGoodVideoV1.businessname == business_name)
 
             if status_filter == "all":
                 return query.count()

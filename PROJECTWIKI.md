@@ -146,7 +146,7 @@ erDiagram
 
 ### backend/open_webui/models
 - **hsai_video_learning_status.py**：联合唯一约束保障 `business_name + video_id` 唯一，提供租户级批量查询与状态列表接口，写入阶段捕获自增序列异常并回滚。
-- **hsai_business_good_video_v1.py**：视频列表与统计接口透传 `business_name` 参数，结合学习状态表完成 pending / learning / learned / abandoned 过滤。
+- **hsai_business_good_video_v1.py**：视频列表与统计接口提供全局数据视图，同时结合学习状态表按 `business_name` 区分 pending / learning / learned / abandoned。
 - **credits.py**：定义 `Credit`, `CreditLog`, `TradeTicket` ORM 表及 `CreditsTable` 操作。新增 `company_id` 字段后，`_resolve_credit_owner` 负责基于用户推导公司负责人。
 - **hsai_companies.py / hsai_projects.py / hsai_tasks.py**：提供 Pydantic 校验与 SQLAlchemy 表结构（含时间戳归一化）。
 - **billing_config.py / api_usage_log.py**：计费费率配置与日志模型。
@@ -230,7 +230,7 @@ erDiagram
 
 ## 变更日志
 ### 2025-10-28
-- 后端：`backend/open_webui/models/hsai_video_learning_status.py` 引入联合唯一约束、租户级批量查询方法；`backend/open_webui/routers/hsai_video_learning.py` 依据 `business_name` 返回/写入学习状态；`backend/open_webui/models/hsai_business_good_video_v1.py` 增强租户过滤与状态筛选。
+- 后端：`backend/open_webui/models/hsai_video_learning_status.py` 引入联合唯一约束、租户级批量查询方法；`backend/open_webui/routers/hsai_video_learning.py` 依据 `business_name` 返回/写入学习状态；`backend/open_webui/models/hsai_business_good_video_v1.py` 在视频列表无租户匹配时回退到全局视图，并结合学习状态完成筛选。
 - 数据脚本：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 同步加入联合唯一约束与索引；新增 `tool/fix_hsai_video_learning_status_sequence.py`，支持序列重置与约束补齐。
 - 测试：新增 `backend/test/test_video_learning_status.py` 覆盖跨租户插入、联合唯一约束及状态筛选逻辑。
 - 文档：数据模型、模块说明、运维脚本段落同步记录视频学习状态设计，更新初始化/运维指引。
