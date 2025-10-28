@@ -8,6 +8,7 @@
     listSocialPosts,
     createSocialPost,
     publishSocialPost,
+    deleteSocialAccount,
     type SocialAccount,
     type SocialPost,
     type MCPExecutionResponse
@@ -201,6 +202,30 @@
       infoMessage = res.message ?? (interactive ? '请在浏览器中完成授权后返回本页。' : '已尝试自动登录，请在运行记录中确认结果。');
     } catch (error) {
       const message = (error as any)?.detail ?? (error as any)?.message ?? '触发登录流程失败';
+      errorMessage = message;
+    } finally {
+      processing = false;
+    }
+  }
+
+  async function removeAccount(event: MouseEvent, account: SocialAccount) {
+    event.stopPropagation();
+    resetMessages();
+    if (!account) return;
+    const confirmed = window.confirm(`确定删除账号 "${account.handle}"? 所有关联的发布任务和运行记录也会被移除。`);
+    if (!confirmed) return;
+    try {
+      processing = true;
+      const token = await ensureToken();
+      await deleteSocialAccount(token, account.id);
+      infoMessage = `账号 ${account.handle} 已删除。`;
+      if (selectedAccountId === account.id) {
+        selectedAccountId = '';
+        createdAccount = null;
+      }
+      await loadExisting();
+    } catch (error) {
+      const message = (error as any)?.detail ?? (error as any)?.message ?? '删除账号失败';
       errorMessage = message;
     } finally {
       processing = false;
@@ -546,7 +571,16 @@
               >
                 <div class="flex items-center justify-between text-sm font-medium">
                   <span>{acc.handle}</span>
-                  <span class={accountStatusClass(acc.status)}>{acc.status}</span>
+                  <div class="flex items-center gap-2">
+                    <span class={accountStatusClass(acc.status)}>{acc.status}</span>
+                    <button
+                      class="text-xs text-error-600 hover:underline disabled:opacity-60"
+                      on:click={(event) => removeAccount(event, acc)}
+                      disabled={processing}
+                    >
+                      删除
+                    </button>
+                  </div>
                 </div>
                 <div class="mt-1 text-xs text-base-500 dark:text-base-400 truncate">
                   凭证: {acc.encrypted_credentials_ref}

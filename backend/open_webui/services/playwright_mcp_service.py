@@ -518,6 +518,54 @@ class PlaywrightMCPService:
             return "account"
         return "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in value.lower())
 
+    def delete_account(self, tenant_id: str, account_id: str) -> bool:
+        with session_scope() as session:
+            account = (
+                session.query(SocialAccount)
+                .filter(SocialAccount.id == account_id, SocialAccount.tenant_id == tenant_id)
+                .first()
+            )
+            if not account:
+                return False
+
+            credential_ref = account.encrypted_credentials_ref
+            profile_path = account.playwright_profile_path
+
+            posts = session.query(SocialPost).filter(SocialPost.account_id == account_id).all()
+            for post in posts:
+                session.delete(post)
+
+            session.delete(account)
+            session.commit()
+
+        self._cleanup_account_files(credential_ref, profile_path)
+        return True
+
+    def _cleanup_account_files(self, credential_ref: Optional[str], profile_path: Optional[str]) -> None:
+        if credential_ref:
+            credential_file = (self._credential_root / f"{credential_ref}.json").resolve()
+            cookies_file = (self._credential_root / "cookies" / f"{credential_ref}_cookies.json").resolve()
+            for path in (credential_file, cookies_file):
+                self._safe_remove_file(path)
+
+        if profile_path:
+            path_obj = Path(profile_path).expanduser().resolve()
+            try:
+                if path_obj.is_dir() and str(path_obj).startswith(str(self._profile_root)):
+                    for child in path_obj.glob("**/*"):
+                        if child.is_file():
+                            child.unlink(missing_ok=True)
+                    path_obj.rmdir()
+            except Exception as exc:
+                log.warning("删除浏览器配置目录失败: %s", exc)
+
+    def _safe_remove_file(self, path: Path) -> None:
+        try:
+            if path.exists() and path.is_file() and str(path).startswith(str(self._credential_root)):
+                path.unlink()
+        except Exception as exc:
+            log.warning("删除凭证文件失败: %s", exc)
+
     def _create_run_record(
         self,
         session: Session,
@@ -598,3 +646,4 @@ class PlaywrightMCPService:
 
 
 playwright_mcp_service = PlaywrightMCPService()
+

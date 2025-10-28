@@ -323,3 +323,4 @@ async def publish_post(post_id: str, user=Depends(get_verified_user)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT(),
         )
+

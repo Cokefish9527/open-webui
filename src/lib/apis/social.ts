@@ -161,3 +161,5 @@ export const createSocialPost = (token: string, payload: CreatePostPayload) =>
 export const publishSocialPost = (token: string, postId: string) =>
 	request<PublishResponse>(token, 'POST', `/social/posts/${postId}/publish`);
 
+export const deleteSocialAccount = (token: string, accountId: string) =>
+	request<{ status: boolean }>(token, 'DELETE', `/social/accounts/${accountId}`);
