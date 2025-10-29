@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added strategic blueprint sync pipeline (`backend/open_webui/services/blueprint_sync_service.py`) that reads `hsai_extraction_blueprint`, persists to `hsai_blueprint_progress`, seeds main tasks, and notifies clients via `hsai_task_blueprint_update`.
 - Introduced `scripts/sqlite_to_postgres_sync.py` for automated SQLite -> PostgreSQL synchronization with Markdown reporting, batch controls, and optional backups.
 - Added `tool/add_company_credit_columns.py` to backfill `company_id` columns for `credit`/`credit_log` across SQLite and PostgreSQL deployments, ensuring legacy数据迁移平滑可追溯。
 
 ### Changed
+- Conversation queue handler now handles `blue_image_content` messages, emitting blueprint task updates and leveraging the new blueprint progress tables.
 - Updated PROJECTWIKI operations/ADR guidance to align with the new database sync workflow and environment variable conventions.
 - Separated billing usage logging into the dedicated `n8n_workflow` database via new `N8N_DATABASE_*` settings, refactoring associated ORM models and services to use the shared secondary SQLAlchemy engine.
 - Unified积分余额在公司维度存储，新增 `credit.company_id` / `credit_log.company_id` 字段，并调整所有接口改为通过 `/api/v1/billing/user/credit` 返回公司余额。

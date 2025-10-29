@@ -15,6 +15,10 @@ from open_webui.env import SRC_LOG_LEVELS, REDIS_URL
 # 延迟导入，在函数内部导入Redis客户端
 # from open_webui.utils.redis_queue_listener import get_redis_client
 from open_webui.utils.robust_json_parser import robust_json_parse, reformat_for_frontend
+from open_webui.services.blueprint_sync_service import (
+    sync_blueprint_for_user,
+    BlueprintSyncResult,
+)
 
 # 配置日志
 log = logging.getLogger(__name__)
@@ -56,6 +60,15 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
         operate_id = message.get("operate_id")
         user_id = message.get("user_id", "")  # 提取user_id
         content_type = message.get("content_type", "")
+
+        blueprint_sync_result: Optional[BlueprintSyncResult] = None
+        if content_type == "blue_image_content" and status == "FINISHED" and user_id:
+            try:
+                blueprint_sync_result = sync_blueprint_for_user(message)
+                for log_line in blueprint_sync_result.logs:
+                    log.info("[BlueprintSync] %s", log_line)
+            except Exception as sync_exc:
+                log.error("战略蓝图同步失败: %s", sync_exc, exc_info=True)
         
         # 检查是否是信息收集完成的消息 (blue_image类型且状态为FINISHED)
         if content_type == "blue_image" and status == "FINISHED" and user_id:
@@ -109,15 +122,46 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
                 log.error(f"记录SESSION_POOL信息时发生错误: {e}")
             return
             
-        # 使用robust_json_parser中的reformat_for_frontend函数重新封装消息
+        # Reformat message for frontend rendering
         frontend_message = reformat_for_frontend(message)
         
-        # 发送封装后的消息到前端
+        if sio is not None and blueprint_sync_result and blueprint_sync_result.notifications:
+            emit_targets = []
+            if target_sid:
+                emit_targets.append(target_sid)
+            elif user_id:
+                fallback_sid = _find_socket_by_user_id(user_id, USER_POOL, SESSION_POOL)
+                if fallback_sid:
+                    emit_targets.append(fallback_sid)
+            if not emit_targets:
+                log.debug("Blueprint notifications could not find an active Socket.IO target.")
+            else:
+                for notification in blueprint_sync_result.notifications:
+                    for sid in emit_targets:
+                        try:
+                            await sio.emit(notification.event, notification.payload, to=sid)
+                            log.debug(
+                                "Blueprint notification sent event=%s target=%s",
+                                notification.event,
+                                sid,
+                            )
+                        except Exception as emit_exc:
+                            log.error(
+                                "Failed to emit blueprint notification: %s",
+                                emit_exc,
+                                exc_info=True,
+                            )
+        
+        # Send packaged message back to frontend
         if sio is not None:
             await sio.emit("hsai_response", frontend_message, to=target_sid)
-            log.info(f"已发送封装后的消息到前端: session_id={session_id}, status={status}")
+            log.info(
+                "Dispatched packaged message to frontend: session_id=%s, status=%s",
+                session_id,
+                status,
+            )
         else:
-            log.error("Socket.IO服务器未初始化")
+            log.error("Socket.IO is not initialized")
         
     except Exception as e:
         log.error(f"处理对话代理消息时发生错误: {e}", exc_info=True)

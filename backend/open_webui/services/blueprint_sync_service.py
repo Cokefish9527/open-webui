@@ -1,0 +1,464 @@
+"""
+Strategic blueprint synchronization service.
+
+When a `blue_image_content` message is received from the Redis queue this
+service pulls the latest blueprint information from the n8n database,
+persists it into the main blueprint progress tables, keeps an audit trail,
+and ensures the corresponding main tasks are created or updated.
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
+
+from sqlalchemy import text
+from zoneinfo import ZoneInfo
+
+from open_webui.config.blueprint_task_templates import (
+    BLUEPRINT_MAIN_TASK_TEMPLATES,
+    get_template,
+)
+from open_webui.internal.db_n8n import get_n8n_db
+from open_webui.models.hsai_blueprint_progress import (
+    BlueprintProgressState,
+    HSAIBlueprintProgressModel,
+    HSAIBlueprintProgressTable,
+    HSAITaskBlueprintLinksTable,
+    HSAITaskBlueprintLinkModel,
+)
+from open_webui.models.hsai_projects import HSAIProjects
+from open_webui.models.hsai_tasks import (
+    HSAITasks,
+    HSAITaskForm,
+    HSAITaskModel,
+    HSAITaskStatus,
+    HSAITaskUpdateForm,
+)
+from open_webui.services.onboarding_orchestrator import ensure_company_project_and_main_tasks
+from open_webui.socket.hsai_events import HSAI_WEBSOCKET_EVENTS
+
+log = logging.getLogger(__name__)
+
+
+@dataclass
+class BlueprintSyncNotification:
+    event: str
+    payload: Dict[str, Any]
+
+
+@dataclass
+class BlueprintSyncResult:
+    progress: Optional[HSAIBlueprintProgressModel] = None
+    created_tasks: List[HSAITaskModel] = field(default_factory=list)
+    updated_tasks: List[HSAITaskModel] = field(default_factory=list)
+    generated_subtasks: List[HSAITaskModel] = field(default_factory=list)
+    notifications: List[BlueprintSyncNotification] = field(default_factory=list)
+    logs: List[str] = field(default_factory=list)
+
+
+def _fetch_latest_blueprint_from_n8n() -> Optional[Dict[str, Any]]:
+    with get_n8n_db() as db:
+        stmt = text(
+            """
+            SELECT
+                id,
+                "blueprintVersion",
+                "executionDurationDays",
+                "plannedTotalPosts",
+                "postingFrequency",
+                "requiredTiktokAccounts",
+                session_id,
+                request_id,
+                user_id,
+                socket_id,
+                blue_image,
+                "createdAt",
+                "updatedAt"
+            FROM hsai_extraction_blueprint
+            ORDER BY "createdAt" DESC
+            LIMIT 1
+            """
+        )
+        row = db.execute(stmt).mappings().first()
+        return dict(row) if row else None
+
+
+def _resolve_project_for_user(user_id: str) -> Optional[str]:
+    projects = HSAIProjects.get_projects_by_user_id(user_id, limit=50)
+    default_project = None
+    for project in projects:
+        config = project.config or {}
+        if isinstance(config, dict) and config.get("is_default"):
+            default_project = project
+            break
+    if not default_project and projects:
+        default_project = projects[0]
+
+    if default_project:
+        return default_project.id
+
+    summary = ensure_company_project_and_main_tasks(user_id)
+    log.info(
+        "ensure_company_project_and_main_tasks summary for user %s: %s",
+        user_id,
+        summary,
+    )
+    projects = HSAIProjects.get_projects_by_user_id(user_id, limit=1)
+    return projects[0].id if projects else None
+
+
+def _derive_daily_cycle_config(
+    blueprint_row: Dict[str, Any],
+    existing_config: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    base_window = get_template("daily_publish_cycle").get("config", {}).get("default_window", {})
+    frequency_text = blueprint_row.get("postingFrequency") or "1条/天"
+
+    occurrences_per_day = 1
+    try:
+        if "/" in frequency_text:
+            value, unit = frequency_text.split("/", maxsplit=1)
+            value = "".join([c for c in value if c.isdigit()])
+            occurrences = int(value) if value else 1
+            if "天" in unit or "day" in unit.lower():
+                occurrences_per_day = max(1, occurrences)
+    except Exception as exc:
+        log.warning("Failed to parse posting frequency '%s': %s", frequency_text, exc)
+
+    config = existing_config.copy() if isinstance(existing_config, dict) else {}
+    config.update(
+        {
+            "frequency": frequency_text,
+            "occurrences_per_day": occurrences_per_day,
+            "window": base_window or {"hour": 9, "minute": 0, "timezone": "Asia/Shanghai"},
+        }
+    )
+    return config
+
+
+def _build_progress_payload(
+    blueprint_row: Dict[str, Any],
+    existing_config: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    summary_md = blueprint_row.get("blue_image")
+    digest = {
+        "blueprint_id": str(blueprint_row.get("id")),
+        "session_id": blueprint_row.get("session_id"),
+        "request_id": blueprint_row.get("request_id"),
+        "user_id": blueprint_row.get("user_id"),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+    }
+    daily_cycle_config = _derive_daily_cycle_config(blueprint_row, existing_config)
+    return {
+        "blueprint_version": blueprint_row.get("blueprintVersion") or "v1",
+        "execution_duration_days": blueprint_row.get("executionDurationDays"),
+        "planned_total_posts": blueprint_row.get("plannedTotalPosts"),
+        "posting_frequency": blueprint_row.get("postingFrequency"),
+        "required_tiktok_accounts": blueprint_row.get("requiredTiktokAccounts"),
+        "summary_md": summary_md,
+        "blueprint_raw": summary_md,
+        "latest_digest": digest,
+        "progress_state": BlueprintProgressState.RUNNING,
+        "daily_cycle_config": daily_cycle_config,
+    }
+
+
+def _create_or_update_task_from_template(
+    template_key: str,
+    template: Dict[str, Any],
+    user_id: str,
+    project_id: str,
+    link: Optional[HSAITaskBlueprintLinkModel],
+    blueprint_version: str,
+    progress_id: str,
+) -> Tuple[Optional[HSAITaskModel], Optional[HSAITaskModel]]:
+    """Return (created_task, updated_task)."""
+    config = template.get("config", {}).copy()
+    config.setdefault("blueprint_version", blueprint_version)
+    config.setdefault("template_key", template_key)
+    config.setdefault("progress_id", progress_id)
+
+    if link:
+        existing_task = HSAITasks.get_task_by_id(link.task_id)
+        if not existing_task:
+            link = None  # treat as missing
+        else:
+            needs_update = False
+            update_payload: Dict[str, Any] = {}
+            if existing_task.title != template["title"]:
+                update_payload["title"] = template["title"]
+                needs_update = True
+            if template.get("description") and existing_task.description != template["description"]:
+                update_payload["description"] = template["description"]
+                needs_update = True
+            merged_config = existing_task.config or {}
+            merged = {**merged_config, **config}
+            if merged != merged_config:
+                update_payload["config"] = merged
+                needs_update = True
+
+            if needs_update:
+                updated = HSAITasks.update_task_by_id(
+                    existing_task.id, HSAITaskUpdateForm(**update_payload)
+                )
+                return (None, updated)
+            return (None, None)
+
+    form = HSAITaskForm(
+        title=template["title"],
+        description=template.get("description"),
+        task_type=template["task_type"],
+        task_category=template.get("task_category"),
+        project_id=project_id,
+        config=config,
+        prompt_config=template.get("prompt_config"),
+        priority=int(template.get("priority") or 0),
+    )
+    created = HSAITasks.insert_new_task(user_id, form)
+    return (created, None)
+
+
+def _sync_task_links(
+    progress: HSAIBlueprintProgressModel,
+    user_id: str,
+) -> Tuple[List[HSAITaskModel], List[HSAITaskModel]]:
+    created: List[HSAITaskModel] = []
+    updated: List[HSAITaskModel] = []
+
+    for template_key, template in BLUEPRINT_MAIN_TASK_TEMPLATES.items():
+        link = None
+        links = HSAITaskBlueprintLinksTable.get_by_progress(progress.id, template_key=template_key)
+        if links:
+            link = links[0]
+
+        created_task, updated_task = _create_or_update_task_from_template(
+            template_key=template_key,
+            template=template,
+            user_id=user_id,
+            project_id=progress.project_id,
+            link=link,
+            blueprint_version=progress.blueprint_version,
+            progress_id=progress.id,
+        )
+        if created_task:
+            created.append(created_task)
+            HSAITaskBlueprintLinksTable.upsert_link(
+                progress_id=progress.id,
+                task_id=created_task.id,
+                template_key=template_key,
+                metadata={
+                    "blueprint_version": progress.blueprint_version,
+                    "progress_id": progress.id,
+                },
+            )
+        if updated_task:
+            updated.append(updated_task)
+            HSAITaskBlueprintLinksTable.upsert_link(
+                progress_id=progress.id,
+                task_id=updated_task.id,
+                template_key=template_key,
+                metadata={
+                    "blueprint_version": progress.blueprint_version,
+                    "progress_id": progress.id,
+                },
+            )
+
+    return created, updated
+
+
+def _all_prerequisites_completed(
+    progress_id: str,
+    user_id: str,
+    project_id: str,
+) -> bool:
+    prerequisite_keys = get_template("daily_publish_cycle").get("config", {}).get("dependencies", [])
+    if not prerequisite_keys:
+        return True
+    links = HSAITaskBlueprintLinksTable.get_by_progress(progress_id)
+    template_map = {link.template_key: link for link in links}
+    for key in prerequisite_keys:
+        link = template_map.get(key)
+        if not link:
+            return False
+        task = HSAITasks.get_task_by_id(link.task_id)
+        if not task or task.status != HSAITaskStatus.COMPLETED.value:
+            return False
+    return True
+
+
+def _get_timezone(window_cfg: Dict[str, Any]) -> timezone:
+    tz_name = window_cfg.get("timezone") or "UTC"
+    try:
+        return ZoneInfo(tz_name)
+    except Exception:
+        log.warning("Unsupported timezone '%s', falling back to UTC", tz_name)
+        return timezone.utc
+
+
+def _maybe_generate_daily_subtask(
+    progress: HSAIBlueprintProgressModel,
+    user_id: str,
+    project_id: str,
+) -> Optional[HSAITaskModel]:
+    config = progress.daily_cycle_config or {}
+    window_cfg = config.get("window", {})
+    tz = _get_timezone(window_cfg)
+
+    now_local = datetime.now(tz)
+    scheduled_time = now_local.replace(
+        hour=int(window_cfg.get("hour", 9)),
+        minute=int(window_cfg.get("minute", 0)),
+        second=0,
+        microsecond=0,
+    )
+
+    if now_local < scheduled_time:
+        return None
+
+    if not _all_prerequisites_completed(progress.id, user_id, project_id):
+        return None
+
+    # locate main cycle task
+    links = HSAITaskBlueprintLinksTable.get_by_progress(progress.id, template_key="daily_publish_cycle")
+    if not links:
+        return None
+    cycle_task = HSAITasks.get_task_by_id(links[0].task_id)
+    if not cycle_task:
+        return None
+
+    # check whether today's subtask already exists
+    tasks = HSAITasks.get_tasks_by_user_id(
+        user_id=user_id,
+        project_id=project_id,
+        task_category="blueprint_daily",
+        limit=200,
+    )
+    today_key = now_local.strftime("%Y-%m-%d")
+    for task in tasks:
+        task_config = task.config or {}
+        if task_config.get("scheduled_for") == today_key and task.parent_task_id == cycle_task.id:
+            return None
+
+    title = f"{today_key} 视频发布"
+    description = "依据战略蓝图配置完成当日视频发布动作，并回填效果数据。"
+    subtask_form = HSAITaskForm(
+        title=title,
+        description=description,
+        task_type="platform_publishing",
+        task_category="blueprint_daily",
+        project_id=project_id,
+        parent_task_id=cycle_task.id,
+        priority=max(10, (cycle_task.priority or 0) - 10),
+        config={
+            "scheduled_for": today_key,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "template_key": "daily_publish_cycle",
+        },
+    )
+    return HSAITasks.insert_new_task(user_id, subtask_form)
+
+
+def sync_blueprint_for_user(
+    message: Dict[str, Any],
+) -> BlueprintSyncResult:
+    """
+    Sync blueprint progress for the user behind the incoming Redis message.
+    """
+    result = BlueprintSyncResult()
+
+    user_id = message.get("user_id")
+    if not user_id:
+        result.logs.append("消息缺少 user_id，跳过蓝图同步。")
+        return result
+
+    project_id = _resolve_project_for_user(user_id)
+    if not project_id:
+        result.logs.append("未能定位或创建项目，无法关联蓝图进度。")
+        return result
+
+    blueprint_row = _fetch_latest_blueprint_from_n8n()
+    if not blueprint_row:
+        result.logs.append("n8n_workflow 库未找到战略蓝图记录。")
+        return result
+
+    existing = HSAIBlueprintProgressTable.get_by_project(project_id)
+    payload = _build_progress_payload(
+        blueprint_row,
+        existing_config=existing.daily_cycle_config if existing else None,
+    )
+    progress = HSAIBlueprintProgressTable.upsert_progress(
+        project_id=project_id,
+        payload=payload,
+        operator_id=user_id,
+    )
+    result.progress = progress
+    result.logs.append(f"战略蓝图版本 {progress.blueprint_version} 已同步至项目 {project_id}。")
+
+    created_tasks, updated_tasks = _sync_task_links(progress, user_id=user_id)
+    result.created_tasks.extend(created_tasks)
+    result.updated_tasks.extend([task for task in updated_tasks if task])
+
+    for task in created_tasks:
+        result.notifications.append(
+            BlueprintSyncNotification(
+                event="hsai_task_blueprint_update",
+                payload={
+                    "action": "created",
+                    "task_id": task.id,
+                    "project_id": project_id,
+                    "template_key": task.config.get("template_key") if task.config else None,
+                    "title": task.title,
+                    "status": task.status,
+                },
+            )
+        )
+    for task in updated_tasks:
+        if not task:
+            continue
+        result.notifications.append(
+            BlueprintSyncNotification(
+                event="hsai_task_blueprint_update",
+                payload={
+                    "action": "updated",
+                    "task_id": task.id,
+                    "project_id": project_id,
+                    "template_key": task.config.get("template_key") if task.config else None,
+                    "title": task.title,
+                    "status": task.status,
+                },
+            )
+        )
+
+    subtask = _maybe_generate_daily_subtask(progress, user_id=user_id, project_id=project_id)
+    if subtask:
+        result.generated_subtasks.append(subtask)
+        result.notifications.append(
+            BlueprintSyncNotification(
+                event="hsai_task_blueprint_update",
+                payload={
+                    "action": "created",
+                    "task_id": subtask.id,
+                    "project_id": project_id,
+                    "template_key": "daily_publish_cycle_sub",
+                    "title": subtask.title,
+                    "status": subtask.status,
+                },
+            )
+        )
+
+    result.notifications.append(
+        BlueprintSyncNotification(
+            event=HSAI_WEBSOCKET_EVENTS.get("RESPONSE", "hsai_response"),
+            payload={
+                "type": "hsai_blueprint_progress",
+                "success": True,
+                "progress": progress.model_dump(),
+                "message": "战略蓝图进度已更新。",
+            },
+        )
+    )
+
+    return result

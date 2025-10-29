@@ -471,15 +471,16 @@ class HSAITasksTable:
                 return None
 
     def get_tasks_by_user_id(
-        self, 
-        user_id: str, 
+        self,
+        user_id: str,
         status: Optional[str] = None,
         task_type: Optional[str] = None,
         assignee_id: Optional[str] = None,
         chat_id: Optional[str] = None,
         project_id: Optional[str] = None,
+        task_category: Optional[str] = None,
         limit: int = 20,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[HSAITaskModel]:
         with get_db() as db:
             try:
@@ -495,7 +496,9 @@ class HSAITasksTable:
                     query = query.filter_by(chat_id=chat_id)
                 if project_id:
                     query = query.filter_by(project_id=project_id)
-                    
+                if task_category:
+                    query = query.filter_by(task_category=task_category)
+                
                 tasks = query.order_by(
                     HSAITask.priority.desc(),
                     HSAITask.updated_at.desc()
@@ -507,13 +510,14 @@ class HSAITasksTable:
                 return []
 
     def get_tasks_count(
-        self, 
-        user_id: str, 
+        self,
+        user_id: str,
         status: Optional[str] = None,
         task_type: Optional[str] = None,
         assignee_id: Optional[str] = None,
         chat_id: Optional[str] = None,
-        project_id: Optional[str] = None
+        project_id: Optional[str] = None,
+        task_category: Optional[str] = None,
     ) -> int:
         """获取任务总数"""
         with get_db() as db:
@@ -530,7 +534,9 @@ class HSAITasksTable:
                     query = query.filter_by(chat_id=chat_id)
                 if project_id:
                     query = query.filter_by(project_id=project_id)
-                    
+                if task_category:
+                    query = query.filter_by(task_category=task_category)
+                
                 return query.count()
             except Exception as e:
                 log.exception(f"Error counting tasks: {e}")

@@ -34,6 +34,67 @@ flowchart LR
   Utils -.-> Services
 ```
 
+### 战略蓝图数据表
+```mermaid
+erDiagram
+  hsai_projects ||--o{ hsai_blueprint_progress : "跟踪蓝图"
+  hsai_blueprint_progress ||--o{ hsai_blueprint_progress_history : "版本历史"
+  hsai_blueprint_progress ||--o{ hsai_task_blueprint_links : "生成主线任务"
+  hsai_tasks ||--o{ hsai_task_blueprint_links : "蓝图来源"
+
+  hsai_blueprint_progress {
+    string id PK
+    string project_id FK hsai_projects.id
+    string blueprint_version
+    string progress_state
+    json daily_cycle_config
+    json latest_digest
+    bigint last_synced_at
+  }
+  hsai_blueprint_progress_history {
+    string id PK
+    string progress_id FK hsai_blueprint_progress.id
+    string operation
+    json changes_json
+    bigint created_at
+  }
+  hsai_task_blueprint_links {
+    string id PK
+    string progress_id FK hsai_blueprint_progress.id
+    string task_id FK hsai_tasks.id
+    string template_key
+    json metadata
+    bigint created_at
+  }
+```
+
+- `hsai_blueprint_progress`：记录最新蓝图版本、执行参数与同步时间，仅允许每个项目一条最新记录。
+- `hsai_blueprint_progress_history`：保留蓝图变更快照，支持回溯更新日志。
+- `hsai_task_blueprint_links`：建立蓝图与主线任务、循环子任务的追溯关系，避免重复生成。
+
+### 战略蓝图同步流程
+```mermaid
+sequenceDiagram
+  participant Redis as Redis消息
+  participant Handler as conversation_queue_handler
+  participant Service as blueprint_sync_service
+  participant N8N as n8n_workflow DB
+  participant DB as Owen_ai 主库
+  participant WS as Socket.IO
+
+  Redis->>Handler: content_type=blue_image_content
+  Handler->>Service: sync_blueprint_for_user(message)
+  Service->>N8N: 查询 hsai_extraction_blueprint 最新记录
+  Service->>DB: upsert hsai_blueprint_progress/links
+  Service->>DB: 创建/更新主线任务与每日子任务
+  Service->>WS: hsai_task_blueprint_update 事件
+  Handler->>WS: hsai_response 渲染消息
+```
+
+- 蓝图同步失败会记录错误日志但不会阻断原对话消息。
+- Daily Publish 循环任务在依赖任务全部完成且到达配置时间窗口后自动生成当日子任务。
+
+
 ### 关键流程：公司账户扣费
 ```mermaid
 sequenceDiagram
@@ -236,6 +297,12 @@ erDiagram
 - 文档：数据模型、模块说明、运维脚本段落同步记录视频学习状态设计，更新初始化/运维指引。
 - 数据库：执行 `tool/fix_credit_timestamp_columns.py` 将 PostgreSQL `credit`/`credit_log` 表的 `created_at`、`updated_at` 列从 `bigint` 迁移为 `timestamptz`，修复登录初始化阶段抛出的 `credit initialize failed`。示例命令：`python tool/fix_credit_timestamp_columns.py --database-url "$DATABASE_URL"`，脚本支持幂等重复运行。
 - 验证：迁移后 `Credits.init_credit_by_user_id` 与 `/api/v1/auths/signin` 均返回正常响应，新账号登录即可生成初始积分记录。
+
+### 2025-10-29
+- 后端：新增 `backend/open_webui/services/blueprint_sync_service.py` 同步战略蓝图，按项目生成/更新主线任务并推送 Socket 通知。
+- 数据层：引入 `hsai_blueprint_progress` / `hsai_blueprint_progress_history` / `hsai_task_blueprint_links` ORM，配套脚本 `tool/add_blueprint_progress_tables.py` 初始化表结构。
+- 运行时：`conversation_queue_handler` 监听 `blue_image_content`，派发 `hsai_task_blueprint_update` 事件，避免蓝图通知缺失。
+- 文档：PROJECTWIKI 增补蓝图数据模型与同步流程示意，记录新的依赖与操作手册。
 
 ### 2025-10-27
 - 前端：`websocket-test.html` 新增“任务调试”标签页，提供任务上下文/事件流/操作面板；`static/ws-tester.js` 实现快照拉取、任务事件订阅、按钮状态联动与任务模板批量创建。

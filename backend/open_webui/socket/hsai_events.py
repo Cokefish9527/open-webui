@@ -219,6 +219,7 @@ HSAI_WEBSOCKET_EVENTS = {
     # 核心事件（已实现）
     "RESPONSE": "hsai_response",      # 成功响应事件
     "ERROR": "hsai_error",            # 错误响应事件
+    "BLUEPRINT_TASK_UPDATE": "hsai_task_blueprint_update",
     
     # 工作流相关事件（已合并到核心事件中）
     # "WORKFLOW_STARTED": "hsai_workflow_started",     # 已合并到hsai_response，通过subtype区分
