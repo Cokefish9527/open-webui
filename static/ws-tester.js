@@ -1,5 +1,7 @@
 ﻿const STORAGE_KEY = "openwebui_ws_tester_config_v2";
 
+const TASK_EVENT_LIMIT = 100;
+
 const DEFAULT_CONFIG = {
   serverBaseUrl: "http://localhost:8080",
   autoLogin: true,
@@ -16,6 +18,10 @@ const DEFAULT_CONFIG = {
     disconnect: true,
     ping: true,
     pong: true,
+    task_status_updated: true,
+    task_progress: true,
+    task_replay: true,
+    hsai_task_blueprint_update: true,
   },
   messageTemplates: [
     {
@@ -58,6 +64,8 @@ class WebSocketTester {
     this.conversations = new Map();
     this.replayQueue = [];
     this.rawLogs = [];
+    this.lastTaskRefreshAt = 0;
+    this.taskRefreshTimer = null;
 
     this.stats = {
       sent: 0,
@@ -72,6 +80,7 @@ class WebSocketTester {
 
     this.config = this.loadConfig();
     this.bindElements();
+    this.taskState = this.getInitialTaskState();
     this.setLoginButtonState("idle");
     this.setConnectButtonState("idle");
     this.applyConfigToUI();
@@ -81,6 +90,11 @@ class WebSocketTester {
     this.updateMetrics();
     this.appendSystemEvent("页面加载完成，等待操作。");
     this.updateAuthControls();
+    this.renderTaskOverview();
+    this.renderTaskLists();
+    this.renderTaskEvents();
+    this.updateTaskOperationsState();
+    this.setTaskMessage("等待登录后刷新任务概览。");
 
     if (this.config.autoLogin) {
       this.autoLogin();
@@ -180,6 +194,28 @@ class WebSocketTester {
       "focusSessionBtn",
       "focusLatestBtn",
       "clearFocusBtn",
+      "refreshTasksBtn",
+      "taskCompanyName",
+      "taskProjectName",
+      "taskMainProgress",
+      "taskRecurringStatus",
+      "taskMainSelect",
+      "taskRecurringSelect",
+      "taskMainList",
+      "taskSubtaskList",
+      "taskEventFilter",
+      "taskSessionOnlyToggle",
+      "clearTaskEventsBtn",
+      "taskEventTimeline",
+      "taskEventCounter",
+      "seedMainTasksBtn",
+      "completeMainTaskBtn",
+      "resetMainTaskBtn",
+      "activateRecurringBtn",
+      "taskSchedulerDate",
+      "simulateSchedulerBtn",
+      "taskOpsResult",
+      "replaySubtaskBtn",
     ];
 
     this.el = Object.fromEntries(ids.map((id) => [id, $(id)]));
@@ -338,6 +374,69 @@ class WebSocketTester {
     this.el.clearSubscriptionsBtn.addEventListener("click", () =>
       this.setAllSubscriptions(false)
     );
+
+    if (this.el.refreshTasksBtn) {
+      this.el.refreshTasksBtn.addEventListener("click", () =>
+        this.refreshTaskSnapshot({ reason: "manual" })
+      );
+    }
+    if (this.el.taskEventFilter) {
+      this.el.taskEventFilter.addEventListener("change", (event) => {
+        this.taskState.filters.category = event.target.value;
+        this.renderTaskEvents();
+      });
+    }
+    if (this.el.taskSessionOnlyToggle) {
+      this.el.taskSessionOnlyToggle.addEventListener("change", (event) => {
+        this.taskState.filters.sessionOnly = event.target.checked;
+        this.renderTaskEvents();
+      });
+    }
+    if (this.el.clearTaskEventsBtn) {
+      this.el.clearTaskEventsBtn.addEventListener("click", () =>
+        this.clearTaskEvents()
+      );
+    }
+    if (this.el.seedMainTasksBtn) {
+      this.el.seedMainTasksBtn.addEventListener("click", () =>
+        this.seedMainTasks()
+      );
+    }
+    if (this.el.completeMainTaskBtn) {
+      this.el.completeMainTaskBtn.addEventListener("click", () =>
+        this.updateMainTaskStatus("completed")
+      );
+    }
+    if (this.el.resetMainTaskBtn) {
+      this.el.resetMainTaskBtn.addEventListener("click", () =>
+        this.updateMainTaskStatus("pending")
+      );
+    }
+    if (this.el.activateRecurringBtn) {
+      this.el.activateRecurringBtn.addEventListener("click", () =>
+        this.startRecurringTask()
+      );
+    }
+    if (this.el.simulateSchedulerBtn) {
+      this.el.simulateSchedulerBtn.addEventListener("click", () =>
+        this.simulateScheduler()
+      );
+    }
+    if (this.el.replaySubtaskBtn) {
+      this.el.replaySubtaskBtn.addEventListener("click", () =>
+        this.replaySelectedSubtask()
+      );
+    }
+    if (this.el.taskMainSelect) {
+      this.el.taskMainSelect.addEventListener("change", (event) => {
+        this.setSelectedMainTask(event.target.value || null);
+      });
+    }
+    if (this.el.taskRecurringSelect) {
+      this.el.taskRecurringSelect.addEventListener("change", (event) => {
+        this.setSelectedRecurringTask(event.target.value || null);
+      });
+    }
 
     if (this.el.messageModal) {
       this.el.messageModalClose.addEventListener("click", () =>
@@ -573,16 +672,32 @@ class WebSocketTester {
     }
     if (eventName === "hsai_response") {
       this.handleResponse(payload);
-    } else if (eventName === "hsai_error") {
+      return;
+    }
+    if (eventName === "hsai_error") {
       this.handleError(payload);
-    } else if (eventName === "channel-events") {
+      return;
+    }
+    if (eventName === "hsai_task_blueprint_update") {
+      this.handleTaskEvent(eventName, payload);
+      return;
+    }
+    if (eventName === "channel-events") {
       const sessionId = payload?.channel_id || "channel";
       this.appendConversationMessage("received", eventName, payload, {
         sessionId,
       });
-    } else {
-      this.appendSystemEvent(`${eventName}：${JSON.stringify(payload)}`);
+      return;
     }
+    if (
+      eventName === "task_status_updated" ||
+      eventName === "task_progress" ||
+      eventName === "task_replay"
+    ) {
+      this.handleTaskEvent(eventName, payload);
+      return;
+    }
+    this.appendSystemEvent(`${eventName}：${JSON.stringify(payload)}`);
   }
 
   handleResponse(payload) {
@@ -1480,6 +1595,677 @@ class WebSocketTester {
     this.renderTemplates();
     this.appendSystemEvent("已清空本地缓存，恢复默认配置。");
   }
+  getInitialTaskState() {
+    return {
+      loading: false,
+      companyName: "-",
+      projectName: "-",
+      projectId: null,
+      mainTasks: [],
+      recurringTasks: [],
+      subtasks: [],
+      selectedMainTaskId: null,
+      selectedRecurringTaskId: null,
+      activeSubtaskId: null,
+      events: [],
+      filters: {
+        category: "all",
+        sessionOnly: false,
+      },
+    };
+  }
+
+  setTaskMessage(message, level = "info") {
+    if (!this.el.taskOpsResult) return;
+    this.el.taskOpsResult.textContent = message;
+    this.el.taskOpsResult.dataset.level = level;
+  }
+
+  renderTaskOverview() {
+    if (!this.el.taskCompanyName) {
+      return;
+    }
+    const { companyName, projectName, mainTasks, recurringTasks } = this.taskState;
+    this.el.taskCompanyName.textContent = companyName || "-";
+    this.el.taskProjectName.textContent = projectName || "-";
+    const totalMain = mainTasks.length;
+    const completedMain = mainTasks.filter((task) => task.status === "completed").length;
+    this.el.taskMainProgress.textContent = totalMain
+      ? ${Math.round((completedMain / totalMain) * 100)}% (/)
+      : "-";
+    const activeRecurring = recurringTasks.filter((task) => task.status === "in_progress").length;
+    this.el.taskRecurringStatus.textContent = recurringTasks.length
+      ? ${activeRecurring}/
+      : "-";
+  }
+
+  populateSelect(selectEl, tasks, selectedId) {
+    if (!selectEl) return;
+    selectEl.innerHTML = "";
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "尚未选择";
+    selectEl.appendChild(defaultOption);
+    tasks.forEach((task) => {
+      const option = document.createElement("option");
+      option.value = task.id;
+      option.textContent = task.title || task.name || task.id;
+      if (task.id === selectedId) {
+        option.selected = true;
+      }
+      selectEl.appendChild(option);
+    });
+  }
+
+  createTaskSectionTitle(label) {
+    const title = document.createElement("h3");
+    title.textContent = label;
+    title.style.margin = "8px 0";
+    title.style.color = "var(--muted)";
+    title.style.fontSize = "13px";
+    return title;
+  }
+
+  createTaskBadge(label, tone) {
+    const span = document.createElement("span");
+    span.className = "task-badge";
+    if (tone) {
+      span.dataset.tone = tone;
+    }
+    span.textContent = label;
+    return span;
+  }
+
+  createTaskCard(task, type, isActive = false) {
+    const card = document.createElement("article");
+    card.className = "task-item";
+    if (isActive) {
+      card.classList.add("is-active");
+    }
+    card.dataset.taskId = task.id || "";
+    card.dataset.taskType = type;
+
+    const header = document.createElement("div");
+    header.className = "task-item-header";
+    const title = document.createElement("div");
+    title.innerHTML = <strong></strong>;
+    header.appendChild(title);
+
+    const badges = document.createElement("div");
+    badges.className = "task-event-badges";
+    if (task.status) {
+      badges.appendChild(this.createTaskBadge(this.translateTaskStatus(task.status), status-));
+    }
+    if (typeof task.progress === "number") {
+      badges.appendChild(this.createTaskBadge(${task.progress}%, "progress"));
+    }
+    if (task.task_type) {
+      badges.appendChild(this.createTaskBadge(this.translateTaskType(task.task_type), "type"));
+    }
+    header.appendChild(badges);
+    card.appendChild(header);
+
+    if (task.description) {
+      const paragraph = document.createElement("p");
+      paragraph.className = "task-event-meta";
+      paragraph.textContent = task.description;
+      card.appendChild(paragraph);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "task-event-meta";
+    const metaParts = [];
+    if (task.status) {
+      metaParts.push(this.translateTaskStatus(task.status));
+    }
+    if (typeof task.progress === "number") {
+      metaParts.push(${task.progress}%);
+    }
+    if (task.updated_at) {
+      const ts = typeof task.updated_at === "number" ? new Date(task.updated_at * 1000) : new Date(task.updated_at);
+      if (!Number.isNaN(ts.getTime())) {
+        metaParts.push(ts.toLocaleString());
+      }
+    }
+    meta.textContent = metaParts.join(" · ") || "-";
+    card.appendChild(meta);
+
+    return card;
+  }
+
+  renderTaskLists() {
+    if (!this.el.taskMainList) {
+      return;
+    }
+    const { mainTasks, recurringTasks, subtasks, selectedMainTaskId, selectedRecurringTaskId, activeSubtaskId } = this.taskState;
+
+    this.populateSelect(this.el.taskMainSelect, mainTasks, selectedMainTaskId);
+    this.populateSelect(this.el.taskRecurringSelect, recurringTasks, selectedRecurringTaskId);
+
+    const mainList = this.el.taskMainList;
+    mainList.innerHTML = "";
+    if (!mainTasks.length && !recurringTasks.length) {
+      mainList.innerHTML = '<p class="task-empty">尚未加载任务，请先刷新概览。</p>';
+    } else {
+      if (mainTasks.length) {
+        mainList.appendChild(this.createTaskSectionTitle("主线任务"));
+        mainTasks.forEach((task) => {
+          const card = this.createTaskCard(task, "main", task.id === selectedMainTaskId);
+          card.addEventListener("click", () => {
+            this.setSelectedMainTask(task.id);
+          });
+          mainList.appendChild(card);
+        });
+      }
+      if (recurringTasks.length) {
+        mainList.appendChild(this.createTaskSectionTitle("循环任务"));
+        recurringTasks.forEach((task) => {
+          const card = this.createTaskCard(task, "recurring", task.id === selectedRecurringTaskId);
+          card.addEventListener("click", () => {
+            this.setSelectedRecurringTask(task.id);
+          });
+          mainList.appendChild(card);
+        });
+      }
+    }
+
+    if (this.el.taskSubtaskList) {
+      const subList = this.el.taskSubtaskList;
+      subList.innerHTML = "";
+      if (!subtasks.length) {
+        subList.innerHTML = '<p class="task-empty">暂无子任务。</p>';
+      } else {
+        subtasks.forEach((task) => {
+          const card = this.createTaskCard(task, "subtask", task.id === activeSubtaskId);
+          card.addEventListener("click", () => {
+            this.taskState.activeSubtaskId = this.taskState.activeSubtaskId === task.id ? null : task.id;
+            this.renderTaskLists();
+            this.updateTaskOperationsState();
+          });
+          subList.appendChild(card);
+        });
+      }
+    }
+
+    this.updateTaskOperationsState();
+  }
+
+  renderTaskEvents() {
+    if (!this.el.taskEventTimeline) {
+      return;
+    }
+    const { events, filters } = this.taskState;
+    let list = Array.from(events);
+    if (filters.category !== "all") {
+      list = list.filter((event) => event.category === filters.category);
+    }
+    if (filters.sessionOnly && this.primarySession) {
+      list = list.filter((event) => event.sessionId === this.primarySession);
+    }
+
+    const container = this.el.taskEventTimeline;
+    container.innerHTML = "";
+    if (!list.length) {
+      container.innerHTML = '<p class="task-empty">尚未收到任务事件。</p>';
+    } else {
+      list.forEach((event) => container.appendChild(this.createTaskEventRow(event)));
+    }
+    if (this.el.taskEventCounter) {
+      this.el.taskEventCounter.textContent = String(list.length);
+    }
+  }
+
+  createTaskEventRow(event) {
+    const row = document.createElement("div");
+    row.className = "task-event";
+
+    const title = document.createElement("div");
+    title.style.display = "flex";
+    title.style.justifyContent = "space-between";
+    title.style.alignItems = "center";
+
+    const name = document.createElement("strong");
+    name.textContent = this.getTaskEventTitle(event);
+    title.appendChild(name);
+
+    const meta = document.createElement("span");
+    meta.textContent = this.formatEventMeta(event);
+    meta.style.fontSize = "12px";
+    meta.style.color = "var(--muted)";
+    title.appendChild(meta);
+    row.appendChild(title);
+
+    if (event.message) {
+      const paragraph = document.createElement("p");
+      paragraph.className = "task-event-meta";
+      paragraph.textContent = event.message;
+      row.appendChild(paragraph);
+    }
+
+    const badges = document.createElement("div");
+    badges.className = "task-event-badges";
+    if (event.status) {
+      badges.appendChild(this.createTaskBadge(this.translateTaskStatus(event.status), status-));
+    }
+    if (typeof event.progress === "number") {
+      badges.appendChild(this.createTaskBadge(${event.progress}%, "progress"));
+    }
+    row.appendChild(badges);
+
+    return row;
+  }
+
+  getTaskEventTitle(event) {
+    const task = this.findTaskById(event.taskId);
+    const base = task?.title || task?.name || event.taskId || "任务";
+    if (event.eventName === "task_status_updated") {
+      return ${base} 状态变更;
+    }
+    if (event.eventName === "task_progress") {
+      return ${base} 进度更新;
+    }
+    if (event.eventName === "task_replay") {
+      return ${base} 回放;
+    }
+    if (event.eventName === "hsai_task_blueprint_update") {
+      return ${base} 蓝图同步;
+    }
+    return ${base} 事件;
+  }
+
+  formatEventMeta(event) {
+    const parts = [];
+    if (event.createdAt instanceof Date) {
+      parts.push(event.createdAt.toLocaleTimeString());
+    }
+    if (event.sessionId) {
+      parts.push(会话 );
+    }
+    if (event.eventName) {
+      parts.push(event.eventName);
+    }
+    return parts.join(' · ') || '-';
+  }
+
+  clearTaskEvents() {
+    this.taskState.events = [];
+    this.renderTaskEvents();
+    this.setTaskMessage("事件列表已清空。", "info");
+  }
+
+  resolveTaskEventCategory(eventName) {
+    if (eventName === "task_status_updated") return "status";
+    if (eventName === "task_progress") return "progress";
+    if (eventName === "task_replay") return "replay";
+    if (eventName === "hsai_task_blueprint_update") return "status";
+    return "system";
+  }
+
+  ensureAuthorized() {
+    if (!this.token) {
+      this.setTaskMessage("请先登录后再执行任务操作。", "warn");
+      return false;
+    }
+    return true;
+  }
+
+  getBaseUrl() {
+    return this.el.serverUrl.value.trim() || this.config.serverBaseUrl;
+  }
+
+  async authorizedFetch(path, options = {}) {
+    const baseUrl = this.getBaseUrl();
+    if (!baseUrl) {
+      throw new Error("接口地址未配置");
+    }
+    if (!this.ensureAuthorized()) {
+      throw new Error("Token 未就绪");
+    }
+    const init = { ...options };
+    init.headers = {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    };
+    if (this.token) {
+      init.headers.Authorization = Bearer ;
+    }
+    if (init.body && typeof init.body !== "string") {
+      init.body = JSON.stringify(init.body);
+    }
+    const response = await fetch(${baseUrl}, init);
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      throw new Error(errorText || ${response.status} );
+    }
+    const text = await response.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
+  async refreshTaskSnapshot({ reason = "manual" } = {}) {
+    if (!this.ensureAuthorized()) {
+      return;
+    }
+    if (this.taskState.loading) {
+      this.setTaskMessage("任务刷新进行中，请稍候。", "warn");
+      return;
+    }
+    this.taskState.loading = true;
+    this.updateTaskOperationsState();
+    this.setTaskMessage("正在刷新任务概览...", "info");
+    try {
+      const [tasksResp, companiesResp, projectsResp] = await Promise.all([
+        this.authorizedFetch("/api/v1/hsai/tasks?ps=100&pi=1"),
+        this.authorizedFetch("/api/v1/hsai/companies?ps=1&pi=1"),
+        this.authorizedFetch("/api/v1/hsai/projects?ps=1&pi=1"),
+      ]);
+      const tasks = Array.isArray(tasksResp?.data)
+        ? tasksResp.data
+        : Array.isArray(tasksResp?.items)
+        ? tasksResp.items
+        : Array.isArray(tasksResp)
+        ? tasksResp
+        : [];
+      const company = Array.isArray(companiesResp?.data)
+        ? companiesResp.data[0]
+        : Array.isArray(companiesResp)
+        ? companiesResp[0]
+        : companiesResp;
+      const project = Array.isArray(projectsResp?.data)
+        ? projectsResp.data[0]
+        : Array.isArray(projectsResp)
+        ? projectsResp[0]
+        : projectsResp;
+      if (company) {
+        this.taskState.companyName = company.name || company.company_name || "-";
+      }
+      if (project) {
+        this.taskState.projectName = project.name || project.project_name || "-";
+        this.taskState.projectId = project.id || project.project_id || null;
+      }
+      const categorized = this.categorizeTasks(tasks || []);
+      this.taskState.mainTasks = categorized.mainTasks;
+      this.taskState.recurringTasks = categorized.recurringTasks;
+      this.taskState.subtasks = categorized.subtasks;
+
+      if (
+        this.taskState.selectedMainTaskId &&
+        !this.taskState.mainTasks.some((task) => task.id === this.taskState.selectedMainTaskId)
+      ) {
+        this.taskState.selectedMainTaskId = null;
+      }
+      if (
+        this.taskState.selectedRecurringTaskId &&
+        !this.taskState.recurringTasks.some((task) => task.id === this.taskState.selectedRecurringTaskId)
+      ) {
+        this.taskState.selectedRecurringTaskId = null;
+      }
+      this.renderTaskOverview();
+      this.renderTaskLists();
+      this.setTaskMessage("任务概览已更新。", "success");
+      this.lastTaskRefreshAt = Date.now();
+    } catch (error) {
+      console.error(error);
+      this.setTaskMessage(刷新失败：, "error");
+    } finally {
+      this.taskState.loading = false;
+      this.updateTaskOperationsState();
+    }
+  }
+
+  categorizeTasks(tasks = []) {
+    const mainTasks = [];
+    const recurringTasks = [];
+    const subtasks = [];
+    tasks.forEach((task) => {
+      if (!task) return;
+      const parentId = task.parent_task_id || task.parentTaskId;
+      if (parentId) {
+        subtasks.push(task);
+        return;
+      }
+      const category = (task.task_category || task.category || "main").toLowerCase();
+      if (category.includes("recurring") || category.includes("daily")) {
+        recurringTasks.push(task);
+      } else {
+        mainTasks.push(task);
+      }
+    });
+    return { mainTasks, recurringTasks, subtasks };
+  }
+
+  mergeTaskUpdate(taskId, updates = {}) {
+    ["mainTasks", "recurringTasks", "subtasks"].forEach((key) => {
+      const list = this.taskState[key];
+      const index = Array.isArray(list) ? list.findIndex((task) => task.id === taskId) : -1;
+      if (index !== -1) {
+        this.taskState[key][index] = { ...list[index], ...updates };
+      }
+    });
+  }
+
+  findTaskById(taskId) {
+    if (!taskId) return null;
+    const collections = [
+      ...(this.taskState.mainTasks || []),
+      ...(this.taskState.recurringTasks || []),
+      ...(this.taskState.subtasks || []),
+    ];
+    return collections.find((task) => task.id === taskId) || null;
+  }
+
+  setSelectedMainTask(taskId) {
+    this.taskState.selectedMainTaskId = taskId || null;
+    this.renderTaskLists();
+    this.updateTaskOperationsState();
+  }
+
+  setSelectedRecurringTask(taskId) {
+    this.taskState.selectedRecurringTaskId = taskId || null;
+    this.renderTaskLists();
+    this.updateTaskOperationsState();
+  }
+
+  async seedMainTasks() {
+    if (!this.ensureAuthorized()) return;
+    if (!this.taskState.projectId) {
+      this.setTaskMessage("请先刷新概览，以确定项目信息。", "warn");
+      return;
+    }
+    try {
+      this.setTaskMessage("正在创建默认主线任务...", "info");
+      await this.authorizedFetch("/api/v1/hsai/tasks", {
+        method: "POST",
+        body: {
+          project_id: this.taskState.projectId,
+          template_key: "default_main_tasks",
+        },
+      });
+      this.setTaskMessage("任务创建请求已发送。", "success");
+      await this.refreshTaskSnapshot({ reason: "seed" });
+    } catch (error) {
+      this.setTaskMessage(创建失败：, "error");
+    }
+  }
+
+  async updateMainTaskStatus(status) {
+    if (!this.ensureAuthorized()) return;
+    const taskId = this.taskState.selectedMainTaskId;
+    if (!taskId) {
+      this.setTaskMessage("请选择主线任务后再操作。", "warn");
+      return;
+    }
+    try {
+      this.setTaskMessage("正在更新主线任务状态...", "info");
+      await this.authorizedFetch(/api/v1/hsai/tasks/, {
+        method: "PUT",
+        body: { status },
+      });
+      this.setTaskMessage("状态更新请求已发送。", "success");
+      await this.refreshTaskSnapshot({ reason: "status" });
+    } catch (error) {
+      this.setTaskMessage(更新失败：, "error");
+    }
+  }
+
+  async startRecurringTask() {
+    if (!this.ensureAuthorized()) return;
+    const taskId = this.taskState.selectedRecurringTaskId;
+    if (!taskId) {
+      this.setTaskMessage("请选择循环任务后再操作。", "warn");
+      return;
+    }
+    try {
+      this.setTaskMessage("正在启动循环任务...", "info");
+      await this.authorizedFetch(/api/v1/hsai/tasks//start, {
+        method: "POST",
+      });
+      this.setTaskMessage("任务启动请求已发送。", "success");
+      await this.refreshTaskSnapshot({ reason: "recurring" });
+    } catch (error) {
+      this.setTaskMessage(启动失败：, "error");
+    }
+  }
+
+  async simulateScheduler() {
+    if (!this.ensureAuthorized()) return;
+    const taskId = this.taskState.selectedRecurringTaskId;
+    if (!taskId) {
+      this.setTaskMessage("请选择循环任务后再调度。", "warn");
+      return;
+    }
+    const date = this.el.taskSchedulerDate?.value;
+    if (!date) {
+      this.setTaskMessage("请选择调度日期。", "warn");
+      return;
+    }
+    try {
+      this.setTaskMessage("正在生成模拟子任务...", "info");
+      await this.authorizedFetch(/api/v1/hsai/tasks//start, {
+        method: "POST",
+        body: { schedule_date: date },
+      });
+      this.setTaskMessage("模拟调度请求已发送。", "success");
+      await this.refreshTaskSnapshot({ reason: "simulate" });
+    } catch (error) {
+      this.setTaskMessage(模拟失败：, "error");
+    }
+  }
+
+  replaySelectedSubtask() {
+    const subtaskId = this.taskState.activeSubtaskId;
+    if (!subtaskId) {
+      this.setTaskMessage("请先在列表中选择子任务。", "warn");
+      return;
+    }
+    const subtask = this.findTaskById(subtaskId);
+    if (!subtask) {
+      this.setTaskMessage("未找到选中的子任务。", "error");
+      return;
+    }
+    this.handleTaskEvent("task_replay", {
+      task_id: subtask.id,
+      task: subtask,
+      message: "手动回放子任务",
+    });
+    this.setTaskMessage("已回放选中子任务，事件已记录。", "success");
+  }
+
+  handleTaskEvent(eventName, payload = {}) {
+    const event = {
+      id: this.generateUUID(),
+      eventName,
+      taskId: payload.task_id || payload.id || payload.task?.id || null,
+      status: payload.status || payload.task?.status || null,
+      progress:
+        typeof payload.progress === "number"
+          ? payload.progress
+          : typeof payload.task?.progress === "number"
+          ? payload.task.progress
+          : null,
+      sessionId:
+        payload.session_id ||
+        payload.sessionId ||
+        payload.context?.session_id ||
+        null,
+      message: payload.message || payload.detail || "",
+      category: this.resolveTaskEventCategory(eventName),
+      createdAt: new Date(),
+    };
+
+    this.taskState.events.unshift(event);
+    if (this.taskState.events.length > TASK_EVENT_LIMIT) {
+      this.taskState.events.length = TASK_EVENT_LIMIT;
+    }
+
+    if (event.taskId) {
+      const mergedPayload = payload.task || payload;
+      this.mergeTaskUpdate(event.taskId, mergedPayload);
+    }
+
+    this.renderTaskEvents();
+    this.renderTaskLists();
+    this.renderTaskOverview();
+  }
+
+  translateTaskStatus(status) {
+    const map = {
+      pending: "待处理",
+      in_progress: "进行中",
+      completed: "已完成",
+      failed: "失败",
+      cancelled: "已取消",
+    };
+    return map[status] || status || "-";
+  }
+
+  translateTaskType(taskType) {
+    const map = {
+      workflow_execution: "流程执行",
+      material_processing: "素材处理",
+      content_analysis: "内容分析",
+      platform_publishing: "平台发布",
+      reporting: "汇报",
+    };
+    return map[taskType] || taskType || "-";
+  }
+
+  updateTaskOperationsState() {
+    const hasToken = !!this.token;
+    const {
+      loading,
+      projectId,
+      selectedMainTaskId,
+      selectedRecurringTaskId,
+      activeSubtaskId,
+    } = this.taskState;
+
+    if (this.el.refreshTasksBtn) {
+      this.el.refreshTasksBtn.disabled = !hasToken || loading;
+    }
+    if (this.el.seedMainTasksBtn) {
+      this.el.seedMainTasksBtn.disabled = !hasToken || loading || !projectId;
+    }
+    if (this.el.completeMainTaskBtn) {
+      this.el.completeMainTaskBtn.disabled = !hasToken || loading || !selectedMainTaskId;
+    }
+    if (this.el.resetMainTaskBtn) {
+      this.el.resetMainTaskBtn.disabled = !hasToken || loading || !selectedMainTaskId;
+    }
+    if (this.el.activateRecurringBtn) {
+      this.el.activateRecurringBtn.disabled = !hasToken || loading || !selectedRecurringTaskId;
+    }
+    if (this.el.simulateSchedulerBtn) {
+      this.el.simulateSchedulerBtn.disabled = !hasToken || loading || !selectedRecurringTaskId;
+    }
+    if (this.el.replaySubtaskBtn) {
+      this.el.replaySubtaskBtn.disabled = !hasToken || loading || !activeSubtaskId;
+    }
+  }
 
   generateUUID() {
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -1491,4 +2277,3 @@ class WebSocketTester {
 }
 
 document.addEventListener("DOMContentLoaded", () => new WebSocketTester());
-

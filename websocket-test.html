@@ -142,9 +142,170 @@
             grid-column: span 2;
         }
 
-        .messaging-grid {
+.messaging-grid {
             grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
             align-items: flex-start;
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: minmax(320px, 360px) minmax(420px, 1fr) minmax(320px, 360px);
+            gap: 16px;
+            min-height: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .tasks-grid {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
+        }
+
+        .task-context-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .task-context-grid strong {
+            display: block;
+            margin-top: 2px;
+            font-size: 15px;
+        }
+
+        .task-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .task-section-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .task-section-header p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .task-item {
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: calc(var(--radius) - 6px);
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.6);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .task-item.is-active {
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
+        }
+
+        .task-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .task-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            color: #1f2937;
+            background: rgba(99, 102, 241, 0.1);
+            margin-left: 6px;
+        }
+
+        .task-event-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .task-event-timeline {
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-event {
+            border-left: 3px solid var(--primary);
+            background: rgba(37, 99, 235, 0.08);
+            padding: 10px 12px;
+            border-radius: calc(var(--radius) - 6px);
+        }
+
+        .task-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .task-inline {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .task-inline select,
+        .task-inline input {
+            width: 100%;
+        }
+
+        .task-ops-result {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: calc(var(--radius) - 6px);
+            font-size: 14px;
+            background: rgba(37, 99, 235, 0.08);
+            color: var(--text);
+        }
+
+        .task-ops-result[data-level="warn"] {
+            background: rgba(234, 179, 8, 0.18);
+        }
+
+        .task-ops-result[data-level="error"] {
+            background: rgba(220, 38, 38, 0.18);
+        }
+
+        .task-empty {
+            margin: 0;
+            padding: 24px 18px;
+            text-align: center;
+            color: var(--muted);
+            border: 1px dashed rgba(15, 23, 42, 0.2);
+            border-radius: calc(var(--radius) - 6px);
+        }
+
+        .task-event-counter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-size: 12px;
         }
 
         .message-form-card {
@@ -779,6 +940,7 @@
     <div class="tab-bar" role="tablist">
         <button type="button" class="tab-button active" data-tab="connection" aria-selected="true">连接与订阅</button>
         <button type="button" class="tab-button" data-tab="messaging" aria-selected="false">消息调试</button>
+        <button type="button" class="tab-button" data-tab="tasks" aria-selected="false">任务系统</button>
         <button type="button" class="tab-button" data-tab="monitor" aria-selected="false">监控面板</button>
     </div>
     <div class="tab-panels">
@@ -942,6 +1104,128 @@
                         </div>
                     </div>
                     <div id="conversationContainer" class="conversation-body"></div>
+                </section>
+            </div>
+        </section>
+        <section class="tab-panel" data-tab-panel="tasks" role="tabpanel" aria-label="任务系统" hidden>
+            <div class="tasks-grid">
+                <section class="card">
+                    <div class="task-section-header">
+                        <div>
+                            <h2>项目概览</h2>
+                            <p class="card-subtitle">同步企业与项目基础信息，实时掌握任务进展。</p>
+                        </div>
+                        <button id="refreshTasksBtn" class="secondary" type="button">刷新概览</button>
+                    </div>
+                    <div class="task-context-grid" aria-live="polite">
+                        <div>
+                            <span>企业名称</span>
+                            <strong id="taskCompanyName">-</strong>
+                        </div>
+                        <div>
+                            <span>当前项目</span>
+                            <strong id="taskProjectName">-</strong>
+                        </div>
+                        <div>
+                            <span>主线完成度</span>
+                            <strong id="taskMainProgress">-</strong>
+                        </div>
+                        <div>
+                            <span>循环任务</span>
+                            <strong id="taskRecurringStatus">-</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="task-section-header">
+                        <div>
+                            <h2>任务列表</h2>
+                            <p class="card-subtitle">列出主线、循环与子任务，支持手动筛选。</p>
+                        </div>
+                    </div>
+                    <div class="task-status-grid">
+                        <div class="task-inline">
+                            <label for="taskMainSelect">主线任务</label>
+                            <select id="taskMainSelect">
+                                <option value="">尚未选择</option>
+                            </select>
+                        </div>
+                        <div class="task-inline">
+                            <label for="taskRecurringSelect">循环任务</label>
+                            <select id="taskRecurringSelect">
+                                <option value="">尚未选择</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="taskMainList" class="task-list" aria-live="polite">
+                        <p class="task-empty">尚未加载任务，请先刷新概览。</p>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="task-section-header">
+                        <div>
+                            <h2>任务事件</h2>
+                            <p class="card-subtitle">监听 WebSocket 推送的任务状态、进度及回放消息。</p>
+                        </div>
+                        <span id="taskEventCounter" class="task-event-counter" aria-live="polite">0</span>
+                    </div>
+                    <div class="task-event-toolbar">
+                        <label class="task-inline" for="taskEventFilter">
+                            <span>事件类型</span>
+                            <select id="taskEventFilter">
+                                <option value="all">全部事件</option>
+                                <option value="status">状态变更</option>
+                                <option value="progress">进度更新</option>
+                                <option value="replay">回放记录</option>
+                            </select>
+                        </label>
+                        <label class="task-inline" for="taskSessionOnlyToggle">
+                            <span>仅当前会话</span>
+                            <input id="taskSessionOnlyToggle" type="checkbox">
+                        </label>
+                        <button id="clearTaskEventsBtn" class="secondary" type="button">清空事件</button>
+                    </div>
+                    <div id="taskEventTimeline" class="task-event-timeline" aria-live="polite">
+                        <p class="task-empty">尚未收到任务事件。</p>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="task-section-header">
+                        <div>
+                            <h2>操作中心</h2>
+                            <p class="card-subtitle">支持初始化主线、更新状态以及模拟循环调度。</p>
+                        </div>
+                    </div>
+                    <div class="task-inline">
+                        <button id="seedMainTasksBtn" class="secondary" type="button">创建默认主线任务</button>
+                    </div>
+                    <div class="task-inline">
+                        <label>主线任务操作</label>
+                        <div class="task-inline">
+                            <button id="completeMainTaskBtn" type="button">标记主线完成</button>
+                            <button id="resetMainTaskBtn" type="button">重置为未开始</button>
+                        </div>
+                    </div>
+                    <div class="task-inline">
+                        <label>循环任务操作</label>
+                        <button id="activateRecurringBtn" type="button">启动循环任务</button>
+                    </div>
+                    <div class="task-inline">
+                        <label for="taskSchedulerDate">模拟调度日期</label>
+                        <input id="taskSchedulerDate" type="date">
+                        <button id="simulateSchedulerBtn" class="secondary" type="button">生成当日子任务</button>
+                    </div>
+                    <div class="task-inline">
+                        <label for="taskSubtaskList">子任务列表</label>
+                        <div id="taskSubtaskList" class="task-list" aria-live="polite">
+                            <p class="task-empty">暂无子任务。</p>
+                        </div>
+                        <button id="replaySubtaskBtn" class="secondary" type="button">回放选中子任务</button>
+                    </div>
+                    <div id="taskOpsResult" class="task-ops-result" data-level="info">任务操作日志将显示在此。</div>
                 </section>
             </div>
         </section>
