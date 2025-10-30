@@ -1598,6 +1598,7 @@ class WebSocketTester {
   getInitialTaskState() {
     return {
       loading: false,
+      operationPending: false,
       companyName: "-",
       projectName: "-",
       projectId: null,
@@ -1621,21 +1622,39 @@ class WebSocketTester {
     this.el.taskOpsResult.dataset.level = level;
   }
 
+  setTaskOperationPending(isPending) {
+    this.taskState.operationPending = Boolean(isPending);
+    this.updateTaskOperationsState();
+  }
+
   renderTaskOverview() {
-    if (!this.el.taskCompanyName) {
+    if (
+      !this.el.taskCompanyName ||
+      !this.el.taskProjectName ||
+      !this.el.taskMainProgress ||
+      !this.el.taskRecurringStatus
+    ) {
       return;
     }
-    const { companyName, projectName, mainTasks, recurringTasks } = this.taskState;
-    this.el.taskCompanyName.textContent = companyName || "-";
-    this.el.taskProjectName.textContent = projectName || "-";
+    const { companyName, projectName, mainTasks, recurringTasks, loading, operationPending } =
+      this.taskState;
+    const loadingText = loading || operationPending ? "加载中…" : "-";
+    this.el.taskCompanyName.textContent = companyName || loadingText;
+    this.el.taskProjectName.textContent = projectName || loadingText;
+
     const totalMain = mainTasks.length;
-    const completedMain = mainTasks.filter((task) => task.status === "completed").length;
+    const completedMain = mainTasks.filter(
+      (task) => (task.status || "").toLowerCase() === "completed"
+    ).length;
     this.el.taskMainProgress.textContent = totalMain
-      ? ${Math.round((completedMain / totalMain) * 100)}% (/)
+      ? `${Math.round((completedMain / totalMain) * 100)}% (${completedMain}/${totalMain})`
       : "-";
-    const activeRecurring = recurringTasks.filter((task) => task.status === "in_progress").length;
+
+    const activeRecurring = recurringTasks.filter(
+      (task) => (task.status || "").toLowerCase() === "in_progress"
+    ).length;
     this.el.taskRecurringStatus.textContent = recurringTasks.length
-      ? ${activeRecurring}/
+      ? `${activeRecurring}/${recurringTasks.length}`
       : "-";
   }
 
@@ -1687,20 +1706,26 @@ class WebSocketTester {
 
     const header = document.createElement("div");
     header.className = "task-item-header";
-    const title = document.createElement("div");
-    title.innerHTML = <strong></strong>;
+
+    const title = document.createElement("strong");
+    title.textContent = task.title || task.name || "未命名任务";
     header.appendChild(title);
 
     const badges = document.createElement("div");
     badges.className = "task-event-badges";
     if (task.status) {
-      badges.appendChild(this.createTaskBadge(this.translateTaskStatus(task.status), status-));
+      badges.appendChild(
+        this.createTaskBadge(this.translateTaskStatus(task.status), "status")
+      );
     }
     if (typeof task.progress === "number") {
-      badges.appendChild(this.createTaskBadge(${task.progress}%, "progress"));
+      const progressValue = Math.max(0, Math.min(100, Math.round(task.progress)));
+      badges.appendChild(this.createTaskBadge(`${progressValue}%`, "progress"));
     }
     if (task.task_type) {
-      badges.appendChild(this.createTaskBadge(this.translateTaskType(task.task_type), "type"));
+      badges.appendChild(
+        this.createTaskBadge(this.translateTaskType(task.task_type), "type")
+      );
     }
     header.appendChild(badges);
     card.appendChild(header);
@@ -1719,7 +1744,7 @@ class WebSocketTester {
       metaParts.push(this.translateTaskStatus(task.status));
     }
     if (typeof task.progress === "number") {
-      metaParts.push(${task.progress}%);
+      metaParts.push(`${Math.round(task.progress)}%`);
     }
     if (task.updated_at) {
       const ts = typeof task.updated_at === "number" ? new Date(task.updated_at * 1000) : new Date(task.updated_at);
@@ -1737,7 +1762,14 @@ class WebSocketTester {
     if (!this.el.taskMainList) {
       return;
     }
-    const { mainTasks, recurringTasks, subtasks, selectedMainTaskId, selectedRecurringTaskId, activeSubtaskId } = this.taskState;
+    const {
+      mainTasks,
+      recurringTasks,
+      subtasks,
+      selectedMainTaskId,
+      selectedRecurringTaskId,
+      activeSubtaskId,
+    } = this.taskState;
 
     this.populateSelect(this.el.taskMainSelect, mainTasks, selectedMainTaskId);
     this.populateSelect(this.el.taskRecurringSelect, recurringTasks, selectedRecurringTaskId);
@@ -1747,25 +1779,32 @@ class WebSocketTester {
     if (!mainTasks.length && !recurringTasks.length) {
       mainList.innerHTML = '<p class="task-empty">尚未加载任务，请先刷新概览。</p>';
     } else {
+      mainList.appendChild(this.createTaskSectionTitle("主线任务"));
       if (mainTasks.length) {
-        mainList.appendChild(this.createTaskSectionTitle("主线任务"));
         mainTasks.forEach((task) => {
           const card = this.createTaskCard(task, "main", task.id === selectedMainTaskId);
-          card.addEventListener("click", () => {
-            this.setSelectedMainTask(task.id);
-          });
+          card.addEventListener("click", () => this.setSelectedMainTask(task.id));
           mainList.appendChild(card);
         });
+      } else {
+        const empty = document.createElement("p");
+        empty.className = "task-empty";
+        empty.textContent = "暂无主线任务。";
+        mainList.appendChild(empty);
       }
+
+      mainList.appendChild(this.createTaskSectionTitle("循环任务"));
       if (recurringTasks.length) {
-        mainList.appendChild(this.createTaskSectionTitle("循环任务"));
         recurringTasks.forEach((task) => {
           const card = this.createTaskCard(task, "recurring", task.id === selectedRecurringTaskId);
-          card.addEventListener("click", () => {
-            this.setSelectedRecurringTask(task.id);
-          });
+          card.addEventListener("click", () => this.setSelectedRecurringTask(task.id));
           mainList.appendChild(card);
         });
+      } else {
+        const empty = document.createElement("p");
+        empty.className = "task-empty";
+        empty.textContent = "暂无循环任务。";
+        mainList.appendChild(empty);
       }
     }
 
@@ -1773,12 +1812,14 @@ class WebSocketTester {
       const subList = this.el.taskSubtaskList;
       subList.innerHTML = "";
       if (!subtasks.length) {
+        this.taskState.activeSubtaskId = null;
         subList.innerHTML = '<p class="task-empty">暂无子任务。</p>';
       } else {
         subtasks.forEach((task) => {
           const card = this.createTaskCard(task, "subtask", task.id === activeSubtaskId);
           card.addEventListener("click", () => {
-            this.taskState.activeSubtaskId = this.taskState.activeSubtaskId === task.id ? null : task.id;
+            this.taskState.activeSubtaskId =
+              this.taskState.activeSubtaskId === task.id ? null : task.id;
             this.renderTaskLists();
             this.updateTaskOperationsState();
           });
@@ -1809,6 +1850,7 @@ class WebSocketTester {
       container.innerHTML = '<p class="task-empty">尚未收到任务事件。</p>';
     } else {
       list.forEach((event) => container.appendChild(this.createTaskEventRow(event)));
+      container.scrollTop = 0;
     }
     if (this.el.taskEventCounter) {
       this.el.taskEventCounter.textContent = String(list.length);
@@ -1845,10 +1887,13 @@ class WebSocketTester {
     const badges = document.createElement("div");
     badges.className = "task-event-badges";
     if (event.status) {
-      badges.appendChild(this.createTaskBadge(this.translateTaskStatus(event.status), status-));
+      badges.appendChild(
+        this.createTaskBadge(this.translateTaskStatus(event.status), "status")
+      );
     }
     if (typeof event.progress === "number") {
-      badges.appendChild(this.createTaskBadge(${event.progress}%, "progress"));
+      const progressValue = Math.max(0, Math.min(100, Math.round(event.progress)));
+      badges.appendChild(this.createTaskBadge(`${progressValue}%`, "progress"));
     }
     row.appendChild(badges);
 
@@ -1858,19 +1903,18 @@ class WebSocketTester {
   getTaskEventTitle(event) {
     const task = this.findTaskById(event.taskId);
     const base = task?.title || task?.name || event.taskId || "任务";
-    if (event.eventName === "task_status_updated") {
-      return ${base} 状态变更;
+    switch (event.eventName) {
+      case "task_status_updated":
+        return `${base} 状态变更`;
+      case "task_progress":
+        return `${base} 进度更新`;
+      case "task_replay":
+        return `${base} 回放`;
+      case "hsai_task_blueprint_update":
+        return `${base} 蓝图同步`;
+      default:
+        return `${base} 事件`;
     }
-    if (event.eventName === "task_progress") {
-      return ${base} 进度更新;
-    }
-    if (event.eventName === "task_replay") {
-      return ${base} 回放;
-    }
-    if (event.eventName === "hsai_task_blueprint_update") {
-      return ${base} 蓝图同步;
-    }
-    return ${base} 事件;
   }
 
   formatEventMeta(event) {
@@ -1879,12 +1923,12 @@ class WebSocketTester {
       parts.push(event.createdAt.toLocaleTimeString());
     }
     if (event.sessionId) {
-      parts.push(会话 );
+      parts.push(`会话 ${event.sessionId}`);
     }
     if (event.eventName) {
       parts.push(event.eventName);
     }
-    return parts.join(' · ') || '-';
+    return parts.join(" · ") || "-";
   }
 
   clearTaskEvents() {
@@ -1898,6 +1942,7 @@ class WebSocketTester {
     if (eventName === "task_progress") return "progress";
     if (eventName === "task_replay") return "replay";
     if (eventName === "hsai_task_blueprint_update") return "status";
+    if (typeof eventName === "string" && eventName.includes("error")) return "error";
     return "system";
   }
 
@@ -1914,28 +1959,35 @@ class WebSocketTester {
   }
 
   async authorizedFetch(path, options = {}) {
-    const baseUrl = this.getBaseUrl();
+    const baseUrl = (this.getBaseUrl() || "").replace(/\/$/, "");
     if (!baseUrl) {
       throw new Error("接口地址未配置");
     }
     if (!this.ensureAuthorized()) {
       throw new Error("Token 未就绪");
     }
-    const init = { ...options };
+    const init = {
+      credentials: "include",
+      ...options,
+    };
     init.headers = {
       "Content-Type": "application/json",
       ...(options.headers || {}),
     };
     if (this.token) {
-      init.headers.Authorization = Bearer ;
+      init.headers.Authorization = `Bearer ${this.token}`;
     }
     if (init.body && typeof init.body !== "string") {
       init.body = JSON.stringify(init.body);
     }
-    const response = await fetch(${baseUrl}, init);
+    const urlPath = path.startsWith("/") ? path : `/${path}`;
+    const response = await fetch(`${baseUrl}${urlPath}`, init);
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
-      throw new Error(errorText || ${response.status} );
+      throw new Error(errorText || `HTTP ${response.status}`);
+    }
+    if (response.status === 204) {
+      return null;
     }
     const text = await response.text();
     if (!text) return null;
@@ -2010,7 +2062,7 @@ class WebSocketTester {
       this.lastTaskRefreshAt = Date.now();
     } catch (error) {
       console.error(error);
-      this.setTaskMessage(刷新失败：, "error");
+      this.setTaskMessage(`刷新失败：${error.message || "请求异常"}`, "error");
     } finally {
       this.taskState.loading = false;
       this.updateTaskOperationsState();
@@ -2077,6 +2129,7 @@ class WebSocketTester {
       return;
     }
     try {
+      this.setTaskOperationPending(true);
       this.setTaskMessage("正在创建默认主线任务...", "info");
       await this.authorizedFetch("/api/v1/hsai/tasks", {
         method: "POST",
@@ -2088,7 +2141,10 @@ class WebSocketTester {
       this.setTaskMessage("任务创建请求已发送。", "success");
       await this.refreshTaskSnapshot({ reason: "seed" });
     } catch (error) {
-      this.setTaskMessage(创建失败：, "error");
+      console.error(error);
+      this.setTaskMessage(`创建失败：${error.message || "请求异常"}`, "error");
+    } finally {
+      this.setTaskOperationPending(false);
     }
   }
 
@@ -2100,15 +2156,19 @@ class WebSocketTester {
       return;
     }
     try {
+      this.setTaskOperationPending(true);
       this.setTaskMessage("正在更新主线任务状态...", "info");
-      await this.authorizedFetch(/api/v1/hsai/tasks/, {
+      await this.authorizedFetch(`/api/v1/hsai/tasks/${taskId}`, {
         method: "PUT",
         body: { status },
       });
       this.setTaskMessage("状态更新请求已发送。", "success");
       await this.refreshTaskSnapshot({ reason: "status" });
     } catch (error) {
-      this.setTaskMessage(更新失败：, "error");
+      console.error(error);
+      this.setTaskMessage(`更新失败：${error.message || "请求异常"}`, "error");
+    } finally {
+      this.setTaskOperationPending(false);
     }
   }
 
@@ -2120,14 +2180,18 @@ class WebSocketTester {
       return;
     }
     try {
+      this.setTaskOperationPending(true);
       this.setTaskMessage("正在启动循环任务...", "info");
-      await this.authorizedFetch(/api/v1/hsai/tasks//start, {
+      await this.authorizedFetch(`/api/v1/hsai/tasks/${taskId}/start`, {
         method: "POST",
       });
       this.setTaskMessage("任务启动请求已发送。", "success");
       await this.refreshTaskSnapshot({ reason: "recurring" });
     } catch (error) {
-      this.setTaskMessage(启动失败：, "error");
+      console.error(error);
+      this.setTaskMessage(`启动失败：${error.message || "请求异常"}`, "error");
+    } finally {
+      this.setTaskOperationPending(false);
     }
   }
 
@@ -2144,15 +2208,19 @@ class WebSocketTester {
       return;
     }
     try {
+      this.setTaskOperationPending(true);
       this.setTaskMessage("正在生成模拟子任务...", "info");
-      await this.authorizedFetch(/api/v1/hsai/tasks//start, {
+      await this.authorizedFetch(`/api/v1/hsai/tasks/${taskId}/simulate`, {
         method: "POST",
         body: { schedule_date: date },
       });
       this.setTaskMessage("模拟调度请求已发送。", "success");
       await this.refreshTaskSnapshot({ reason: "simulate" });
     } catch (error) {
-      this.setTaskMessage(模拟失败：, "error");
+      console.error(error);
+      this.setTaskMessage(`模拟失败：${error.message || "请求异常"}`, "error");
+    } finally {
+      this.setTaskOperationPending(false);
     }
   }
 
@@ -2197,6 +2265,31 @@ class WebSocketTester {
       createdAt: new Date(),
     };
 
+    if (!event.message && payload.error) {
+      event.message =
+        typeof payload.error === "string" ? payload.error : JSON.stringify(payload.error);
+    }
+    if (!event.message && payload.note) {
+      event.message = payload.note;
+    }
+    if (!event.message && payload.contextMessage) {
+      event.message = payload.contextMessage;
+    }
+    if (!event.message && payload.task?.message) {
+      event.message = payload.task.message;
+    }
+    if (!event.message && payload.task?.detail) {
+      event.message = payload.task.detail;
+    }
+
+    if (!event.category || event.category === "system") {
+      if (eventName && eventName.includes("error")) {
+        event.category = "error";
+      } else if (payload.error) {
+        event.category = "error";
+      }
+    }
+
     this.taskState.events.unshift(event);
     if (this.taskState.events.length > TASK_EVENT_LIMIT) {
       this.taskState.events.length = TASK_EVENT_LIMIT;
@@ -2238,32 +2331,34 @@ class WebSocketTester {
     const hasToken = !!this.token;
     const {
       loading,
+      operationPending,
       projectId,
       selectedMainTaskId,
       selectedRecurringTaskId,
       activeSubtaskId,
     } = this.taskState;
+    const busy = loading || operationPending;
 
     if (this.el.refreshTasksBtn) {
-      this.el.refreshTasksBtn.disabled = !hasToken || loading;
+      this.el.refreshTasksBtn.disabled = !hasToken || busy;
     }
     if (this.el.seedMainTasksBtn) {
-      this.el.seedMainTasksBtn.disabled = !hasToken || loading || !projectId;
+      this.el.seedMainTasksBtn.disabled = !hasToken || busy || !projectId;
     }
     if (this.el.completeMainTaskBtn) {
-      this.el.completeMainTaskBtn.disabled = !hasToken || loading || !selectedMainTaskId;
+      this.el.completeMainTaskBtn.disabled = !hasToken || busy || !selectedMainTaskId;
     }
     if (this.el.resetMainTaskBtn) {
-      this.el.resetMainTaskBtn.disabled = !hasToken || loading || !selectedMainTaskId;
+      this.el.resetMainTaskBtn.disabled = !hasToken || busy || !selectedMainTaskId;
     }
     if (this.el.activateRecurringBtn) {
-      this.el.activateRecurringBtn.disabled = !hasToken || loading || !selectedRecurringTaskId;
+      this.el.activateRecurringBtn.disabled = !hasToken || busy || !selectedRecurringTaskId;
     }
     if (this.el.simulateSchedulerBtn) {
-      this.el.simulateSchedulerBtn.disabled = !hasToken || loading || !selectedRecurringTaskId;
+      this.el.simulateSchedulerBtn.disabled = !hasToken || busy || !selectedRecurringTaskId;
     }
     if (this.el.replaySubtaskBtn) {
-      this.el.replaySubtaskBtn.disabled = !hasToken || loading || !activeSubtaskId;
+      this.el.replaySubtaskBtn.disabled = !hasToken || busy || !activeSubtaskId;
     }
   }
 

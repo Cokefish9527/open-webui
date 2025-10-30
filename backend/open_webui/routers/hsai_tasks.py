@@ -20,6 +20,9 @@ from open_webui.models.hsai_tasks import (
     HSAITaskStatus,
     HSAITaskType,
     HSAICardType,
+    HSAIRecurringState,
+    HSAITaskStateLogs,
+    HSAITaskModel,
     # 添加分页相关的导入
     PaginationData,
     PaginatedHSAITaskResponse,
@@ -49,6 +52,88 @@ class TaskStatsResponse(BaseModel):
     failed_tasks: int
     tasks_by_type: dict
     avg_completion_time: Optional[float] = None
+
+
+class RecurringActivateForm(BaseModel):
+    next_run_at: Optional[int] = None
+    message: Optional[str] = None
+
+
+class RecurringPauseForm(BaseModel):
+    reason: Optional[str] = None
+    message: Optional[str] = None
+
+
+class RecurringResumeForm(BaseModel):
+    message: Optional[str] = None
+
+
+class RecurringHandoverForm(BaseModel):
+    controller: str = Field(description="外部控制方标识")
+    note: Optional[str] = None
+
+
+class RecurringSyncForm(BaseModel):
+    state: str = Field(description="循环任务状态")
+    next_run_at: Optional[int] = None
+    last_run_at: Optional[int] = None
+    message: Optional[str] = None
+
+
+class SimulateSchedulerForm(BaseModel):
+    schedule_date: str = Field(description="YYYY-MM-DD")
+
+
+def _get_task_for_user(task_id: str, user_id: str) -> HSAITaskModel:
+    task = HSAITasks.get_task_by_id(task_id)
+    if not task or task.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found",
+        )
+    return task
+
+
+def _is_recurring_task(task: HSAITaskModel) -> bool:
+    category = (task.task_category or "").lower()
+    return task.is_recurring or category.startswith("blueprint_daily")
+
+
+def _append_state_log(
+    task_id: str,
+    from_state: Optional[str],
+    to_state: str,
+    user,
+    source: str,
+    message: Optional[str],
+    snapshot: Optional[Dict[str, Any]] = None,
+) -> None:
+    operator_id = getattr(user, "id", None)
+    operator_name = getattr(user, "name", None) or getattr(user, "email", None)
+    HSAITaskStateLogs.append_log(
+        task_id=task_id,
+        from_state=from_state,
+        to_state=to_state,
+        operator_id=operator_id,
+        operator_name=operator_name,
+        source=source,
+        message=message,
+        snapshot_json=snapshot,
+    )
+
+
+def _emit_task_event(task: HSAITaskModel, event: str, message: Optional[str], context: Optional[Dict[str, Any]] = None):
+    emitter = get_event_emitter()
+    if not emitter:
+        return
+    payload = {
+        "task_id": task.id,
+        "status": task.status,
+        "recurring_state": task.recurring_state,
+        "message": message,
+        "context": context or {},
+    }
+    emitter.emit(event, payload)
 
 
 @router.get("/statistics", response_model=TaskStatsResponse, summary="获取任务统计")

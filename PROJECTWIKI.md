@@ -277,7 +277,7 @@ erDiagram
 - **脚本验证**：`tool/` 目录提供数据库列校验、Redis 队列修复脚本，运行前需确认 `.env` 指向正确环境。
 - **数据库修复脚本**：`tool/fix_hsai_video_learning_status_sequence.py` 支持 dry-run / --apply，两步完成重复检测与联合唯一约束/序列补齐。
 - **监控建议**：重点观测 `credit`/`credit_log` 同步延迟、Redis Stream 消费积压、n8n 数据库链路。
-- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；除消息发送卡片、Markdown/JSON 双模态与 `workflow_started` 延迟过滤外，新增任务快照刷新、事件流筛选与操作按钮状态机；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-27 更新）。
+- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；任务标签页采用双列布局（左列操作中心，右列依次为项目概览、任务列表、事件时间轴），按钮内置加载/禁用状态，事件卡片展示状态徽章、进度和会话信息；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-30 更新）。
 
 ## 术语表
 | 术语 | 说明 |
@@ -297,6 +297,10 @@ erDiagram
 - 文档：数据模型、模块说明、运维脚本段落同步记录视频学习状态设计，更新初始化/运维指引。
 - 数据库：执行 `tool/fix_credit_timestamp_columns.py` 将 PostgreSQL `credit`/`credit_log` 表的 `created_at`、`updated_at` 列从 `bigint` 迁移为 `timestamptz`，修复登录初始化阶段抛出的 `credit initialize failed`。示例命令：`python tool/fix_credit_timestamp_columns.py --database-url "$DATABASE_URL"`，脚本支持幂等重复运行。
 - 验证：迁移后 `Credits.init_credit_by_user_id` 与 `/api/v1/auths/signin` 均返回正常响应，新账号登录即可生成初始积分记录。
+
+### 2025-10-30
+- 前端：重构调试页任务标签为双列布局，完善主线/循环/子任务卡片渲染与按钮状态管理，事件时间轴新增状态徽章和进度展示。
+- 文档：更新 `docs/410_websocket_test_page_manual.md` 描述新的布局与操作流程，并在验收清单新增操作禁用与事件展示的核对项。
 
 ### 2025-10-29
 - 后端：新增 `backend/open_webui/services/blueprint_sync_service.py` 同步战略蓝图，按项目生成/更新主线任务并推送 Socket 通知。

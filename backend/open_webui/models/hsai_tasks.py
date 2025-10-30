@@ -43,6 +43,14 @@ class HSAITaskType(str, Enum):
     WORKFLOW_EXECUTION = "workflow_execution"
 
 
+class HSAIRecurringState(str, Enum):
+    """循环任务运行状态"""
+    IDLE = "idle"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    EXTERNAL_CONTROLLED = "external_controlled"
+
+
 class HSAICardType(str, Enum):
     """卡片类型枚举"""
     TASK_CARD = "task_card"
@@ -76,7 +84,15 @@ class HSAITask(Base):
     # 任务配置和参数
     config = Column(JSON, nullable=True)  # 任务配置参数
     prompt_config = Column(JSON, nullable=True)  # 提示词配置
-    
+
+    # 循环任务
+    is_recurring = Column(Boolean, nullable=False, default=False)
+    recurring_state = Column(String, nullable=True, default=HSAIRecurringState.IDLE.value)
+    last_run_at = Column(EpochTimestamp(), nullable=True)
+    next_run_at = Column(EpochTimestamp(), nullable=True)
+    external_controller = Column(String, nullable=True)
+    recurring_meta = Column(JSON, nullable=True)
+
     # 工作流相关
     workflow_id = Column(String, ForeignKey("hsai_workflows.id"), nullable=True)
     parent_task_id = Column(String, ForeignKey("hsai_tasks.id"), nullable=True)
@@ -209,20 +225,24 @@ class HSAITaskModel(BaseModel):
     status: str = Field(default=HSAITaskStatus.PENDING, description="任务状态")
     user_id: str = Field(description="用户ID")
     assignee_id: Optional[str] = Field(default=None, description="指派人ID")
-    chat_id: Optional[str] = Field(default=None, description="关联的聊天会话ID")
+    chat_id: Optional[str] = Field(default=None, description="关联的会话ID")
     project_id: Optional[str] = Field(default=None, description="关联的项目ID")
     config: Optional[dict] = Field(default=None, description="任务配置参数")
     prompt_config: Optional[dict] = Field(default=None, description="提示词配置")
-    workflow_id: Optional[str] = Field(default=None, description="工作流ID")
+    workflow_id: Optional[str] = Field(default=None, description="关联工作流ID")
     parent_task_id: Optional[str] = Field(default=None, description="父任务ID")
+    is_recurring: bool = Field(default=False, description="是否循环任务")
+    recurring_state: Optional[str] = Field(default=None, description="循环任务运行状态")
+    last_run_at: Optional[int] = Field(default=None, description="最近运行时间戳")
+    next_run_at: Optional[int] = Field(default=None, description="下次计划运行时间戳")
+    external_controller: Optional[str] = Field(default=None, description="外部控制方标识")
+    recurring_meta: Optional[dict] = Field(default=None, description="循环任务扩展元数据")
     progress: int = Field(default=0, description="进度百分比(0-100)")
     started_at: Optional[int] = Field(default=None, description="开始时间戳")
     completed_at: Optional[int] = Field(default=None, description="完成时间戳")
     priority: int = Field(default=0, description="优先级，数字越大越优先")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
-
-
 
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
@@ -234,7 +254,7 @@ class HSAITaskModel(BaseModel):
         except ValueError as exc:
             raise ValueError(f"Invalid timestamp value: {exc}") from exc
 
-    @field_validator("started_at", "completed_at", mode="before")
+    @field_validator("started_at", "completed_at", "last_run_at", "next_run_at", mode="before")
     @classmethod
     def validate_optional_timestamps(cls, value):
         if value is None:
@@ -243,6 +263,7 @@ class HSAITaskModel(BaseModel):
             return normalize_optional_timestamp(value)
         except ValueError as exc:
             raise ValueError(f"Invalid optional timestamp value: {exc}") from exc
+
 
 class HSAIWorkflowModel(BaseModel):
     """HSAI工作流模型"""
@@ -337,6 +358,12 @@ class HSAITaskForm(BaseModel):
     prompt_config: Optional[dict] = None
     workflow_id: Optional[str] = None
     parent_task_id: Optional[str] = None
+    is_recurring: Optional[bool] = False
+    recurring_state: Optional[str] = None
+    last_run_at: Optional[int] = None
+    next_run_at: Optional[int] = None
+    external_controller: Optional[str] = None
+    recurring_meta: Optional[dict] = None
     priority: Optional[int] = 0
 
 
@@ -370,10 +397,18 @@ class HSAITaskUpdateForm(BaseModel):
     description: Optional[str] = None
     task_category: Optional[str] = None
     status: Optional[str] = None
-    assignee_id: Optional[str] = None  # 指派人ID
+    assignee_id: Optional[str] = None
     project_id: Optional[str] = None
     config: Optional[dict] = None
     prompt_config: Optional[dict] = None
+    workflow_id: Optional[str] = None
+    parent_task_id: Optional[str] = None
+    is_recurring: Optional[bool] = None
+    recurring_state: Optional[str] = None
+    last_run_at: Optional[int] = None
+    next_run_at: Optional[int] = None
+    external_controller: Optional[str] = None
+    recurring_meta: Optional[dict] = None
     progress: Optional[int] = None
     priority: Optional[int] = None
 
@@ -392,7 +427,15 @@ class HSAITaskResponse(BaseModel):
     status: str = Field(description="任务状态")
     assignee_id: Optional[str] = Field(default=None, description="任务指派人ID")
     project_id: Optional[str] = Field(default=None, description="关联的项目ID")
-    progress: int = Field(default=0, description="任务进度百分比 (0-100)")
+    workflow_id: Optional[str] = Field(default=None, description="关联工作流ID")
+    parent_task_id: Optional[str] = Field(default=None, description="父任务ID")
+    is_recurring: bool = Field(default=False, description="是否循环任务")
+    recurring_state: Optional[str] = Field(default=None, description="循环任务运行状态")
+    last_run_at: Optional[int] = Field(default=None, description="最近运行时间戳")
+    next_run_at: Optional[int] = Field(default=None, description="下次计划运行时间戳")
+    external_controller: Optional[str] = Field(default=None, description="外部控制方标识")
+    recurring_meta: Optional[dict] = Field(default=None, description="循环任务扩展元数据")
+    progress: int = Field(default=0, description="任务进度百分比(0-100)")
     priority: int = Field(default=0, description="任务优先级")
     started_at: Optional[int] = Field(default=None, description="任务开始时间戳")
     completed_at: Optional[int] = Field(default=None, description="任务完成时间戳")
@@ -437,6 +480,37 @@ class PaginatedHSAICardResponse(BaseModel):
     """分页的卡片响应模型"""
     data: List[HSAICardResponse] = Field(description="卡片数据列表")
     pagination: PaginationData = Field(description="分页信息")
+
+
+class HSAITaskStateLog(Base):
+    """循环任务状态日志"""
+    __tablename__ = "hsai_task_state_logs"
+
+    id = Column(String, primary_key=True)
+    task_id = Column(String, ForeignKey("hsai_tasks.id"), nullable=False)
+    from_state = Column(String, nullable=True)
+    to_state = Column(String, nullable=False)
+    operator_id = Column(String, nullable=True)
+    operator_name = Column(String, nullable=True)
+    source = Column(String, nullable=True)  # admin_console / api / automation
+    message = Column(Text, nullable=True)
+    snapshot_json = Column(JSON, nullable=True)
+    created_at = Column(EpochTimestamp(), nullable=False)
+
+
+class HSAITaskStateLogModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    task_id: str
+    from_state: Optional[str] = None
+    to_state: str
+    operator_id: Optional[str] = None
+    operator_name: Optional[str] = None
+    source: Optional[str] = None
+    message: Optional[str] = None
+    snapshot_json: Optional[Dict[str, Any]] = None
+    created_at: int
 
 
 ####################
@@ -591,9 +665,51 @@ class HSAITasksTable:
                     db.commit()
                     return True
                 return False
-            except Exception as e:
-                log.exception(f"Error updating task progress: {e}")
-                return False
+        except Exception as e:
+            log.exception(f"Error updating task progress: {e}")
+            return False
+
+
+class HSAITaskStateLogsTable:
+    def append_log(
+        self,
+        task_id: str,
+        to_state: str,
+        from_state: Optional[str] = None,
+        operator_id: Optional[str] = None,
+        operator_name: Optional[str] = None,
+        source: Optional[str] = None,
+        message: Optional[str] = None,
+        snapshot_json: Optional[Dict[str, Any]] = None,
+    ) -> HSAITaskStateLogModel:
+        with get_db() as db:
+            log_entry = HSAITaskStateLog(
+                id=str(uuid.uuid4()),
+                task_id=task_id,
+                from_state=from_state,
+                to_state=to_state,
+                operator_id=operator_id,
+                operator_name=operator_name,
+                source=source,
+                message=message,
+                snapshot_json=snapshot_json,
+                created_at=int(time.time()),
+            )
+            db.add(log_entry)
+            db.commit()
+            db.refresh(log_entry)
+            return HSAITaskStateLogModel.model_validate(log_entry)
+
+    def list_logs(self, task_id: str, limit: int = 50) -> List[HSAITaskStateLogModel]:
+        with get_db() as db:
+            records = (
+                db.query(HSAITaskStateLog)
+                .filter_by(task_id=task_id)
+                .order_by(HSAITaskStateLog.created_at.desc())
+                .limit(limit)
+                .all()
+            )
+            return [HSAITaskStateLogModel.model_validate(item) for item in records]
 
 
 class HSAICardsTable:
@@ -669,4 +785,5 @@ class HSAICardsTable:
 
 # 全局实例
 HSAITasks = HSAITasksTable()
+HSAITaskStateLogs = HSAITaskStateLogsTable()
 HSAICards = HSAICardsTable()
