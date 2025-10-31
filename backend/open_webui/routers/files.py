@@ -42,8 +42,8 @@ from pydantic import BaseModel
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-
-router = APIRouter()
+# 统一中文标签：文件管理
+router = APIRouter(tags=["文件管理"])
 
 
 ############################
@@ -83,7 +83,12 @@ def has_access_to_file(
 ############################
 
 
-@router.post("/", response_model=FileModelResponse)
+@router.post(
+    "/",
+    response_model=FileModelResponse,
+    summary="上传文件",
+    description="上传单个文件并可选择是否处理（转写/内容抽取入检索）。支持携带 JSON 元数据 metadata，受允许扩展名白名单限制。"
+)
 def upload_file(
     request: Request,
     file: UploadFile = File(...),

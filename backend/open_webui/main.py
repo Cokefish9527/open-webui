@@ -1224,8 +1224,8 @@ app.mount("/ws", socket_app)
 app.include_router(ollama.router, prefix="/ollama", tags=["ollama"])
 app.include_router(openai.router, prefix="/openai", tags=["openai"])
 
-app.include_router(pipelines.router, prefix="/api/v1/pipelines", tags=["pipelines"])
-app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
+app.include_router(pipelines.router, prefix="/api/v1/pipelines", tags=["管线管理"])
+app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["任务管理"])
 app.include_router(images.router, prefix="/api/v1/images", tags=["images"])
 
 app.include_router(audio.router, prefix="/api/v1/audio", tags=["audio"])
@@ -1233,29 +1233,29 @@ app.include_router(retrieval.router, prefix="/api/v1/retrieval", tags=["retrieva
 
 app.include_router(configs.router, prefix="/api/v1/configs", tags=["configs"])
 
-app.include_router(auths.router, prefix="/api/v1/auths", tags=["auths"])
+app.include_router(auths.router, prefix="/api/v1/auths", tags=["认证与授权"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 
 app.include_router(credit.router, prefix="/api/v1/credit", tags=["credit"])
 
 # 添加计费路由
 from open_webui.routers import billing
-app.include_router(billing.router, prefix="/api/v1/billing", tags=["billing"])
+app.include_router(billing.router, prefix="/api/v1/billing", tags=["计费管理"])
 
 app.include_router(channels.router, prefix="/api/v1/channels", tags=["channels"])
-app.include_router(chats.router, prefix="/api/v1/chats", tags=["chats"])
+app.include_router(chats.router, prefix="/api/v1/chats", tags=["对话管理"])
 app.include_router(notes.router, prefix="/api/v1/notes", tags=["notes"])
 
 
-app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
-app.include_router(knowledge.router, prefix="/api/v1/knowledge", tags=["knowledge"])
+app.include_router(models.router, prefix="/api/v1/models", tags=["模型管理"])
+app.include_router(knowledge.router, prefix="/api/v1/knowledge", tags=["知识库管理"])
 app.include_router(prompts.router, prefix="/api/v1/prompts", tags=["prompts"])
-app.include_router(tools.router, prefix="/api/v1/tools", tags=["tools"])
+app.include_router(tools.router, prefix="/api/v1/tools", tags=["工具管理"])
 
 app.include_router(memories.router, prefix="/api/v1/memories", tags=["memories"])
 app.include_router(folders.router, prefix="/api/v1/folders", tags=["folders"])
 app.include_router(groups.router, prefix="/api/v1/groups", tags=["groups"])
-app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
+app.include_router(files.router, prefix="/api/v1/files", tags=["文件管理"])
 app.include_router(functions.router, prefix="/api/v1/functions", tags=["functions"])
 app.include_router(
     evaluations.router, prefix="/api/v1/evaluations", tags=["evaluations"]
@@ -1281,7 +1281,7 @@ app.include_router(hsai_projects.router, prefix="/api/v1")  # 添加项目管理
 app.include_router(
     organizations.router,
     prefix="/api/v1/organizations",
-    tags=["organizations"],
+    tags=["组织管理"],
 )
 
 # 添加外部管理路由

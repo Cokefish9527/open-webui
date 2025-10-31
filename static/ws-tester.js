@@ -197,6 +197,10 @@ class WebSocketTester {
       "refreshTasksBtn",
       "taskCompanyName",
       "taskProjectName",
+      "taskBlueprintVersion",
+      "taskBlueprintUpdatedAt",
+      "taskBlueprintPlannedEnd",
+      "taskBlueprintState",
       "taskMainProgress",
       "taskRecurringStatus",
       "taskMainSelect",
@@ -1602,9 +1606,18 @@ class WebSocketTester {
       companyName: "-",
       projectName: "-",
       projectId: null,
+      blueprintVersion: "-",
+      blueprintUpdatedAt: "-",
+      blueprintPlannedEnd: "-",
+      blueprintState: "-",
+      mainStats: { total: 0, completed: 0 },
+      recurringStats: { total: 0, active: 0 },
       mainTasks: [],
       recurringTasks: [],
       subtasks: [],
+      recurringItems: [],
+      recurringLogs: [],
+      blueprintLinks: [],
       selectedMainTaskId: null,
       selectedRecurringTaskId: null,
       activeSubtaskId: null,
@@ -1627,35 +1640,147 @@ class WebSocketTester {
     this.updateTaskOperationsState();
   }
 
+  formatTimestamp(timestamp) {
+    if (timestamp === null || timestamp === undefined) return "-";
+    const numeric = Number(timestamp);
+    if (!Number.isFinite(numeric)) return "-";
+    const ms = numeric > 9999999999 ? numeric : numeric * 1000;
+    const date = new Date(ms);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString();
+  }
+
+  pickFirstProject(record) {
+    if (!record) return null;
+    if (Array.isArray(record?.data) && record.data.length) return record.data[0];
+    if (Array.isArray(record?.items) && record.items.length) return record.items[0];
+    if (Array.isArray(record) && record.length) return record[0];
+    return record;
+  }
+
+  hydrateProjectSummary(summary, fallbackProject = null) {
+    const project = summary?.project || fallbackProject || null;
+    if (project) {
+      if (project.id) {
+        this.taskState.projectId = project.id;
+      }
+      this.taskState.projectName = project.name || project.project_name || "-";
+      const business =
+        project.business_name ||
+        project.company_name ||
+        project.companyInfo?.name ||
+        project.company_info?.name ||
+        this.taskState.companyName;
+      this.taskState.companyName = business || "-";
+    } else {
+      this.taskState.projectName = "-";
+      this.taskState.companyName = "-";
+    }
+
+    const blueprint = summary?.blueprint || null;
+    this.taskState.blueprintVersion = blueprint?.version || "-";
+    this.taskState.blueprintState = blueprint?.progress_state || "-";
+    this.taskState.blueprintUpdatedAt = blueprint?.last_synced_at
+      ? this.formatTimestamp(blueprint.last_synced_at)
+      : "-";
+    this.taskState.blueprintPlannedEnd = blueprint?.planned_end_at
+      ? this.formatTimestamp(blueprint.planned_end_at)
+      : "-";
+
+    if (summary?.main_tasks) {
+      this.taskState.mainStats = {
+        total: Number(summary.main_tasks.total) || 0,
+        completed: Number(summary.main_tasks.completed) || 0,
+      };
+    } else {
+      this.taskState.mainStats = { total: 0, completed: 0 };
+    }
+
+    if (summary?.recurring_tasks) {
+      this.taskState.recurringStats = {
+        total: Number(summary.recurring_tasks.total) || 0,
+        active: Number(summary.recurring_tasks.completed) || 0,
+      };
+    } else {
+      this.taskState.recurringStats = { total: 0, active: 0 };
+    }
+
+    this.taskState.recurringItems = Array.isArray(summary?.recurring_items)
+      ? summary.recurring_items
+      : [];
+    this.taskState.recurringLogs = Array.isArray(summary?.recent_logs)
+      ? summary.recent_logs
+      : [];
+    this.taskState.blueprintLinks = Array.isArray(summary?.blueprint_links)
+      ? summary.blueprint_links
+      : [];
+  }
+
   renderTaskOverview() {
     if (
       !this.el.taskCompanyName ||
       !this.el.taskProjectName ||
+      !this.el.taskBlueprintVersion ||
+      !this.el.taskBlueprintUpdatedAt ||
+      !this.el.taskBlueprintPlannedEnd ||
+      !this.el.taskBlueprintState ||
       !this.el.taskMainProgress ||
       !this.el.taskRecurringStatus
     ) {
       return;
     }
-    const { companyName, projectName, mainTasks, recurringTasks, loading, operationPending } =
-      this.taskState;
-    const loadingText = loading || operationPending ? "加载中…" : "-";
-    this.el.taskCompanyName.textContent = companyName || loadingText;
-    this.el.taskProjectName.textContent = projectName || loadingText;
+    const {
+      companyName,
+      projectName,
+      blueprintVersion,
+      blueprintUpdatedAt,
+      blueprintPlannedEnd,
+      blueprintState,
+      mainStats,
+      recurringStats,
+      mainTasks,
+      recurringTasks,
+      loading,
+      operationPending,
+    } = this.taskState;
+    const showLoading = loading || operationPending;
+    const loadingText = "加载中…";
+    const renderValue = (value) => {
+      if (showLoading) return loadingText;
+      if (value === null || value === undefined || value === "") return "-";
+      return value;
+    };
 
-    const totalMain = mainTasks.length;
-    const completedMain = mainTasks.filter(
-      (task) => (task.status || "").toLowerCase() === "completed"
-    ).length;
-    this.el.taskMainProgress.textContent = totalMain
-      ? `${Math.round((completedMain / totalMain) * 100)}% (${completedMain}/${totalMain})`
-      : "-";
+    this.el.taskCompanyName.textContent = renderValue(companyName);
+    this.el.taskProjectName.textContent = renderValue(projectName);
+    this.el.taskBlueprintVersion.textContent = renderValue(blueprintVersion);
+    this.el.taskBlueprintUpdatedAt.textContent = renderValue(blueprintUpdatedAt);
+    this.el.taskBlueprintPlannedEnd.textContent = renderValue(blueprintPlannedEnd);
+    this.el.taskBlueprintState.textContent = renderValue(blueprintState);
 
-    const activeRecurring = recurringTasks.filter(
-      (task) => (task.status || "").toLowerCase() === "in_progress"
-    ).length;
-    this.el.taskRecurringStatus.textContent = recurringTasks.length
-      ? `${activeRecurring}/${recurringTasks.length}`
-      : "-";
+    let totalMain = mainStats?.total || 0;
+    let completedMain = mainStats?.completed || 0;
+    if (!totalMain && Array.isArray(mainTasks)) {
+      totalMain = mainTasks.length;
+      completedMain = mainTasks.filter(
+        (task) => (task.status || "").toLowerCase() === "completed"
+      ).length;
+    }
+    this.el.taskMainProgress.textContent =
+      totalMain > 0
+        ? `${Math.round((completedMain / totalMain) * 100)}% (${completedMain}/${totalMain})`
+        : renderValue(null);
+
+    let totalRecurring = recurringStats?.total || 0;
+    let activeRecurring = recurringStats?.active || 0;
+    if (!totalRecurring && Array.isArray(recurringTasks)) {
+      totalRecurring = recurringTasks.length;
+      activeRecurring = recurringTasks.filter(
+        (task) => (task.recurring_state || "").toLowerCase() === "active"
+      ).length;
+    }
+    this.el.taskRecurringStatus.textContent =
+      totalRecurring > 0 ? `${activeRecurring}/${totalRecurring}` : renderValue(null);
   }
 
   populateSelect(selectEl, tasks, selectedId) {
@@ -2010,39 +2135,69 @@ class WebSocketTester {
     this.updateTaskOperationsState();
     this.setTaskMessage("正在刷新任务概览...", "info");
     try {
-      const [tasksResp, companiesResp, projectsResp] = await Promise.all([
-        this.authorizedFetch("/api/v1/hsai/tasks?ps=100&pi=1"),
-        this.authorizedFetch("/api/v1/hsai/companies?ps=1&pi=1"),
-        this.authorizedFetch("/api/v1/hsai/projects?ps=1&pi=1"),
-      ]);
-      const tasks = Array.isArray(tasksResp?.data)
-        ? tasksResp.data
-        : Array.isArray(tasksResp?.items)
-        ? tasksResp.items
-        : Array.isArray(tasksResp)
-        ? tasksResp
-        : [];
-      const company = Array.isArray(companiesResp?.data)
-        ? companiesResp.data[0]
-        : Array.isArray(companiesResp)
-        ? companiesResp[0]
-        : companiesResp;
-      const project = Array.isArray(projectsResp?.data)
-        ? projectsResp.data[0]
-        : Array.isArray(projectsResp)
-        ? projectsResp[0]
-        : projectsResp;
-      if (company) {
-        this.taskState.companyName = company.name || company.company_name || "-";
+      let projectId = this.taskState.projectId;
+      let fallbackProject = null;
+
+      if (!projectId) {
+        const projectsResp = await this.authorizedFetch("/api/v1/hsai/projects?ps=1&pi=1");
+        fallbackProject = this.pickFirstProject(projectsResp);
+        if (fallbackProject?.id) {
+          projectId = fallbackProject.id;
+          this.taskState.projectId = projectId;
+        }
       }
-      if (project) {
-        this.taskState.projectName = project.name || project.project_name || "-";
-        this.taskState.projectId = project.id || project.project_id || null;
+
+      let summary = null;
+      if (projectId) {
+        summary = await this.authorizedFetch(`/api/v1/hsai/projects/${projectId}/summary`);
       }
+      this.hydrateProjectSummary(summary || null, fallbackProject);
+
+      let tasks = [];
+      if (projectId) {
+        const projectTasksResp = await this.authorizedFetch(
+          `/api/v1/hsai/projects/${projectId}/tasks`
+        );
+        tasks = Array.isArray(projectTasksResp?.data)
+          ? projectTasksResp.data
+          : Array.isArray(projectTasksResp)
+          ? projectTasksResp
+          : [];
+      }
+      if (!tasks.length) {
+        const tasksResp = await this.authorizedFetch("/api/v1/hsai/tasks?ps=100&pi=1");
+        tasks = Array.isArray(tasksResp?.data)
+          ? tasksResp.data
+          : Array.isArray(tasksResp?.items)
+          ? tasksResp.items
+          : Array.isArray(tasksResp)
+          ? tasksResp
+          : [];
+      }
+
       const categorized = this.categorizeTasks(tasks || []);
       this.taskState.mainTasks = categorized.mainTasks;
       this.taskState.recurringTasks = categorized.recurringTasks;
       this.taskState.subtasks = categorized.subtasks;
+
+      if (!summary?.main_tasks && categorized.mainTasks.length) {
+        const completedMain = categorized.mainTasks.filter(
+          (task) => (task.status || "").toLowerCase() === "completed"
+        ).length;
+        this.taskState.mainStats = {
+          total: categorized.mainTasks.length,
+          completed: completedMain,
+        };
+      }
+      if (!summary?.recurring_tasks && categorized.recurringTasks.length) {
+        const activeRecurring = categorized.recurringTasks.filter(
+          (task) => (task.recurring_state || task.status || "").toLowerCase() === "active"
+        ).length;
+        this.taskState.recurringStats = {
+          total: categorized.recurringTasks.length,
+          active: activeRecurring,
+        };
+      }
 
       if (
         this.taskState.selectedMainTaskId &&
@@ -2056,6 +2211,7 @@ class WebSocketTester {
       ) {
         this.taskState.selectedRecurringTaskId = null;
       }
+
       this.renderTaskOverview();
       this.renderTaskLists();
       this.setTaskMessage("任务概览已更新。", "success");
@@ -2181,15 +2337,16 @@ class WebSocketTester {
     }
     try {
       this.setTaskOperationPending(true);
-      this.setTaskMessage("正在启动循环任务...", "info");
-      await this.authorizedFetch(`/api/v1/hsai/tasks/${taskId}/start`, {
+      this.setTaskMessage("正在激活循环任务...", "info");
+      await this.authorizedFetch(`/api/v1/hsai/tasks/${taskId}/recurring/activate`, {
         method: "POST",
+        body: {},
       });
-      this.setTaskMessage("任务启动请求已发送。", "success");
+      this.setTaskMessage("循环任务激活请求已发送。", "success");
       await this.refreshTaskSnapshot({ reason: "recurring" });
     } catch (error) {
       console.error(error);
-      this.setTaskMessage(`启动失败：${error.message || "请求异常"}`, "error");
+      this.setTaskMessage(`激活失败：${error.message || "请求异常"}`, "error");
     } finally {
       this.setTaskOperationPending(false);
     }

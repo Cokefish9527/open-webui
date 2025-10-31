@@ -82,7 +82,7 @@ class HSAITaskBlueprintLink(Base):
     progress_id = Column(String, ForeignKey("hsai_blueprint_progress.id"), nullable=False)
     task_id = Column(String, ForeignKey("hsai_tasks.id"), nullable=False)
     template_key = Column(String, nullable=False)
-    metadata = Column(JSON, nullable=True)
+    link_metadata = Column("metadata", JSON, nullable=True)
     created_at = Column(EpochTimestamp(), nullable=False)
     updated_at = Column(EpochTimestamp(), nullable=False)
 
@@ -134,7 +134,7 @@ class HSAITaskBlueprintLinkModel(BaseModel):
     progress_id: str
     task_id: str
     template_key: str
-    metadata: Optional[Dict[str, Any]] = None
+    link_metadata: Optional[Dict[str, Any]] = Field(default=None, alias="metadata")
     created_at: int
     updated_at: int
 
@@ -296,7 +296,7 @@ class HSAITaskBlueprintLinksStore:
         progress_id: str,
         task_id: str,
         template_key: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        link_metadata: Optional[Dict[str, Any]] = None,
     ) -> HSAITaskBlueprintLinkModel:
         now_ts = self._now()
         with get_db() as db:
@@ -310,7 +310,8 @@ class HSAITaskBlueprintLinksStore:
             )
             if existing:
                 existing.task_id = task_id
-                existing.metadata = metadata or existing.metadata
+                if link_metadata is not None:
+                    existing.link_metadata = link_metadata or existing.link_metadata
                 existing.updated_at = now_ts
                 db.add(existing)
                 db.commit()
@@ -322,7 +323,7 @@ class HSAITaskBlueprintLinksStore:
                 progress_id=progress_id,
                 task_id=task_id,
                 template_key=template_key,
-                metadata=metadata or {},
+                link_metadata=link_metadata or {},
                 created_at=now_ts,
                 updated_at=now_ts,
             )

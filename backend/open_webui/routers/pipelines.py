@@ -30,7 +30,6 @@ from open_webui.utils.auth import get_admin_user
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
 
-
 ##################################
 #
 # Pipeline Middleware
@@ -172,10 +171,16 @@ async def process_pipeline_outlet_filter(request, payload, user, models):
 #
 ##################################
 
-router = APIRouter()
+from fastapi import APIRouter
+# 统一中文标签：管线管理
+router = APIRouter(tags=["管线管理"])
 
 
-@router.get("/list")
+@router.get(
+    "/list",
+    summary="获取可用管线列表",
+    description="从后端模型服务聚合可用的管线节点（按可用响应筛选）。仅管理员。"
+)
 async def get_pipelines_list(request: Request, user=Depends(get_admin_user)):
     responses = await get_all_models_responses(request, user)
     log.debug(f"get_pipelines_list: get_openai_models_responses returned {responses}")
@@ -197,7 +202,11 @@ async def get_pipelines_list(request: Request, user=Depends(get_admin_user)):
     }
 
 
-@router.post("/upload")
+@router.post(
+    "/upload",
+    summary="上传管线脚本",
+    description="上传并推送 Python 管线脚本至后端模型服务（仅允许 .py 文件，管理员）。"
+)
 async def upload_pipeline(
     request: Request,
     urlIdx: int = Form(...),

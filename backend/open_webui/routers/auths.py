@@ -68,7 +68,8 @@ from ssl import CERT_NONE, CERT_REQUIRED, PROTOCOL_TLS
 from ldap3 import Server, Connection, NONE, Tls
 from ldap3.utils.conv import escape_filter_chars
 
-router = APIRouter()
+# 统一中文标签：认证与授权
+router = APIRouter(tags=["认证与授权"])
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
@@ -85,7 +86,12 @@ class SessionUserResponse(Token, UserResponse):
     credit: Decimal
 
 
-@router.get("/", response_model=SessionUserResponse)
+@router.get(
+    "/",
+    response_model=SessionUserResponse,
+    summary="获取当前会话用户信息",
+    description="返回当前登录用户的会话信息与权限标识；未登录将返回匿名或相应错误。"
+)
 async def get_session_user(
     request: Request, response: Response, user: UserModel = Depends(get_current_user)
 ):
@@ -144,7 +150,12 @@ async def get_session_user(
 ############################
 
 
-@router.post("/update/profile", response_model=UserResponse)
+@router.post(
+    "/update/profile",
+    response_model=UserResponse,
+    summary="更新用户资料",
+    description="更新当前用户的基础资料（昵称、邮箱等）。需要已登录。"
+)
 async def update_profile(
     form_data: UpdateProfileForm, session_user=Depends(get_verified_user)
 ):
@@ -166,7 +177,12 @@ async def update_profile(
 ############################
 
 
-@router.post("/update/password", response_model=bool)
+@router.post(
+    "/update/password",
+    response_model=bool,
+    summary="修改密码",
+    description="用户自助修改登录密码，需提供旧密码校验。"
+)
 async def update_password(
     form_data: UpdatePasswordForm, session_user=Depends(get_current_user)
 ):
@@ -187,7 +203,12 @@ async def update_password(
 ############################
 # LDAP Authentication
 ############################
-@router.post("/ldap", response_model=SessionUserResponse)
+@router.post(
+    "/ldap",
+    response_model=SessionUserResponse,
+    summary="LDAP 登录",
+    description="通过 LDAP 目录进行登录认证，成功后返回会话信息。"
+)
 async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
     ENABLE_LDAP = request.app.state.config.ENABLE_LDAP
     LDAP_SERVER_LABEL = request.app.state.config.LDAP_SERVER_LABEL
@@ -470,7 +491,12 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
 ############################
 
 
-@router.post("/signin", response_model=SessionUserResponse)
+@router.post(
+    "/signin",
+    response_model=SessionUserResponse,
+    summary="用户名/邮箱登录",
+    description="使用用户名或邮箱与密码进行登录。支持可选的二次校验配置。"
+)
 async def signin(request: Request, response: Response, form_data: SigninForm):
     if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
         if WEBUI_AUTH_TRUSTED_EMAIL_HEADER not in request.headers:
@@ -599,7 +625,12 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
 ############################
 
 
-@router.post("/signup", response_model=SessionUserResponse)
+@router.post(
+    "/signup",
+    response_model=SessionUserResponse,
+    summary="注册新用户",
+    description="创建新账户（可由系统配置限制是否允许注册）。成功后返回会话信息或待验证状态。"
+)
 async def signup(request: Request, response: Response, form_data: SignupForm):
     if WEBUI_AUTH:
         if (
@@ -788,7 +819,11 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
         raise HTTPException(500, detail="An internal error occurred during signup.")
 
 
-@router.get("/signup_verify/{code}")
+@router.get(
+    "/signup_verify/{code}",
+    summary="邮箱验证码验证",
+    description="校验注册邮箱验证码，完成账户激活。"
+)
 async def signup_verify(request: Request, code: str):
     email = verify_email_by_code(code=code)
     if not email:
@@ -802,7 +837,11 @@ async def signup_verify(request: Request, code: str):
     return RedirectResponse(url=request.app.state.config.WEBUI_URL)
 
 
-@router.get("/signout")
+@router.get(
+    "/signout",
+    summary="退出登录",
+    description="清除当前会话或令牌，使用户登出系统。"
+)
 async def signout(request: Request, response: Response):
     response.delete_cookie("token")
 
@@ -858,7 +897,12 @@ async def signout(request: Request, response: Response):
 ############################
 
 
-@router.post("/add", response_model=SigninResponse)
+@router.post(
+    "/add",
+    response_model=SigninResponse,
+    summary="管理员创建用户",
+    description="由管理员创建新用户账户，支持设定初始角色与密码。"
+)
 async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
     if not validate_email_format(form_data.email.lower()):
         raise HTTPException(
@@ -921,7 +965,11 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
 ############################
 
 
-@router.get("/admin/details")
+@router.get(
+    "/admin/details",
+    summary="获取管理员详情",
+    description="返回管理员用户的关键配置与能力边界，用于管理台展示。"
+)
 async def get_admin_details(request: Request, user=Depends(get_current_user)):
     if request.app.state.config.SHOW_ADMIN_DETAILS:
         admin_email = request.app.state.config.ADMIN_EMAIL
@@ -952,7 +1000,11 @@ async def get_admin_details(request: Request, user=Depends(get_current_user)):
 ############################
 
 
-@router.get("/admin/config")
+@router.get(
+    "/admin/config",
+    summary="获取认证配置",
+    description="获取认证相关的系统配置（OAuth/LDAP/注册策略等）。"
+)
 async def get_admin_config(request: Request, user=Depends(get_admin_user)):
     return {
         "SHOW_ADMIN_DETAILS": request.app.state.config.SHOW_ADMIN_DETAILS,
@@ -997,7 +1049,11 @@ class AdminConfig(BaseModel):
     RESPONSE_WATERMARK: Optional[str] = None
 
 
-@router.post("/admin/config")
+@router.post(
+    "/admin/config",
+    summary="更新认证配置",
+    description="更新系统的认证配置（仅限系统管理员）。"
+)
 async def update_admin_config(
     request: Request, form_data: AdminConfig, user=Depends(get_admin_user)
 ):
@@ -1083,7 +1139,12 @@ class LdapServerConfig(BaseModel):
     ciphers: Optional[str] = "ALL"
 
 
-@router.get("/admin/config/ldap/server", response_model=LdapServerConfig)
+@router.get(
+    "/admin/config/ldap/server",
+    response_model=LdapServerConfig,
+    summary="获取 LDAP 服务器配置",
+    description="返回 LDAP 服务器连接与映射配置。"
+)
 async def get_ldap_server(request: Request, user=Depends(get_admin_user)):
     return {
         "label": request.app.state.config.LDAP_SERVER_LABEL,
@@ -1102,7 +1163,11 @@ async def get_ldap_server(request: Request, user=Depends(get_admin_user)):
     }
 
 
-@router.post("/admin/config/ldap/server")
+@router.post(
+    "/admin/config/ldap/server",
+    summary="更新 LDAP 服务器配置",
+    description="更新 LDAP 服务器连接与映射配置（仅限系统管理员）。"
+)
 async def update_ldap_server(
     request: Request, form_data: LdapServerConfig, user=Depends(get_admin_user)
 ):
@@ -1153,7 +1218,11 @@ async def update_ldap_server(
     }
 
 
-@router.get("/admin/config/ldap")
+@router.get(
+    "/admin/config/ldap",
+    summary="获取 LDAP 认证配置",
+    description="获取 LDAP 认证策略、过滤规则与字段映射等配置。"
+)
 async def get_ldap_config(request: Request, user=Depends(get_admin_user)):
     return {"ENABLE_LDAP": request.app.state.config.ENABLE_LDAP}
 
@@ -1162,7 +1231,11 @@ class LdapConfigForm(BaseModel):
     enable_ldap: Optional[bool] = None
 
 
-@router.post("/admin/config/ldap")
+@router.post(
+    "/admin/config/ldap",
+    summary="更新 LDAP 认证配置",
+    description="更新 LDAP 认证策略、过滤规则与字段映射等配置（仅限系统管理员）。"
+)
 async def update_ldap_config(
     request: Request, form_data: LdapConfigForm, user=Depends(get_admin_user)
 ):
@@ -1176,7 +1249,12 @@ async def update_ldap_config(
 
 
 # create api key
-@router.post("/api_key", response_model=ApiKey)
+@router.post(
+    "/api_key",
+    response_model=ApiKey,
+    summary="创建 API Key",
+    description="为当前用户创建新的 API Key（若已存在可能覆盖或并存，取决于实现）。"
+)
 async def generate_api_key(request: Request, user=Depends(get_current_user)):
     if not request.app.state.config.ENABLE_API_KEY:
         raise HTTPException(
@@ -1203,7 +1281,12 @@ async def delete_api_key(user=Depends(get_current_user)):
 
 
 # get api key
-@router.get("/api_key", response_model=ApiKey)
+@router.get(
+    "/api_key",
+    response_model=ApiKey,
+    summary="获取 API Key",
+    description="获取当前用户的 API Key 信息（密钥本体通常仅首次可见）。"
+)
 async def get_api_key(user=Depends(get_current_user)):
     api_key = Users.get_user_api_key_by_id(user.id)
     if api_key:

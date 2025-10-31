@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 from typing import Optional
 
@@ -27,18 +27,35 @@ from open_webui.utils.access_control import has_permission
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-router = APIRouter()
+# 统一中文标签：对话管理
+router = APIRouter(tags=["对话管理"])
 
 ############################
 # GetChatList
 ############################
 
 
-@router.get("/", response_model=list[ChatTitleIdResponse])
-@router.get("/list", response_model=list[ChatTitleIdResponse])
+@router.get(
+    "/",
+    response_model=list[ChatTitleIdResponse],
+    summary="获取我的对话列表",
+    description="按需分页返回当前登录用户的对话标题与ID列表。未传 page 则返回全部标题列表。"
+)
+@router.get(
+    "/list",
+    response_model=list[ChatTitleIdResponse],
+    summary="获取我的对话列表（兼容路径）",
+    description="功能同 GET /api/v1/chats/，保留向后兼容。"
+)
 async def get_session_user_chat_list(
     user=Depends(get_verified_user), page: Optional[int] = None
 ):
+    """
+    获取我的对话列表（支持分页）。
+
+    - 参数：page（可选，页码，从 1 开始）。
+    - 返回：当前用户的对话标题与 ID 列表。
+    """
     if page is not None:
         limit = 60
         skip = (page - 1) * limit
@@ -53,8 +70,18 @@ async def get_session_user_chat_list(
 ############################
 
 
-@router.delete("/", response_model=bool)
+@router.delete(
+    "/",
+    response_model=bool,
+    summary="删除我的全部对话",
+    description="删除当前用户的所有对话记录。若权限策略禁止则返回 401。"
+)
 async def delete_all_user_chats(request: Request, user=Depends(get_verified_user)):
+    """
+    删除当前用户的全部对话。
+
+    若权限策略禁止（chat.delete），返回 401。
+    """
 
     if user.role == "user" and not has_permission(
         user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS
@@ -73,7 +100,12 @@ async def delete_all_user_chats(request: Request, user=Depends(get_verified_user
 ############################
 
 
-@router.get("/list/user/{user_id}", response_model=list[ChatTitleIdResponse])
+@router.get(
+    "/list/user/{user_id}",
+    response_model=list[ChatTitleIdResponse],
+    summary="管理员获取指定用户的对话列表",
+    description="仅管理员可用。支持分页与查询/排序参数。需要启用 ENABLE_ADMIN_CHAT_ACCESS。"
+)
 async def get_user_chat_list_by_user_id(
     user_id: str,
     page: Optional[int] = None,
@@ -82,6 +114,11 @@ async def get_user_chat_list_by_user_id(
     direction: Optional[str] = None,
     user=Depends(get_admin_user),
 ):
+    """
+    管理员获取指定用户的对话列表。
+
+    仅在 ENABLE_ADMIN_CHAT_ACCESS 启用时可用，支持分页与查询/排序参数。
+    """
     if not ENABLE_ADMIN_CHAT_ACCESS:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -112,7 +149,7 @@ async def get_user_chat_list_by_user_id(
 ############################
 
 
-@router.post("/new", response_model=Optional[ChatResponse])
+@router.post("/new", response_model=Optional[ChatResponse], summary="新建对话", description="为当前用户创建一条新的对话并返回对话详情。")
 async def create_new_chat(form_data: ChatForm, user=Depends(get_verified_user)):
     try:
         chat = Chats.insert_new_chat(user.id, form_data)
@@ -858,3 +895,4 @@ async def delete_all_tags_by_id(id: str, user=Depends(get_verified_user)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.NOT_FOUND
         )
+

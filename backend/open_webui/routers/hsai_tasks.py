@@ -1,6 +1,7 @@
 import logging
 import time
-from typing import Optional, List
+from datetime import datetime
+from typing import Optional, List, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from pydantic import BaseModel, Field
@@ -83,6 +84,17 @@ class RecurringSyncForm(BaseModel):
 class SimulateSchedulerForm(BaseModel):
     schedule_date: str = Field(description="YYYY-MM-DD")
 
+class RecurringLogEntry(BaseModel):
+    id: str
+    task_id: str
+    from_state: Optional[str] = None
+    to_state: str
+    operator_id: Optional[str] = None
+    operator_name: Optional[str] = None
+    source: Optional[str] = None
+    message: Optional[str] = None
+    created_at: int
+
 
 def _get_task_for_user(task_id: str, user_id: str) -> HSAITaskModel:
     task = HSAITasks.get_task_by_id(task_id)
@@ -107,19 +119,23 @@ def _append_state_log(
     source: str,
     message: Optional[str],
     snapshot: Optional[Dict[str, Any]] = None,
-) -> None:
+):
     operator_id = getattr(user, "id", None)
     operator_name = getattr(user, "name", None) or getattr(user, "email", None)
-    HSAITaskStateLogs.append_log(
-        task_id=task_id,
-        from_state=from_state,
-        to_state=to_state,
-        operator_id=operator_id,
-        operator_name=operator_name,
-        source=source,
-        message=message,
-        snapshot_json=snapshot,
-    )
+    try:
+        return HSAITaskStateLogs.append_log(
+            task_id=task_id,
+            from_state=from_state,
+            to_state=to_state,
+            operator_id=operator_id,
+            operator_name=operator_name,
+            source=source,
+            message=message,
+            snapshot_json=snapshot,
+        )
+    except Exception as exc:
+        log.warning("Failed to append recurring task log for %s: %s", task_id, exc)
+        return None
 
 
 def _emit_task_event(task: HSAITaskModel, event: str, message: Optional[str], context: Optional[Dict[str, Any]] = None):
@@ -133,7 +149,10 @@ def _emit_task_event(task: HSAITaskModel, event: str, message: Optional[str], co
         "message": message,
         "context": context or {},
     }
-    emitter.emit(event, payload)
+    try:
+        emitter.emit(event, payload)
+    except Exception as exc:
+        log.warning("Failed to emit task event %s for %s: %s", event, task.id, exc)
 
 
 @router.get("/statistics", response_model=TaskStatsResponse, summary="获取任务统计")
@@ -480,6 +499,357 @@ async def update_task(
         )
 
 
+
+
+@router.post("/{task_id}/recurring/activate", response_model=HSAITaskResponse, summary="启动循环任务")
+async def activate_recurring_task(
+    task_id: str,
+    form: RecurringActivateForm,
+    user=Depends(get_verified_user),
+):
+    """
+    启动循环任务。
+    
+    将处于空闲或暂停状态的循环任务激活，使其进入活跃状态并准备执行。
+    
+    Args:
+        task_id (str): 循环任务ID
+        form (RecurringActivateForm): 激活表单
+            - next_run_at (Optional[int]): 下次运行时间戳（可选）
+            - message (Optional[str]): 操作消息（可选）
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAITaskResponse: 更新后的任务信息
+        
+    Raises:
+        HTTPException: 400 - 任务不是循环任务或状态不允许激活
+        HTTPException: 500 - 激活失败
+        
+    Note:
+        - 仅空闲(IDLE)或暂停(PAUSED)状态的循环任务可以被激活
+        - 激活后任务状态变为活跃(ACTIVE)
+        - 会记录状态变更日志
+    """
+    task = _get_task_for_user(task_id, user.id)
+    if not _is_recurring_task(task):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task is not recurring")
+
+    previous_state = (task.recurring_state or HSAIRecurringState.IDLE.value).lower()
+    if previous_state not in {"", HSAIRecurringState.IDLE.value, HSAIRecurringState.PAUSED.value}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task cannot be activated")
+
+    update_form = HSAITaskUpdateForm(
+        is_recurring=True,
+        recurring_state=HSAIRecurringState.ACTIVE.value,
+        next_run_at=form.next_run_at,
+    )
+    updated = HSAITasks.update_task_by_id(task_id, update_form)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=ERROR_MESSAGES.DEFAULT())
+
+    log_entry = _append_state_log(
+        task_id=task_id,
+        from_state=task.recurring_state,
+        to_state=HSAIRecurringState.ACTIVE.value,
+        user=user,
+        source="admin_api",
+        message=form.message or "激活循环任务",
+        snapshot=updated.model_dump(),
+    )
+    context = {"log_id": log_entry.id} if log_entry else None
+    _emit_task_event(updated, "task_status_updated", form.message, context)
+    return HSAITaskResponse(**updated.model_dump())
+
+
+@router.post("/{task_id}/recurring/pause", response_model=HSAITaskResponse, summary="暂停循环任务")
+async def pause_recurring_task(
+    task_id: str,
+    form: RecurringPauseForm,
+    user=Depends(get_verified_user),
+):
+    """
+    暂停循环任务。
+    
+    将活跃状态的循环任务暂停，使其暂时停止执行。
+    
+    Args:
+        task_id (str): 循环任务ID
+        form (RecurringPauseForm): 暂停表单
+            - reason (Optional[str]): 暂停原因（可选）
+            - message (Optional[str]): 操作消息（可选）
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAITaskResponse: 更新后的任务信息
+        
+    Raises:
+        HTTPException: 400 - 任务不是循环任务或未处于活跃状态
+        HTTPException: 500 - 暂停失败
+        
+    Note:
+        - 仅活跃(ACTIVE)状态的循环任务可以被暂停
+        - 暂停后任务状态变为暂停(PAUSED)
+        - 会记录状态变更日志
+    """
+    task = _get_task_for_user(task_id, user.id)
+    if not _is_recurring_task(task):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task is not recurring")
+    if (task.recurring_state or "").lower() != HSAIRecurringState.ACTIVE.value:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task is not active")
+
+    update_form = HSAITaskUpdateForm(recurring_state=HSAIRecurringState.PAUSED.value)
+    updated = HSAITasks.update_task_by_id(task_id, update_form)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=ERROR_MESSAGES.DEFAULT())
+
+    log_entry = _append_state_log(
+        task_id=task_id,
+        from_state=task.recurring_state,
+        to_state=HSAIRecurringState.PAUSED.value,
+        user=user,
+        source="admin_api",
+        message=form.message or form.reason or "暂停循环任务",
+        snapshot=updated.model_dump(),
+    )
+    context = {"log_id": log_entry.id} if log_entry else None
+    _emit_task_event(updated, "task_status_updated", form.message, context)
+    return HSAITaskResponse(**updated.model_dump())
+
+
+@router.post("/{task_id}/recurring/resume", response_model=HSAITaskResponse, summary="恢复循环任务")
+async def resume_recurring_task(
+    task_id: str,
+    form: RecurringResumeForm,
+    user=Depends(get_verified_user),
+):
+    """
+    恢复循环任务。
+    
+    将暂停或外部控制状态的循环任务恢复为活跃状态，继续执行。
+    
+    Args:
+        task_id (str): 循环任务ID
+        form (RecurringResumeForm): 恢复表单
+            - message (Optional[str]): 操作消息（可选）
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAITaskResponse: 更新后的任务信息
+        
+    Raises:
+        HTTPException: 400 - 任务不是循环任务或状态不允许恢复
+        HTTPException: 500 - 恢复失败
+        
+    Note:
+        - 仅暂停(PAUSED)或外部控制(EXTERNAL_CONTROLLED)状态的循环任务可以被恢复
+        - 恢复后任务状态变为活跃(ACTIVE)
+        - 会记录状态变更日志
+    """
+    task = _get_task_for_user(task_id, user.id)
+    if not _is_recurring_task(task):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task is not recurring")
+    if (task.recurring_state or "").lower() not in {HSAIRecurringState.PAUSED.value, HSAIRecurringState.EXTERNAL_CONTROLLED.value}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task cannot be resumed")
+
+    update_form = HSAITaskUpdateForm(recurring_state=HSAIRecurringState.ACTIVE.value)
+    updated = HSAITasks.update_task_by_id(task_id, update_form)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=ERROR_MESSAGES.DEFAULT())
+
+    log_entry = _append_state_log(
+        task_id=task_id,
+        from_state=task.recurring_state,
+        to_state=HSAIRecurringState.ACTIVE.value,
+        user=user,
+        source="admin_api",
+        message=form.message or "恢复循环任务",
+        snapshot=updated.model_dump(),
+    )
+    context = {"log_id": log_entry.id} if log_entry else None
+    _emit_task_event(updated, "task_status_updated", form.message, context)
+    return HSAITaskResponse(**updated.model_dump())
+
+
+@router.post("/{task_id}/recurring/handover", response_model=HSAITaskResponse, summary="循环任务交接外部控制")
+async def handover_recurring_task(
+    task_id: str,
+    form: RecurringHandoverForm,
+    user=Depends(get_verified_user),
+):
+    """
+    循环任务交接外部控制。
+    
+    将循环任务的控制权交接给外部系统，任务将由外部系统控制执行。
+    
+    Args:
+        task_id (str): 循环任务ID
+        form (RecurringHandoverForm): 交接表单
+            - controller (str): 外部控制方标识
+            - note (Optional[str]): 交接备注（可选）
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAITaskResponse: 更新后的任务信息
+        
+    Raises:
+        HTTPException: 400 - 任务不是循环任务
+        HTTPException: 500 - 交接失败
+        
+    Note:
+        - 交接后任务状态变为外部控制(EXTERNAL_CONTROLLED)
+        - 会记录状态变更日志
+        - 外部系统可以通过API控制任务的执行
+    """
+    task = _get_task_for_user(task_id, user.id)
+    if not _is_recurring_task(task):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task is not recurring")
+
+    update_form = HSAITaskUpdateForm(
+        recurring_state=HSAIRecurringState.EXTERNAL_CONTROLLED.value,
+        external_controller=form.controller,
+    )
+    updated = HSAITasks.update_task_by_id(task_id, update_form)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=ERROR_MESSAGES.DEFAULT())
+
+    log_entry = _append_state_log(
+        task_id=task_id,
+        from_state=task.recurring_state,
+        to_state=HSAIRecurringState.EXTERNAL_CONTROLLED.value,
+        user=user,
+        source="admin_api",
+        message=form.note or "循环任务交接外部控制",
+        snapshot=updated.model_dump(),
+    )
+    context = {"log_id": log_entry.id} if log_entry else None
+    _emit_task_event(updated, "task_status_updated", form.note, context)
+    return HSAITaskResponse(**updated.model_dump())
+
+
+@router.post("/{task_id}/recurring/sync", response_model=HSAITaskResponse, summary="同步循环任务状态")
+async def sync_recurring_task(
+    task_id: str,
+    form: RecurringSyncForm,
+    user=Depends(get_verified_user),
+):
+    """
+    同步循环任务状态。
+    
+    同步循环任务的状态信息，包括状态、下次运行时间和上次运行时间。
+    
+    Args:
+        task_id (str): 循环任务ID
+        form (RecurringSyncForm): 同步表单
+            - state (str): 目标状态
+            - next_run_at (Optional[int]): 下次运行时间戳（可选）
+            - last_run_at (Optional[int]): 上次运行时间戳（可选）
+            - message (Optional[str]): 操作消息（可选）
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAITaskResponse: 更新后的任务信息
+        
+    Raises:
+        HTTPException: 400 - 任务不是循环任务或状态不支持
+        HTTPException: 500 - 同步失败
+        
+    Note:
+        - 支持的状态包括：空闲(IDLE)、活跃(ACTIVE)、暂停(PAUSED)、外部控制(EXTERNAL_CONTROLLED)
+        - 会记录状态变更日志
+        - 通常由外部系统调用以同步任务状态
+    """
+    task = _get_task_for_user(task_id, user.id)
+    if not _is_recurring_task(task):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task is not recurring")
+
+    target_state = form.state.lower()
+    if target_state not in {
+        HSAIRecurringState.IDLE.value,
+        HSAIRecurringState.ACTIVE.value,
+        HSAIRecurringState.PAUSED.value,
+        HSAIRecurringState.EXTERNAL_CONTROLLED.value,
+    }:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported recurring state")
+
+    update_form = HSAITaskUpdateForm(
+        recurring_state=target_state,
+        next_run_at=form.next_run_at,
+        last_run_at=form.last_run_at,
+        is_recurring=True,
+    )
+    updated = HSAITasks.update_task_by_id(task_id, update_form)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=ERROR_MESSAGES.DEFAULT())
+
+    log_entry = _append_state_log(
+        task_id=task_id,
+        from_state=task.recurring_state,
+        to_state=target_state,
+        user=user,
+        source="admin_api",
+        message=form.message or "循环任务状态同步",
+        snapshot=updated.model_dump(),
+    )
+    context = {"log_id": log_entry.id} if log_entry else None
+    _emit_task_event(updated, "task_status_updated", form.message, context)
+    return HSAITaskResponse(**updated.model_dump())
+
+
+@router.get("/{task_id}/recurring/logs", response_model=List[RecurringLogEntry], summary="循环任务状态日志")
+async def get_recurring_logs(
+    task_id: str,
+    limit: int = Query(20, ge=1, le=100),
+    user=Depends(get_verified_user),
+):
+    """
+    获取循环任务状态日志。
+    
+    返回循环任务的状态变更历史记录。
+    
+    Args:
+        task_id (str): 循环任务ID
+        limit (int): 返回记录数量限制，范围1-100，默认20
+        user: 已认证的用户对象
+        
+    Returns:
+        List[RecurringLogEntry]: 状态日志列表
+        - id (str): 日志ID
+        - task_id (str): 任务ID
+        - from_state (Optional[str]): 变更前状态
+        - to_state (str): 变更后状态
+        - operator_id (Optional[str]): 操作者ID
+        - operator_name (Optional[str]): 操作者名称
+        - source (Optional[str]): 操作来源
+        - message (Optional[str]): 操作消息
+        - created_at (int): 创建时间戳
+        
+    Raises:
+        HTTPException: 400 - 任务不是循环任务
+        
+    Note:
+        - 按时间倒序返回最新的状态变更记录
+        - 用于审计和调试任务状态变更历史
+    """
+    task = _get_task_for_user(task_id, user.id)
+    if not _is_recurring_task(task):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task is not recurring")
+
+    logs = HSAITaskStateLogs.list_logs(task_id, limit=limit)
+    return [
+        RecurringLogEntry(
+            id=entry.id,
+            task_id=entry.task_id,
+            from_state=entry.from_state,
+            to_state=entry.to_state,
+            operator_id=entry.operator_id,
+            operator_name=entry.operator_name,
+            source=entry.source,
+            message=entry.message,
+            created_at=entry.created_at,
+        )
+        for entry in logs
+    ]
 @router.post("/{task_id}/start", response_model=HSAITaskResponse, summary="启动任务")
 async def start_task(
     task_id: str,
@@ -549,6 +919,88 @@ async def start_task(
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
+
+
+
+@router.post("/{task_id}/simulate", response_model=HSAITaskResponse, summary="模拟循环任务调度")
+async def simulate_recurring_schedule(
+    task_id: str,
+    form: SimulateSchedulerForm,
+    user=Depends(get_verified_user),
+):
+    """
+    模拟循环任务调度。
+    
+    为指定日期创建模拟的循环任务子任务，用于测试和预览任务调度效果。
+    
+    Args:
+        task_id (str): 循环任务ID
+        form (SimulateSchedulerForm): 调度表单
+            - schedule_date (str): 调度日期（格式：YYYY-MM-DD）
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAITaskResponse: 创建的模拟子任务信息
+        
+    Raises:
+        HTTPException: 400 - 任务不是循环任务或日期格式无效或子任务已存在
+        HTTPException: 500 - 创建模拟任务失败
+        
+    Note:
+        - 用于预览和测试循环任务的调度效果
+        - 模拟任务不会实际执行
+        - 会记录状态变更日志
+        - 模拟任务优先级会比原任务低5级
+    """
+    task = _get_task_for_user(task_id, user.id)
+    if not _is_recurring_task(task):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task is not recurring")
+
+    try:
+        target_date = datetime.strptime(form.schedule_date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid schedule_date")
+
+    scheduled_key = target_date.isoformat()
+    existing_subtasks = HSAITasks.get_tasks_by_user_id(user.id, project_id=task.project_id, limit=200)
+    for sub in existing_subtasks:
+        if sub.parent_task_id == task.id and (sub.config or {}).get("scheduled_for") == scheduled_key:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Subtask already exists for date")
+
+    subtask_form = HSAITaskForm(
+        title=f"{scheduled_key} 循环发布任务",
+        description="模拟调度生成的循环发布任务",
+        task_type=task.task_type or HSAITaskType.PLATFORM_PUBLISHING.value,
+        task_category="blueprint_daily_simulation",
+        project_id=task.project_id,
+        parent_task_id=task.id,
+        config={
+            "scheduled_for": scheduled_key,
+            "generated_by": "simulate",
+        },
+        priority=max(0, (task.priority or 0) - 5),
+    )
+    subtask = HSAITasks.insert_new_task(user.id, subtask_form)
+    if not subtask:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=ERROR_MESSAGES.DEFAULT())
+
+    log_entry = _append_state_log(
+        task_id=task_id,
+        from_state=task.recurring_state,
+        to_state=task.recurring_state or HSAIRecurringState.ACTIVE.value,
+        user=user,
+        source="admin_api",
+        message=f"Simulated subtask scheduled for {scheduled_key}",
+        snapshot=subtask.model_dump(),
+    )
+    context = {"log_id": log_entry.id} if log_entry else None
+    _emit_task_event(
+        task,
+        "task_progress",
+        f"Simulated subtask scheduled for {scheduled_key}",
+        context,
+    )
+    return HSAITaskResponse(**subtask.model_dump())
 
 @router.post("/{task_id}/cancel", response_model=HSAITaskResponse, summary="取消任务")
 async def cancel_task(
@@ -861,4 +1313,7 @@ async def update_card(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()
         )
+
+
+
 

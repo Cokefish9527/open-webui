@@ -40,7 +40,8 @@ from open_webui.utils.access_control import get_permissions, has_permission
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-router = APIRouter()
+# 统一中文标签：用户管理
+router = APIRouter(tags=["用户管理"])
 
 
 ############################
@@ -48,7 +49,11 @@ router = APIRouter()
 ############################
 
 
-@router.get("/active")
+@router.get(
+    "/active",
+    summary="获取在线用户ID列表",
+    description="返回当前处于活跃状态的用户 ID 列表（基于 WebSocket/会话心跳统计）。"
+)
 async def get_active_users(
     user=Depends(get_verified_user),
 ):
@@ -68,7 +73,12 @@ async def get_active_users(
 PAGE_ITEM_COUNT = 30
 
 
-@router.get("/", response_model=UserListResponse)
+@router.get(
+    "/",
+    response_model=UserListResponse,
+    summary="获取用户列表",
+    description="按条件分页查询用户列表，仅管理员可访问。支持 query/排序/方向/页码 参数。"
+)
 async def get_users(
     query: Optional[str] = None,
     order_by: Optional[str] = None,

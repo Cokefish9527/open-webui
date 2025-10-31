@@ -87,89 +87,90 @@ class ProjectSummaryResponse(BaseModel):
     blueprint_links: List[Dict[str, Any]]
 
 
-# 椤圭洰妯℃澘瀹氫箟PROJECT_MAIN_TASK_TEMPLATES = {
+# 项目模板定义
+PROJECT_MAIN_TASK_TEMPLATES = {
     "company_info": {
-        "title": "瀹屽杽浼佷笟淇℃伅",
-        "description": "璇锋彁渚涙偍浼佷笟鐨勫熀鏈俊鎭紝鍖呮嫭浼佷笟鍚嶇О銆佽涓氥€佽妯＄瓑",
+        "title": "完善企业信息",
+        "description": "收集公司名称、行业、规模等基础资料，用于后续工作流初始化。",
         "task_type": "workflow_execution",
         "task_category": "main",
         "workflow_type": "company_info",
         "priority": 10,
         "prompt_config": {
-            "system_prompt": "鎮ㄦ槸涓€涓紒涓氫俊鎭敹闆嗗姪鎵嬶紝璇峰紩瀵肩敤鎴峰畬鍠勪紒涓氬熀鏈俊鎭?,
-            "initial_message": "鎮ㄥソ锛佷负浜嗘洿濂藉湴涓烘偍鏈嶅姟锛屾垜浠渶瑕佹敹闆嗕竴浜涙偍浼佷笟鐨勫熀鏈俊鎭€?,
+            "system_prompt": "You are an onboarding assistant. Guide the user to provide the company's basic profile.",
+            "initial_message": "您好！为了后续更好地推进项目，请先补充企业的基础信息。",
             "guidance_questions": [
-                "璇峰憡璇夋垜鎮ㄧ殑浼佷笟鍚嶇О鏄粈涔堬紵",
-                "鎮ㄧ殑浼佷笟灞炰簬鍝釜琛屼笟锛?,
-                "浼佷笟澶ф鏈夊灏戝憳宸ワ紵",
-                "浼佷笟鎴愮珛澶氶暱鏃堕棿浜嗭紵"
+                "公司的全称是什么？",
+                "主营行业属于哪一类？",
+                "目前团队大约有多少人？",
+                "公司成立于哪一年？"
             ],
-            "completion_criteria": "鐢ㄦ埛鎻愪緵浜嗗畬鏁寸殑浼佷笟鍩烘湰淇℃伅",
-            "success_message": "鎰熻阿鎮ㄦ彁渚涚殑浼佷笟淇℃伅锛屾垜浠凡缁忚褰曞畬姣曘€?
+            "completion_criteria": "用户提供了公司名称、行业、规模与成立年份等基础信息。",
+            "success_message": "感谢提供企业资料，我们已完成记录。"
         }
     },
     "project_info": {
-        "title": "瀹屽杽椤圭洰淇℃伅",
-        "description": "璇锋彁渚涢」鐩殑鍩烘湰淇℃伅锛屽寘鎷」鐩洰鏍囥€侀鏈熸垚鏋溿€佹椂闂磋鍒掔瓑",
+        "title": "完善项目信息",
+        "description": "明确项目目标、交付物、关键时间节点与依赖，为后续执行提供依据。",
         "task_type": "workflow_execution",
         "task_category": "main",
         "workflow_type": "project_info",
         "priority": 9,
         "prompt_config": {
-            "system_prompt": "鎮ㄦ槸涓€涓」鐩俊鎭敹闆嗗姪鎵嬶紝璇峰紩瀵肩敤鎴峰畬鍠勯」鐩熀鏈俊鎭?,
-            "initial_message": "鎺ヤ笅鏉ユ垜浠渶瑕佷簡瑙ｆ偍鐨勯」鐩熀鏈俊鎭紝浠ヤ究涓烘偍鎻愪緵鏇村ソ鐨勬湇鍔°€?,
+            "system_prompt": "You are a project intake assistant. Collect the key information required to launch this initiative.",
+            "initial_message": "为了明确项目目标与排期，请帮助我们确认项目的核心信息。",
             "guidance_questions": [
-                "璇锋弿杩颁竴涓嬫偍鐨勯」鐩洰鏍囨槸浠€涔堬紵",
-                "鎮ㄦ湡鏈涢€氳繃杩欎釜椤圭洰杈炬垚浠€涔堟垚鏋滐紵",
-                "椤圭洰鐨勬椂闂磋鍒掓槸鎬庢牱鐨勶紵",
-                "椤圭洰鐨勪富瑕佹寫鎴樻湁鍝簺锛?
+                "本项目希望达到的主要目标是什么？",
+                "预期产出或交付物有哪些？",
+                "计划的启动时间与结束时间分别是？",
+                "当前是否存在需要重点关注的风险或依赖？"
             ],
-            "completion_criteria": "鐢ㄦ埛鎻愪緵浜嗗畬鏁寸殑椤圭洰鍩烘湰淇℃伅",
-            "success_message": "鎰熻阿鎮ㄦ彁渚涚殑椤圭洰淇℃伅锛屾垜浠凡缁忚褰曞畬姣曘€?
+            "completion_criteria": "用户补充了项目目标、产出、时间计划与关键风险。",
+            "success_message": "感谢提供项目信息，我们会据此安排后续工作。"
         }
     },
     "material_init": {
-        "title": "绱犳潗搴撳垵濮嬪寲",
-        "description": "鍒濆鍖栭」鐩礌鏉愬簱锛屼笂浼犵浉鍏崇礌鏉愭枃浠?,
+        "title": "素材库初始化",
+        "description": "收集图片、视频、文档等关键素材，建立项目专属资源库。",
         "task_type": "material_processing",
         "task_category": "main",
         "workflow_type": "material_init",
         "priority": 8,
         "prompt_config": {
-            "system_prompt": "鎮ㄦ槸涓€涓礌鏉愮鐞嗗姪鎵嬶紝璇峰紩瀵肩敤鎴峰畬鎴愮礌鏉愬簱鍒濆鍖?,
-            "initial_message": "鐜板湪璁╂垜浠垵濮嬪寲鎮ㄧ殑椤圭洰绱犳潗搴擄紝璇蜂笂浼犵浉鍏崇礌鏉愭枃浠躲€?,
+            "system_prompt": "You are a content librarian. Help the user initialise the asset library required for this project.",
+            "initial_message": "我们需要收集项目相关的素材，请根据提示上传现有内容。",
             "guidance_questions": [
-                "璇蜂笂浼犻」鐩浉鍏崇殑鍥剧墖绱犳潗",
-                "璇蜂笂浼犻」鐩浉鍏崇殑瑙嗛绱犳潗",
-                "璇蜂笂浼犻」鐩浉鍏崇殑鏂囨。绱犳潗"
+                "请上传与项目相关的图片或品牌视觉素材。",
+                "如果有既定的视频素材，请一并提供。",
+                "补充能够说明项目背景的文档、方案或案例。"
             ],
-            "completion_criteria": "鐢ㄦ埛瀹屾垚浜嗙礌鏉愬簱鐨勫垵濮嬪寲涓婁紶",
-            "success_message": "绱犳潗搴撳垵濮嬪寲瀹屾垚锛屾偍鍙互闅忔椂娣诲姞鏇村绱犳潗銆?
+            "completion_criteria": "用户已经完成图片、视频及文档等核心素材的首次上传。",
+            "success_message": "素材库初始化完成，后续可随时追加或更新。"
         }
     }
 }
 
-@router.get("/", response_model=PaginatedHSAIProjectResponse, summary="鑾峰彇椤圭洰鍒楄〃")
+@router.get("/", response_model=PaginatedHSAIProjectResponse, summary="获取项目列表")
 async def get_projects(
-    status: Optional[str] = Query(None, description="椤圭洰鐘舵€佽繃婊?),
-    ps: int = Query(20, description="鍒嗛〉澶у皬", ge=1, le=100),
-    pi: int = Query(1, description="鍒嗛〉绱㈠紩锛屼粠1寮€濮?, ge=1),
+    status: Optional[str] = Query(None, description="项目状态过滤"),
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引（从 1 开始）", ge=1),
     user=Depends(get_verified_user)
 ):
     """
-    鑾峰彇鐢ㄦ埛鐨勯」鐩垪琛紙鍒嗛〉锛夈€?
+    获取用户的项目列表（分页）。
     
     Args:
-        status (Optional[str]): 椤圭洰鐘舵€佽繃婊?
-        ps (int): 鍒嗛〉澶у皬锛岃寖鍥?-100
-        pi (int): 鍒嗛〉绱㈠紩锛屼粠1寮€濮?
-        user: 宸茶璇佺殑鐢ㄦ埛瀵硅薄
+        status (Optional[str]): 项目状态过滤
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
+        user: 已认证的用户对象
         
     Returns:
-        PaginatedHSAIProjectResponse: 鍒嗛〉鐨勯」鐩垪琛?
+        PaginatedHSAIProjectResponse: 分页的项目列表
     """
     try:
-        # 璁＄畻offset
+        # 计算offset
         offset = (pi - 1) * ps
         
         projects = HSAIProjects.get_projects_by_user_id(
@@ -179,7 +180,7 @@ async def get_projects(
             offset=offset
         )
         
-        # 鑾峰彇鎬绘暟
+        # 获取总数
         total = HSAIProjects.get_projects_count(
             user.id,
             status=status
@@ -187,8 +188,8 @@ async def get_projects(
         
         responses = [HSAIProjectResponse(**project.model_dump()) for project in projects]
         
-        # 璁＄畻鍒嗛〉鏁版嵁
-        total_pages = (total + ps - 1) // ps  # 鍚戜笂鍙栨暣
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
         
         pagination = PaginationData(
             total=total,
@@ -210,22 +211,22 @@ async def get_projects(
         )
 
 
-@router.post("/", response_model=HSAIProjectResponse, summary="鍒涘缓椤圭洰")
+@router.post("/", response_model=HSAIProjectResponse, summary="创建项目")
 async def create_project(
     form_data: HSAIProjectForm,
     user=Depends(get_verified_user)
 ):
     """
-    鍒涘缓鏂扮殑椤圭洰銆?
+    创建新的项目。
     
-    鍒涘缓椤圭洰鍚庝細鑷姩鍒涘缓涓荤嚎浠诲姟銆?
+    创建项目后会自动创建主线任务。
     
     Args:
-        form_data (HSAIProjectForm): 椤圭洰鍒涘缓琛ㄥ崟
-        user: 宸茶璇佺殑鐢ㄦ埛瀵硅薄
+        form_data (HSAIProjectForm): 项目创建表单
+        user: 已认证的用户对象
         
     Returns:
-        HSAIProjectResponse: 鍒涘缓鐨勯」鐩俊鎭?
+        HSAIProjectResponse: 创建的项目信息
     """
     try:
         project = HSAIProjects.insert_new_project(user.id, form_data)
@@ -235,7 +236,7 @@ async def create_project(
                 detail="Failed to create project"
             )
         
-        # 鍒涘缓涓荤嚎浠诲姟
+        # 创建主线任务
         main_tasks = []
         for template_key, template in PROJECT_MAIN_TASK_TEMPLATES.items():
             task_form = HSAITaskForm(
@@ -266,12 +267,12 @@ async def create_project(
         )
 
 
-@router.get("/{project_id}", response_model=HSAIProjectResponse, summary="鑾峰彇椤圭洰璇︽儏")
+@router.get("/{project_id}", response_model=HSAIProjectResponse, summary="获取项目详情")
 async def get_project(
     project_id: str,
     user=Depends(get_verified_user)
 ):
-    """鑾峰彇鍗曚釜椤圭洰璇︽儏"""
+    """获取单个项目详情"""
     try:
         project = HSAIProjects.get_project_by_id(project_id)
         if not project or project.user_id != user.id:
@@ -292,13 +293,29 @@ async def get_project(
         )
 
 
-@router.put("/{project_id}", response_model=HSAIProjectResponse, summary="鏇存柊椤圭洰")
+@router.put("/{project_id}", response_model=HSAIProjectResponse, summary="更新项目")
 async def update_project(
     project_id: str,
     form_data: HSAIProjectUpdateForm,
     user=Depends(get_verified_user)
 ):
-    """鏇存柊椤圭洰"""
+    """更新项目。
+    
+    更新指定项目的详细信息。
+    
+    Args:
+        project_id (str): 项目ID
+        form_data (HSAIProjectUpdateForm): 项目更新表单
+        user: 已认证的用户对象
+        
+    Returns:
+        HSAIProjectResponse: 更新后的项目信息
+        
+    Raises:
+        HTTPException: 404 - 项目未找到
+        HTTPException: 400 - 项目更新失败
+        HTTPException: 500 - 服务器内部错误
+    """
     try:
         # 楠岃瘉椤圭洰鎵€鏈夋潈
         existing_project = HSAIProjects.get_project_by_id(project_id)
@@ -327,12 +344,27 @@ async def update_project(
         )
 
 
-@router.delete("/{project_id}", response_model=bool, summary="鍒犻櫎椤圭洰")
+@router.delete("/{project_id}", response_model=bool, summary="删除项目")
 async def delete_project(
     project_id: str,
     user=Depends(get_verified_user)
 ):
-    """鍒犻櫎椤圭洰"""
+    """删除项目。
+    
+    删除指定项目及其关联的所有任务。
+    
+    Args:
+        project_id (str): 项目ID
+        user: 已认证的用户对象
+        
+    Returns:
+        bool: 删除成功返回True
+        
+    Raises:
+        HTTPException: 404 - 项目未找到
+        HTTPException: 400 - 项目删除失败
+        HTTPException: 500 - 服务器内部错误
+    """
     try:
         # 楠岃瘉椤圭洰鎵€鏈夋潈
         existing_project = HSAIProjects.get_project_by_id(project_id)
@@ -361,12 +393,24 @@ async def delete_project(
         )
 
 
-@router.get("/{project_id}/tasks", response_model=List[HSAITaskResponse], summary="鑾峰彇椤圭洰浠诲姟鍒楄〃")
+@router.get("/{project_id}/tasks", response_model=List[HSAITaskResponse], summary="获取项目任务列表")
 async def get_project_tasks(
     project_id: str,
     user=Depends(get_verified_user)
 ):
-    """鑾峰彇椤圭洰鍏宠仈鐨勪换鍔″垪琛?""
+    """获取指定项目关联的所有任务。
+    
+    Args:
+        project_id (str): 项目ID
+        user: 已认证的用户对象
+        
+    Returns:
+        List[HSAITaskResponse]: 项目关联的任务列表
+        
+    Raises:
+        HTTPException: 404 - 项目未找到
+        HTTPException: 500 - 服务器内部错误
+    """
     try:
         # 楠岃瘉椤圭洰鎵€鏈夋潈
         project = HSAIProjects.get_project_by_id(project_id)
@@ -397,6 +441,28 @@ async def get_project_summary(
     project_id: str,
     user=Depends(get_verified_user),
 ):
+    """获取项目任务摘要信息。
+    
+    包括项目基本信息、蓝图进度、主要任务统计、循环任务统计、最近日志等。
+    
+    Args:
+        project_id (str): 项目ID
+        user: 已认证的用户对象
+        
+    Returns:
+        ProjectSummaryResponse: 项目摘要信息
+            - project: 项目基本信息
+            - blueprint: 蓝图进度信息
+            - main_tasks: 主要任务统计(总数和完成数)
+            - recurring_tasks: 循环任务统计(总数和活跃数)
+            - recurring_items: 循环任务列表
+            - recent_logs: 最近的循环任务日志
+            - blueprint_links: 蓝图链接信息
+            
+    Raises:
+        HTTPException: 404 - 项目未找到
+        HTTPException: 500 - 服务器内部错误
+    """
     try:
         project = HSAIProjects.get_project_by_id(project_id)
         if not project or project.user_id != user.id:
@@ -443,13 +509,13 @@ async def get_project_summary(
 
             links = HSAITaskBlueprintLinksTable.get_by_progress(progress.id)
             for link in links:
-                blueprint_links.append(
-                    {
-                        "task_id": link.task_id,
-                        "template_key": link.template_key,
-                        "metadata": link.metadata or {},
-                    }
-                )
+                        blueprint_links.append(
+                            {
+                                "task_id": link.task_id,
+                                "template_key": link.template_key,
+                                "metadata": link.link_metadata or {},
+                            }
+                        )
 
         tasks: List[HSAITaskModel] = HSAITasks.get_tasks_by_user_id(
             user.id, project_id=project_id, limit=500

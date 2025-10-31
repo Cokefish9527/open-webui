@@ -277,7 +277,7 @@ erDiagram
 - **脚本验证**：`tool/` 目录提供数据库列校验、Redis 队列修复脚本，运行前需确认 `.env` 指向正确环境。
 - **数据库修复脚本**：`tool/fix_hsai_video_learning_status_sequence.py` 支持 dry-run / --apply，两步完成重复检测与联合唯一约束/序列补齐。
 - **监控建议**：重点观测 `credit`/`credit_log` 同步延迟、Redis Stream 消费积压、n8n 数据库链路。
-- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；任务标签页采用双列布局（左列操作中心，右列依次为项目概览、任务列表、事件时间轴），按钮内置加载/禁用状态，事件卡片展示状态徽章、进度和会话信息；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-30 更新）。
+- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；任务标签页采用双列布局（左列操作中心，右列依次为项目概览、任务列表、事件时间轴），按钮内置加载/禁用状态，事件卡片展示状态徽章、进度和会话信息；项目概览卡片会同步展示战略蓝图版本/状态/最近同步/计划结束时间，数据源改为 `/api/v1/hsai/projects/{project_id}/summary` + `/api/v1/hsai/projects/{project_id}/tasks`；循环任务激活操作调用 `/api/v1/hsai/tasks/{task_id}/recurring/activate` 并记录状态日志；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-30 更新）。
 
 ## 术语表
 | 术语 | 说明 |
@@ -299,8 +299,9 @@ erDiagram
 - 验证：迁移后 `Credits.init_credit_by_user_id` 与 `/api/v1/auths/signin` 均返回正常响应，新账号登录即可生成初始积分记录。
 
 ### 2025-10-30
-- 前端：重构调试页任务标签为双列布局，完善主线/循环/子任务卡片渲染与按钮状态管理，事件时间轴新增状态徽章和进度展示。
-- 文档：更新 `docs/410_websocket_test_page_manual.md` 描述新的布局与操作流程，并在验收清单新增操作禁用与事件展示的核对项。
+- 后端：恢复 `PROJECT_MAIN_TASK_TEMPLATES` 常量定义，避免项目初始化阶段主线任务缺失；`hsai_tasks` 循环任务 API 补充状态日志回写与事件上下文，消除激活/暂停时的 `AttributeError`。
+- 前端：重构调试页任务标签为双列布局，项目概览卡片接入 `/api/v1/hsai/projects/{project_id}/summary` 展示蓝图版本/状态/最近同步/计划结束，并改用 `/api/v1/hsai/tasks/{task_id}/recurring/activate` 激活循环任务，完善按钮状态与事件进度展示。
+- 文档：更新 `docs/410_websocket_test_page_manual.md` 描述新的布局、蓝图指标与操作流程，并在验收清单新增操作禁用与事件展示的核对项。
 
 ### 2025-10-29
 - 后端：新增 `backend/open_webui/services/blueprint_sync_service.py` 同步战略蓝图，按项目生成/更新主线任务并推送 Socket 通知。
@@ -366,3 +367,34 @@ flowchart TD
 
 
 
+### API 手册（新增：组织管理与项目摘要）
+
+以下条目与代码保持一致，更新于 2025-10-31：
+
+```mermaid
+flowchart LR
+  U[用户] -->|REST| ORG[组织管理 API]
+  U -->|REST| PROJ[HSAI 项目管理 API]
+```
+
+| 模块 | 方法 | 路径 | 摘要 |
+|------|------|------|------|
+| 组织管理 | GET | `/api/v1/organizations/` | 获取组织列表（系统管理员） |
+| 组织管理 | POST | `/api/v1/organizations/` | 创建组织（系统管理员） |
+| 组织管理 | GET | `/api/v1/organizations/{organization_id}` | 获取组织详情 |
+| 组织管理 | POST | `/api/v1/organizations/{organization_id}` | 更新组织信息（组织管理员） |
+| 组织管理 | DELETE | `/api/v1/organizations/{organization_id}` | 删除组织（系统管理员） |
+| 组织管理 | GET | `/api/v1/organizations/{organization_id}/users` | 获取组织用户列表 |
+| 组织管理 | POST | `/api/v1/organizations/{organization_id}/users/{user_id}` | 将用户加入组织 |
+| 组织管理 | DELETE | `/api/v1/organizations/{organization_id}/users/{user_id}` | 将用户从组织移除 |
+| HSAI 项目管理 | GET | `/api/v1/hsai/projects/{project_id}/tasks` | 获取项目任务列表 |
+| HSAI 项目管理 | GET | `/api/v1/hsai/projects/{project_id}/summary` | 项目任务摘要 |
+| 对话管理 | GET | `/api/v1/chats/` | 获取我的对话列表 |
+| 对话管理 | DELETE | `/api/v1/chats/` | 删除我的全部对话 |
+| 文件管理 | POST | `/api/v1/files/` | 上传文件 |
+| 知识库管理 | GET | `/api/v1/knowledge/` | 获取知识库列表 |
+
+备注：
+- 标签统一：`organizations` → `组织管理`；`HSAI ��Ŀ����` → `HSAI 项目管理`；计费接口统一为 `计费管理`。
+- 新增统一：`chats` → `对话管理`；`files` → `文件管理`；`knowledge` → `知识库管理`。
+- 以上接口的中文摘要/描述已补齐；其余模块将按模块批次推进中文化与标签治理。

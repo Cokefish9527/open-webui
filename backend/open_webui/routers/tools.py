@@ -28,15 +28,20 @@ from open_webui.utils.tools import get_tool_servers_data
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
 
-
-router = APIRouter()
+# 统一中文标签：工具管理
+router = APIRouter(tags=["工具管理"])
 
 ############################
 # GetTools
 ############################
 
 
-@router.get("/", response_model=list[ToolUserResponse])
+@router.get(
+    "/",
+    response_model=list[ToolUserResponse],
+    summary="获取工具列表",
+    description="返回当前系统可用的内置工具与已配置的 Tool Server 工具；非管理员仅返回具备可读权限的项目。"
+)
 async def get_tools(request: Request, user=Depends(get_verified_user)):
 
     if not request.app.state.TOOL_SERVERS:
@@ -90,7 +95,12 @@ async def get_tools(request: Request, user=Depends(get_verified_user)):
 ############################
 
 
-@router.get("/list", response_model=list[ToolUserResponse])
+@router.get(
+    "/list",
+    response_model=list[ToolUserResponse],
+    summary="获取可写工具列表",
+    description="返回当前用户具备可写权限的工具集合，用于管理与编辑。"
+)
 async def get_tool_list(user=Depends(get_verified_user)):
     if user.role == "admin":
         tools = Tools.get_tools()
@@ -127,7 +137,12 @@ def github_url_to_raw_url(url: str) -> str:
     return url
 
 
-@router.post("/load/url", response_model=Optional[dict])
+@router.post(
+    "/load/url",
+    response_model=Optional[dict],
+    summary="从 URL 载入工具源码（预览）",
+    description="管理员从 GitHub 链接载入 Python 工具源码（只读取，不落库），用于导入前预览与编辑。"
+)
 async def load_tool_from_url(
     request: Request, form_data: LoadUrlForm, user=Depends(get_admin_user)
 ):
@@ -179,7 +194,12 @@ async def load_tool_from_url(
 ############################
 
 
-@router.get("/export", response_model=list[ToolModel])
+@router.get(
+    "/export",
+    response_model=list[ToolModel],
+    summary="导出工具定义",
+    description="管理员导出所有自定义工具的定义，便于备份与迁移。"
+)
 async def export_tools(user=Depends(get_admin_user)):
     tools = Tools.get_tools()
     return tools
@@ -190,7 +210,12 @@ async def export_tools(user=Depends(get_admin_user)):
 ############################
 
 
-@router.post("/create", response_model=Optional[ToolResponse])
+@router.post(
+    "/create",
+    response_model=Optional[ToolResponse],
+    summary="创建工具",
+    description="创建新的自定义工具，需具备 workspace.tools 权限或管理员角色。"
+)
 async def create_new_tools(
     request: Request,
     form_data: ToolForm,

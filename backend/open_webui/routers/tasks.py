@@ -42,7 +42,8 @@ from open_webui.env import SRC_LOG_LEVELS
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-router = APIRouter()
+# 统一中文标签：任务管理
+router = APIRouter(tags=["任务管理"])
 
 
 ##################################
@@ -52,7 +53,11 @@ router = APIRouter()
 ##################################
 
 
-@router.get("/config")
+@router.get(
+    "/config",
+    summary="获取任务配置",
+    description="返回标题生成、标签生成、自动补全、查询生成、工具函数调用等任务相关的启用与模板配置。"
+)
 async def get_task_config(request: Request, user=Depends(get_verified_user)):
     return {
         "TASK_MODEL": request.app.state.config.TASK_MODEL,

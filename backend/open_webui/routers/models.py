@@ -15,7 +15,8 @@ from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.access_control import has_access, has_permission
 
 
-router = APIRouter()
+# 统一中文标签：模型管理
+router = APIRouter(tags=["模型管理"])
 
 
 ###########################
@@ -23,7 +24,12 @@ router = APIRouter()
 ###########################
 
 
-@router.get("/", response_model=list[ModelUserResponse])
+@router.get(
+    "/",
+    response_model=list[ModelUserResponse],
+    summary="获取模型列表",
+    description="管理员返回全部模型，普通用户返回与其相关的可见模型列表。"
+)
 async def get_models(id: Optional[str] = None, user=Depends(get_verified_user)):
     if user.role == "admin":
         return Models.get_models()
@@ -36,7 +42,12 @@ async def get_models(id: Optional[str] = None, user=Depends(get_verified_user)):
 ###########################
 
 
-@router.get("/base", response_model=list[ModelResponse])
+@router.get(
+    "/base",
+    response_model=list[ModelResponse],
+    summary="获取基础模型列表",
+    description="返回系统支持的基础模型清单（管理员）。"
+)
 async def get_base_models(user=Depends(get_admin_user)):
     return Models.get_base_models()
 
@@ -46,7 +57,12 @@ async def get_base_models(user=Depends(get_admin_user)):
 ############################
 
 
-@router.post("/create", response_model=Optional[ModelModel])
+@router.post(
+    "/create",
+    response_model=Optional[ModelModel],
+    summary="创建模型",
+    description="创建新的模型定义，需要 workspace.models 权限或管理员角色。"
+)
 async def create_new_model(
     request: Request,
     form_data: ModelForm,

@@ -8,7 +8,8 @@ from open_webui.config_module import get_config, save_config, BannerModel
 
 from open_webui.utils.tools import get_tool_server_data, get_tool_servers_data
 
-router = APIRouter()
+# 统一中文标签：配置管理
+router = APIRouter(tags=["配置管理"])
 
 
 ############################
@@ -20,7 +21,12 @@ class ImportConfigForm(BaseModel):
     config: dict
 
 
-@router.post("/import", response_model=dict)
+@router.post(
+    "/import",
+    response_model=dict,
+    summary="导入配置",
+    description="导入整套系统配置（JSON），仅限管理员。"
+)
 async def import_config(form_data: ImportConfigForm, user=Depends(get_admin_user)):
     save_config(form_data.config)
     return get_config()
@@ -31,7 +37,12 @@ async def import_config(form_data: ImportConfigForm, user=Depends(get_admin_user
 ############################
 
 
-@router.get("/export", response_model=dict)
+@router.get(
+    "/export",
+    response_model=dict,
+    summary="导出配置",
+    description="导出当前系统配置（JSON），仅限管理员。"
+)
 async def export_config(user=Depends(get_admin_user)):
     return get_config()
 
@@ -45,14 +56,24 @@ class DirectConnectionsConfigForm(BaseModel):
     ENABLE_DIRECT_CONNECTIONS: bool
 
 
-@router.get("/direct_connections", response_model=DirectConnectionsConfigForm)
+@router.get(
+    "/direct_connections",
+    response_model=DirectConnectionsConfigForm,
+    summary="获取直连配置",
+    description="获取是否启用直连（ENABLE_DIRECT_CONNECTIONS），仅限管理员。"
+)
 async def get_direct_connections_config(request: Request, user=Depends(get_admin_user)):
     return {
         "ENABLE_DIRECT_CONNECTIONS": request.app.state.config.ENABLE_DIRECT_CONNECTIONS,
     }
 
 
-@router.post("/direct_connections", response_model=DirectConnectionsConfigForm)
+@router.post(
+    "/direct_connections",
+    response_model=DirectConnectionsConfigForm,
+    summary="更新直连配置",
+    description="更新是否启用直连（ENABLE_DIRECT_CONNECTIONS），仅限管理员。"
+)
 async def set_direct_connections_config(
     request: Request,
     form_data: DirectConnectionsConfigForm,

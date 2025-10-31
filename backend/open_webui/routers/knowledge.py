@@ -32,13 +32,20 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 router = APIRouter()
+# 统一中文标签：知识库管理
+router.tags = ["知识库管理"]
 
 ############################
 # getKnowledgeBases
 ############################
 
 
-@router.get("/", response_model=List[KnowledgeUserResponse])
+@router.get(
+    "/",
+    response_model=List[KnowledgeUserResponse],
+    summary="获取知识库列表",
+    description="按当前用户权限返回知识库列表：管理员返回全部，普通用户返回具备 read 权限的集合，并附带文件元数据。"
+)
 async def get_knowledge(user=Depends(get_verified_user)):
     knowledge_bases = []
 
@@ -86,7 +93,12 @@ async def get_knowledge(user=Depends(get_verified_user)):
     return knowledge_with_files
 
 
-@router.get("/list", response_model=List[KnowledgeUserResponse])
+@router.get(
+    "/list",
+    response_model=List[KnowledgeUserResponse],
+    summary="获取可写知识库列表",
+    description="按当前用户权限返回具备 write 权限的知识库集合，用于管理与导入。"
+)
 async def get_knowledge_list(user=Depends(get_verified_user)):
     knowledge_bases = []
 
@@ -138,7 +150,12 @@ async def get_knowledge_list(user=Depends(get_verified_user)):
 ############################
 
 
-@router.post("/create", response_model=Optional[KnowledgeResponse])
+@router.post(
+    "/create",
+    response_model=Optional[KnowledgeResponse],
+    summary="创建知识库",
+    description="创建新的知识库，需管理员或具备 workspace.knowledge 权限的用户。"
+)
 async def create_new_knowledge(
     request: Request, form_data: KnowledgeForm, user=Depends(get_verified_user)
 ):
@@ -166,7 +183,12 @@ async def create_new_knowledge(
 ############################
 
 
-@router.post("/reindex", response_model=bool)
+@router.post(
+    "/reindex",
+    response_model=bool,
+    summary="重建全部知识库索引",
+    description="对系统内所有知识库执行重新索引（管理员）。会跳过不合法条目并清理无效引用。"
+)
 async def reindex_knowledge_files(request: Request, user=Depends(get_verified_user)):
     if user.role != "admin":
         raise HTTPException(

@@ -36,6 +36,8 @@ from open_webui.models.hsai_tasks import (
     HSAITaskModel,
     HSAITaskStatus,
     HSAITaskUpdateForm,
+    HSAIRecurringState,
+    HSAITaskStateLogs,
 )
 from open_webui.services.onboarding_orchestrator import ensure_company_project_and_main_tasks
 from open_webui.socket.hsai_events import HSAI_WEBSOCKET_EVENTS
@@ -181,6 +183,8 @@ def _create_or_update_task_from_template(
     config.setdefault("template_key", template_key)
     config.setdefault("progress_id", progress_id)
 
+    is_recurring = bool(config.get("recurring"))
+
     if link:
         existing_task = HSAITasks.get_task_by_id(link.task_id)
         if not existing_task:
@@ -200,6 +204,19 @@ def _create_or_update_task_from_template(
                 update_payload["config"] = merged
                 needs_update = True
 
+            if existing_task.is_recurring != is_recurring:
+                update_payload["is_recurring"] = is_recurring
+                needs_update = True
+            if is_recurring and not (existing_task.recurring_state or ""):
+                update_payload["recurring_state"] = HSAIRecurringState.IDLE.value
+                needs_update = True
+            if not is_recurring and (existing_task.recurring_state or None):
+                update_payload["recurring_state"] = None
+                update_payload["external_controller"] = None
+                update_payload["next_run_at"] = None
+                update_payload["last_run_at"] = None
+                needs_update = True
+
             if needs_update:
                 updated = HSAITasks.update_task_by_id(
                     existing_task.id, HSAITaskUpdateForm(**update_payload)
@@ -216,6 +233,8 @@ def _create_or_update_task_from_template(
         config=config,
         prompt_config=template.get("prompt_config"),
         priority=int(template.get("priority") or 0),
+        is_recurring=is_recurring,
+        recurring_state=HSAIRecurringState.IDLE.value if is_recurring else None,
     )
     created = HSAITasks.insert_new_task(user_id, form)
     return (created, None)
@@ -245,11 +264,25 @@ def _sync_task_links(
         )
         if created_task:
             created.append(created_task)
+            if created_task.is_recurring:
+                try:
+                    HSAITaskStateLogs.append_log(
+                        task_id=created_task.id,
+                        from_state=None,
+                        to_state=created_task.recurring_state or HSAIRecurringState.IDLE.value,
+                        operator_id=user_id,
+                        operator_name=None,
+                        source="blueprint_sync",
+                        message="初始化循环任务状态",
+                        snapshot_json=created_task.model_dump(),
+                    )
+                except Exception as exc:
+                    log.warning("Failed to append recurring log for %s: %s", created_task.id, exc)
             HSAITaskBlueprintLinksTable.upsert_link(
                 progress_id=progress.id,
                 task_id=created_task.id,
                 template_key=template_key,
-                metadata={
+                link_metadata={
                     "blueprint_version": progress.blueprint_version,
                     "progress_id": progress.id,
                 },
@@ -260,7 +293,7 @@ def _sync_task_links(
                 progress_id=progress.id,
                 task_id=updated_task.id,
                 template_key=template_key,
-                metadata={
+                link_metadata={
                     "blueprint_version": progress.blueprint_version,
                     "progress_id": progress.id,
                 },

@@ -1,5 +1,5 @@
 ﻿# WebSocket 调试页面开发手册
-> 版本：2025-10-27  
+> 版本：2025-10-30  
 > 维护角色：前端工程师 & 调试工程师  
 > 关联文件：`websocket-test.html`、`static/ws-tester.js`
 
@@ -88,19 +88,21 @@ flowchart LR
 
 ### 3.7 任务系统
 
-1. 切换到“任务系统”标签后，左列为操作中心，右列依次展示“项目概览 → 任务列表 → 任务事件”。首次进入请点击“刷新概览”，依次请求 `/api/v1/hsai/tasks`、`/api/v1/hsai/companies`、`/api/v1/hsai/projects` 拉取最新数据，概览卡片会同步显示主线完成度与循环任务状态。
+1. 切换到“任务系统”标签后，左列为操作中心，右列依次展示“项目概览 → 任务列表 → 任务事件”。首次进入请点击“刷新概览”，前端会优先定位默认项目（`/api/v1/hsai/projects?ps=1&pi=1`），随后调用 `/api/v1/hsai/projects/{project_id}/summary` + `/api/v1/hsai/projects/{project_id}/tasks` 拉取项目概览与任务清单。卡片会同步展示企业名称、项目名、战略蓝图版本/状态/最近同步时间/计划结束日，以及主线完成度与循环任务活跃度。
 
 2. 任务列表按“主线任务”“循环任务”分组展示，支持下拉框快速定位，也可直接点击卡片设置当前选中任务；子任务单独占据操作中心底部滚动区域，并保留选中高亮。
 
-3. “创建默认主线任务”按钮会针对当前项目调用 `POST /api/v1/hsai/tasks` 写入 `MAIN_TASK_TEMPLATES` 中定义的模板，适合初始化项目或回归测试。操作过程中按钮会进入 Loading 状态并禁用其他入口。
+3. “创建默认主线任务”按钮会针对当前项目调用 `POST /api/v1/hsai/tasks` 写入 `PROJECT_MAIN_TASK_TEMPLATES` 中定义的模板，适合初始化项目或回归测试。操作过程中按钮会进入 Loading 状态并禁用其他入口。
 
 4. 主线任务操作区提供“标记主线完成”“重置为未开始”两个入口，对应 `PUT /api/v1/hsai/tasks/{task_id}`；执行后页面自动刷新概览，并在事件面板留下状态记录。
 
-5. 循环任务支持 `POST /api/v1/hsai/tasks/{task_id}/start` 激活计划，同时可通过“模拟调度日期”输入框+按钮生成当日子任务，验证调度逻辑及任务依赖。若遗漏日期或未选择循环任务，操作日志会提示原因。
+5. 循环任务激活入口请求 `POST /api/v1/hsai/tasks/{task_id}/recurring/activate`，成功后会写入状态日志并推送 `task_status_updated` 事件；“模拟调度日期”输入框+按钮仍调用 `POST /api/v1/hsai/tasks/{task_id}/simulate` 生成当日子任务，用于验证调度逻辑及依赖链路。若遗漏日期或未选择循环任务，操作日志会提示原因。
 
 6. 事件面板默认订阅 `task_status_updated`、`task_progress`、`task_replay` 三类 Socket 事件，可结合类型下拉框与“仅当前会话”开关过滤调试记录；事件卡片展示状态徽章、进度百分比和会话 ID，便于追踪上下游。
 
 7. 子任务列表会收集最近生成的执行项，选中后点击“回放选中子任务”即可将 payload 写回会话事件，辅助复盘或再次触发。
+
+8. 蓝图指标位于项目概览卡片右半区：`蓝图版本` 与 `蓝图状态` 直接映射 summary 的 `blueprint.version`、`blueprint.progress_state`；`蓝图更新时间` 使用本地时区展示最近同步时间，`蓝图计划结束` 根据执行周期推算预计完结日，便于核对 n8n 蓝图生成成果。
 
 
 

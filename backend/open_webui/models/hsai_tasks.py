@@ -665,9 +665,9 @@ class HSAITasksTable:
                     db.commit()
                     return True
                 return False
-        except Exception as e:
-            log.exception(f"Error updating task progress: {e}")
-            return False
+            except Exception as e:
+                log.exception(f"Error updating task progress: {e}")
+                return False
 
 
 class HSAITaskStateLogsTable:
