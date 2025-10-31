@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 
 from open_webui.models.models import (
     ModelForm,
@@ -16,8 +16,8 @@ from open_webui.utils.access_control import has_access, has_permission
 
 
 # 统一中文标签：模型管理
-router = APIRouter(tags=["模型管理"])
 
+router = APIRouter(tags=["模型管理"])
 
 ###########################
 # GetModels
@@ -46,7 +46,7 @@ async def get_models(id: Optional[str] = None, user=Depends(get_verified_user)):
     "/base",
     response_model=list[ModelResponse],
     summary="获取基础模型列表",
-    description="返回系统支持的基础模型清单（管理员）。"
+    description="仅管理员可用：返回系统支持的基础模型清单。"
 )
 async def get_base_models(user=Depends(get_admin_user)):
     return Models.get_base_models()

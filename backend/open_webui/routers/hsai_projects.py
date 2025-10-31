@@ -398,18 +398,22 @@ async def get_project_tasks(
     project_id: str,
     user=Depends(get_verified_user)
 ):
-    """获取指定项目关联的所有任务。
-    
-    Args:
-        project_id (str): 项目ID
-        user: 已认证的用户对象
-        
-    Returns:
-        List[HSAITaskResponse]: 项目关联的任务列表
-        
-    Raises:
-        HTTPException: 404 - 项目未找到
-        HTTPException: 500 - 服务器内部错误
+    """获取指定项目下的任务列表。
+
+    权限边界：
+    - 仅项目所属用户可访问；管理员需具备相应后门开关方可代查。
+
+    过滤项：
+    - 无额外查询参数（如需分页/筛选请在上层列表接口完成后在客户端过滤）。
+
+    返回字段（HSAITaskResponse 列表）：
+    - id：任务ID
+    - title：标题
+    - status：状态（如 pending/running/paused/done）
+    - type：任务类型（main/recurring）
+    - project_id：项目ID
+    - created_at/updated_at：时间戳（秒）
+    - metadata：附加信息
     """
     try:
         # 楠岃瘉椤圭洰鎵€鏈夋潈
@@ -441,27 +445,19 @@ async def get_project_summary(
     project_id: str,
     user=Depends(get_verified_user),
 ):
-    """获取项目任务摘要信息。
-    
-    包括项目基本信息、蓝图进度、主要任务统计、循环任务统计、最近日志等。
-    
-    Args:
-        project_id (str): 项目ID
-        user: 已认证的用户对象
-        
-    Returns:
-        ProjectSummaryResponse: 项目摘要信息
-            - project: 项目基本信息
-            - blueprint: 蓝图进度信息
-            - main_tasks: 主要任务统计(总数和完成数)
-            - recurring_tasks: 循环任务统计(总数和活跃数)
-            - recurring_items: 循环任务列表
-            - recent_logs: 最近的循环任务日志
-            - blueprint_links: 蓝图链接信息
-            
-    Raises:
-        HTTPException: 404 - 项目未找到
-        HTTPException: 500 - 服务器内部错误
+    """返回项目任务摘要信息。
+
+    权限边界：
+    - 仅项目所属用户可访问；管理员需具备相应后门开关方可代查。
+
+    返回字段（ProjectSummaryResponse）：
+    - project：项目基本信息
+    - blueprint：蓝图版本/同步状态/最后同步时间
+    - main_tasks：主要任务完成度统计
+    - recurring_tasks：循环任务统计汇总
+    - recurring_items：循环任务条目列表
+    - recent_logs：近期状态日志
+    - blueprint_links：蓝图关联信息
     """
     try:
         project = HSAIProjects.get_project_by_id(project_id)

@@ -166,7 +166,12 @@ async def create_new_chat(form_data: ChatForm, user=Depends(get_verified_user)):
 ############################
 
 
-@router.post("/import", response_model=Optional[ChatResponse])
+@router.post(
+    "/import",
+    response_model=Optional[ChatResponse],
+    summary="导入对话",
+    description="根据导入表单创建新对话并自动注册表单中的标签。",
+)
 async def import_chat(form_data: ChatImportForm, user=Depends(get_verified_user)):
     try:
         chat = Chats.import_chat(user.id, form_data)
@@ -194,7 +199,12 @@ async def import_chat(form_data: ChatImportForm, user=Depends(get_verified_user)
 ############################
 
 
-@router.get("/search", response_model=list[ChatTitleIdResponse])
+@router.get(
+    "/search",
+    response_model=list[ChatTitleIdResponse],
+    summary="搜索我的对话",
+    description="按关键字分页搜索当前用户的对话；当 text 为 tag:xxx 时按标签匹配。",
+)
 async def search_user_chats(
     text: str, page: Optional[int] = None, user=Depends(get_verified_user)
 ):
@@ -319,7 +329,12 @@ async def get_all_user_chats_in_db(user=Depends(get_admin_user)):
 ############################
 
 
-@router.get("/archived", response_model=list[ChatTitleIdResponse])
+@router.get(
+    "/archived",
+    response_model=list[ChatTitleIdResponse],
+    summary="获取已归档对话列表",
+    description="分页获取当前用户的已归档对话列表，支持 query、order_by、direction 过滤。",
+)
 async def get_archived_session_user_chat_list(
     page: Optional[int] = None,
     query: Optional[str] = None,
@@ -359,7 +374,12 @@ async def get_archived_session_user_chat_list(
 ############################
 
 
-@router.post("/archive/all", response_model=bool)
+@router.post(
+    "/archive/all",
+    response_model=bool,
+    summary="归档我所有对话",
+    description="将当前用户的所有对话置为归档状态，返回布尔结果。",
+)
 async def archive_all_chats(user=Depends(get_verified_user)):
     return Chats.archive_all_chats_by_user_id(user.id)
 
@@ -369,7 +389,12 @@ async def archive_all_chats(user=Depends(get_verified_user)):
 ############################
 
 
-@router.get("/share/{share_id}", response_model=Optional[ChatResponse])
+@router.get(
+    "/share/{share_id}",
+    response_model=Optional[ChatResponse],
+    summary="通过分享ID获取对话",
+    description="按 share_id 获取共享对话；若启用 ENABLE_ADMIN_CHAT_ACCESS，管理员可按 ID 获取。",
+)
 async def get_shared_chat_by_id(share_id: str, user=Depends(get_verified_user)):
     if user.role == "pending":
         raise HTTPException(
@@ -404,7 +429,12 @@ class TagFilterForm(TagForm):
     limit: Optional[int] = 50
 
 
-@router.post("/tags", response_model=list[ChatTitleIdResponse])
+@router.post(
+    "/tags",
+    response_model=list[ChatTitleIdResponse],
+    summary="按标签获取我的对话列表",
+    description="根据标签名称分页返回当前用户的对话列表；若标签无对话则自动清理该标签。",
+)
 async def get_user_chat_list_by_tag_name(
     form_data: TagFilterForm, user=Depends(get_verified_user)
 ):
@@ -422,7 +452,12 @@ async def get_user_chat_list_by_tag_name(
 ############################
 
 
-@router.get("/{id}", response_model=Optional[ChatResponse])
+@router.get(
+    "/{id}",
+    response_model=Optional[ChatResponse],
+    summary="获取对话详情",
+    description="按对话 ID 获取当前用户的对话详情。",
+)
 async def get_chat_by_id(id: str, user=Depends(get_verified_user)):
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
 
@@ -440,7 +475,12 @@ async def get_chat_by_id(id: str, user=Depends(get_verified_user)):
 ############################
 
 
-@router.post("/{id}", response_model=Optional[ChatResponse])
+@router.post(
+    "/{id}",
+    response_model=Optional[ChatResponse],
+    summary="更新对话",
+    description="更新对话内容与元信息，仅限对话所有者。",
+)
 async def update_chat_by_id(
     id: str, form_data: ChatForm, user=Depends(get_verified_user)
 ):
