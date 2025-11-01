@@ -23,8 +23,8 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 ####################
 
 
-class Group(Base):
-    __tablename__ = "group"
+class UserGroup(Base):
+    __tablename__ = "user_groups"
     __table_args__ = {'extend_existing': True}
 
     id = Column(Text, unique=True, primary_key=True)
@@ -125,7 +125,7 @@ class GroupTable:
             )
 
             try:
-                result = Group(**group.model_dump())
+                result = UserGroup(**group.model_dump())
                 db.add(result)
                 db.commit()
                 db.refresh(result)
@@ -139,7 +139,7 @@ class GroupTable:
 
     def get_groups(self, company_id: Optional[str] = None) -> List[GroupModel]:
         with get_db() as db:
-            query = db.query(Group)
+            query = db.query(UserGroup)
             
             # 如果指定了公司ID，只返回该公司下的组
             if company_id:
@@ -147,18 +147,18 @@ class GroupTable:
                 
             return [
                 GroupModel.model_validate(group)
-                for group in query.order_by(Group.updated_at.desc()).all()
+                for group in query.order_by(UserGroup.updated_at.desc()).all()
             ]
 
     def get_groups_by_member_id(self, user_id: str, company_id: Optional[str] = None) -> List[GroupModel]:
         with get_db() as db:
-            query = db.query(Group).filter(Group.user_ids.isnot(None))
+            query = db.query(UserGroup).filter(UserGroup.user_ids.isnot(None))
 
             if company_id:
                 query = query.filter_by(company_id=company_id)
 
             groups: List[GroupModel] = []
-            for group in query.order_by(Group.updated_at.desc()).all():
+            for group in query.order_by(UserGroup.updated_at.desc()).all():
                 try:
                     group_model = GroupModel.model_validate(group)
                 except Exception:
@@ -172,7 +172,7 @@ class GroupTable:
     def get_group_by_id(self, id: str) -> Optional[GroupModel]:
         try:
             with get_db() as db:
-                group = db.query(Group).filter_by(id=id).first()
+                group = db.query(UserGroup).filter_by(id=id).first()
                 return GroupModel.model_validate(group) if group else None
         except Exception:
             return None
@@ -189,7 +189,7 @@ class GroupTable:
     ) -> Optional[GroupModel]:
         try:
             with get_db() as db:
-                db.query(Group).filter_by(id=id).update(
+                db.query(UserGroup).filter_by(id=id).update(
                     {
                         **form_data.model_dump(exclude_none=True),
                         "updated_at": int(time.time()),
@@ -204,7 +204,7 @@ class GroupTable:
     def delete_group_by_id(self, id: str) -> bool:
         try:
             with get_db() as db:
-                db.query(Group).filter_by(id=id).delete()
+                db.query(UserGroup).filter_by(id=id).delete()
                 db.commit()
                 return True
         except Exception:
@@ -213,7 +213,7 @@ class GroupTable:
     def delete_all_groups(self) -> bool:
         with get_db() as db:
             try:
-                db.query(Group).delete()
+                db.query(UserGroup).delete()
                 db.commit()
 
                 return True
@@ -227,7 +227,7 @@ class GroupTable:
 
                 for group in groups:
                     group.user_ids.remove(user_id)
-                    db.query(Group).filter_by(id=group.id).update(
+                    db.query(UserGroup).filter_by(id=group.id).update(
                         {
                             "user_ids": group.user_ids,
                             "updated_at": int(time.time()),
@@ -262,7 +262,7 @@ class GroupTable:
                         updated_at=int(time.time()),
                     )
                     try:
-                        result = Group(**new_group.model_dump())
+                        result = UserGroup(**new_group.model_dump())
                         db.add(result)
                         db.commit()
                         db.refresh(result)
@@ -275,7 +275,7 @@ class GroupTable:
     def sync_groups_by_group_names(self, user_id: str, group_names: List[str], company_id: Optional[str] = None) -> bool:
         with get_db() as db:
             try:
-                query = db.query(Group).filter(Group.name.in_(group_names))
+                query = db.query(UserGroup).filter(UserGroup.name.in_(group_names))
                 
                 # 如果指定了公司ID，只在该公司内查找组
                 if company_id:
@@ -290,7 +290,7 @@ class GroupTable:
                 for group in existing_groups:
                     if group.id not in group_ids:
                         group.user_ids.remove(user_id)
-                        db.query(Group).filter_by(id=group.id).update(
+                        db.query(UserGroup).filter_by(id=group.id).update(
                             {
                                 "user_ids": group.user_ids,
                                 "updated_at": int(time.time()),
@@ -301,7 +301,7 @@ class GroupTable:
                 for group in groups:
                     if user_id not in group.user_ids:
                         group.user_ids.append(user_id)
-                        db.query(Group).filter_by(id=group.id).update(
+                        db.query(UserGroup).filter_by(id=group.id).update(
                             {
                                 "user_ids": group.user_ids,
                                 "updated_at": int(time.time()),

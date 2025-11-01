@@ -337,6 +337,7 @@ erDiagram
 - 工具：	ool/add_recurring_task_fields.py 复用共享迁移逻辑并保留 dry-run 输出；ackend/test/test_recurring_task_schema.py 新增单元测试覆盖列补齐/索引创建及幂等验证。
 - 数据脚本：ackend/sql/postgresql_init_from_sqlite.sql、ackend/sql/sqlite_dump_raw.sql 同步补入 is_recurring 系列字段、hsai_task_state_logs 表与索引，保证全新部署即具备循环任务能力。
 - 文档：PROJECTWIKI 数据模型、设计决策与运维段落同步记录循环任务字段、自检流程与上线 checklist。
+- 数据库：将 `"group"` 表重命名为 `user_groups`，并统一使用 `company_id`（替换遗留的 `organization_id`）。运行 `tool/remove_legacy_organization_schema.py` 可自动完成重命名与外键校准。
 - 前端：`websocket-test.html` 新增循环运行概览/循环状态日志卡片、任务选中提示与消息 ID 自动填充；`static/ws-tester.js` 扩展循环任务启动/暂停/恢复/交接/同步、日志刷新与时间输入解析，保持操作中心与事件流一致。
 - 手册：`docs/410_websocket_test_page_manual.md` 更新至 2025-11-01 版，补充循环状态机按钮、日志刷新、验收清单与调试流程说明。
 ### 2025-10-28

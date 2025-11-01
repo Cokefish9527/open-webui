@@ -62,7 +62,15 @@ def remove_legacy_organization_schema(
             return quote(table)
 
         user_columns = {column["name"] for column in inspector.get_columns("user", schema=effective_schema)}
-        group_columns = {column["name"] for column in inspector.get_columns("group", schema=effective_schema)}
+
+        group_table_name = "user_groups" if inspector.has_table("user_groups", schema=effective_schema) else "group"
+        group_columns = set()
+        if inspector.has_table(group_table_name, schema=effective_schema):
+            group_columns = {
+                column["name"]
+                for column in inspector.get_columns(group_table_name, schema=effective_schema)
+            }
+
         projects_columns = {
             column["name"] for column in inspector.get_columns("hsai_projects", schema=effective_schema)
         }
@@ -76,13 +84,48 @@ def remove_legacy_organization_schema(
                 f"ALTER TABLE {qualified('user')} DROP COLUMN IF EXISTS {quote('is_org_admin')}"
             )
 
-        if "organization_id" in group_columns:
+        renamed_to_user_groups = False
+        renamed_company_column = False
+        target_table = group_table_name
+
+        if inspector.has_table("group", schema=effective_schema):
+            if "organization_id" in group_columns:
+                statements.append(
+                    f"ALTER TABLE {qualified('group')} RENAME COLUMN {quote('organization_id')} TO {quote('company_id')}"
+                )
+                renamed_company_column = True
+                group_columns.discard("organization_id")
+                group_columns.add("company_id")
+            if not inspector.has_table("user_groups", schema=effective_schema):
+                statements.append(
+                    f"ALTER TABLE {qualified('group')} RENAME TO {quote('user_groups')}"
+                )
+                renamed_to_user_groups = True
+                target_table = "user_groups"
+
+        if target_table != "user_groups":
             statements.append(
-                f"ALTER TABLE {qualified('group')} DROP COLUMN IF EXISTS {quote('organization_id')}"
+                f"ALTER TABLE {qualified(target_table)} RENAME TO {quote('user_groups')}"
             )
-        if "company_id" not in group_columns:
+            target_table = "user_groups"
+
+        if inspector.has_table("user_groups", schema=effective_schema):
+            target_columns = {
+                column["name"] for column in inspector.get_columns("user_groups", schema=effective_schema)
+            }
+        else:
+            target_columns = set(group_columns)
+
+        if "organization_id" in target_columns and not renamed_company_column:
             statements.append(
-                f"ALTER TABLE {qualified('group')} ADD COLUMN IF NOT EXISTS {quote('company_id')} VARCHAR(255) REFERENCES {qualified('companies')}(id)"
+                f"ALTER TABLE {qualified('user_groups')} RENAME COLUMN {quote('organization_id')} TO {quote('company_id')}"
+            )
+            target_columns.discard("organization_id")
+            target_columns.add("company_id")
+
+        if "company_id" not in target_columns:
+            statements.append(
+                f"ALTER TABLE {qualified('user_groups')} ADD COLUMN IF NOT EXISTS {quote('company_id')} VARCHAR(255) REFERENCES {qualified('companies')}(id)"
             )
 
         if "organization_id" in projects_columns:
