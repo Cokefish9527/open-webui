@@ -1,4 +1,4 @@
-﻿# WebSocket 调试页面开发手册
+# WebSocket 调试页面开发手册
 > 版本：2025-10-30  
 > 维护角色：前端工程师 & 调试工程师  
 > 关联文件：`websocket-test.html`、`static/ws-tester.js`

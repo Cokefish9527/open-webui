@@ -1,0 +1,26 @@
+name: bom-scan
+
+on:
+  push:
+    paths:
+      - "**/*.py"
+      - "tool/clean_special_chars.py"
+      - ".github/workflows/bom-scan.yml"
+  pull_request:
+    paths:
+      - "**/*.py"
+      - "tool/clean_special_chars.py"
+      - ".github/workflows/bom-scan.yml"
+
+jobs:
+  bom-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+      - name: 检查 Python 文件是否包含 BOM
+        run: python tool/clean_special_chars.py --root . --extensions .py

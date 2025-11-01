@@ -1,4 +1,4 @@
-﻿from typing import Optional
+from typing import Optional
 
 from open_webui.models.models import (
     ModelForm,

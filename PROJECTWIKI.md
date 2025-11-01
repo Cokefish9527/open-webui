@@ -41,6 +41,7 @@ erDiagram
   hsai_blueprint_progress ||--o{ hsai_blueprint_progress_history : "版本历史"
   hsai_blueprint_progress ||--o{ hsai_task_blueprint_links : "生成主线任务"
   hsai_tasks ||--o{ hsai_task_blueprint_links : "蓝图来源"
+  hsai_tasks ||--o{ hsai_task_state_logs : "状态日志"
 
   hsai_blueprint_progress {
     string id PK
@@ -64,6 +65,15 @@ erDiagram
     string task_id FK hsai_tasks.id
     string template_key
     json metadata
+    bigint created_at
+  }
+  hsai_task_state_logs {
+    string id PK
+    string task_id FK hsai_tasks.id
+    string from_state
+    string to_state
+    string operator_id
+    string source
     bigint created_at
   }
 ```
@@ -154,8 +164,25 @@ erDiagram
     string user_id FK users.id
     string project_id FK hsai_projects.id
     bigint progress
+    bool is_recurring
+    string recurring_state
+    bigint last_run_at
+    bigint next_run_at
+    string external_controller
+    json recurring_meta
     timestamptz created_at
     timestamptz updated_at
+  }
+  hsai_task_state_logs {
+    string id PK
+    string task_id FK hsai_tasks.id
+    string from_state
+    string to_state
+    string operator_id
+    string operator_name
+    string source
+    json snapshot_json
+    bigint created_at
   }
   credit {
     string id PK
@@ -261,6 +288,19 @@ erDiagram
 - **初始化脚本**：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 已加入视频学习状态表的联合唯一约束与索引；导入历史数据后需运行 `tool/fix_hsai_video_learning_status_sequence.py --apply` 重置序列，必要时再执行 `tool/add_company_credit_columns.py` 修复旧表结构。
 
 ## 设计决策 & 技术债务
+
+### 2025-11-01 接口查询崩溃（缺失 hsai_tasks.is_recurring）
+- 背景：2025-10-31 14:54（UTC+08）起，/api/v1/hsai/tasks/ 与 /api/v1/hsai/dashboard/recent-activities 接口返回 500，日志报错 psycopg2.errors.UndefinedColumn: column hsai_tasks.is_recurring does not exist，导致管理后台任务列表与仪表盘无法加载。
+- 根因：循环任务特性新增 ORM 字段后，仅提供 	ool/add_recurring_task_fields.py 手动迁移脚本；生产 PostgreSQL 未执行该脚本，且业务层缺乏列缺失防护，SQLAlchemy 在查询阶段即抛出缺列异常。
+- 修复：
+  - ackend/open_webui/internal/migrations/recurring_tasks.py 新增 ensure_recurring_task_schema，按数据库方言自动补齐循环任务字段、hsai_task_state_logs 表及索引，支持 dry-run 幂等执行。
+  - ackend/open_webui/models/hsai_tasks.py 引入 _schema_aware_db 包装，确保任务/日志/卡片访问前统一触发 schema 校验。
+  - 	ool/add_recurring_task_fields.py 复用共享逻辑并保留 CLI 输出，避免重复维护 SQL 片段。
+  - 初始化脚本 ackend/sql/postgresql_init_from_sqlite.sql、ackend/sql/sqlite_dump_raw.sql 同步补入循环任务字段与索引，保证新环境无需额外迁移即可启用。
+  - 新增回归测试 ackend/test/test_recurring_task_schema.py 覆盖 SQLite 场景下的列补齐、日志表/索引创建及 dry-run 幂等校验。
+- 验证：执行 pytest backend/test/test_recurring_task_schema.py 通过；PostgreSQL 实例重启后日志显示 schema ensure 仅首次执行，原报错接口恢复 200。
+- 预防：任务模块统一通过 _schema_aware_db 访问数据库；上线 checklist 新增 “	ool/add_recurring_task_fields.py --dry-run 无缺失列” 与 “首启日志出现 schema ensure 成功记录”。
+- 关联：ackend/open_webui/models/hsai_tasks.py、ackend/open_webui/internal/migrations/recurring_tasks.py、ackend/sql/postgresql_init_from_sqlite.sql、ackend/sql/sqlite_dump_raw.sql、	ool/add_recurring_task_fields.py、ackend/test/test_recurring_task_schema.py、本条 WIKI。
 - **时间戳持久化策略（2025-10-23）**：引入 `EpochTimestamp` TypeDecorator，将 ORM 层时间字段统一转换为 PostgreSQL `timestamptz`，业务仍以整型 Epoch 秒读写；此次覆盖 redis_queue_messages、billing_config、chats、files、hsai_*、credits、users 等核心模型，并配套更新校验脚本，消除 `DatatypeMismatch` 报错并锁定未来扩展范围。
 - **积分统一于公司维度**：通过 `company_id` 将同公司用户余额合并，BillingService 与 CreditsTable 保持一致；后续需要对前端展示（个人额度）做差额提示。
 - **双数据库架构**：业务主库与 n8n_workflow 分离，计费日志与视频学习读取使用二级连接池；需监控跨库事务失败的补偿逻辑。
@@ -290,6 +330,11 @@ erDiagram
 | Trade Ticket | 充值工单，结合第三方支付回调自动入账。 |
 
 ## 变更日志
+### 2025-11-01
+- 后端：ackend/open_webui/models/hsai_tasks.py 引入 _schema_aware_db，在任务检索/统计/递归操作前自动确保循环任务字段和日志表已齐备，消除缺列报错；新增共享迁移工具 ackend/open_webui/internal/migrations/recurring_tasks.py。
+- 工具：	ool/add_recurring_task_fields.py 复用共享迁移逻辑并保留 dry-run 输出；ackend/test/test_recurring_task_schema.py 新增单元测试覆盖列补齐/索引创建及幂等验证。
+- 数据脚本：ackend/sql/postgresql_init_from_sqlite.sql、ackend/sql/sqlite_dump_raw.sql 同步补入 is_recurring 系列字段、hsai_task_state_logs 表与索引，保证全新部署即具备循环任务能力。
+- 文档：PROJECTWIKI 数据模型、设计决策与运维段落同步记录循环任务字段、自检流程与上线 checklist。
 ### 2025-10-28
 - 后端：`backend/open_webui/models/hsai_video_learning_status.py` 引入联合唯一约束、租户级批量查询方法；`backend/open_webui/routers/hsai_video_learning.py` 依据 `business_name` 返回/写入学习状态；`backend/open_webui/models/hsai_business_good_video_v1.py` 在视频列表无租户匹配时回退到全局视图，并结合学习状态完成筛选。
 - 数据脚本：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 同步加入联合唯一约束与索引；新增 `tool/fix_hsai_video_learning_status_sequence.py`，一并校准 `hsai_video_learning_status` / `hsai_video_learning_logs` 序列并补齐约束。
@@ -420,16 +465,25 @@ flowchart LR
   - 移除 `chats.py` 开头异常字符并以无 BOM 的 UTF‑8 重写文件；首行修正为 `import json`。
   - 用最小导入测试验证 `open_webui.routers.chats` 可被成功导入，服务可继续启动；其余告警（ffmpeg/USER_AGENT/msgpack/aiomcache）与本次崩溃无关。
 - 预防：
-  - 统一保存为 UTF‑8（无 BOM）；在 CI 增加 BOM 检测钩子（仅允许文本文件无 BOM，或白名单例外）。
-  - 在 pre-commit 中添加检查脚本：扫描新增/修改的 `*.py` 头 3 字节是否为 `EF BB BF`，若是则拒绝提交。
-  - 在编辑器团队配置中约定：默认 UTF‑8（无 BOM）。
+  - 已上线 `tool/clean_special_chars.py` 扫描脚本，支持 `--check` / `--fix` 模式，统一使用 `python tool/clean_special_chars.py --root . --extensions .py --fix` 清理。
+  - 通过 `.githooks/pre-commit` 钩子（需执行 `git config core.hooksPath .githooks`）及 `.github/workflows/bom-scan.yml` CI，在本地提交与 Push/PR 阶段阻断含 BOM 的 `*.py` 文件。
+  - 团队 IDE/编辑器默认保持 UTF-8（无 BOM），避免再次写入 BOM。
 - 关联：
   - 代码：`backend/open_webui/routers/chats.py` 首行修复。
   - 本条目：记录于 PROJECTWIKI.md「设计决策 & 技术债务 / 缺陷复盘」。
 
 ## 设计决策 & 技术债务 / 缺陷复盘（更新）
 
-### 2025-10-31 编码统一化（移除路由模块 BOM）
+### 2025-11-01 BOM 自动化治理上线
+- 背景：针对 2025-10-31 的 BOM 事故，需要可复用的工具链阻断含 BOM 的 Python 代码进入主干。
+- 变更：
+  - 新增 `tool/clean_special_chars.py`，提供 `--check` / `--fix` 模式批量清理 UTF-8 BOM 与控制字符，默认针对 `*.py` 扫描。
+  - 新增 `.githooks/pre-commit`，调用上述脚本检查待提交内容（需执行 `git config core.hooksPath .githooks` 初始化钩子）。
+  - 新增 `.github/workflows/bom-scan.yml`，在 Push/PR 阶段运行脚本并拒绝含 BOM 的 `*.py`。
+- 验证：本地执行 `python tool/clean_special_chars.py --root . --extensions .py` 返回 0，`rg "\uFEFF"` 未再命中；GitHub Actions 任务通过。
+- 影响面：FastAPI 路由代码、Git 工作流、CI 规范；要求团队在拉取后运行 `git config core.hooksPath .githooks`。
+
+## 2025-10-31 编码统一化（移除路由模块 BOM）
 - 背景：同目录多文件存在 UTF‑8 BOM，虽未立即导致崩溃，但增加跨平台与编辑器差异风险。
 - 处置：统一将以下文件重写为 UTF‑8（无 BOM），不改任何业务逻辑：
   - backend/open_webui/routers/auths.py

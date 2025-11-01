@@ -1,4 +1,4 @@
-﻿const STORAGE_KEY = "openwebui_ws_tester_config_v2";
+const STORAGE_KEY = "openwebui_ws_tester_config_v2";
 
 const TASK_EVENT_LIMIT = 100;
 

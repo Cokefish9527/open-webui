@@ -1,4 +1,4 @@
-﻿import re
+import re
 import uuid
 import time
 import datetime

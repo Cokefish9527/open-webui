@@ -1,4 +1,4 @@
-﻿BEGIN;
+BEGIN;
 CREATE TABLE alembic_version (
 	version_num VARCHAR(32) NOT NULL, 
 	CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num)
@@ -583,10 +583,31 @@ CREATE TABLE "hsai_tasks" (
 	updated_at BIGINT, 
 	assignee_id VARCHAR, 
 	collaborators JSON, 
-	shared_sessions JSON, project_id VARCHAR REFERENCES hsai_projects(id), task_category VARCHAR, prompt_config JSON, 
+	shared_sessions JSON, 
+	project_id VARCHAR REFERENCES hsai_projects(id), 
+	task_category VARCHAR, 
+	prompt_config JSON, 
+	is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
+	recurring_state VARCHAR(64),
+	last_run_at BIGINT,
+	next_run_at BIGINT,
+	external_controller VARCHAR(255),
+	recurring_meta JSONB,
 	PRIMARY KEY (id), 
 	FOREIGN KEY(parent_task_id) REFERENCES hsai_tasks (id), 
 	FOREIGN KEY(workflow_id) REFERENCES hsai_workflows (id)
+);
+CREATE TABLE "hsai_task_state_logs" (
+	id VARCHAR(64) PRIMARY KEY,
+	task_id VARCHAR(64) NOT NULL REFERENCES hsai_tasks(id) ON DELETE CASCADE,
+	from_state VARCHAR(64),
+	to_state VARCHAR(64) NOT NULL,
+	operator_id VARCHAR(64),
+	operator_name VARCHAR(128),
+	source VARCHAR(64),
+	message TEXT,
+	snapshot_json JSONB,
+	created_at BIGINT NOT NULL
 );
 INSERT INTO "hsai_tasks" VALUES('ffae6b7d-61fc-4613-8bdc-6dbefdad508b','鐢熸垚video鍐呭鍒涙剰','AI鐢熸垚浠诲姟锛氱敓鎴恦ideo鍐呭鍒涙剰','content_analysis','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'null','{"industry": "\u673a\u68b0\u5236\u9020", "target_audience": "\u6d77\u5916\u91c7\u8d2d\u5546", "content_type": "video", "count": 5}','null',NULL,NULL,0,NULL,NULL,NULL,0,1,'null',1756525422,1756525422,NULL,NULL,NULL,NULL,NULL,NULL);
 INSERT INTO "hsai_tasks" VALUES('2ec6ef0a-6e58-4ce5-809b-4ad301b06a54','鐢熸垚video鍐呭鍒涙剰','AI鐢熸垚浠诲姟锛氱敓鎴恦ideo鍐呭鍒涙剰','content_analysis','pending','496e0f43-8bfa-464a-b333-7738d4b3b76d',NULL,'null','{"industry": "\u673a\u68b0\u5236\u9020", "target_audience": "\u6d77\u5916\u91c7\u8d2d\u5546", "content_type": "video", "count": 5}','null',NULL,NULL,0,NULL,NULL,NULL,0,1,'null',1756525443,1756525443,NULL,NULL,NULL,NULL,NULL,NULL);
@@ -9161,6 +9182,8 @@ CREATE INDEX ix_hsai_tasks_user_id ON hsai_tasks (user_id);
 CREATE INDEX ix_hsai_tasks_status ON hsai_tasks (status);
 CREATE INDEX ix_hsai_tasks_type ON hsai_tasks (task_type);
 CREATE INDEX ix_hsai_tasks_assignee_id ON hsai_tasks (assignee_id);
+CREATE INDEX idx_hsai_tasks_recurring_state ON hsai_tasks (is_recurring, recurring_state);
+CREATE INDEX idx_hsai_task_state_logs_task ON hsai_task_state_logs (task_id, created_at);
 CREATE INDEX idx_redis_queue_messages_queue_name ON redis_queue_messages(queue_name);
 CREATE INDEX idx_redis_queue_messages_status ON redis_queue_messages(status);
 CREATE INDEX idx_redis_queue_messages_created_at ON redis_queue_messages(created_at)

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+PYTHON_BIN="${PYTHON:-python}"
+
+echo "[pre-commit] 执行字符扫描：${PYTHON_BIN} tool/clean_special_chars.py --extensions .py --check"
+
+"${PYTHON_BIN}" "${ROOT_DIR}/tool/clean_special_chars.py" --root "${ROOT_DIR}" --extensions .py

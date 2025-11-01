@@ -1,11 +1,14 @@
 import logging
 import time
 import uuid
-from typing import Optional, List, Dict, Any
+from contextlib import contextmanager
 from enum import Enum
+from threading import Lock
+from typing import Optional, List, Dict, Any
 
+from open_webui.env import DATABASE_SCHEMA, SRC_LOG_LEVELS
 from open_webui.internal.db import Base, JSONField, get_db
-from open_webui.env import SRC_LOG_LEVELS
+from open_webui.internal.migrations import ensure_recurring_task_schema
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean
@@ -19,6 +22,31 @@ from ._timestamp_utils import (
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
+
+_SCHEMA_LOCK = Lock()
+_SCHEMA_READY = False
+
+
+def _ensure_recurring_schema(session) -> None:
+    global _SCHEMA_READY
+    if _SCHEMA_READY:
+        return
+    with _SCHEMA_LOCK:
+        if _SCHEMA_READY:
+            return
+        ensure_recurring_task_schema(
+            session.get_bind(),
+            schema=DATABASE_SCHEMA,
+            logger=log.debug,
+        )
+        _SCHEMA_READY = True
+
+
+@contextmanager
+def _schema_aware_db():
+    with get_db() as db:
+        _ensure_recurring_schema(db)
+        yield db
 
 ####################
 # HSAI Tasks DB Schema
@@ -522,7 +550,7 @@ class HSAITasksTable:
     def insert_new_task(
         self, user_id: str, form_data: HSAITaskForm
     ) -> Optional[HSAITaskModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             id = str(uuid.uuid4())
             task = HSAITaskModel(
                 **{
@@ -556,7 +584,7 @@ class HSAITasksTable:
         limit: int = 20,
         offset: int = 0,
     ) -> List[HSAITaskModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(HSAITask).filter_by(user_id=user_id)
                 
@@ -594,7 +622,7 @@ class HSAITasksTable:
         task_category: Optional[str] = None,
     ) -> int:
         """获取任务总数"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(HSAITask).filter_by(user_id=user_id)
                 
@@ -617,7 +645,7 @@ class HSAITasksTable:
                 return 0
 
     def get_task_by_id(self, task_id: str) -> Optional[HSAITaskModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 task = db.get(HSAITask, task_id)
                 return HSAITaskModel.model_validate(task) if task else None
@@ -627,7 +655,7 @@ class HSAITasksTable:
     def update_task_by_id(
         self, task_id: str, form_data: HSAITaskUpdateForm
     ) -> Optional[HSAITaskModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 task = db.get(HSAITask, task_id)
                 if task:
@@ -651,7 +679,7 @@ class HSAITasksTable:
 
     def update_task_progress(self, task_id: str, progress: int) -> bool:
         """更新任务进度"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 task = db.get(HSAITask, task_id)
                 if task:
@@ -682,7 +710,7 @@ class HSAITaskStateLogsTable:
         message: Optional[str] = None,
         snapshot_json: Optional[Dict[str, Any]] = None,
     ) -> HSAITaskStateLogModel:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             log_entry = HSAITaskStateLog(
                 id=str(uuid.uuid4()),
                 task_id=task_id,
@@ -701,7 +729,7 @@ class HSAITaskStateLogsTable:
             return HSAITaskStateLogModel.model_validate(log_entry)
 
     def list_logs(self, task_id: str, limit: int = 50) -> List[HSAITaskStateLogModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             records = (
                 db.query(HSAITaskStateLog)
                 .filter_by(task_id=task_id)
@@ -716,7 +744,7 @@ class HSAICardsTable:
     def insert_new_card(
         self, user_id: str, form_data: HSAICardForm
     ) -> Optional[HSAICardModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             id = str(uuid.uuid4())
             card = HSAICardModel(
                 **{
@@ -741,7 +769,7 @@ class HSAICardsTable:
     def get_cards_by_chat_id(
         self, chat_id: str, limit: int = 20, offset: int = 0
     ) -> List[HSAICardModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 cards = db.query(HSAICard).filter_by(
                     chat_id=chat_id, status="active"
@@ -754,7 +782,7 @@ class HSAICardsTable:
 
     def get_cards_count(self, chat_id: str) -> int:
         """获取卡片总数"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 return db.query(HSAICard).filter_by(
                     chat_id=chat_id, status="active"
@@ -766,7 +794,7 @@ class HSAICardsTable:
     def update_card_by_id(
         self, card_id: str, updates: dict
     ) -> Optional[HSAICardModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 card = db.get(HSAICard, card_id)
                 if card:

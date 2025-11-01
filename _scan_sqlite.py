@@ -1,4 +1,4 @@
-﻿import os
+import os
 hits = []
 for root, _, files in os.walk('backend'):
     for fname in files:

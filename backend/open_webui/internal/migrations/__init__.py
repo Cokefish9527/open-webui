@@ -1,0 +1,11 @@
+"""
+Lightweight migration utilities for Open WebUI internal databases.
+
+This package deliberately keeps runtime migrations minimal and idempotent.
+Each helper should expose a pure function that can be reused both at
+application startup and from standalone maintenance scripts.
+"""
+
+from .recurring_tasks import ensure_recurring_task_schema
+
+__all__ = ["ensure_recurring_task_schema"]
