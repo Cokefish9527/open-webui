@@ -278,8 +278,15 @@
         }
 
         .task-inline select,
-        .task-inline input {
+        .task-inline input,
+        .task-inline textarea {
             width: 100%;
+        }
+
+        .task-inline-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         .task-ops-result {
@@ -318,6 +325,149 @@
             border-radius: 999px;
             padding: 2px 10px;
             font-size: 12px;
+        }
+
+        .task-action-group {
+            border-top: 1px solid rgba(15, 23, 42, 0.07);
+            padding-top: 12px;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-action-group:first-of-type {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .task-action-title {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .task-action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .task-action-buttons button {
+            flex: 1 1 160px;
+        }
+
+        .task-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .task-form-grid textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .task-hint {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border-radius: calc(var(--radius) - 6px);
+            background: rgba(15, 23, 42, 0.04);
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .task-hint strong {
+            color: var(--text);
+        }
+
+        .task-hint .inline-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .task-supplement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .task-subheading {
+            margin: 0 0 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .task-aux-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .task-aux-item {
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            border-radius: calc(var(--radius) - 6px);
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.7);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .task-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: rgba(37, 99, 235, 0.12);
+            color: var(--primary-dark);
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+
+        .task-log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 360px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .task-log-item {
+            border-left: 3px solid rgba(37, 99, 235, 0.6);
+            border-radius: calc(var(--radius) - 6px);
+            background: rgba(37, 99, 235, 0.08);
+            padding: 10px 12px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .task-log-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .task-log-message {
+            margin: 0;
+            word-break: break-word;
         }
 
         .message-form-card {
@@ -1126,36 +1276,115 @@
                         <div class="task-section-header">
                             <div>
                                 <h2>操作中心</h2>
-                                <p class="card-subtitle">支持初始化主线、更新状态以及模拟循环调度。</p>
+                                <p class="card-subtitle">支持初始化主线、控制循环状态并与消息调试联动。</p>
                             </div>
                         </div>
-                        <div class="task-inline">
-                            <button id="seedMainTasksBtn" class="secondary" type="button">创建默认主线任务</button>
+                        <div class="task-hint" aria-live="polite">
+                            <span>当前选中任务：</span>
+                            <strong id="currentTaskIndicator">未选择</strong>
+                            <div class="inline-actions">
+                                <button id="fillTaskIntoMessageBtn" class="link-button" type="button">填充到消息调试</button>
+                                <button id="clearTaskSelectionBtn" class="link-button" type="button">清空选中</button>
+                            </div>
                         </div>
-                        <div class="task-inline">
-                            <label>主线任务操作</label>
-                            <div class="task-inline">
+                        <div class="task-action-group">
+                            <p class="task-action-title">主线任务</p>
+                            <div class="task-action-buttons">
+                                <button id="seedMainTasksBtn" class="secondary" type="button">创建默认主线任务</button>
                                 <button id="completeMainTaskBtn" type="button">标记主线完成</button>
                                 <button id="resetMainTaskBtn" type="button">重置为未开始</button>
                             </div>
                         </div>
-                        <div class="task-inline">
-                            <label>循环任务操作</label>
-                            <div class="task-inline">
+                        <div class="task-action-group">
+                            <p class="task-action-title">循环任务状态</p>
+                            <div class="task-action-buttons">
                                 <button id="activateRecurringBtn" type="button">启动循环任务</button>
+                                <button id="pauseRecurringBtn" type="button">暂停循环任务</button>
+                                <button id="resumeRecurringBtn" type="button">恢复循环任务</button>
+                            </div>
+                            <div class="task-form-grid">
+                                <div class="task-inline">
+                                    <label for="recurringActivateNextRun">计划下次执行</label>
+                                    <input id="recurringActivateNextRun" type="datetime-local" placeholder="可选，ISO 时间">
+                                </div>
+                                <div class="task-inline">
+                                    <label for="recurringActivateMessage">启动备注</label>
+                                    <input id="recurringActivateMessage" type="text" placeholder="例如：重启每日投放">
+                                </div>
+                                <div class="task-inline">
+                                    <label for="recurringPauseReason">暂停原因</label>
+                                    <input id="recurringPauseReason" type="text" placeholder="例如：等待素材补充">
+                                </div>
+                                <div class="task-inline">
+                                    <label for="recurringResumeMessage">恢复备注</label>
+                                    <input id="recurringResumeMessage" type="text" placeholder="可选，写入状态日志">
+                                </div>
                             </div>
                         </div>
-                        <div class="task-inline">
-                            <label for="taskSchedulerDate">模拟调度日期</label>
-                            <input id="taskSchedulerDate" type="date">
-                            <button id="simulateSchedulerBtn" class="secondary" type="button">生成当日子任务</button>
-                        </div>
-                        <div class="task-inline">
-                            <label for="taskSubtaskList">子任务列表</label>
-                            <div id="taskSubtaskList" class="task-list" aria-live="polite">
-                                <p class="task-empty">暂无子任务。</p>
+                        <div class="task-action-group">
+                            <p class="task-action-title">循环任务交接</p>
+                            <div class="task-action-buttons">
+                                <button id="handoverRecurringBtn" type="button">交接给外部</button>
                             </div>
-                            <button id="replaySubtaskBtn" class="secondary" type="button">回放选中子任务</button>
+                            <div class="task-form-grid">
+                                <div class="task-inline">
+                                    <label for="recurringHandoverController">外部控制方</label>
+                                    <input id="recurringHandoverController" type="text" placeholder="例如：agency_a">
+                                </div>
+                                <div class="task-inline">
+                                    <label for="recurringHandoverNote">交接备注</label>
+                                    <textarea id="recurringHandoverNote" placeholder="记录交接原因或补充说明"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-action-group">
+                            <p class="task-action-title">同步外部状态</p>
+                            <div class="task-action-buttons">
+                                <button id="syncRecurringBtn" type="button">同步状态</button>
+                            </div>
+                            <div class="task-form-grid">
+                                <div class="task-inline">
+                                    <label for="recurringSyncState">循环任务状态</label>
+                                    <select id="recurringSyncState">
+                                        <option value="">请选择状态</option>
+                                        <option value="idle">idle</option>
+                                        <option value="active">active</option>
+                                        <option value="paused">paused</option>
+                                        <option value="external_controlled">external_controlled</option>
+                                    </select>
+                                </div>
+                                <div class="task-inline">
+                                    <label for="recurringSyncNextRun">下一次执行</label>
+                                    <input id="recurringSyncNextRun" type="datetime-local" placeholder="可选">
+                                </div>
+                                <div class="task-inline">
+                                    <label for="recurringSyncLastRun">最近执行</label>
+                                    <input id="recurringSyncLastRun" type="datetime-local" placeholder="可选">
+                                </div>
+                                <div class="task-inline">
+                                    <label for="recurringSyncMessage">同步备注</label>
+                                    <textarea id="recurringSyncMessage" placeholder="记录外部状态说明"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-action-group">
+                            <p class="task-action-title">调度与子任务</p>
+                            <div class="task-inline">
+                                <label for="taskSchedulerDate">模拟调度日期</label>
+                                <div class="task-inline-row">
+                                    <input id="taskSchedulerDate" type="date">
+                                    <button id="simulateSchedulerBtn" class="secondary" type="button">生成当日子任务</button>
+                                </div>
+                            </div>
+                            <div class="task-inline">
+                                <label for="taskSubtaskList">子任务列表</label>
+                                <div id="taskSubtaskList" class="task-list" aria-live="polite">
+                                    <p class="task-empty">暂无子任务。</p>
+                                </div>
+                                <div class="task-action-buttons">
+                                    <button id="replaySubtaskBtn" class="secondary" type="button">回放选中子任务</button>
+                                </div>
+                            </div>
                         </div>
                         <div id="taskOpsResult" class="task-ops-result" data-level="info">任务操作日志将显示在此。</div>
                     </section>
@@ -1229,6 +1458,40 @@
                         </div>
                         <div id="taskMainList" class="task-list" aria-live="polite">
                             <p class="task-empty">尚未加载任务，请先刷新概览。</p>
+                        </div>
+                    </section>
+                    <section class="card">
+                        <div class="task-section-header">
+                            <div>
+                                <h2>循环运行概览</h2>
+                                <p class="card-subtitle">查看循环任务条目与蓝图关联，辅助分析执行链路。</p>
+                            </div>
+                        </div>
+                        <div class="task-supplement-grid">
+                            <div>
+                                <p class="task-subheading">循环运行项</p>
+                                <div id="taskRecurringItems" class="task-aux-list" aria-live="polite">
+                                    <p class="task-empty">尚未加载循环运行项。</p>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="task-subheading">蓝图关联</p>
+                                <div id="taskBlueprintLinks" class="task-aux-list" aria-live="polite">
+                                    <p class="task-empty">暂无蓝图关联。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="card">
+                        <div class="task-section-header">
+                            <div>
+                                <h2>循环状态日志</h2>
+                                <p class="card-subtitle">倒序展示最近 20 条状态/调度记录。</p>
+                            </div>
+                            <button id="refreshRecurringLogsBtn" class="secondary" type="button">刷新日志</button>
+                        </div>
+                        <div id="taskRecurringLogs" class="task-log-list" aria-live="polite">
+                            <p class="task-empty">尚未加载循环状态日志。</p>
                         </div>
                     </section>
 

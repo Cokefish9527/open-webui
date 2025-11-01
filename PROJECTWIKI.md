@@ -317,7 +317,7 @@ erDiagram
 - **脚本验证**：`tool/` 目录提供数据库列校验、Redis 队列修复脚本，运行前需确认 `.env` 指向正确环境。
 - **数据库修复脚本**：`tool/fix_hsai_video_learning_status_sequence.py` 支持 dry-run / --apply，两步完成重复检测与联合唯一约束/序列补齐。
 - **监控建议**：重点观测 `credit`/`credit_log` 同步延迟、Redis Stream 消费积压、n8n 数据库链路。
-- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；任务标签页采用双列布局（左列操作中心，右列依次为项目概览、任务列表、事件时间轴），按钮内置加载/禁用状态，事件卡片展示状态徽章、进度和会话信息；项目概览卡片会同步展示战略蓝图版本/状态/最近同步/计划结束时间，数据源改为 `/api/v1/hsai/projects/{project_id}/summary` + `/api/v1/hsai/projects/{project_id}/tasks`；循环任务激活操作调用 `/api/v1/hsai/tasks/{task_id}/recurring/activate` 并记录状态日志；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-30 更新）。
+- **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；任务标签页采用双列布局（左列操作中心，右列覆盖项目概览、任务列表、循环运行概览、循环状态日志、事件时间轴），按钮内置加载/禁用状态，事件卡片展示状态徽章、进度和会话信息；操作中心支持主线模板初始化、循环任务启动/暂停/恢复/交接/同步、子任务回放以及“填充到消息调试”快捷键；循环运行概览渲染蓝图关联与运行快照，循环状态日志支持一键刷新调用 `/api/v1/hsai/tasks/{task_id}/recurring/logs`；项目概览数据源保持 `/api/v1/hsai/projects/{project_id}/summary` + `/api/v1/hsai/projects/{project_id}/tasks`。操作手册见 `docs/410_websocket_test_page_manual.md`（2025-11-01 更新）。
 - **后台对接缺口方案（2025-11-01）**：见 `docs/backend_integration_alignment_plan.md`，明确客户/公司/项目/任务/计费/审计的接口补齐计划、OAuth2 + HMAC 鉴权要求、审计 ID 返回格式，以及文档与 OpenAPI 同步流程；后续所有后台↔服务端契约调整需引用该方案并在完成后更新 `CHANGELOG.md` 与本节。
 
 ## 术语表
@@ -337,6 +337,8 @@ erDiagram
 - 工具：	ool/add_recurring_task_fields.py 复用共享迁移逻辑并保留 dry-run 输出；ackend/test/test_recurring_task_schema.py 新增单元测试覆盖列补齐/索引创建及幂等验证。
 - 数据脚本：ackend/sql/postgresql_init_from_sqlite.sql、ackend/sql/sqlite_dump_raw.sql 同步补入 is_recurring 系列字段、hsai_task_state_logs 表与索引，保证全新部署即具备循环任务能力。
 - 文档：PROJECTWIKI 数据模型、设计决策与运维段落同步记录循环任务字段、自检流程与上线 checklist。
+- 前端：`websocket-test.html` 新增循环运行概览/循环状态日志卡片、任务选中提示与消息 ID 自动填充；`static/ws-tester.js` 扩展循环任务启动/暂停/恢复/交接/同步、日志刷新与时间输入解析，保持操作中心与事件流一致。
+- 手册：`docs/410_websocket_test_page_manual.md` 更新至 2025-11-01 版，补充循环状态机按钮、日志刷新、验收清单与调试流程说明。
 ### 2025-10-28
 - 后端：`backend/open_webui/models/hsai_video_learning_status.py` 引入联合唯一约束、租户级批量查询方法；`backend/open_webui/routers/hsai_video_learning.py` 依据 `business_name` 返回/写入学习状态；`backend/open_webui/models/hsai_business_good_video_v1.py` 在视频列表无租户匹配时回退到全局视图，并结合学习状态完成筛选。
 - 数据脚本：`backend/sql/postgresql_init_from_sqlite.sql`、`backend/sql/sqlite_dump_raw.sql` 同步加入联合唯一约束与索引；新增 `tool/fix_hsai_video_learning_status_sequence.py`，一并校准 `hsai_video_learning_status` / `hsai_video_learning_logs` 序列并补齐约束。
