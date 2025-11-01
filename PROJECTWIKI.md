@@ -1,4 +1,4 @@
-﻿# HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
+# HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
 > 一等公民 · 与主干代码保持持续一致（UTF-8）
 
 更新日期：2025-10-23（与 main 同步）
@@ -408,3 +408,33 @@ flowchart LR
   - HSAI 项目管理（hsai_projects.py）：修正 tasks/summary 两端点的中文摘要（若控制台编码显示为乱码，请以 /docs 实际页面为准）。
 - 影响：仅 OpenAPI 元信息与 Swagger 展示；零业务逻辑改动。
 - 验证建议：本地运行后访问 /docs，检查上述端点摘要/描述均为中文。
+\n## 设计决策 & 技术债务 / 缺陷复盘
+
+### 2025-10-31 启动失败（SyntaxError: invalid non-printable character U+FEFF）
+- 背景：在 Windows 环境下启动后端（uvicorn）时报错，堆栈定位到 `backend/open_webui/routers/chats.py` 第 1 行，提示 `invalid non-printable character U+FEFF`。
+- 根因：文件头部残留 UTF‑8 BOM（U+FEFF），且紧随一枚异常字节，导致解析器在首行 `import` 之前读到不可见字符而报错。
+- 受影响文件（检测样本，仅本目录）：
+  - 必修复：`backend/open_webui/routers/chats.py`（首行异常字符 + BOM）。
+  - 建议清理：`backend/open_webui/routers/auths.py`、`billing.py`、`hsai_projects.py`、`models.py`（存在 BOM，但当前未触发崩溃）。
+- 处置：
+  - 移除 `chats.py` 开头异常字符并以无 BOM 的 UTF‑8 重写文件；首行修正为 `import json`。
+  - 用最小导入测试验证 `open_webui.routers.chats` 可被成功导入，服务可继续启动；其余告警（ffmpeg/USER_AGENT/msgpack/aiomcache）与本次崩溃无关。
+- 预防：
+  - 统一保存为 UTF‑8（无 BOM）；在 CI 增加 BOM 检测钩子（仅允许文本文件无 BOM，或白名单例外）。
+  - 在 pre-commit 中添加检查脚本：扫描新增/修改的 `*.py` 头 3 字节是否为 `EF BB BF`，若是则拒绝提交。
+  - 在编辑器团队配置中约定：默认 UTF‑8（无 BOM）。
+- 关联：
+  - 代码：`backend/open_webui/routers/chats.py` 首行修复。
+  - 本条目：记录于 PROJECTWIKI.md「设计决策 & 技术债务 / 缺陷复盘」。
+
+## 设计决策 & 技术债务 / 缺陷复盘（更新）
+
+### 2025-10-31 编码统一化（移除路由模块 BOM）
+- 背景：同目录多文件存在 UTF‑8 BOM，虽未立即导致崩溃，但增加跨平台与编辑器差异风险。
+- 处置：统一将以下文件重写为 UTF‑8（无 BOM），不改任何业务逻辑：
+  - backend/open_webui/routers/auths.py
+  - backend/open_webui/routers/billing.py
+  - backend/open_webui/routers/hsai_projects.py
+  - backend/open_webui/routers/models.py
+- 验证：重写后首 4 字节分别为：69 6D 70 6F(import)/66 72 6F 6D(from) 等常规 ASCII，未再出现 EF BB BF。
+- 预防：沿用前述 BOM 检测策略（pre-commit/CI），统一团队编辑器默认编码为 UTF‑8（无 BOM）。
