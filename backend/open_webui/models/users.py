@@ -47,10 +47,7 @@ class User(Base):
     # 添加公司关联字段
     company_id = Column(String, ForeignKey("companies.id"), nullable=True)
     
-    # 多租户权限相关字段
-    organization_id = Column(String, ForeignKey("organizations.id"), nullable=True)
     is_super_admin = Column(Boolean, default=False)  # 系统管理员标识
-    is_org_admin = Column(Boolean, default=False)    # 组织管理员标识
 
     oauth_sub = Column(Text, unique=True)
 
@@ -80,10 +77,7 @@ class UserModel(BaseModel):
     business_name: Optional[str] = Field(default=None, description="公司名称")
     # 添加公司关联字段
     company_id: Optional[str] = Field(default=None, description="所属公司ID")
-    # 多租户权限相关字段
-    organization_id: Optional[str] = Field(default=None, description="所属组织ID")
     is_super_admin: bool = Field(default=False, description="是否为系统管理员")
-    is_org_admin: bool = Field(default=False, description="是否为组织管理员")
     oauth_sub: Optional[str] = Field(default=None, description="OAuth子标识符")
 
     model_config = ConfigDict(from_attributes=True, extra="allow")
@@ -114,9 +108,7 @@ class UserModel(BaseModel):
                 "info_collection_completed",
                 "business_name",
                 "company_id",
-                "organization_id",
                 "is_super_admin",
-                "is_org_admin",
                 "oauth_sub",
             ]
             data = {key: getattr(value, key, None) for key in attr_names}
@@ -150,9 +142,7 @@ class UserResponse(BaseModel):
     profile_image_url: str = Field(description="用户头像URL")
     business_name: Optional[str] = Field(default=None, description="公司名称")
     company_id: Optional[str] = Field(default=None, description="所属公司ID")
-    organization_id: Optional[str] = Field(default=None, description="所属组织ID")
     is_super_admin: bool = Field(default=False, description="是否为系统管理员")
-    is_org_admin: bool = Field(default=False, description="是否为组织管理员")
 
 
 class UserNameResponse(BaseModel):
@@ -191,9 +181,7 @@ class UsersTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
-        organization_id: Optional[str] = None,
         is_super_admin: bool = False,
-        is_org_admin: bool = False,
     ) -> Optional[UserModel]:
         with get_db() as db:
             user = UserModel(
@@ -213,10 +201,7 @@ class UsersTable:
                     "business_name": None,
                     # 新用户默认company_id为None
                     "company_id": None,
-                    # 多租户权限相关字段
-                    "organization_id": organization_id,
                     "is_super_admin": is_super_admin,
-                    "is_org_admin": is_org_admin,
                 }
             )
             result = User(**user.model_dump())
@@ -273,14 +258,13 @@ class UsersTable:
         filter: Optional[dict] = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
-        organization_id: Optional[str] = None,
+        company_id: Optional[str] = None,
     ) -> UserListResponse:
         with get_db() as db:
             query = db.query(User)
             
-            # 如果不是系统管理员，添加组织过滤
-            if organization_id:
-                query = query.filter_by(organization_id=organization_id)
+            if company_id:
+                query = query.filter_by(company_id=company_id)
 
             if filter:
                 query_key = filter.get("query")
@@ -338,9 +322,12 @@ class UsersTable:
                 query = query.limit(limit)
 
             users = query.all()
+            total_query = db.query(User)
+            if company_id:
+                total_query = total_query.filter_by(company_id=company_id)
             return UserListResponse(
                 users=[UserModel.model_validate(user) for user in users],
-                total=db.query(User).count(),
+                total=total_query.count(),
             )
 
     def get_users_by_user_ids(self, user_ids: List[str]) -> List[UserModel]:

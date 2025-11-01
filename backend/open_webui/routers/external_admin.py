@@ -1,22 +1,28 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+import os
+from secrets import token_urlsafe
 from typing import Optional, List
-import hmac
-import hashlib
-import base64
-import time
-import json
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from open_webui.models.users import Users, UserModel
-from open_webui.models.organizations import Organizations, OrganizationForm, OrganizationUpdateForm
+from open_webui.models.hsai_companies import (
+    Companies,
+    CompanyForm,
+    CompanyUpdateForm,
+    CompanyModel,
+)
 from open_webui.models.auths import Auths, AddUserForm
 from open_webui.utils.auth import get_password_hash
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
+from open_webui.models.external_admin_tokens import ExternalAdminTokens
 
 # 从配置中获取外部管理密钥和IP白名单
-EXTERNAL_ADMIN_SECRET_KEY = "your_external_admin_secret_key"  # 应该从环境变量获取
-EXTERNAL_ADMIN_IP_WHITELIST = None  # 应该从环境变量获取
+EXTERNAL_ADMIN_IP_WHITELIST = os.environ.get("EXTERNAL_ADMIN_IP_WHITELIST")
+
+EXTERNAL_ADMIN_CLIENT_ID = os.environ.get("EXTERNAL_ADMIN_CLIENT_ID", "external-admin")
+EXTERNAL_ADMIN_CLIENT_SECRET = os.environ.get("EXTERNAL_ADMIN_CLIENT_SECRET")
+EXTERNAL_ADMIN_TOKEN_TTL_SECONDS = int(os.environ.get("EXTERNAL_ADMIN_TOKEN_TTL_SECONDS", "900"))
 
 router = APIRouter(prefix="/external/admin", tags=["external_admin"])
 
@@ -37,41 +43,86 @@ def verify_external_request(request: Request):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="IP地址不在白名单中"
             )
-    
-    # 验证签名
-    signature = request.headers.get("X-Signature")
-    timestamp = request.headers.get("X-Timestamp")
-    
-    if not signature or not timestamp:
+
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.lower().startswith("bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="缺少签名或时间戳"
+            detail="缺少访问令牌",
         )
-    
-    # 验证时间戳（防止重放攻击，允许5分钟的时间差）
-    try:
-        request_time = int(timestamp)
-        current_time = int(time.time())
-        if abs(current_time - request_time) > 300:  # 5分钟
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="请求已过期"
-            )
-    except ValueError:
+    raw_token = auth_header.split(" ", 1)[1].strip()
+    token_record = ExternalAdminTokens.get_valid_token(raw_token)
+    if not token_record:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="时间戳格式错误"
+            detail="访问令牌无效或已过期",
         )
-    
-    # 验证签名
-    # 注意：这里需要实际实现签名验证逻辑
-    # 暂时跳过签名验证以避免错误
-    pass
+    return token_record.client_id
 
 class UserListResponse(BaseModel):
     """用户列表响应模型"""
     users: List[UserModel] = Field(description="用户列表")
     total: int = Field(description="用户总数")
+
+
+class CompanyListResponse(BaseModel):
+    """公司列表响应模型"""
+    companies: List[CompanyModel] = Field(description="公司列表")
+    total: int = Field(description="公司总数")
+
+
+class CompanyCreateRequest(CompanyForm):
+    owner_user_id: str = Field(description="公司负责人用户ID")
+
+
+class OAuthTokenRequest(BaseModel):
+    grant_type: str = Field(default="client_credentials")
+    client_id: str
+    client_secret: str
+
+
+class OAuthTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = Field(default="bearer")
+    expires_in: int
+
+
+class ResetPasswordRequest(BaseModel):
+    new_password: str = Field(min_length=6, description="新密码，需至少 6 位")
+
+
+class OperationResponse(BaseModel):
+    success: bool = True
+    message: str
+    active: Optional[bool] = None
+
+@router.post("/oauth/token", response_model=OAuthTokenResponse)
+async def issue_oauth_token(payload: OAuthTokenRequest):
+    """颁发外部管理 OAuth2 访问令牌"""
+    ExternalAdminTokens.cleanup_expired()
+    if payload.grant_type != "client_credentials":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='grant_type must be client_credentials'
+        )
+    if not EXTERNAL_ADMIN_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail='external admin client secret is not configured'
+        )
+    if payload.client_id != EXTERNAL_ADMIN_CLIENT_ID or payload.client_secret != EXTERNAL_ADMIN_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='客户端凭据不正确'
+        )
+    raw_token = token_urlsafe(48)
+    issued = ExternalAdminTokens.issue_token(payload.client_id, raw_token, EXTERNAL_ADMIN_TOKEN_TTL_SECONDS)
+    if not issued:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='生成访问令牌失败'
+        )
+    return OAuthTokenResponse(access_token=raw_token, expires_in=EXTERNAL_ADMIN_TOKEN_TTL_SECONDS)
 
 # 用户管理接口
 @router.post("/users", response_model=UserModel)
@@ -141,6 +192,71 @@ async def update_user(user_id: str, form_data: AddUserForm, request: Request):
     
     return updated_user
 
+
+@router.post("/users/{user_id}/reset-password", response_model=OperationResponse)
+async def reset_user_password(
+    user_id: str,
+    payload: ResetPasswordRequest,
+    request: Request,
+):
+    """重置用户密码（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
+    user = Users.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="用户不存在",
+        )
+
+    hashed = get_password_hash(payload.new_password)
+    if not Auths.update_user_password_by_id(user_id, hashed):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="重置密码失败",
+        )
+    return OperationResponse(message="密码已重置")
+
+
+@router.post("/users/{user_id}/enable", response_model=OperationResponse)
+async def enable_user(user_id: str, request: Request):
+    """启用用户账号（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
+    user = Users.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="用户不存在",
+        )
+
+    if not Auths.set_active_by_id(user_id, True):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="启用账号失败",
+        )
+    return OperationResponse(message="账号已启用", active=True)
+
+
+@router.post("/users/{user_id}/disable", response_model=OperationResponse)
+async def disable_user(user_id: str, request: Request):
+    """禁用用户账号（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
+    user = Users.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="用户不存在",
+        )
+
+    if not Auths.set_active_by_id(user_id, False):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="禁用账号失败",
+        )
+    return OperationResponse(message="账号已禁用", active=False)
+
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: str, request: Request):
     """删除用户（仅外部管理系统可访问）"""
@@ -165,7 +281,12 @@ async def delete_user(user_id: str, request: Request):
     return {"message": "用户删除成功"}
 
 @router.get("/users")
-async def get_users(request: Request, page: int = 1, size: int = 20):
+async def get_users(
+    request: Request,
+    page: int = 1,
+    size: int = 20,
+    company_id: Optional[str] = None,
+):
     """获取用户列表（仅外部管理系统可访问）"""
     verify_external_request(request)
     
@@ -175,170 +296,169 @@ async def get_users(request: Request, page: int = 1, size: int = 20):
         size = 20
     
     offset = (page - 1) * size
-    users_response = Users.get_users(skip=offset, limit=size)
+    users_response = Users.get_users(skip=offset, limit=size, company_id=company_id)
     
     return users_response
 
-# 组织管理接口
-@router.post("/organizations", response_model=dict)
-async def create_organization(form_data: OrganizationForm, request: Request):
-    """创建组织（仅外部管理系统可访问）"""
+# 公司管理接口
+@router.post("/companies", response_model=CompanyModel)
+async def create_company(payload: CompanyCreateRequest, request: Request):
+    """创建公司（仅外部管理系统可访问）"""
     verify_external_request(request)
-    
-    # 检查组织名称是否已存在
-    existing_org = Organizations.get_organization_by_name(form_data.name)
-    if existing_org:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="组织名称已存在"
-        )
-    
-    # 创建组织
-    organization = Organizations.insert_new_organization(form_data)
-    if not organization:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="创建组织失败"
-        )
-    
-    return organization.model_dump()
 
-@router.put("/organizations/{organization_id}", response_model=dict)
-async def update_organization(organization_id: str, form_data: OrganizationUpdateForm, request: Request):
-    """更新组织信息（仅外部管理系统可访问）"""
-    verify_external_request(request)
-    
-    # 检查组织是否存在
-    organization = Organizations.get_organization_by_id(organization_id)
-    if not organization:
+    owner = Users.get_user_by_id(payload.owner_user_id)
+    if not owner:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="组织不存在"
+            detail="负责人用户不存在",
         )
-    
-    # 更新组织
-    updated_organization = Organizations.update_organization_by_id(organization_id, form_data)
-    if not updated_organization:
+
+    form = CompanyForm(
+        name=payload.name,
+        description=payload.description,
+        company_info=payload.company_info,
+        config=payload.config,
+    )
+    company = Companies.insert_new_company(payload.owner_user_id, form)
+    if not company:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="更新组织失败"
+            detail="创建公司失败",
         )
-    
-    return updated_organization.model_dump()
+    return company
 
-@router.delete("/organizations/{organization_id}")
-async def delete_organization(organization_id: str, request: Request):
-    """删除组织（仅外部管理系统可访问）"""
+
+@router.put("/companies/{company_id}", response_model=CompanyModel)
+async def update_company(company_id: str, form_data: CompanyUpdateForm, request: Request):
+    """更新公司信息（仅外部管理系统可访问）"""
     verify_external_request(request)
-    
-    # 检查组织是否存在
-    organization = Organizations.get_organization_by_id(organization_id)
-    if not organization:
+
+    company = Companies.get_company_by_id(company_id)
+    if not company:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="组织不存在"
+            detail="公司不存在",
         )
-    
-    # 检查组织下是否有用户
-    users = Users.get_users(organization_id=organization_id)
-    if users and users.total > 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="组织下存在用户，无法删除"
-        )
-    
-    # 删除组织
-    result = Organizations.delete_organization_by_id(organization_id)
-    if not result:
+
+    updated_company = Companies.update_company_by_id(company_id, form_data)
+    if not updated_company:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="删除组织失败"
+            detail="更新公司失败",
         )
-    
-    return {"message": "组织删除成功"}
+    return updated_company
 
-@router.get("/organizations")
-async def get_organizations(request: Request, page: int = 1, size: int = 20):
-    """获取组织列表（仅外部管理系统可访问）"""
+
+@router.delete("/companies/{company_id}")
+async def delete_company(company_id: str, request: Request):
+    """删除公司（仅外部管理系统可访问）"""
     verify_external_request(request)
-    
+
+    company = Companies.get_company_by_id(company_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="公司不存在",
+        )
+
+    # 删除前校验是否仍有关联项目或用户
+    from open_webui.models.hsai_projects import HSAIProjects
+
+    related_projects = HSAIProjects.get_projects_by_company_id(company_id, limit=1)
+    if related_projects:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="公司下仍存在项目，无法删除",
+        )
+
+    users_in_company = Users.get_users(company_id=company_id)
+    if users_in_company.total > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="公司下仍有关联用户，无法删除",
+        )
+
+    if not Companies.delete_company_by_id(company_id):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="删除公司失败",
+        )
+    return {"message": "公司删除成功"}
+
+
+@router.get("/companies", response_model=CompanyListResponse)
+async def list_companies(
+    request: Request,
+    page: int = 1,
+    size: int = 20,
+    status_filter: Optional[str] = None,
+):
+    """获取公司列表（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
     if page < 1:
         page = 1
     if size < 1 or size > 100:
         size = 20
-    
+
     offset = (page - 1) * size
-    organizations = Organizations.get_organizations(limit=size, offset=offset)
-    total = Organizations.get_organizations_count()
-    
-    return {
-        "data": [org.model_dump() for org in organizations],
-        "total": total,
-        "page": page,
-        "size": size
-    }
+    companies = Companies.get_all_companies(
+        status=status_filter,
+        limit=size,
+        offset=offset,
+    )
+    total = Companies.get_all_companies_count(status=status_filter)
+    return CompanyListResponse(companies=companies, total=total)
 
-# 权限管理接口
-@router.post("/organizations/{organization_id}/users/{user_id}")
-async def assign_user_to_organization(organization_id: str, user_id: str, request: Request, is_org_admin: bool = False):
-    """分配用户到组织（仅外部管理系统可访问）"""
+
+@router.post("/companies/{company_id}/users/{user_id}")
+async def assign_user_to_company(company_id: str, user_id: str, request: Request):
+    """将用户分配到公司（仅外部管理系统可访问）"""
     verify_external_request(request)
-    
-    # 检查组织是否存在
-    organization = Organizations.get_organization_by_id(organization_id)
-    if not organization:
+
+    company = Companies.get_company_by_id(company_id)
+    if not company:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="组织不存在"
+            detail="公司不存在",
         )
-    
-    # 检查用户是否存在
+
     user = Users.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="用户不存在"
+            detail="用户不存在",
         )
-    
-    # 更新用户组织信息
-    update_data = {
-        "organization_id": organization_id,
-        "is_org_admin": is_org_admin
-    }
-    
+
+    update_data = {"company_id": company_id, "business_name": company.name}
     updated_user = Users.update_user_by_id(user_id, update_data)
     if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="更新用户组织信息失败"
+            detail="更新用户公司信息失败",
         )
-    
-    return {"message": "用户已成功分配到组织"}
 
-@router.delete("/organizations/{organization_id}/users/{user_id}")
-async def remove_user_from_organization(organization_id: str, user_id: str, request: Request):
-    """从组织移除用户（仅外部管理系统可访问）"""
+    return {"message": "用户已成功分配到公司"}
+
+
+@router.delete("/companies/{company_id}/users/{user_id}")
+async def remove_user_from_company(company_id: str, user_id: str, request: Request):
+    """将用户从公司移除（仅外部管理系统可访问）"""
     verify_external_request(request)
-    
-    # 检查用户是否存在
+
     user = Users.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="用户不存在"
+            detail="用户不存在",
         )
-    
-    # 更新用户组织信息
-    update_data = {
-        "organization_id": None,
-        "is_org_admin": False
-    }
-    
+
+    update_data = {"company_id": None, "business_name": None}
     updated_user = Users.update_user_by_id(user_id, update_data)
     if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="更新用户组织信息失败"
+            detail="更新用户公司信息失败",
         )
-    
-    return {"message": "用户已成功从组织移除"}
+
+    return {"message": "用户已成功从公司移除"}

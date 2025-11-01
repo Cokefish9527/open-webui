@@ -19604,444 +19604,6 @@
         "description": "返回项目概要（蓝图版本/同步状态/计划统计）、主要任务完成度、循环任务条目与近期状态日志等。"
       }
     },
-    "/api/v1/organizations/": {
-      "get": {
-        "tags": [
-          "组织管理"
-        ],
-        "summary": "获取组织列表",
-        "description": "分页获取组织列表，仅系统管理员可访问。参数：page（页码，>=1），size（页大小，1-100）。返回包含分页信息的组织列表。",
-        "operationId": "get_organizations_api_v1_organizations__get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 1,
-              "title": "Page"
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 20,
-              "title": "Size"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedOrganizationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "组织管理"
-        ],
-        "summary": "创建组织",
-        "description": "创建新的组织，仅系统管理员可访问。",
-        "operationId": "create_organization_api_v1_organizations__post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrganizationForm"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/organizations/{organization_id}": {
-      "get": {
-        "tags": [
-          "组织管理"
-        ],
-        "summary": "获取组织详情",
-        "description": "按 ID 获取组织详情，需具备该组织的访问权限。未找到返回 404。",
-        "operationId": "get_organization_by_id_api_v1_organizations__organization_id__get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "组织管理"
-        ],
-        "summary": "更新组织信息",
-        "description": "更新指定组织的基础信息，需组织管理员或系统管理员权限。",
-        "operationId": "update_organization_api_v1_organizations__organization_id__post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrganizationUpdateForm"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "组织管理"
-        ],
-        "summary": "删除组织",
-        "description": "删除指定组织，仅系统管理员可访问。若组织下仍有关联用户或项目，将返回 400。",
-        "operationId": "delete_organization_api_v1_organizations__organization_id__delete",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/organizations/{organization_id}/users": {
-      "get": {
-        "tags": [
-          "组织管理"
-        ],
-        "summary": "获取组织用户列表",
-        "description": "分页获取指定组织的用户列表，需组织访问权限。参数：page，size。",
-        "operationId": "get_organization_users_api_v1_organizations__organization_id__users_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 1,
-              "title": "Page"
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 20,
-              "title": "Size"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/organizations/{organization_id}/users/{user_id}": {
-      "post": {
-        "tags": [
-          "组织管理"
-        ],
-        "summary": "将用户加入组织",
-        "description": "将指定用户加入组织并可设置其为组织管理员。",
-        "operationId": "add_user_to_organization_api_v1_organizations__organization_id__users__user_id__post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "User Id"
-            }
-          },
-          {
-            "name": "is_org_admin",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Is Org Admin"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "组织管理"
-        ],
-        "summary": "将用户从组织移除",
-        "description": "从组织中移除指定用户，需组织管理员或系统管理员权限。不可移除自己。",
-        "operationId": "remove_user_from_organization_api_v1_organizations__organization_id__users__user_id__delete",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "User Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/external/admin/users": {
       "post": {
         "tags": [
@@ -20194,300 +19756,6 @@
         "description": "删除用户（仅外部管理系统可访问）",
         "operationId": "delete_user_api_v1_external_admin_users__user_id__delete",
         "parameters": [
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "User Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/external/admin/organizations": {
-      "post": {
-        "tags": [
-          "external_admin"
-        ],
-        "summary": "Create Organization",
-        "description": "创建组织（仅外部管理系统可访问）",
-        "operationId": "create_organization_api_v1_external_admin_organizations_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrganizationForm"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "title": "Response Create Organization Api V1 External Admin Organizations Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "external_admin"
-        ],
-        "summary": "Get Organizations",
-        "description": "获取组织列表（仅外部管理系统可访问）",
-        "operationId": "get_organizations_api_v1_external_admin_organizations_get",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 1,
-              "title": "Page"
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 20,
-              "title": "Size"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/external/admin/organizations/{organization_id}": {
-      "put": {
-        "tags": [
-          "external_admin"
-        ],
-        "summary": "Update Organization",
-        "description": "更新组织信息（仅外部管理系统可访问）",
-        "operationId": "update_organization_api_v1_external_admin_organizations__organization_id__put",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrganizationUpdateForm"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "title": "Response Update Organization Api V1 External Admin Organizations  Organization Id  Put"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "external_admin"
-        ],
-        "summary": "Delete Organization",
-        "description": "删除组织（仅外部管理系统可访问）",
-        "operationId": "delete_organization_api_v1_external_admin_organizations__organization_id__delete",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/external/admin/organizations/{organization_id}/users/{user_id}": {
-      "post": {
-        "tags": [
-          "external_admin"
-        ],
-        "summary": "Assign User To Organization",
-        "description": "分配用户到组织（仅外部管理系统可访问）",
-        "operationId": "assign_user_to_organization_api_v1_external_admin_organizations__organization_id__users__user_id__post",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "User Id"
-            }
-          },
-          {
-            "name": "is_org_admin",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Is Org Admin"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "external_admin"
-        ],
-        "summary": "Remove User From Organization",
-        "description": "从组织移除用户（仅外部管理系统可访问）",
-        "operationId": "remove_user_from_organization_api_v1_external_admin_organizations__organization_id__users__user_id__delete",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Organization Id"
-            }
-          },
           {
             "name": "user_id",
             "in": "path",
@@ -21210,6 +20478,385 @@
           }
         },
         "tags": []
+      }
+    },
+    "/external/admin/oauth/token": {
+      "post": {
+        "summary": "获取外部管理访问令牌",
+        "operationId": "issue_external_admin_token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功获取访问令牌",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthTokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "客户端凭据无效"
+          }
+        }
+      }
+    },
+    "/external/admin/companies": {
+      "get": {
+        "summary": "获取公司列表",
+        "operationId": "list_external_admin_companies",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "公司列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyListResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ExternalAdminBearer": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "创建公司",
+        "operationId": "create_external_admin_company",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanyCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalAdminCompany"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误"
+          }
+        },
+        "security": [
+          {
+            "ExternalAdminBearer": []
+          }
+        ]
+      }
+    },
+    "/external/admin/companies/{company_id}": {
+      "put": {
+        "summary": "更新公司信息",
+        "operationId": "update_external_admin_company",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanyUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalAdminCompany"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "公司不存在"
+          }
+        },
+        "security": [
+          {
+            "ExternalAdminBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "删除公司",
+        "operationId": "delete_external_admin_company",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功"
+          },
+          "400": {
+            "description": "存在关联资源，无法删除"
+          },
+          "404": {
+            "description": "公司不存在"
+          }
+        },
+        "security": [
+          {
+            "ExternalAdminBearer": []
+          }
+        ]
+      }
+    },
+    "/external/admin/companies/{company_id}/users/{user_id}": {
+      "post": {
+        "summary": "分配用户到公司",
+        "operationId": "assign_user_to_company",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "分配成功"
+          },
+          "404": {
+            "description": "公司或用户不存在"
+          }
+        },
+        "security": [
+          {
+            "ExternalAdminBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "将用户从公司移除",
+        "operationId": "remove_user_from_company",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "移除成功"
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "security": [
+          {
+            "ExternalAdminBearer": []
+          }
+        ]
+      }
+    },
+    "/external/admin/users/{user_id}/reset-password": {
+      "post": {
+        "summary": "重置用户密码",
+        "operationId": "reset_external_admin_user_password",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "密码重置成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "security": [
+          {
+            "ExternalAdminBearer": []
+          }
+        ]
+      }
+    },
+    "/external/admin/users/{user_id}/enable": {
+      "post": {
+        "summary": "启用用户账号",
+        "operationId": "enable_external_admin_user",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "启用成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "security": [
+          {
+            "ExternalAdminBearer": []
+          }
+        ]
+      }
+    },
+    "/external/admin/users/{user_id}/disable": {
+      "post": {
+        "summary": "禁用用户账号",
+        "operationId": "disable_external_admin_user",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "禁用成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "security": [
+          {
+            "ExternalAdminBearer": []
+          }
+        ]
       }
     }
   },
@@ -33931,12 +33578,181 @@
           "profile_image_url"
         ],
         "title": "UserResponse"
+      },
+      "CompanyCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "company_info": {
+            "type": "object",
+            "nullable": true
+          },
+          "config": {
+            "type": "object",
+            "nullable": true
+          },
+          "owner_user_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "owner_user_id"
+        ]
+      },
+      "CompanyUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "company_info": {
+            "type": "object",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "config": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      },
+      "ExternalAdminCompany": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "owner_user_id": {
+            "type": "string"
+          },
+          "company_info": {
+            "type": "object",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "config": {
+            "type": "object",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "integer"
+          },
+          "updated_at": {
+            "type": "integer"
+          }
+        }
+      },
+      "CompanyListResponse": {
+        "type": "object",
+        "properties": {
+          "companies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalAdminCompany"
+            }
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "OAuthTokenRequest": {
+        "type": "object",
+        "properties": {
+          "grant_type": {
+            "type": "string",
+            "default": "client_credentials"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_secret": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "client_secret"
+        ]
+      },
+      "OAuthTokenResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "token_type": {
+            "type": "string",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer"
+          }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "new_password": {
+            "type": "string",
+            "minLength": 6,
+            "description": "新密码，需至少 6 位"
+          }
+        },
+        "required": [
+          "new_password"
+        ]
+      },
+      "OperationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "default": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean",
+            "nullable": true
+          }
+        }
       }
     },
     "securitySchemes": {
       "HTTPBearer": {
         "type": "http",
         "scheme": "bearer"
+      },
+      "ExternalAdminBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Bearer"
       }
     }
   }

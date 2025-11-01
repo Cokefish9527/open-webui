@@ -240,6 +240,42 @@ class CompaniesTable:
                 log.exception(f"Error deleting company: {e}")
                 return False
 
+    def get_all_companies(
+        self,
+        status: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> List[CompanyModel]:
+        """获取所有公司列表"""
+        with get_db() as db:
+            try:
+                query = db.query(Company)
+                if status:
+                    query = query.filter_by(status=status)
+
+                companies = (
+                    query.order_by(Company.updated_at.desc())
+                    .limit(limit)
+                    .offset(offset)
+                    .all()
+                )
+                return [CompanyModel.model_validate(company) for company in companies]
+            except Exception as e:
+                log.exception(f"Error getting all companies: {e}")
+                return []
+
+    def get_all_companies_count(self, status: Optional[str] = None) -> int:
+        """统计公司数量"""
+        with get_db() as db:
+            try:
+                query = db.query(Company)
+                if status:
+                    query = query.filter_by(status=status)
+                return query.count()
+            except Exception as e:
+                log.exception(f"Error counting all companies: {e}")
+                return 0
+
 
 # 全局实例
 Companies = CompaniesTable()

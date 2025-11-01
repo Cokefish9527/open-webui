@@ -91,7 +91,6 @@ from open_webui.routers import (
     hsai_woc,  # 添加WOC路由导入
     hsai_video_learning,  # 添加视频学习路由导入
     hsai_projects,  # 添加项目管理路由导入
-    organizations,  # 添加组织管理路由导入
     external_admin,  # 添加外部管理路由导入
     # 移除hsai_websocket路由以避免与Socket.IO冲突
     # hsai_websocket,
@@ -1278,12 +1277,6 @@ app.include_router(hsai_video_learning.router, prefix="/api/v1")  # 添加视频
 app.include_router(hsai_projects.router, prefix="/api/v1")  # 添加项目管理路由
 
 # 添加组织管理路由
-app.include_router(
-    organizations.router,
-    prefix="/api/v1/organizations",
-    tags=["组织管理"],
-)
-
 # 添加外部管理路由
 app.include_router(
     external_admin.router,

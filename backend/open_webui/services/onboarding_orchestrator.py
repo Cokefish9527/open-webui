@@ -77,7 +77,6 @@ def ensure_company_project_and_main_tasks(user_id: str) -> Dict[str, Any]:
             business_name=business_name,
             company_info=None,
             config={"is_default": True},
-            organization_id=None,
         )
         project = HSAIProjects.insert_new_project(user_id, pform)
         if project:
@@ -119,4 +118,3 @@ def ensure_company_project_and_main_tasks(user_id: str) -> Dict[str, Any]:
             summary["seeded_main_tasks"].append(title)
 
     return summary
-

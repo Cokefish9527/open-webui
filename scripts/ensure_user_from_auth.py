@@ -21,7 +21,6 @@ from sqlalchemy import text  # noqa: E402
 from open_webui.internal.db import get_db  # noqa: E402
 from open_webui.models.auths import Auth  # noqa: E402
 from open_webui.models.users import Users  # noqa: E402
-import open_webui.models.organizations  # noqa: F401,E402
 import open_webui.models.hsai_companies  # noqa: F401,E402
 
 DEFAULT_ROLE = os.environ.get("ENSURE_USER_ROLE", "admin")
@@ -49,13 +48,13 @@ def ensure_user(email: str, role: str, name: str) -> bool:
          last_active_at, updated_at, created_at,
          api_key, settings, info,
          info_collection_completed, business_name, company_id,
-         organization_id, is_super_admin, is_org_admin, oauth_sub)
+         is_super_admin, oauth_sub)
         VALUES
         (:id, :name, :email, :role, :profile_image_url,
          NOW(), NOW(), NOW(),
          NULL, NULL, NULL,
          FALSE, NULL, NULL,
-         NULL, :is_super_admin, FALSE, NULL)
+         :is_super_admin, NULL)
         ON CONFLICT (id) DO NOTHING
         """
     )

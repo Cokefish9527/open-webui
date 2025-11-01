@@ -12,12 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduced `scripts/sqlite_to_postgres_sync.py` for automated SQLite -> PostgreSQL synchronization with Markdown reporting, batch controls, and optional backups.
 - Added `tool/add_company_credit_columns.py` to backfill `company_id` columns for `credit`/`credit_log` across SQLite and PostgreSQL deployments, ensuring legacy数据迁移平滑可追溯。
 - Added UTF-8 BOM guardrails: `tool/clean_special_chars.py`, `.githooks/pre-commit`, and `.github/workflows/bom-scan.yml` now prevent BOM-laden `*.py` files from landing in main.
+- Added `backend/open_webui/models/external_admin_tokens.py` to persist OAuth2 client-credential tokens issued给外部后台；新增 `tool/remove_legacy_organization_schema.py` 帮助清理遗留 `organizations` 表及字段。
 
 ### Changed
 - Conversation queue handler now handles `blue_image_content` messages, emitting blueprint task updates and leveraging the new blueprint progress tables.
 - Updated PROJECTWIKI operations/ADR guidance to align with the new database sync workflow and environment variable conventions.
 - Separated billing usage logging into the dedicated `n8n_workflow` database via new `N8N_DATABASE_*` settings, refactoring associated ORM models and services to use the shared secondary SQLAlchemy engine.
 - Unified积分余额在公司维度存储，新增 `credit.company_id` / `credit_log.company_id` 字段，并调整所有接口改为通过 `/api/v1/billing/user/credit` 返回公司余额。
+- Retired legacy `organizations` 模型与路由：`User/Group/HSAIProject` 不再依赖 `organization_id`，外部后台接口切换到 `/external/admin/companies*` + OAuth2 Bearer 鉴权（`/external/admin/oauth/token`）；开放 `openapi.json` 对应路径并更新 PROJECTWIKI 说明。
+- 外部后台新增客户账号运维能力：支持 `/external/admin/users/{user_id}/reset-password|enable|disable`，统一返回 `OperationResponse`。
 
 ### Fixed
 - 自动补齐 `hsai_tasks` 循环字段：在 `backend/open_webui/models/hsai_tasks.py` 引入 `_schema_aware_db`，并复用新建的 `backend/open_webui/internal/migrations/recurring_tasks.py::ensure_recurring_task_schema`，避免 PostgreSQL 未迁移时触发 `UndefinedColumn is_recurring`。

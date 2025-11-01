@@ -1,11 +1,11 @@
-# HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
+﻿# HSAI 管理系统 · 项目知识库（PROJECTWIKI.md）
 > 一等公民 · 与主干代码保持持续一致（UTF-8）
 
 更新日期：2025-10-23（与 main 同步）
 
 ## 项目概述
 HSAI 管理系统提供统一的 AI 任务编排、材料管理与计费能力，后端采用 FastAPI + Pydantic + SQLAlchemy，前端以 SvelteKit 为主。系统围绕“公司 → 项目 → 任务”的多租户模型构建，核心能力包括：
-- 统一鉴权（JWT / API Key）与用户、组织、公司层级权限控制。
+- 统一鉴权（JWT / OAuth2 Bearer / API Key）与用户、公司层级权限控制（组织模型已废弃）。
 - 多模态任务执行（材料生成、视频学习、流程编排）及队列治理。
 - 计费与积分体系：支持模型调用扣费、公司账户共享额度、充值对账。
 - 可扩展的插件与工具生态（Tool Server、Workflow、外部模型接入）。
@@ -318,6 +318,7 @@ erDiagram
 - **数据库修复脚本**：`tool/fix_hsai_video_learning_status_sequence.py` 支持 dry-run / --apply，两步完成重复检测与联合唯一约束/序列补齐。
 - **监控建议**：重点观测 `credit`/`credit_log` 同步延迟、Redis Stream 消费积压、n8n 数据库链路。
 - **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；任务标签页采用双列布局（左列操作中心，右列依次为项目概览、任务列表、事件时间轴），按钮内置加载/禁用状态，事件卡片展示状态徽章、进度和会话信息；项目概览卡片会同步展示战略蓝图版本/状态/最近同步/计划结束时间，数据源改为 `/api/v1/hsai/projects/{project_id}/summary` + `/api/v1/hsai/projects/{project_id}/tasks`；循环任务激活操作调用 `/api/v1/hsai/tasks/{task_id}/recurring/activate` 并记录状态日志；操作手册见 `docs/410_websocket_test_page_manual.md`（2025-10-30 更新）。
+- **后台对接缺口方案（2025-11-01）**：见 `docs/backend_integration_alignment_plan.md`，明确客户/公司/项目/任务/计费/审计的接口补齐计划、OAuth2 + HMAC 鉴权要求、审计 ID 返回格式，以及文档与 OpenAPI 同步流程；后续所有后台↔服务端契约调整需引用该方案并在完成后更新 `CHANGELOG.md` 与本节。
 
 ## 术语表
 | 术语 | 说明 |
@@ -331,6 +332,7 @@ erDiagram
 
 ## 变更日志
 ### 2025-11-01
+- 工具链：清除 'backend/open_webui/routers/external_admin.py' 的 UTF-8 BOM，解除 git 钩子 BOM 校验阻塞，要求后续新文件统一使用无 BOM UTF-8；同步手动校验未产生额外 diff。
 - 后端：ackend/open_webui/models/hsai_tasks.py 引入 _schema_aware_db，在任务检索/统计/递归操作前自动确保循环任务字段和日志表已齐备，消除缺列报错；新增共享迁移工具 ackend/open_webui/internal/migrations/recurring_tasks.py。
 - 工具：	ool/add_recurring_task_fields.py 复用共享迁移逻辑并保留 dry-run 输出；ackend/test/test_recurring_task_schema.py 新增单元测试覆盖列补齐/索引创建及幂等验证。
 - 数据脚本：ackend/sql/postgresql_init_from_sqlite.sql、ackend/sql/sqlite_dump_raw.sql 同步补入 is_recurring 系列字段、hsai_task_state_logs 表与索引，保证全新部署即具备循环任务能力。
@@ -412,37 +414,41 @@ flowchart TD
 
 
 
-### API 手册（新增：组织管理与项目摘要）
+### API 手册（更新：公司管理与项目摘要）
 
-以下条目与代码保持一致，更新于 2025-10-31：
+以下条目与代码保持一致，更新于 2025-11-01：
 
 ```mermaid
 flowchart LR
-  U[用户] -->|REST| ORG[组织管理 API]
-  U -->|REST| PROJ[HSAI 项目管理 API]
+  ADMIN[外部后台客户端] -->|OAuth2 Client Credentials| TOKEN[获取访问令牌]
+  ADMIN -->|REST| COMPANY[公司管理 API]
+  USER[后台用户] -->|REST| PROJ[HSAI 项目管理 API]
 ```
 
 | 模块 | 方法 | 路径 | 摘要 |
 |------|------|------|------|
-| 组织管理 | GET | `/api/v1/organizations/` | 获取组织列表（系统管理员） |
-| 组织管理 | POST | `/api/v1/organizations/` | 创建组织（系统管理员） |
-| 组织管理 | GET | `/api/v1/organizations/{organization_id}` | 获取组织详情 |
-| 组织管理 | POST | `/api/v1/organizations/{organization_id}` | 更新组织信息（组织管理员） |
-| 组织管理 | DELETE | `/api/v1/organizations/{organization_id}` | 删除组织（系统管理员） |
-| 组织管理 | GET | `/api/v1/organizations/{organization_id}/users` | 获取组织用户列表 |
-| 组织管理 | POST | `/api/v1/organizations/{organization_id}/users/{user_id}` | 将用户加入组织 |
-| 组织管理 | DELETE | `/api/v1/organizations/{organization_id}/users/{user_id}` | 将用户从组织移除 |
+| 客户管理 | POST | `/external/admin/users/{user_id}/reset-password` | 重置客户账号密码 |
+| 客户管理 | POST | `/external/admin/users/{user_id}/enable` | 启用客户账号 |
+| 客户管理 | POST | `/external/admin/users/{user_id}/disable` | 禁用客户账号 |
+| 公司管理 | POST | `/external/admin/oauth/token` | 获取外部管理访问令牌（client_credentials） |
+| 公司管理 | GET | `/external/admin/companies` | 分页获取公司列表 |
+| 公司管理 | POST | `/external/admin/companies` | 创建公司并指定负责人 |
+| 公司管理 | PUT | `/external/admin/companies/{company_id}` | 更新公司信息 |
+| 公司管理 | DELETE | `/external/admin/companies/{company_id}` | 删除公司（需无关联项目/用户） |
+| 公司管理 | POST | `/external/admin/companies/{company_id}/users/{user_id}` | 将用户加入公司 |
+| 公司管理 | DELETE | `/external/admin/companies/{company_id}/users/{user_id}` | 将用户从公司移除 |
 | HSAI 项目管理 | GET | `/api/v1/hsai/projects/{project_id}/tasks` | 获取项目任务列表 |
-| HSAI 项目管理 | GET | `/api/v1/hsai/projects/{project_id}/summary` | 项目任务摘要 |
+| HSAI 项目管理 | GET | `/api/v1/hsai/projects/{project_id}/summary` | 项目任务摘要（蓝图/循环任务） |
 | 对话管理 | GET | `/api/v1/chats/` | 获取我的对话列表 |
 | 对话管理 | DELETE | `/api/v1/chats/` | 删除我的全部对话 |
 | 文件管理 | POST | `/api/v1/files/` | 上传文件 |
 | 知识库管理 | GET | `/api/v1/knowledge/` | 获取知识库列表 |
 
 备注：
-- 标签统一：`organizations` → `组织管理`；`HSAI ��Ŀ����` → `HSAI 项目管理`；计费接口统一为 `计费管理`。
-- 新增统一：`chats` → `对话管理`；`files` → `文件管理`；`knowledge` → `知识库管理`。
+- 外部后台所有接口均需携带 Bearer Token；令牌通过 `/external/admin/oauth/token` 颁发且持久化存储，可追踪审计。
+- 新增公司接口后，“组织管理” 已下线；所有权限按 `company_id` 维度控制。
 - 以上接口的中文摘要/描述已补齐；其余模块将按模块批次推进中文化与标签治理。
+
 
 ## 接口文档与 Swagger 中文化（2025-10-31）
 - 本批次完成：

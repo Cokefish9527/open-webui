@@ -193,6 +193,15 @@ class AuthsTable:
         except Exception:
             return False
 
+    def set_active_by_id(self, id: str, active: bool) -> bool:
+        try:
+            with get_db() as db:
+                updated = db.query(Auth).filter_by(id=id).update({"active": active})
+                db.commit()
+                return True if updated == 1 else False
+        except Exception:
+            return False
+
     def delete_auth_by_id(self, id: str) -> bool:
         try:
             with get_db() as db:
