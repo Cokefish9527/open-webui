@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified积分余额在公司维度存储，新增 `credit.company_id` / `credit_log.company_id` 字段，并调整所有接口改为通过 `/api/v1/billing/user/credit` 返回公司余额。
 - Retired legacy `organizations` 模型与路由：`User/Group/HSAIProject` 不再依赖 `organization_id`，外部后台接口切换到 `/external/admin/companies*` + OAuth2 Bearer 鉴权（`/external/admin/oauth/token`）；开放 `openapi.json` 对应路径并更新 PROJECTWIKI 说明。
 - 外部后台新增客户账号运维能力：支持 `/external/admin/users/{user_id}/reset-password|enable|disable`，统一返回 `OperationResponse`。
+- HSAI 素材管理模块现可通过 `STORAGE_PROVIDER` 切换本地/OSS 管理，并按 `<company>/<user>/<hash-name>` 组织文件，数据库同步写入 `oss_bucket`、`oss_key` 及存储元信息，保障素材隔离与追溯。
 
 ### Fixed
 - 自动补齐 `hsai_tasks` 循环字段：在 `backend/open_webui/models/hsai_tasks.py` 引入 `_schema_aware_db`，并复用新建的 `backend/open_webui/internal/migrations/recurring_tasks.py::ensure_recurring_task_schema`，避免 PostgreSQL 未迁移时触发 `UndefinedColumn is_recurring`。

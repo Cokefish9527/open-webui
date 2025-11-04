@@ -6,7 +6,7 @@ import zipfile
 import tempfile
 import os
 import logging
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from pathlib import Path
 from datetime import datetime
 
@@ -37,6 +37,7 @@ from open_webui.utils.access_control import has_permission
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.config import UPLOAD_DIR
+from open_webui.config.oss import STORAGE_PROVIDER, S3_BUCKET_NAME
 
 import aiofiles
 import hashlib
@@ -60,6 +61,135 @@ HSAI_MATERIALS_PREFIX = "hsai/materials"  # OSS存储前缀
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 LOCAL_STORAGE_PATH = os.path.join(UPLOAD_DIR, "materials")
 os.makedirs(LOCAL_STORAGE_PATH, exist_ok=True)
+
+DEFAULT_COMPANY_SEGMENT = "default-company"
+DEFAULT_USER_SEGMENT = "unknown-user"
+
+
+def _is_oss_mode() -> bool:
+    """当前是否运行在 OSS 存储模式"""
+    return HAS_OSS and STORAGE_PROVIDER.lower() in {"s3", "oss"}
+
+
+def _sanitize_path_segment(value: Optional[str], fallback: str) -> str:
+    """
+    将任意字符串转换为路径安全的片段，仅保留字母、数字、下划线和中划线。
+    """
+    if not value:
+        return fallback
+    sanitized = re.sub(r"[^a-zA-Z0-9_-]", "-", value.strip())
+    sanitized = sanitized.strip("-_")
+    return (sanitized or fallback).lower()
+
+
+def _resolve_business_name(user) -> str:
+    """
+    从用户对象中解析公司名称，若不存在则返回默认值。
+    """
+    name = getattr(user, "business_name", None)
+    if isinstance(name, str) and name.strip():
+        return name.strip()
+    info = getattr(user, "info", None)
+    if isinstance(info, dict):
+        info_name = info.get("business_name")
+        if isinstance(info_name, str) and info_name.strip():
+            return info_name.strip()
+    return DEFAULT_COMPANY_SEGMENT
+
+
+def _get_storage_segments(user) -> Tuple[str, str]:
+    """
+    计算存储路径使用的公司与用户目录片段。
+    """
+    business_segment = _sanitize_path_segment(
+        _resolve_business_name(user), DEFAULT_COMPANY_SEGMENT
+    )
+    user_segment = _sanitize_path_segment(getattr(user, "id", None), DEFAULT_USER_SEGMENT)
+    return business_segment, user_segment
+
+
+def _build_storage_key(storage_filename: str, business_segment: str, user_segment: str) -> str:
+    """根据公司与用户目录生成对象键"""
+    return f"{business_segment}/{user_segment}/{storage_filename}"
+
+
+def _build_storage_filename(base_filename: str, content_hash: str) -> str:
+    """
+    为素材生成带哈希的唯一文件名，保留原扩展名。
+    """
+    path = Path(base_filename)
+    safe_stem = path.stem or "material"
+    return f"{safe_stem}_{content_hash}{path.suffix}"
+
+
+def _store_material_file(
+    content: bytes,
+    storage_filename: str,
+    user,
+    material_type: str,
+    original_filename: str,
+) -> dict:
+    """
+    将素材文件保存到本地或 OSS，返回存储元数据。
+    """
+    business_segment, user_segment = _get_storage_segments(user)
+    storage_key = _build_storage_key(storage_filename, business_segment, user_segment)
+
+    storage_provider = "local"
+    file_url = ""
+    file_path = ""
+    oss_bucket = None
+    oss_key = None
+
+    if _is_oss_mode():
+        try:
+            from io import BytesIO
+
+            file_like = BytesIO(content)
+            _, storage_path = Storage.upload_file(
+                file=file_like,
+                filename=storage_key,
+                tags={
+                    "user_id": str(getattr(user, "id", "")),
+                    "material_type": material_type,
+                    "hsai_module": "materials",
+                    "original_filename": original_filename,
+                    "business_segment": business_segment,
+                },
+            )
+            storage_provider = "oss"
+            file_path = str(storage_path)
+            file_url = str(storage_path)
+            oss_bucket = S3_BUCKET_NAME or (
+                storage_path.split("//", 1)[1].split("/", 1)[0]
+                if isinstance(storage_path, str)
+                and storage_path.startswith(("s3://", "https://"))
+                else None
+            )
+            oss_key = storage_key
+        except Exception as upload_error:
+            log.warning(
+                "OSS upload failed, fallback to local storage; error=%s", upload_error
+            )
+
+    if storage_provider != "oss":
+        file_url, file_path = _save_file_local(
+            content,
+            storage_filename,
+            business_segment,
+            user_segment,
+        )
+
+    return {
+        "storage_provider": storage_provider,
+        "file_url": file_url,
+        "file_path": file_path,
+        "oss_bucket": oss_bucket,
+        "oss_key": oss_key,
+        "storage_key": storage_key,
+        "business_segment": business_segment,
+        "user_segment": user_segment,
+    }
 
 ############################
 # 辅助函数
@@ -294,36 +424,40 @@ def _process_zip_file(zip_file: UploadFile, user_id: str, base_scene_code: Optio
     
     return processed_files
 
-def _save_file_local(content: bytes, filename: str, user_id: str) -> tuple:
+def _save_file_local(
+    content: bytes,
+    storage_filename: str,
+    business_segment: str,
+    user_segment: str,
+) -> tuple:
     """
     将文件保存到本地存储
     
     Args:
         content: 文件内容
-        filename: 文件名
-        user_id: 用户ID
-        
+        storage_filename: 已生成的存储文件名（需保证唯一）
+        business_segment: 公司路径片段
+        user_segment: 用户路径片段
+    
     Returns:
         tuple: (文件访问URL, 文件存储路径)
     """
-    # 生成唯一文件名
-    file_hash = hashlib.md5(content).hexdigest()
-    file_extension = Path(filename).suffix
-    unique_filename = f"{Path(filename).stem}_{file_hash}{file_extension}"
-    
-    # 创建用户特定的存储目录
-    user_storage_path = os.path.join(LOCAL_STORAGE_PATH, user_id)
+    # 创建公司 / 用户特定的存储目录
+    user_storage_path = os.path.join(LOCAL_STORAGE_PATH, business_segment, user_segment)
     os.makedirs(user_storage_path, exist_ok=True)
     
     # 完整文件路径
-    file_path = os.path.join(user_storage_path, unique_filename)
+    file_path = os.path.join(user_storage_path, storage_filename)
     
     # 保存文件
     with open(file_path, "wb") as f:
         f.write(content)
     
     # 生成访问URL
-    file_url = f"http://localhost:8080/uploads/materials/{user_id}/{unique_filename}"
+    file_url = (
+        f"http://localhost:8080/uploads/materials/"
+        f"{business_segment}/{user_segment}/{storage_filename}"
+    )
     
     return file_url, file_path
 
@@ -723,105 +857,75 @@ async def upload_material(
             # 逐个上传处理后的文件
             for file_info in processed_files:
                 log.info(f"Processing file from ZIP: {file_info['new_filename']}")
-                # 生成文件哈希
+
                 file_hash = hashlib.md5(file_info["content"]).hexdigest()
-                
-                # 确定文件类型
                 mime_type = mimetypes.guess_type(file_info["new_filename"])[0] or "application/octet-stream"
                 material_type = _determine_material_type(mime_type)
-                
-                # 尝试上传到OSS，如果失败则保存到本地
-                storage_provider = "local"
-                file_url = ""
-                file_path = ""
-                if HAS_OSS:
-                    try:
-                        # 使用Storage provider上传到OSS
-                        from io import BytesIO
-                        file_like = BytesIO(file_info["content"])
-                        
-                        oss_url, oss_path = Storage.upload_file(
-                            file=file_like,
-                            filename=file_info["new_filename"],
-                            tags={
-                                "user_id": user.id,
-                                "material_type": material_type,
-                                "hsai_module": "materials",
-                                "original_filename": file_info["original_filename"]
-                            }
-                        )
-                        
-                        log.info(f"Material uploaded to OSS: {oss_path}")
-                        file_path = oss_path
-                        file_url = oss_url
-                        storage_provider = "oss"
-                        
-                    except Exception as upload_error:
-                        log.warning(f"OSS upload failed, using local storage: {upload_error}")
-                        # 使用本地存储
-                        file_url, file_path = _save_file_local(file_info["content"], file_info["new_filename"], user.id)
-                else:
-                    # 使用本地存储
-                    file_url, file_path = _save_file_local(file_info["content"], file_info["new_filename"], user.id)
-                
-                # 提取文件元数据
+                storage_filename = _build_storage_filename(file_info["new_filename"], file_hash)
+
+                storage_result = _store_material_file(
+                    content=file_info["content"],
+                    storage_filename=storage_filename,
+                    user=user,
+                    material_type=material_type,
+                    original_filename=file_info["original_filename"],
+                )
+
+                file_path = storage_result["file_path"]
+                file_url = storage_result["file_url"]
+                storage_provider = storage_result["storage_provider"]
+                oss_bucket = storage_result["oss_bucket"]
+                oss_key = storage_result["oss_key"]
+
                 material_metadata = {
                     "original_filename": file_info["original_filename"],
                     "upload_time": int(time.time()),
                     "file_url": file_url,
-                    "storage_provider": storage_provider
+                    "storage_provider": storage_provider,
+                    "storage_key": storage_result["storage_key"],
+                    "business_directory": storage_result["business_segment"],
+                    "user_directory": storage_result["user_segment"],
                 }
-                
-                # 如果file_url是bytes类型，则进行解码
-                if isinstance(material_metadata.get("file_url"), bytes):
-                    try:
-                        material_metadata["file_url"] = material_metadata["file_url"].decode('utf-8')
-                    except UnicodeDecodeError:
-                        # 如果UTF-8解码失败，则使用base64编码
-                        import base64
-                        material_metadata["file_url"] = base64.b64encode(material_metadata["file_url"]).decode('utf-8')
 
-                # 初始化视频元数据
+                if oss_bucket:
+                    material_metadata["oss_bucket"] = oss_bucket
+                if oss_key:
+                    material_metadata["oss_key"] = oss_key
+
                 duration = None
                 resolution = None
-                
-                # 如果是视频文件，提取视频元数据
+
                 if material_type == "video":
                     try:
-                        # 保存到临时文件以提取元数据
                         import tempfile
-                        with tempfile.NamedTemporaryFile(suffix=Path(file_info['new_filename']).suffix, delete=False) as tmp_file:
+
+                        with tempfile.NamedTemporaryFile(
+                            suffix=Path(file_info["new_filename"]).suffix, delete=False
+                        ) as tmp_file:
                             tmp_file.write(file_info["content"])
                             tmp_file_path = Path(tmp_file.name)
-                        
+
                         try:
-                            # 使用文件处理器提取元数据
                             from open_webui.utils.hsai_file_processor import HSAIFileProcessor
+
                             processor = HSAIFileProcessor(str(tmp_file_path.parent))
                             metadata = processor.extract_metadata(tmp_file_path, material_type)
-                            
-                            # 更新元数据
                             material_metadata.update(metadata)
-                            
-                            # 提取视频特定元数据
+
                             if "duration" in metadata:
                                 duration = int(metadata["duration"])
                             if "width" in metadata and "height" in metadata:
                                 resolution = f"{metadata['width']}x{metadata['height']}"
                         finally:
-                            # 清理临时文件
                             tmp_file_path.unlink(missing_ok=True)
                     except Exception as meta_error:
                         log.warning(f"Failed to extract video metadata: {meta_error}")
-                
-                # 处理属性代码
+
                 properties_list = None
                 if file_info["properties_code"]:
-                    # 如果是字符串格式，则尝试解析为列表
                     if isinstance(file_info["properties_code"], str):
                         try:
                             properties_list = json.loads(file_info["properties_code"])
-                            # 确保是列表格式
                             if isinstance(properties_list, str):
                                 properties_list = [properties_list]
                             elif not isinstance(properties_list, list):
@@ -833,7 +937,6 @@ async def upload_material(
                     else:
                         properties_list = [str(file_info["properties_code"])]
 
-                # 创建素材记录
                 material_data = HSAIMaterialForm(
                     name=Path(file_info["new_filename"]).stem,
                     description=description,
@@ -850,7 +953,9 @@ async def upload_material(
                     properties_code="_".join(properties_list) if properties_list else None,
                     duration=duration,
                     resolution=resolution,
-                    material_metadata=material_metadata
+                    material_metadata=material_metadata,
+                    oss_bucket=oss_bucket,
+                    oss_key=oss_key,
                 )
                 
                 log.info(f"Creating material record with data: {material_data}")
@@ -944,44 +1049,39 @@ async def upload_material(
             
             # 生成存储文件名
             file_extension = Path(file.filename).suffix
-            storage_filename = f"{filename_base}_{file_hash}{file_extension}"
-            
-            # 尝试上传到OSS，如果失败则保存到本地
-            storage_provider = "local"
-            file_url = ""
-            file_path = ""
-            if HAS_OSS:
-                try:
-                    # 使用Storage provider上传到OSS
-                    file_url, file_path = Storage.upload_file(
-                        file=file.file,
-                        filename=storage_filename,
-                        tags={
-                            "user_id": user.id,
-                            "material_type": material_type,
-                            "hsai_module": "materials",
-                            "original_filename": file.filename
-                        }
-                    )
-                    
-                    log.info(f"Material uploaded to OSS: {file_path}")
-                    storage_provider = "oss"
-                    
-                except Exception as upload_error:
-                    log.warning(f"OSS upload failed, using local storage: {upload_error}")
-                    # 使用本地存储
-                    file_url, file_path = _save_file_local(content, storage_filename, user.id)
-            else:
-                # 使用本地存储
-                file_url, file_path = _save_file_local(content, storage_filename, user.id)
+            storage_filename = _build_storage_filename(
+                f"{filename_base}{file_extension}", file_hash
+            )
+
+            storage_result = _store_material_file(
+                content=content,
+                storage_filename=storage_filename,
+                user=user,
+                material_type=material_type,
+                original_filename=file.filename,
+            )
+
+            file_url = storage_result["file_url"]
+            file_path = storage_result["file_path"]
+            storage_provider = storage_result["storage_provider"]
+            oss_bucket = storage_result["oss_bucket"]
+            oss_key = storage_result["oss_key"]
             
             # 提取文件元数据
             material_metadata = {
                 "original_filename": file.filename,
                 "upload_time": int(time.time()),
                 "file_url": file_url,
-                "storage_provider": storage_provider
+                "storage_provider": storage_provider,
+                "storage_key": storage_result["storage_key"],
+                "business_directory": storage_result["business_segment"],
+                "user_directory": storage_result["user_segment"],
             }
+
+            if oss_bucket:
+                material_metadata["oss_bucket"] = oss_bucket
+            if oss_key:
+                material_metadata["oss_key"] = oss_key
             
             # 如果file_url是bytes类型，则进行解码
             if isinstance(material_metadata.get("file_url"), bytes):
@@ -1043,8 +1143,10 @@ async def upload_material(
                 properties_code="_".join(properties_list) if properties_list else None,
                 duration=duration,
                 resolution=resolution,
-                material_metadata=material_metadata
-            )
+                    material_metadata=material_metadata,
+                    oss_bucket=storage_result["oss_bucket"],
+                    oss_key=storage_result["oss_key"],
+                )
             
             log.info(f"Creating material record with data: {material_data}")
             log.info(f"Material data dict: {material_data.model_dump()}")

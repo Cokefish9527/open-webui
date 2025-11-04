@@ -94,6 +94,16 @@ class AddUserForm(SignupForm):
     role: Optional[str] = "pending"
 
 
+class ExternalAdminUserUpdateForm(BaseModel):
+    """Form used by external-admin update API where password is optional."""
+
+    name: str
+    email: str
+    password: Optional[str] = None
+    profile_image_url: Optional[str] = "/user.png"
+    role: Optional[str] = "pending"
+
+
 class AuthsTable:
     def insert_new_auth(
         self,

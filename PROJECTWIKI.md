@@ -12,7 +12,7 @@ HSAI 管理系统提供统一的 AI 任务编排、材料管理与计费能力�
 
 ## 架构设计
 ### 总体架构
-```mermaid
+`````mermaid
 flowchart LR
   FE[Web / API Client]
   subgraph Backend
@@ -134,6 +134,7 @@ erDiagram
   companies ||--o{ credit : 共享
   credit ||--o{ credit_log : 变动记录
   hsai_tasks ||--o{ hsai_cards : 派生
+  hsai_idempotent_operations ||--o{ hsai_outbox_events : operation
 
   companies {
     string id PK
@@ -193,6 +194,27 @@ erDiagram
     timestamptz updated_at
   }
   credit_log {
+  hsai_idempotent_operations {
+    string id PK
+    string operation_id UNIQUE
+    string status
+    json context
+    string last_error
+    bigint created_at
+    bigint updated_at
+  }
+  hsai_outbox_events {
+    string id PK
+    string operation_id
+    string event_type
+    json payload
+    string status
+    int attempts
+    string last_error
+    bigint scheduled_at
+    bigint created_at
+    bigint updated_at
+  }
     string id PK
     string user_id FK users.id
     string company_id FK companies.id
@@ -201,6 +223,54 @@ erDiagram
     timestamptz created_at
   }
 ```
+
+- hsai_idempotent_operations：记录 onboarding / 回放等幂等操作执行状态，包含 operation_id、context、last_error。
+- hsai_outbox_events：Outbox 事件队列，保存待分发的业务事件，记录重试次数与计划执行时间（scheduled_at）。
+## 任务系统可靠性与调度（2025-11-04）
+- 技术目标：确保“用户→公司→默认项目→主线任务”链路幂等、Outbox 可追溯，循环任务具备自动调度与状态复盘能力。
+- 代码参考：ackend/open_webui/services/onboarding_orchestrator.py:48、ackend/open_webui/services/outbox_dispatcher.py:24、ackend/open_webui/services/recurring_scheduler.py:42、ackend/open_webui/models/hsai_tasks.py:614。
+
+### 任务系统链路（Company → Project → Main Tasks）
+`mermaid
+sequenceDiagram
+  participant API as Auth/Project API
+  participant Orchestrator as onboarding_orchestrator
+  participant Ops as hsai_idempotent_operations
+  participant DB as PostgreSQL
+  participant Tasks as hsai_tasks
+  participant Outbox as hsai_outbox_events
+  participant Dispatcher as outbox_dispatcher
+
+  API->>Orchestrator: ensure_company_project_and_main_tasks(user_id)
+  Orchestrator->>Ops: SELECT FOR UPDATE operation_id
+  alt 新操作
+    Orchestrator->>DB: INSERT companies/projects（business_name 幂等键）
+    Orchestrator->>Tasks: 派生主线任务（模板去重）
+    Orchestrator->>Outbox: enqueue onboarding.seed_summary
+  else 已完成
+    Orchestrator-->>API: 返回已有摘要
+  end
+  Dispatcher->>Outbox: acquire_pending()
+  Dispatcher->>Dispatcher: 调用事件处理器/重试
+  Dispatcher->>Outbox: mark_dispatched()
+`
+- hsai_idempotent_operations 以 operation_id 记录执行状态，异常时写入 last_error，避免重复执行。【backend/open_webui/services/onboarding_orchestrator.py:48】
+- hsai_outbox_events 存储幂等链路产生的事件，由 OutboxDispatcher 轮询分发并支持重试/延时调度。【backend/open_webui/services/outbox_dispatcher.py:24】
+- orchestrator 在登录、蓝图同步及对话补种链路中复用，同步更新 Outbox 与幂等记录。
+- hsai_idempotent_operations 以 operation_id 记录执行状态，异常时写入 last_error，避免重复执行。【backend/open_webui/services/onboarding_orchestrator.py:48】
+- hsai_outbox_events 存储幂等链路产生的事件，由 OutboxDispatcher 轮询分发并支持重试/延时调度。【backend/open_webui/services/outbox_dispatcher.py:24】
+- orchestrator 在登录、蓝图同步及对话补种链路中复用，同步更新 Outbox 与幂等记录。
+
+### 循环任务调度
+- RecurringTaskScheduler 每 60 秒扫描激活任务，依据 
+ecurring_meta.interval_* 计算下一次执行时间，并按 parent_task_id + scheduled_for 幂等生成子任务。【backend/open_webui/services/recurring_scheduler.py:42】
+- 调度成功后自动更新 last_run_at/next_run_at，并写入 hsai_task_state_logs 供后台审计使用。
+- 新增 HSAITasks.list_active_recurring_tasks / ll_main_tasks_completed 作为调度器与 API 共用的查询接口。【backend/open_webui/models/hsai_tasks.py:614】【backend/open_webui/models/hsai_tasks.py:633】
+
+### API 行为调整
+- /hsai/tasks/{task_id}/recurring/activate 在所属项目主线任务未全部完成时返回 400，保障主线→循环的顺序依赖。【backend/open_webui/routers/hsai_tasks.py:505】
+- /hsai/tasks/{task_id}/start、/cancel、/progress 会同步写入 hsai_task_state_logs 并广播 WS 事件，覆盖后台/调试页的审计需求。【backend/open_webui/routers/hsai_tasks.py:860】【backend/open_webui/routers/hsai_tasks.py:1024】【backend/open_webui/routers/hsai_tasks.py:1102】
+- main.py 在应用生命周期内启动/停止 OutboxDispatcher 与 RecurringTaskScheduler，确保后台任务与 API 同步上线。【backend/open_webui/main.py:569】【backend/open_webui/main.py:576】【backend/open_webui/main.py:619】【backend/open_webui/main.py:625】
 
 ### 视频学习状态（hsai_video_learning_status）
 - 支撑视频学习进度的多租户隔离存储，使用联合唯一键 `business_name + video_id` 防止跨公司覆盖。
@@ -430,6 +500,7 @@ flowchart LR
 
 | 模块 | 方法 | 路径 | 摘要 |
 |------|------|------|------|
+| 客户管理 | PUT  | `/api/v1/external/admin/users/{user_id}` | 更新客户资料（密码字段可选，未提供时保留原密码） |
 | 客户管理 | POST | `/external/admin/users/{user_id}/reset-password` | 重置客户账号密码 |
 | 客户管理 | POST | `/external/admin/users/{user_id}/enable` | 启用客户账号 |
 | 客户管理 | POST | `/external/admin/users/{user_id}/disable` | 禁用客户账号 |
@@ -446,12 +517,20 @@ flowchart LR
 | 对话管理 | DELETE | `/api/v1/chats/` | 删除我的全部对话 |
 | 文件管理 | POST | `/api/v1/files/` | 上传文件 |
 | 知识库管理 | GET | `/api/v1/knowledge/` | 获取知识库列表 |
+> 兼容性说明（2025-11-04）：外部后台调用 PUT /api/v1/external/admin/users/{user_id} 时若省略 password，系统会保留原始密码；如需重置密码请使用 POST /external/admin/users/{user_id}/reset-password。
 
 备注：
 - 外部后台所有接口均需携带 Bearer Token；令牌通过 `/external/admin/oauth/token` 颁发且持久化存储，可追踪审计。
+- 临时联调阶段可将 EXTERNAL_ADMIN_AUTH_BYPASS=true 以跳过外部后台 IP/Token 校验；需在开放窗口内加强审计并在恢复时验证鉴权。
 - 新增公司接口后，“组织管理” 已下线；所有权限按 `company_id` 维度控制。
 - 以上接口的中文摘要/描述已补齐；其余模块将按模块批次推进中文化与标签治理。
 
+
+
+### 外部管理 Client Credentials 鉴权方案
+
+- 详细方案见 docs/500-599_后端设计/模块设计/577-外部后台管理鉴权方案.md，涵盖配置映射、错误码、生命周期与安全策略。
+- 本节仅保留提醒：所有外部管理接口必须携带 /external/admin/oauth/token 签发的 Bearer Token，生产环境需启用 IP 白名单与密钥轮换监控。
 
 ## 接口文档与 Swagger 中文化（2025-10-31）
 - 本批次完成：
@@ -501,3 +580,21 @@ flowchart LR
   - backend/open_webui/routers/models.py
 - 验证：重写后首 4 字节分别为：69 6D 70 6F(import)/66 72 6F 6D(from) 等常规 ASCII，未再出现 EF BB BF。
 - 预防：沿用前述 BOM 检测策略（pre-commit/CI），统一团队编辑器默认编码为 UTF‑8（无 BOM）。
+
+## HSAI 素材管理存储策略（2025-11-04）
+
+- 素材上传统一由 `backend/open_webui/routers/hsai_materials.py` 处理，根据 `STORAGE_PROVIDER` 切换本地/OSS 管理方式：`local` 写入 `./uploads/materials/<company>/<user>/<hash-name>`，`s3` 则通过 `Storage.upload_file` 持久化到 `<company>/<user>/<hash-name>` 并同步 `oss_bucket`、`oss_key`。
+- 公司目录取自 `User.business_name`（为空时回退 `default-company`），再辅以用户 ID 形成隔离目录，确保公司间素材完全隔离并可追溯。
+- `material_metadata` 现新增 `storage_provider`、`storage_key`、`business_directory`、`user_directory` 字段，方便运维脚本快速定位源文件与存储模式。
+
+```mermaid
+flowchart TD
+    U[上传请求] --> V[解析 business_name / user.id]
+    V --> S{STORAGE_PROVIDER}
+    S -->|local| L[落盘 ./uploads/materials/<company>/<user>/<hash-name>]
+    S -->|s3| O[Storage.upload_file(company/user/hash-name)]
+    O --> B[写入 oss_bucket + oss_key]
+    L --> R[生成 material_metadata]
+    B --> R
+    R --> DB[(hsai_materials)]
+```

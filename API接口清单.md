@@ -1289,7 +1289,7 @@ Returns:
 |------|------|--------|------|------|
 | /api/v1/external/admin/users | POST | create_user_api_v1_external_admin_users_post | Create User | 创建用户（仅外部管理系统可访问） |
 | /api/v1/external/admin/users | GET | get_users_api_v1_external_admin_users_get | Get Users | 获取用户列表（仅外部管理系统可访问） |
-| /api/v1/external/admin/users/{user_id} | PUT | update_user_api_v1_external_admin_users__user_id__put | Update User | 更新用户信息（仅外部管理系统可访问） |
+| /api/v1/external/admin/users/{user_id} | PUT | update_user_api_v1_external_admin_users__user_id__put | Update User | 更新用户信息（仅外部管理系统可访问；`password` 可选） |
 | /api/v1/external/admin/users/{user_id} | DELETE | delete_user_api_v1_external_admin_users__user_id__delete | Delete User | 删除用户（仅外部管理系统可访问） |
 | /api/v1/external/admin/organizations | POST | create_organization_api_v1_external_admin_organizations_post | Create Organization | 创建组织（仅外部管理系统可访问） |
 | /api/v1/external/admin/organizations | GET | get_organizations_api_v1_external_admin_organizations_get | Get Organizations | 获取组织列表（仅外部管理系统可访问） |

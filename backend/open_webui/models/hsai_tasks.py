@@ -611,6 +611,49 @@ class HSAITasksTable:
                 log.exception(f"Error getting tasks: {e}")
                 return []
 
+    def list_active_recurring_tasks(
+        self,
+        limit: int = 100,
+    ) -> List[HSAITaskModel]:
+        with _schema_aware_db() as db:
+            try:
+                records = (
+                    db.query(HSAITask)
+                    .filter_by(is_recurring=True)
+                    .filter(HSAITask.recurring_state == HSAIRecurringState.ACTIVE.value)
+                    .order_by(HSAITask.next_run_at.asc().nullsfirst())
+                    .limit(limit)
+                    .all()
+                )
+                return [HSAITaskModel.model_validate(item) for item in records]
+            except Exception as e:
+                log.exception("Error listing active recurring tasks: %s", e)
+                return []
+
+    def all_main_tasks_completed(self, project_id: str) -> bool:
+        with _schema_aware_db() as db:
+            try:
+                total = (
+                    db.query(HSAITask)
+                    .filter_by(project_id=project_id, task_category="main")
+                    .count()
+                )
+                if total == 0:
+                    return False
+                completed = (
+                    db.query(HSAITask)
+                    .filter_by(
+                        project_id=project_id,
+                        task_category="main",
+                        status=HSAITaskStatus.COMPLETED.value,
+                    )
+                    .count()
+                )
+                return total == completed
+            except Exception as e:
+                log.exception("Error checking main task completion: %s", e)
+                return False
+
     def get_tasks_count(
         self,
         user_id: str,

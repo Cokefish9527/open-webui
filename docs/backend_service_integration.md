@@ -48,7 +48,7 @@
 | --- | --- | --- | --- |
 | 查询客户列表 | `GET /api/v1/external/admin/users` | ✅ 已提供 | `/system/customer/data` 按姓名、邮箱、公司筛选 |
 | 创建客户 | `POST /api/v1/external/admin/users` | ✅ 已提供 | `/system/customer/save` 需携带初始密码、公司信息 |
-| 更新客户资料 | `PUT /api/v1/external/admin/users/{user_id}` | ✅ 已提供 | `/system/customer/update`，保持字段映射一致 |
+| 更新客户资料 | `PUT /api/v1/external/admin/users/{user_id}` | ✅ 已提供 | `/system/customer/update`，保持字段映射一致；未传 `password` 时沿用原密码 |
 | 删除客户 | `DELETE /api/v1/external/admin/users/{user_id}` | ✅ 已提供 | `/system/customer/remove/{id}`，删除前需由业务端校验依赖 |
 | 调整积分 | `PUT /api/v1/users/{user_id}/credit` | ✅ 已提供 | 由计费模块调用，返回最新余额 |
 | 重置密码 | （缺失） | ⚠️ 待业务补充 | `/system/customer/resetPassword` 仍需保留占位逻辑 |

@@ -1,6 +1,10 @@
+import logging
 import os
+import time
+from collections import defaultdict, deque
 from secrets import token_urlsafe
-from typing import Optional, List
+from threading import Lock
+from typing import Optional, List, Deque, Dict
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
@@ -11,53 +15,153 @@ from open_webui.models.hsai_companies import (
     CompanyUpdateForm,
     CompanyModel,
 )
-from open_webui.models.auths import Auths, AddUserForm
+from open_webui.models.auths import (
+    Auths,
+    AddUserForm,
+    ExternalAdminUserUpdateForm,
+)
 from open_webui.utils.auth import get_password_hash
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.models.external_admin_tokens import ExternalAdminTokens
 
-# 从配置中获取外部管理密钥和IP白名单
-EXTERNAL_ADMIN_IP_WHITELIST = os.environ.get("EXTERNAL_ADMIN_IP_WHITELIST")
+log = logging.getLogger(__name__)
+log.setLevel(SRC_LOG_LEVELS.get("CONFIG", "INFO"))
+
+EXTERNAL_ADMIN_IP_WHITELIST = [
+    ip.strip() for ip in os.environ.get("EXTERNAL_ADMIN_IP_WHITELIST", "").split(",") if ip.strip()
+]
 
 EXTERNAL_ADMIN_CLIENT_ID = os.environ.get("EXTERNAL_ADMIN_CLIENT_ID", "external-admin")
 EXTERNAL_ADMIN_CLIENT_SECRET = os.environ.get("EXTERNAL_ADMIN_CLIENT_SECRET")
+EXTERNAL_ADMIN_CLIENT_SECRET_ROLLOVER = os.environ.get("EXTERNAL_ADMIN_CLIENT_SECRET_ROLLOVER")
 EXTERNAL_ADMIN_TOKEN_TTL_SECONDS = int(os.environ.get("EXTERNAL_ADMIN_TOKEN_TTL_SECONDS", "900"))
 
+_raw_allowed_scopes = os.environ.get("EXTERNAL_ADMIN_ALLOWED_SCOPES", "")
+EXTERNAL_ADMIN_ALLOWED_SCOPES = [scope.strip() for scope in _raw_allowed_scopes.split() if scope.strip()]
+
+EXTERNAL_ADMIN_RATE_LIMIT_PER_MIN = int(os.environ.get("EXTERNAL_ADMIN_RATE_LIMIT_PER_MIN", "60"))
+_RATE_LIMIT_WINDOW_SECONDS = 60
+_rate_lock = Lock()
+_rate_limit_state: Dict[str, Deque[float]] = defaultdict(deque)
+
+_auth_bypass_raw = os.environ.get("EXTERNAL_ADMIN_AUTH_BYPASS", "false").strip().lower()
+EXTERNAL_ADMIN_AUTH_BYPASS = _auth_bypass_raw in {"1", "true", "yes", "on"}
+_AUTH_BYPASS_WARNING_EMITTED = False
+
+
+
+def _oauth_error(status_code: int, error_code: str, description: str) -> HTTPException:
+    return HTTPException(
+        status_code=status_code,
+        detail={
+            "error": error_code,
+            "error_description": description,
+        },
+    )
+
+def _derive_allowed_scopes() -> List[str]:
+    return EXTERNAL_ADMIN_ALLOWED_SCOPES.copy() if EXTERNAL_ADMIN_ALLOWED_SCOPES else []
+
+def _validate_and_resolve_scopes(requested_scope: Optional[str]) -> List[str]:
+    allowed = _derive_allowed_scopes()
+    if requested_scope in (None, ""):
+        return allowed
+    requested = [scope.strip() for scope in requested_scope.split() if scope.strip()]
+    if not requested:
+        return allowed
+    if allowed and not set(requested).issubset(set(allowed)):
+        raise _oauth_error(
+            status.HTTP_400_BAD_REQUEST,
+            "invalid_scope",
+            "requested scope exceeds allowed scopes",
+        )
+    return requested
+
+def _validate_client_credentials(client_id: str, client_secret: str) -> None:
+    valid_secrets = [secret for secret in (
+        EXTERNAL_ADMIN_CLIENT_SECRET,
+        EXTERNAL_ADMIN_CLIENT_SECRET_ROLLOVER,
+    ) if secret]
+    if not valid_secrets:
+        raise _oauth_error(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "client_secret_not_configured",
+            "external admin client secret is not configured",
+        )
+    if client_id != EXTERNAL_ADMIN_CLIENT_ID or client_secret not in valid_secrets:
+        raise _oauth_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "invalid_client",
+            "client credentials are incorrect",
+        )
+
+def _enforce_rate_limit(client_id: str) -> None:
+    if EXTERNAL_ADMIN_RATE_LIMIT_PER_MIN <= 0:
+        return
+    now = time.time()
+    with _rate_lock:
+        bucket = _rate_limit_state[client_id]
+        cutoff = now - _RATE_LIMIT_WINDOW_SECONDS
+        while bucket and bucket[0] < cutoff:
+            bucket.popleft()
+        if len(bucket) >= EXTERNAL_ADMIN_RATE_LIMIT_PER_MIN:
+            raise _oauth_error(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "rate_limited",
+                "token endpoint rate limit exceeded; retry later",
+            )
+        bucket.append(now)
 router = APIRouter(prefix="/external/admin", tags=["external_admin"])
 
 # 验证外部系统请求
 def verify_external_request(request: Request):
     """验证外部系统请求的合法性"""
-    # IP白名单检查
+    global _AUTH_BYPASS_WARNING_EMITTED
+
+    if EXTERNAL_ADMIN_AUTH_BYPASS:
+        if not _AUTH_BYPASS_WARNING_EMITTED:
+            log.warning(
+                "EXTERNAL_ADMIN_AUTH_BYPASS enabled; skipping external admin IP/token checks. "
+                "禁用该开关即可恢复鉴权。"
+            )
+            _AUTH_BYPASS_WARNING_EMITTED = True
+        return EXTERNAL_ADMIN_CLIENT_ID
+
     if EXTERNAL_ADMIN_IP_WHITELIST:
         if not request.client:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无法获取客户端IP"
+            raise _oauth_error(
+                status.HTTP_403_FORBIDDEN,
+                "ip_not_allowed",
+                "无法获取客户端IP",
             )
         client_ip = request.client.host
-        allowed_ips = EXTERNAL_ADMIN_IP_WHITELIST.split(",")
-        if client_ip not in allowed_ips:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="IP地址不在白名单中"
+        if client_ip not in EXTERNAL_ADMIN_IP_WHITELIST:
+            raise _oauth_error(
+                status.HTTP_403_FORBIDDEN,
+                "ip_not_allowed",
+                "IP地址不在白名单中",
             )
 
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.lower().startswith("bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="缺少访问令牌",
+        raise _oauth_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "invalid_token",
+            "缺少访问令牌",
         )
+
     raw_token = auth_header.split(" ", 1)[1].strip()
     token_record = ExternalAdminTokens.get_valid_token(raw_token)
     if not token_record:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="访问令牌无效或已过期",
+        raise _oauth_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "invalid_token",
+            "访问令牌无效或已过期",
         )
+
     return token_record.client_id
+
 
 class UserListResponse(BaseModel):
     """用户列表响应模型"""
@@ -79,12 +183,14 @@ class OAuthTokenRequest(BaseModel):
     grant_type: str = Field(default="client_credentials")
     client_id: str
     client_secret: str
+    scope: Optional[str] = Field(default=None, description="空值时使用配置默认 scope")
 
 
 class OAuthTokenResponse(BaseModel):
     access_token: str
     token_type: str = Field(default="bearer")
     expires_in: int
+    scope: Optional[str] = None
 
 
 class ResetPasswordRequest(BaseModel):
@@ -100,29 +206,42 @@ class OperationResponse(BaseModel):
 async def issue_oauth_token(payload: OAuthTokenRequest):
     """颁发外部管理 OAuth2 访问令牌"""
     ExternalAdminTokens.cleanup_expired()
+
     if payload.grant_type != "client_credentials":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='grant_type must be client_credentials'
+        raise _oauth_error(
+            status.HTTP_400_BAD_REQUEST,
+            "invalid_grant",
+            "grant_type must be client_credentials",
         )
-    if not EXTERNAL_ADMIN_CLIENT_SECRET:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail='external admin client secret is not configured'
-        )
-    if payload.client_id != EXTERNAL_ADMIN_CLIENT_ID or payload.client_secret != EXTERNAL_ADMIN_CLIENT_SECRET:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='客户端凭据不正确'
-        )
+
+    client_id = payload.client_id or ""
+    _enforce_rate_limit(client_id or "unknown")
+    _validate_client_credentials(client_id, payload.client_secret)
+    resolved_scopes = _validate_and_resolve_scopes(payload.scope)
+
     raw_token = token_urlsafe(48)
-    issued = ExternalAdminTokens.issue_token(payload.client_id, raw_token, EXTERNAL_ADMIN_TOKEN_TTL_SECONDS)
+    issued = ExternalAdminTokens.issue_token(client_id, raw_token, EXTERNAL_ADMIN_TOKEN_TTL_SECONDS)
     if not issued:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='生成访问令牌失败'
+        raise _oauth_error(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "token_issue_failed",
+            "生成访问令牌失败",
         )
-    return OAuthTokenResponse(access_token=raw_token, expires_in=EXTERNAL_ADMIN_TOKEN_TTL_SECONDS)
+
+    log.info(
+        "Issued external admin token",
+        extra={
+            "client_id": client_id,
+            "scope": " ".join(resolved_scopes) if resolved_scopes else "",
+        },
+    )
+
+    return OAuthTokenResponse(
+        access_token=raw_token,
+        expires_in=EXTERNAL_ADMIN_TOKEN_TTL_SECONDS,
+        scope=" ".join(resolved_scopes) if resolved_scopes else None,
+    )
+
 
 # 用户管理接口
 @router.post("/users", response_model=UserModel)
@@ -158,7 +277,9 @@ async def create_user(form_data: AddUserForm, request: Request):
     return user
 
 @router.put("/users/{user_id}", response_model=UserModel)
-async def update_user(user_id: str, form_data: AddUserForm, request: Request):
+async def update_user(
+    user_id: str, form_data: ExternalAdminUserUpdateForm, request: Request
+):
     """更新用户信息（仅外部管理系统可访问）"""
     verify_external_request(request)
     

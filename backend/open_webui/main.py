@@ -564,6 +564,22 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         log.error(f"Viral learning scheduler start failed: {e}")
 
+    # 启动 Outbox 分发器
+    try:
+        from open_webui.services.outbox_dispatcher import outbox_dispatcher
+        await outbox_dispatcher.start()
+        app.state.outbox_dispatcher = outbox_dispatcher
+    except Exception as e:
+        log.error(f"Outbox dispatcher start failed: {e}")
+
+    # 启动循环任务调度器
+    try:
+        from open_webui.services.recurring_scheduler import recurring_task_scheduler
+        await recurring_task_scheduler.start()
+        app.state.recurring_task_scheduler = recurring_task_scheduler
+    except Exception as e:
+        log.error(f"Recurring task scheduler start failed: {e}")
+
     # 启动Redis信号处理器
     from open_webui.utils.redis_signal_handler import redis_signal_handler
     await redis_signal_handler.initialize()
@@ -600,6 +616,18 @@ async def lifespan(app: FastAPI):
     if hasattr(app.state, "redis_task_command_listener"):
         app.state.redis_task_command_listener.cancel()
     # 停止每日调度器
+    try:
+        if hasattr(app.state, "recurring_task_scheduler") and app.state.recurring_task_scheduler:
+            await app.state.recurring_task_scheduler.stop()
+    except Exception as e:
+        log.error(f"Recurring task scheduler stop failed: {e}")
+
+    try:
+        if hasattr(app.state, "outbox_dispatcher") and app.state.outbox_dispatcher:
+            await app.state.outbox_dispatcher.stop()
+    except Exception as e:
+        log.error(f"Outbox dispatcher stop failed: {e}")
+
     try:
         if hasattr(app.state, "viral_learning_scheduler") and app.state.viral_learning_scheduler:
             await app.state.viral_learning_scheduler.stop()

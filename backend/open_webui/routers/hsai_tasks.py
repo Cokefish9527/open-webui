@@ -535,6 +535,12 @@ async def activate_recurring_task(
     if not _is_recurring_task(task):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task is not recurring")
 
+    if task.project_id and not HSAITasks.all_main_tasks_completed(task.project_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Main tasks must be completed before activating recurring tasks",
+        )
+
     previous_state = (task.recurring_state or HSAIRecurringState.IDLE.value).lower()
     if previous_state not in {"", HSAIRecurringState.IDLE.value, HSAIRecurringState.PAUSED.value}:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task cannot be activated")
@@ -904,6 +910,18 @@ async def start_task(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to start task"
             )
+
+        log_entry = _append_state_log(
+            task_id=task_id,
+            from_state=existing_task.status,
+            to_state=HSAITaskStatus.IN_PROGRESS.value,
+            user=user,
+            source="admin_api",
+            message="启动任务",
+            snapshot=task.model_dump(),
+        )
+        context = {"log_id": log_entry.id} if log_entry else None
+        _emit_task_event(task, "task_status_updated", "启动任务", context)
         
         # 在这里可以添加异步任务执行逻辑
         # 例如：通过Celery或其他队列系统执行实际的AI处理
@@ -1055,6 +1073,18 @@ async def cancel_task(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to cancel task"
             )
+
+        log_entry = _append_state_log(
+            task_id=task_id,
+            from_state=existing_task.status,
+            to_state=HSAITaskStatus.CANCELLED.value,
+            user=user,
+            source="admin_api",
+            message="取消任务",
+            snapshot=task.model_dump(),
+        )
+        context = {"log_id": log_entry.id} if log_entry else None
+        _emit_task_event(task, "task_status_updated", "取消任务", context)
         
         return HSAITaskResponse(**task.model_dump())
         
@@ -1106,7 +1136,27 @@ async def update_task_progress(
             )
         
         result = HSAITasks.update_task_progress(task_id, progress)
-        
+
+        if result:
+            updated_task = HSAITasks.get_task_by_id(task_id)
+            if updated_task:
+                log_entry = _append_state_log(
+                    task_id=task_id,
+                    from_state=existing_task.status,
+                    to_state=updated_task.status,
+                    user=user,
+                    source="admin_api",
+                    message=f"更新进度到 {progress}",
+                    snapshot=updated_task.model_dump(),
+                )
+                context = {"log_id": log_entry.id} if log_entry else None
+                _emit_task_event(
+                    updated_task,
+                    "task_progress",
+                    f"进度更新为 {progress}",
+                    context,
+                )
+
         return result
         
     except HTTPException:
