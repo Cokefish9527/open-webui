@@ -4,7 +4,8 @@ import json
 import logging
 import re
 from abc import ABC, abstractmethod
-from typing import BinaryIO, Tuple, Dict
+from io import BytesIO
+from typing import BinaryIO, Dict, Optional, Tuple
 
 from open_webui.config.oss import (
     S3_ACCESS_KEY_ID,
@@ -50,6 +51,10 @@ class StorageProvider(ABC):
     @abstractmethod
     def delete_file(self, file_path: str) -> None:
         pass
+
+    def generate_download_url(self, file_path: str, expires: int = 900) -> Optional[str]:
+        """默认返回 None，表示当前存储驱动不支持签名链接。"""
+        return None
 
 
 class LocalStorageProvider(StorageProvider):
@@ -211,29 +216,29 @@ class S3StorageProvider(StorageProvider):
         self, file: BinaryIO, filename: str, tags: Dict[str, str]
     ) -> Tuple[bytes, str]:
         """Handles uploading of the file to S3 storage."""
-        _, file_path = LocalStorageProvider.upload_file(file, filename, tags)
+        contents = file.read()
+        if not contents:
+            raise ValueError(ERROR_MESSAGES.EMPTY_CONTENT)
+
         s3_key = os.path.join(self.key_prefix, filename)
         try:
-            self.s3_client.upload_file(file_path, self.bucket_name, s3_key)
+            extra_args = {}
             if S3_ENABLE_TAGGING and tags:
                 sanitized_tags = {
                     self.sanitize_tag_value(k): self.sanitize_tag_value(v)
                     for k, v in tags.items()
                 }
-                tagging = {
-                    "TagSet": [
-                        {"Key": k, "Value": v} for k, v in sanitized_tags.items()
-                    ]
-                }
-                self.s3_client.put_object_tagging(
-                    Bucket=self.bucket_name,
-                    Key=s3_key,
-                    Tagging=tagging,
-                )
-            return (
-                open(file_path, "rb").read(),
-                f"s3://{self.bucket_name}/{s3_key}",
+                if sanitized_tags:
+                    extra_args["Tagging"] = "&".join(
+                        f"{k}={v}" for k, v in sanitized_tags.items()
+                    )
+            self.s3_client.upload_fileobj(
+                BytesIO(contents),
+                self.bucket_name,
+                s3_key,
+                ExtraArgs=extra_args or None,
             )
+            return contents, f"s3://{self.bucket_name}/{s3_key}"
         except self.ClientError as e:
             raise RuntimeError(f"Error uploading file to S3: {e}")
 
@@ -276,6 +281,17 @@ class S3StorageProvider(StorageProvider):
 
         # Always delete from local storage
         LocalStorageProvider.delete_all_files()
+
+    def generate_download_url(self, file_path: str, expires: int = 900) -> Optional[str]:
+        try:
+            s3_key = self._extract_s3_key(file_path)
+            return self.s3_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self.bucket_name, "Key": s3_key},
+                ExpiresIn=expires,
+            )
+        except self.ClientError as e:
+            raise RuntimeError(f"Error generating presigned URL: {e}")
 
     # The s3 key is the name assigned to an object. It excludes the bucket name, but includes the internal path and the file name.
     def _extract_s3_key(self, full_file_path: str) -> str:

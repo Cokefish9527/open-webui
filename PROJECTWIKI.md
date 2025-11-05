@@ -571,6 +571,16 @@ flowchart LR
 - 验证：本地执行 `python tool/clean_special_chars.py --root . --extensions .py` 返回 0，`rg "\uFEFF"` 未再命中；GitHub Actions 任务通过。
 - 影响面：FastAPI 路由代码、Git 工作流、CI 规范；要求团队在拉取后运行 `git config core.hooksPath .githooks`。
 
+
+### 2025-11-05 素材管理与 FFmpeg OSS 服务对齐方案
+
+- 背景：素材管理模块与《318-HSAI 接口模块功能描述文档》及 FFmpeg `/oss` 服务在接口路径、检索能力、签名下载与上传流程上存在差距，导致与视频转码链路协同效率低。
+
+- 方案：编制《docs/materials_management_alignment_plan.md》，覆盖接口补齐（新增 `/search`、`/stats`）、标签/分类扩展检索、签名下载链接生成、FFmpeg OSS 客户端封装、配置治理及验证/回滚策略。
+
+- 验证：按方案执行单元/集成/性能/安全测试；在灰度阶段通过监控验证签名链接有效性与过期策略。
+
+- 回滚：保留 `USE_FFMPEG_OSS`、`STORAGE_PROVIDER` 等配置开关，可快速退回本地存储 / 直接 boto3 上传流程；详情见上述文档。
 ## 2025-10-31 编码统一化（移除路由模块 BOM）
 - 背景：同目录多文件存在 UTF‑8 BOM，虽未立即导致崩溃，但增加跨平台与编辑器差异风险。
 - 处置：统一将以下文件重写为 UTF‑8（无 BOM），不改任何业务逻辑：
@@ -598,3 +608,4 @@ flowchart TD
     B --> R
     R --> DB[(hsai_materials)]
 ```
+

@@ -8,7 +8,8 @@ from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean, Integer
+from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean, Integer, cast
+from sqlalchemy import or_
 from sqlalchemy.orm import relationship
 
 from ._timestamp_utils import (
@@ -227,7 +228,7 @@ class HSAIMaterialModel(BaseModel):
     access_control: Optional[dict] = Field(default=None, description="访问控制")
     scene_code: Optional[str] = Field(default=None, description="场景代码")
     technique_code: Optional[str] = Field(default=None, description="手法代码")
-    properties_code: Optional[str] = Field(default=None, description="属性代码")
+    properties_code: Optional[List[str]] = Field(default=None, description="属性代码列表")
     duration: Optional[int] = Field(default=None, description="视频时长（秒）")
     resolution: Optional[str] = Field(default=None, description="视频分辨率")
     oss_bucket: Optional[str] = Field(default=None, description="OSS Bucket")
@@ -256,6 +257,18 @@ class HSAIMaterialModel(BaseModel):
             return normalize_optional_timestamp(value)
         except ValueError as exc:
             raise ValueError(f"Invalid optional timestamp value: {exc}") from exc
+
+    @field_validator("properties_code", mode="before")
+    @classmethod
+    def normalize_properties_code(cls, value):
+        if value is None:
+            return None
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            parts = [segment for segment in value.split("_") if segment]
+            return parts or None
+        return value
 
 
 class HSAIMaterialTagModel(BaseModel):
@@ -838,10 +851,17 @@ class HSAIMaterialsTable:
                 if material_type:
                     search_query = search_query.filter_by(material_type=material_type)
                 
-                # 搜索名称和描述
+                # 搜索名称、描述、标签与分类编码
+                like_pattern = f"%{query}%"
                 search_query = search_query.filter(
-                    HSAIMaterial.name.ilike(f"%{query}%") |
-                    HSAIMaterial.description.ilike(f"%{query}%")
+                    or_(
+                        HSAIMaterial.name.ilike(like_pattern),
+                        HSAIMaterial.description.ilike(like_pattern),
+                        cast(HSAIMaterial.tags, String).ilike(like_pattern),
+                        HSAIMaterial.scene_code.ilike(like_pattern),
+                        HSAIMaterial.technique_code.ilike(like_pattern),
+                        HSAIMaterial.properties_code.ilike(like_pattern),
+                    )
                 )
                 
                 materials = search_query.order_by(HSAIMaterial.updated_at.desc()).limit(limit).offset(offset).all()
@@ -861,10 +881,17 @@ class HSAIMaterialsTable:
                 if material_type:
                     search_query = search_query.filter_by(material_type=material_type)
                 
-                # 搜索名称和描述
+                # 搜索名称、描述、标签与分类编码
+                like_pattern = f"%{query}%"
                 search_query = search_query.filter(
-                    HSAIMaterial.name.ilike(f"%{query}%") |
-                    HSAIMaterial.description.ilike(f"%{query}%")
+                    or_(
+                        HSAIMaterial.name.ilike(like_pattern),
+                        HSAIMaterial.description.ilike(like_pattern),
+                        cast(HSAIMaterial.tags, String).ilike(like_pattern),
+                        HSAIMaterial.scene_code.ilike(like_pattern),
+                        HSAIMaterial.technique_code.ilike(like_pattern),
+                        HSAIMaterial.properties_code.ilike(like_pattern),
+                    )
                 )
                 
                 return search_query.count()
