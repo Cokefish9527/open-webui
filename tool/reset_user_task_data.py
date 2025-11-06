@@ -1,194 +1,238 @@
 #!/usr/bin/env python3
 """
-还原用户任务数据，将当前的蓝图数据、任务数据删除，账号还原到触发蓝图节点之前的状态
+重置指定用户的任务系统数据，兼容 PostgreSQL。
+
+删除范围：
+- hsai_tasks / hsai_task_state_logs / hsai_task_blueprint_links
+- hsai_blueprint_progress / hsai_blueprint_progress_history
+- hsai_projects（该用户创建）
+- companies（该用户作为 owner）
+
+同时会重置用户的 business_name / company_id / info_collection_completed 字段。
 """
 
-import sqlite3
+from __future__ import annotations
+
 import argparse
-import os
-from datetime import datetime
+from typing import Any, Dict
 
-def get_database_connection(db_path):
-    """获取数据库连接"""
-    try:
-        if not os.path.exists(db_path):
-            print(f"❌ 数据库文件不存在: {db_path}")
-            return None
-            
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
-    except Exception as e:
-        print(f"❌ 无法连接到数据库: {e}")
-        return None
+from sqlalchemy import delete, select, update
 
-def reset_user_data(conn, user_id):
-    """重置用户数据"""
-    try:
-        cursor = conn.cursor()
-        
-        print(f"🔄 开始重置用户 {user_id} 的数据...")
-        
-        # 1. 删除用户的所有任务
-        cursor.execute("DELETE FROM hsai_tasks WHERE user_id = ?", (user_id,))
-        tasks_deleted = cursor.rowcount
-        print(f"   删除任务记录: {tasks_deleted} 条")
-        
-        # 2. 删除用户的蓝图进度记录
-        cursor.execute("DELETE FROM hsai_blueprint_progress WHERE project_id IN (SELECT id FROM hsai_projects WHERE user_id = ?)", (user_id,))
-        blueprint_deleted = cursor.rowcount
-        print(f"   删除蓝图进度记录: {blueprint_deleted} 条")
-        
-        # 3. 删除用户的任务蓝图链接记录
-        cursor.execute("DELETE FROM hsai_task_blueprint_links WHERE task_id IN (SELECT id FROM hsai_tasks WHERE user_id = ?)", (user_id,))
-        links_deleted = cursor.rowcount
-        print(f"   删除任务蓝图链接: {links_deleted} 条")
-        
-        # 4. 删除用户的项目
-        cursor.execute("DELETE FROM hsai_projects WHERE user_id = ?", (user_id,))
-        projects_deleted = cursor.rowcount
-        print(f"   删除项目记录: {projects_deleted} 个")
-        
-        # 5. 删除用户的公司
-        cursor.execute("DELETE FROM companies WHERE owner_user_id = ?", (user_id,))
-        companies_deleted = cursor.rowcount
-        print(f"   删除公司记录: {companies_deleted} 个")
-        
-        # 6. 删除任务状态日志
-        cursor.execute("DELETE FROM hsai_task_state_logs WHERE task_id IN (SELECT id FROM hsai_tasks WHERE user_id = ?)", (user_id,))
-        logs_deleted = cursor.rowcount
-        print(f"   删除任务状态日志: {logs_deleted} 条")
-        
-        # 7. 重置用户的业务信息收集状态
-        cursor.execute("UPDATE user SET info_collection_completed = 0 WHERE id = ?", (user_id,))
-        users_updated = cursor.rowcount
-        print(f"   重置用户信息收集状态: {users_updated} 个")
-        
-        # 提交事务
-        conn.commit()
-        
-        print(f"\n✅ 用户 {user_id} 的数据重置完成")
-        print(f"   总计删除记录: {tasks_deleted + blueprint_deleted + links_deleted + projects_deleted + companies_deleted + logs_deleted} 条")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ 重置用户数据时发生错误: {e}")
-        conn.rollback()
-        return False
+from task_system_utils import (
+    ConfigError,
+    TaskSystemConfig,
+    ensure_database_url,
+    init_logger,
+    load_config,
+)
 
-def verify_user_exists(conn, user_id):
-    """验证用户是否存在"""
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name, email FROM user WHERE id = ?", (user_id,))
-        user = cursor.fetchone()
-        
-        if user:
-            print(f"✅ 找到用户: {user['name']} ({user['email']})")
-            return True
-        else:
-            print(f"❌ 未找到用户ID为 {user_id} 的用户")
-            return False
-    except Exception as e:
-        print(f"❌ 验证用户时发生错误: {e}")
-        return False
 
-def show_user_data_summary(conn, user_id):
-    """显示用户当前数据摘要"""
-    try:
-        cursor = conn.cursor()
-        
-        # 查询任务数量
-        cursor.execute("SELECT COUNT(*) as count FROM hsai_tasks WHERE user_id = ?", (user_id,))
-        tasks_count = cursor.fetchone()['count']
-        
-        # 查询项目数量
-        cursor.execute("SELECT COUNT(*) as count FROM hsai_projects WHERE user_id = ?", (user_id,))
-        projects_count = cursor.fetchone()['count']
-        
-        # 查询公司数量
-        cursor.execute("SELECT COUNT(*) as count FROM companies WHERE owner_user_id = ?", (user_id,))
-        companies_count = cursor.fetchone()['count']
-        
-        print(f"\n📊 用户 {user_id} 当前数据摘要:")
-        print(f"   任务数量: {tasks_count}")
-        print(f"   项目数量: {projects_count}")
-        print(f"   公司数量: {companies_count}")
-        
-    except Exception as e:
-        print(f"❌ 获取数据摘要时发生错误: {e}")
+def _collect_ids(session, user_id: str) -> Dict[str, list[str]]:
+    from open_webui.models.hsai_tasks import (
+        HSAIBlueprintProgressHistory,
+        HSAIBlueprintProgressTable,
+        HSAITaskBlueprintLinksTable,
+        HSAITaskStateLogsTable,
+        HSAITasks,
+    )
+    from open_webui.models.hsai_projects import HSAIProjects
 
-def main():
-    parser = argparse.ArgumentParser(description="还原用户任务数据")
-    parser.add_argument("--user-id", required=True, help="用户ID")
-    parser.add_argument("--db-path", default="data/webui.db", help="数据库文件路径")
-    parser.add_argument("--dry-run", action="store_true", help="仅显示将要执行的操作，不实际执行")
-    
-    args = parser.parse_args()
-    
-    print("🔄 开始还原用户任务数据...")
-    print(f"   用户ID: {args.user_id}")
-    print(f"   数据库路径: {args.db_path}")
-    print(f"   模拟运行: {'是' if args.dry_run else '否'}")
-    
-    # 获取数据库连接
-    conn = get_database_connection(args.db_path)
-    if not conn:
-        return 1
-    
-    try:
-        # 验证用户是否存在
-        if not verify_user_exists(conn, args.user_id):
-            conn.close()
-            return 1
-        
-        # 显示当前数据摘要
-        show_user_data_summary(conn, args.user_id)
-        
-        if args.dry_run:
-            print("\n🔍 模拟运行模式 - 仅显示将要执行的操作")
-            print("   将执行以下删除操作:")
-            print("   1. 删除用户的所有任务记录")
-            print("   2. 删除用户的蓝图进度记录")
-            print("   3. 删除用户的任务蓝图链接记录")
-            print("   4. 删除用户的项目记录")
-            print("   5. 删除用户的公司记录")
-            print("   6. 删除用户的任务状态日志")
-            print("   7. 重置用户的信息收集状态")
-            print("\n💡 如需实际执行，请移除 --dry-run 参数")
-        else:
-            # 确认执行
-            confirm = input("\n⚠️  确定要删除用户的所有相关数据吗？此操作不可恢复！(输入 'yes' 确认): ")
-            if confirm.lower() != 'yes':
-                print("❌ 操作已取消")
-                conn.close()
-                return 0
-            
-            # 执行数据重置
-            if reset_user_data(conn, args.user_id):
-                print("\n✅ 数据重置成功完成")
-                print("💡 用户数据已还原到触发蓝图节点之前的状态")
-            else:
-                print("\n❌ 数据重置失败")
-                conn.close()
-                return 1
-        
-        # 再次显示数据摘要
-        if not args.dry_run:
-            show_user_data_summary(conn, args.user_id)
-        
-        conn.close()
-        return 0
-        
-    except KeyboardInterrupt:
-        print("\n\n❌ 操作被用户中断")
-        conn.close()
-        return 1
-    except Exception as e:
-        print(f"\n❌ 发生未预期的错误: {e}")
-        conn.close()
-        return 1
+    task_ids = list(
+        session.scalars(
+            select(HSAITasks.id).where(HSAITasks.user_id == user_id)
+        )
+    )
+    project_ids = list(
+        session.scalars(
+            select(HSAIProjects.id).where(HSAIProjects.user_id == user_id)
+        )
+    )
 
-if __name__ == "__main__":
-    exit(main())
+    progress_ids: list[str] = []
+    if project_ids:
+        progress_ids = list(
+            session.scalars(
+                select(HSAIBlueprintProgressTable.id).where(
+                    HSAIBlueprintProgressTable.project_id.in_(project_ids)
+                )
+            )
+        )
+
+    link_ids: list[str] = []
+    if progress_ids:
+        link_ids = list(
+            session.scalars(
+                select(HSAITaskBlueprintLinksTable.id).where(
+                    HSAITaskBlueprintLinksTable.progress_id.in_(progress_ids)
+                )
+            )
+        )
+
+    log_ids: list[str] = []
+    if task_ids:
+        log_ids = list(
+            session.scalars(
+                select(HSAITaskStateLogsTable.id).where(
+                    HSAITaskStateLogsTable.task_id.in_(task_ids)
+                )
+            )
+        )
+
+    history_ids: list[str] = []
+    if progress_ids:
+        history_ids = list(
+            session.scalars(
+                select(HSAIBlueprintProgressHistory.id).where(
+                    HSAIBlueprintProgressHistory.progress_id.in_(progress_ids)
+                )
+            )
+        )
+
+    return {
+        "task_ids": task_ids,
+        "project_ids": project_ids,
+        "progress_ids": progress_ids,
+        "link_ids": link_ids,
+        "log_ids": log_ids,
+        "history_ids": history_ids,
+    }
+
+
+def reset_user_task_data(
+    config: TaskSystemConfig,
+    user_id: str,
+    dry_run: bool = False,
+    logger=None,
+) -> Dict[str, Any]:
+    """执行数据重置，返回删除数量统计。"""
+    if logger is None:
+        logger = init_logger("reset_user_task_data")
+
+    ensure_database_url(config)
+
+    # 延迟导入，确保环境变量已生效
+    from open_webui.internal.db import get_db
+    from open_webui.models.hsai_tasks import (
+        HSAIBlueprintProgressHistory,
+        HSAIBlueprintProgressTable,
+        HSAITaskBlueprintLinksTable,
+        HSAITaskStateLogsTable,
+        HSAITasks,
+    )
+    from open_webui.models.hsai_projects import HSAIProjects
+    from open_webui.models.hsai_companies import Companies
+    from open_webui.models.users import User
+
+    with get_db() as session:
+        user = session.get(User, user_id)
+        if not user:
+            raise ConfigError(f"未找到用户 {user_id}")
+
+        ids = _collect_ids(session, user_id)
+        companies = list(
+            session.scalars(
+                select(Companies.id).where(Companies.owner_user_id == user_id)
+            )
+        )
+
+        summary = {
+            "tasks": len(ids["task_ids"]),
+            "task_logs": len(ids["log_ids"]),
+            "task_links": len(ids["link_ids"]),
+            "blueprint_progress": len(ids["progress_ids"]),
+            "blueprint_history": len(ids["history_ids"]),
+            "projects": len(ids["project_ids"]),
+            "companies": len(companies),
+        }
+
+        if dry_run:
+            logger.info("Dry run: %s", summary)
+            return summary
+
+        if ids["log_ids"]:
+            session.execute(
+                delete(HSAITaskStateLogsTable).where(
+                    HSAITaskStateLogsTable.id.in_(ids["log_ids"])
+                )
+            )
+        if ids["link_ids"]:
+            session.execute(
+                delete(HSAITaskBlueprintLinksTable).where(
+                    HSAITaskBlueprintLinksTable.id.in_(ids["link_ids"])
+                )
+            )
+        if ids["task_ids"]:
+            session.execute(
+                delete(HSAITasks).where(HSAITasks.id.in_(ids["task_ids"]))
+            )
+        if ids["history_ids"]:
+            session.execute(
+                delete(HSAIBlueprintProgressHistory).where(
+                    HSAIBlueprintProgressHistory.id.in_(ids["history_ids"])
+                )
+            )
+        if ids["progress_ids"]:
+            session.execute(
+                delete(HSAIBlueprintProgressTable).where(
+                    HSAIBlueprintProgressTable.id.in_(ids["progress_ids"])
+                )
+            )
+        if ids["project_ids"]:
+            session.execute(
+                delete(HSAIProjects).where(
+                    HSAIProjects.id.in_(ids["project_ids"])
+                )
+            )
+        if companies:
+            session.execute(
+                delete(Companies).where(Companies.id.in_(companies))
+            )
+
+        session.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(
+                info_collection_completed=False,
+                business_name=None,
+                company_id=None,
+            )
+        )
+
+        session.commit()
+        logger.info("已清理用户 %s 的任务系统数据", user_id)
+        return summary
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    parser = argparse.ArgumentParser(description="重置用户任务系统数据")
+    parser.add_argument("--config", help="配置文件路径", default=None)
+    parser.add_argument("--user-id", required=True, help="目标用户 ID")
+    parser.add_argument("--dry-run", action="store_true", help="仅统计不执行删除")
+    parser.add_argument("--yes", action="store_true", help="跳过二次确认")
+    parser.add_argument("--verbose", action="store_true", help="输出调试日志")
+
+    args = parser.parse_args(argv)
+    logger = init_logger("reset_user_task_data", verbose=args.verbose)
+
+    config = load_config(args.config)
+
+    if not args.dry_run and not args.yes:
+        confirm = input(
+            f"将删除用户 {args.user_id} 的任务相关数据，确认继续？(yes/no): "
+        )
+        if confirm.strip().lower() != "yes":
+            logger.info("操作已取消")
+            return 0
+
+    summary = reset_user_task_data(
+        config=config,
+        user_id=args.user_id,
+        dry_run=args.dry_run,
+        logger=logger,
+    )
+    logger.info("处理结果: %s", summary)
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(main())

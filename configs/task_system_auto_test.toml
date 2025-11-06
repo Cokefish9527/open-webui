@@ -1,0 +1,30 @@
+#############################################
+# Task System Auto Test Configuration (sample)
+#############################################
+
+[admin_api]
+base_url = "http://127.0.0.1:8080/api/v1"
+client_id = "external-admin"
+client_secret = "replace-with-secret"
+scope = ""
+# 若已有长期有效的 token，可直接填写
+# token = "replace-with-existing-token"
+
+[redis]
+host = "127.0.0.1"
+port = 6379
+queue = "ai-conversation-agent-message-queue"
+
+[db]
+dsn = "postgresql://user:password@127.0.0.1:5432/open_webui"
+
+[verify]
+poll_interval = 5.0
+timeout_sec = 120.0
+
+[report]
+output_path = "reports"
+
+[logs]
+path = "logs"
+keywords = ["ERROR", "Traceback"]
