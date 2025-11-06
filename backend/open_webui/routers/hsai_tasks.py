@@ -29,6 +29,8 @@ from open_webui.models.hsai_tasks import (
     PaginatedHSAITaskResponse,
     PaginatedHSAICardResponse
 )
+from open_webui.models.hsai_companies import Companies
+from open_webui.models.hsai_projects import HSAIProjects
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.utils.access_control import has_permission
@@ -236,7 +238,224 @@ async def get_task_stats(user=Depends(get_verified_user)):
     except Exception as e:
         log.exception(f"Error getting task stats for user {user.id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+
+@router.get("/by-company/{company_name}", response_model=PaginatedHSAITaskResponse, summary="通过企业名称获取任务列表")
+async def get_tasks_by_company_name(
+    company_name: str,
+    status: Optional[str] = Query(None, description="任务状态过滤：pending(待执行)、in_progress(执行中)、completed(已完成)、failed(执行失败)、cancelled(已取消)"),
+    task_type: Optional[str] = Query(None, description="任务类型过滤：video_creation(视频创作)、content_analysis(内容分析)、image_generation(图像生成)、text_processing(文本处理)"),
+    ps: int = Query(20, description="分页大小", ge=1, le=100),
+    pi: int = Query(1, description="分页索引，从1开始", ge=1),
+    user=Depends(get_verified_user)
+):
+    """
+    通过企业名称获取任务列表（分页）。
+    
+    支持按状态和类型进行过滤，返回企业关联项目下的所有任务。
+    
+    Args:
+        company_name (str): 企业名称
+        status (Optional[str]): 任务状态过滤
+        - "pending": 待执行
+        - "in_progress": 执行中
+        - "completed": 已完成
+        - "failed": 执行失败
+        - "cancelled": 已取消
+        task_type (Optional[str]): 任务类型过滤
+        - "video_creation": 视频创作
+        - "content_analysis": 内容分析
+        - "image_generation": 图像生成
+        - "text_processing": 文本处理
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
+        user: 已认证的用户对象
+        
+    Returns:
+        PaginatedHSAITaskResponse: 分页的任务列表
+        - data: 任务列表
+        - pagination: 分页信息
+          - total: 总记录数
+          - page: 当前页码
+          - size: 每页大小
+          - total_pages: 总页数
+        
+    Raises:
+        HTTPException: 404 - 企业未找到
+        HTTPException: 500 - 服务器内部错误
+    """
+    try:
+        # 先根据企业名称查找企业
+        company = Companies.get_company_by_name(company_name)
+        if not company:
+            raise HTTPException(
+                status_code=404,
+                detail="Company not found"
+            )
+        
+        # 检查用户是否有权限访问该企业
+        if company.owner_user_id != user.id:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied"
+            )
+        
+        # 计算offset
+        offset = (pi - 1) * ps
+        
+        # 获取企业关联的所有项目下的任务
+        tasks = HSAITasks.get_tasks_by_company_id(
+            company.id,
+            status=status,
+            task_type=task_type,
+            limit=ps,
+            offset=offset
+        )
+        
+        # 获取总数
+        # 先获取企业关联的所有项目
+        projects = HSAIProjects.get_projects_by_company_id(company.id)
+        project_ids = [project.id for project in projects]
+        total = 0
+        if project_ids:
+            total = HSAITasks.get_tasks_count(
+                user.id,  # 这里使用user_id作为过滤条件，但实际会通过project_ids过滤
+                status=status,
+                task_type=task_type,
+                project_id=project_ids[0] if len(project_ids) == 1 else None
+            )
+            # 如果有多个项目，需要分别统计每个项目的任务数
+            if len(project_ids) > 1:
+                total = 0
+                for project_id in project_ids:
+                    total += HSAITasks.get_tasks_count(
+                        user.id,
+                        status=status,
+                        task_type=task_type,
+                        project_id=project_id
+                    )
+        
+        responses = []
+        for task in tasks:
+            # 计算预估耗时（简化版本）
+            estimated_duration = None
+            if task.task_type == HSAITaskType.VIDEO_CREATION:
+                estimated_duration = 300  # 5分钟
+            elif task.task_type == HSAITaskType.CONTENT_ANALYSIS:
+                estimated_duration = 60   # 1分钟
+            
+            response = HSAITaskResponse(
+                **task.model_dump(),
+                estimated_duration=estimated_duration
+            )
+            responses.append(response)
+        
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
+        
+        pagination = PaginationData(
+            total=total,
+            page=pi,
+            size=ps,
+            total_pages=total_pages
+        )
+        
+        return PaginatedHSAITaskResponse(
+            data=responses,
+            pagination=pagination
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception(f"Error getting tasks by company name: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+    """
+    获取任务统计信息。
+    
+    提供用户任务的详细统计数据，用于仪表板展示和性能分析。
+    
+    Args:
+        user: 已认证的用户对象
+        
+    Returns:
+        TaskStatsResponse: 统计信息
+        - total_tasks: 任务总数量
+        - pending_tasks: 待执行任务数量
+        - in_progress_tasks: 执行中任务数量
+        - completed_tasks: 已完成任务数量
+        - failed_tasks: 失败任务数量
+        - tasks_by_type: 按类型分组的任务数量
+          - video_creation: 视频创作任务数量
+          - content_analysis: 内容分析任务数量
+          - image_generation: 图像生成任务数量
+          - text_processing: 文本处理任务数量
+        - avg_completion_time: 平均完成时间（秒）
+        
+    Raises:
+        HTTPException: 500 - 服务器内部错误
+        
+    Note:
+        - 统计数据仅包含当前用户的任务
+        - 平均完成时间基于已完成任务计算
+        - 用于性能监控和用户行为分析
+    """
+    try:
+        log.info(f"Getting task stats for user_id: {user.id}")
+        tasks = HSAITasks.get_tasks_by_user_id(user.id)
+        log.info(f"Retrieved {len(tasks)} tasks for user_id: {user.id}")
+        
+        # 统计各状态任务数量
+        stats = {
+            "total_tasks": len(tasks),
+            "pending_tasks": 0,
+            "in_progress_tasks": 0,
+            "completed_tasks": 0,
+            "failed_tasks": 0,
+            "tasks_by_type": {}
+        }
+        
+        completion_times = []
+        
+        for task in tasks:
+            # 按状态统计
+            if task.status == HSAITaskStatus.PENDING:
+                stats["pending_tasks"] += 1
+            elif task.status == HSAITaskStatus.IN_PROGRESS:
+                stats["in_progress_tasks"] += 1
+            elif task.status == HSAITaskStatus.COMPLETED:
+                stats["completed_tasks"] += 1
+                # 计算完成时间
+                if task.started_at and task.completed_at:
+                    completion_times.append(task.completed_at - task.started_at)
+            elif task.status == HSAITaskStatus.FAILED:
+                stats["failed_tasks"] += 1
+            
+            # 按类型统计
+            if task.task_type not in stats["tasks_by_type"]:
+                stats["tasks_by_type"][task.task_type] = 0
+            stats["tasks_by_type"][task.task_type] += 1
+        
+        # 计算平均完成时间
+        if completion_times:
+            stats["avg_completion_time"] = sum(completion_times) / len(completion_times)
+        
+        log.info(f"Task stats for user_id {user.id}: {stats}")
+        return TaskStatsResponse(**stats)
+        
+    except HTTPException:
+        # 重新抛出HTTP异常
+        raise
+    except Exception as e:
+        log.exception(f"Error getting task stats for user {user.id}: {e}")
+        raise HTTPException(
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -345,7 +564,7 @@ async def get_tasks(
     except Exception as e:
         log.exception(f"Error getting tasks: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -421,7 +640,7 @@ async def create_task(
     except Exception as e:
         log.exception(f"Error creating task: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -447,7 +666,7 @@ async def get_task(
     except Exception as e:
         log.exception(f"Error getting task: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -494,7 +713,7 @@ async def update_task(
     except Exception as e:
         log.exception(f"Error updating task: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -933,7 +1152,7 @@ async def start_task(
     except Exception as e:
         log.exception(f"Error starting task: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -1093,7 +1312,7 @@ async def cancel_task(
     except Exception as e:
         log.exception(f"Error cancelling task: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -1164,7 +1383,7 @@ async def update_task_progress(
     except Exception as e:
         log.exception(f"Error updating task progress: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -1222,7 +1441,7 @@ async def assign_task(
     except Exception as e:
         log.exception(f"Error assigning task: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -1307,7 +1526,7 @@ async def get_chat_cards(
     except Exception as e:
         log.exception(f"Error getting chat cards: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -1333,7 +1552,7 @@ async def create_card(
     except Exception as e:
         log.exception(f"Error creating card: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
@@ -1360,7 +1579,7 @@ async def update_card(
     except Exception as e:
         log.exception(f"Error updating card: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
 

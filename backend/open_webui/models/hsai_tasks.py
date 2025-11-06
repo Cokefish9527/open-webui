@@ -611,6 +611,45 @@ class HSAITasksTable:
                 log.exception(f"Error getting tasks: {e}")
                 return []
 
+    def get_tasks_by_company_id(
+        self,
+        company_id: str,
+        status: Optional[str] = None,
+        task_type: Optional[str] = None,
+        task_category: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> List[HSAITaskModel]:
+        """根据公司ID获取任务列表"""
+        with _schema_aware_db() as db:
+            try:
+                # 先获取公司关联的所有项目ID
+                from open_webui.models.hsai_projects import HSAIProjects
+                projects = HSAIProjects.get_projects_by_company_id(company_id)
+                project_ids = [project.id for project in projects]
+                
+                if not project_ids:
+                    return []
+                
+                query = db.query(HSAITask).filter(HSAITask.project_id.in_(project_ids))
+                
+                if status:
+                    query = query.filter_by(status=status)
+                if task_type:
+                    query = query.filter_by(task_type=task_type)
+                if task_category:
+                    query = query.filter_by(task_category=task_category)
+                
+                tasks = query.order_by(
+                    HSAITask.priority.desc(),
+                    HSAITask.updated_at.desc()
+                ).limit(limit).offset(offset).all()
+                
+                return [HSAITaskModel.model_validate(task) for task in tasks]
+            except Exception as e:
+                log.exception(f"Error getting tasks by company id: {e}")
+                return []
+
     def list_active_recurring_tasks(
         self,
         limit: int = 100,

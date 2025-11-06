@@ -609,3 +609,7 @@ flowchart TD
     R --> DB[(hsai_materials)]
 ```
 
+
+## 容器化与部署参考
+- 通用 Docker 技术使用方案：docs/docker_tech_general_plan.md
+- 项目 Docker 方案参考（基于本仓库实践）：docs/docker_solution_reference.md
