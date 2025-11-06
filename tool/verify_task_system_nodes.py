@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import select
+from sqlalchemy.exc import ProgrammingError
 
 from task_system_utils import (
     ConfigError,
@@ -34,10 +35,10 @@ class VerificationResult:
 
 
 def _fetch_task_summary(session, user_id: str) -> Dict[str, Any]:
-    from open_webui.models.hsai_tasks import HSAITasks
+    from open_webui.models.hsai_tasks import HSAITask
 
     tasks = list(
-        session.scalars(select(HSAITasks).where(HSAITasks.user_id == user_id))
+        session.scalars(select(HSAITask).where(HSAITask.user_id == user_id))
     )
     summary = {
         "total": len(tasks),
@@ -60,16 +61,16 @@ def _fetch_task_summary(session, user_id: str) -> Dict[str, Any]:
 
 
 def _blueprint_progress_summary(session, user_id: str) -> Dict[str, Any]:
-    from open_webui.models.hsai_projects import HSAIProjects
+    from open_webui.models.hsai_projects import HSAIProject
     from open_webui.models.hsai_blueprint_progress import (
-        HSAIBlueprintProgressTable,
+        HSAIBlueprintProgress,
         HSAIBlueprintProgressHistory,
-        HSAITaskBlueprintLinksTable,
+        HSAITaskBlueprintLink,
     )
 
     projects = list(
         session.scalars(
-            select(HSAIProjects).where(HSAIProjects.user_id == user_id)
+            select(HSAIProject).where(HSAIProject.user_id == user_id)
         )
     )
     project_ids = [proj.id for proj in projects]
@@ -77,8 +78,8 @@ def _blueprint_progress_summary(session, user_id: str) -> Dict[str, Any]:
     if project_ids:
         progress = list(
             session.scalars(
-                select(HSAIBlueprintProgressTable).where(
-                    HSAIBlueprintProgressTable.project_id.in_(project_ids)
+                select(HSAIBlueprintProgress).where(
+                    HSAIBlueprintProgress.project_id.in_(project_ids)
                 )
             )
         )
@@ -96,8 +97,8 @@ def _blueprint_progress_summary(session, user_id: str) -> Dict[str, Any]:
         )
         link_records = list(
             session.scalars(
-                select(HSAITaskBlueprintLinksTable).where(
-                    HSAITaskBlueprintLinksTable.progress_id.in_(progress_ids)
+                select(HSAITaskBlueprintLink).where(
+                    HSAITaskBlueprintLink.progress_id.in_(progress_ids)
                 )
             )
         )
@@ -114,13 +115,22 @@ def _blueprint_progress_summary(session, user_id: str) -> Dict[str, Any]:
 def _outbox_summary(session, user_id: str) -> Dict[str, Any]:
     from open_webui.models.hsai_outbox import HSAIOutboxEvent
 
-    events = list(
-        session.scalars(
-            select(HSAIOutboxEvent).where(
-                HSAIOutboxEvent.payload["user_id"].astext == user_id
+    try:
+        events = list(
+            session.scalars(
+                select(HSAIOutboxEvent)
+                .order_by(HSAIOutboxEvent.created_at.desc())
+                .limit(200)
             )
         )
-    )
+    except ProgrammingError:
+        return {"total": 0, "events": [], "warning": "hsai_outbox_events table missing"}
+    events = [
+        event
+        for event in events
+        if isinstance(event.payload, dict)
+        and str(event.payload.get("user_id")) == str(user_id)
+    ]
     return {
         "total": len(events),
         "events": [

@@ -29,22 +29,22 @@ from task_system_utils import (
 
 def _collect_ids(session, user_id: str) -> Dict[str, list[str]]:
     from open_webui.models.hsai_tasks import (
-        HSAIBlueprintProgressHistory,
-        HSAIBlueprintProgressTable,
-        HSAITaskBlueprintLinksTable,
-        HSAITaskStateLogsTable,
-        HSAITasks,
+        HSAITask,
+        HSAITaskStateLog,
     )
-    from open_webui.models.hsai_projects import HSAIProjects
+    from open_webui.models.hsai_blueprint_progress import (
+        HSAIBlueprintProgress,
+        HSAIBlueprintProgressHistory,
+        HSAITaskBlueprintLink,
+    )
+    from open_webui.models.hsai_projects import HSAIProject
 
     task_ids = list(
-        session.scalars(
-            select(HSAITasks.id).where(HSAITasks.user_id == user_id)
-        )
+        session.scalars(select(HSAITask.id).where(HSAITask.user_id == user_id))
     )
     project_ids = list(
         session.scalars(
-            select(HSAIProjects.id).where(HSAIProjects.user_id == user_id)
+            select(HSAIProject.id).where(HSAIProject.user_id == user_id)
         )
     )
 
@@ -52,8 +52,8 @@ def _collect_ids(session, user_id: str) -> Dict[str, list[str]]:
     if project_ids:
         progress_ids = list(
             session.scalars(
-                select(HSAIBlueprintProgressTable.id).where(
-                    HSAIBlueprintProgressTable.project_id.in_(project_ids)
+                select(HSAIBlueprintProgress.id).where(
+                    HSAIBlueprintProgress.project_id.in_(project_ids)
                 )
             )
         )
@@ -62,8 +62,8 @@ def _collect_ids(session, user_id: str) -> Dict[str, list[str]]:
     if progress_ids:
         link_ids = list(
             session.scalars(
-                select(HSAITaskBlueprintLinksTable.id).where(
-                    HSAITaskBlueprintLinksTable.progress_id.in_(progress_ids)
+                select(HSAITaskBlueprintLink.id).where(
+                    HSAITaskBlueprintLink.progress_id.in_(progress_ids)
                 )
             )
         )
@@ -72,8 +72,8 @@ def _collect_ids(session, user_id: str) -> Dict[str, list[str]]:
     if task_ids:
         log_ids = list(
             session.scalars(
-                select(HSAITaskStateLogsTable.id).where(
-                    HSAITaskStateLogsTable.task_id.in_(task_ids)
+                select(HSAITaskStateLog.id).where(
+                    HSAITaskStateLog.task_id.in_(task_ids)
                 )
             )
         )
@@ -113,14 +113,16 @@ def reset_user_task_data(
     # 延迟导入，确保环境变量已生效
     from open_webui.internal.db import get_db
     from open_webui.models.hsai_tasks import (
-        HSAIBlueprintProgressHistory,
-        HSAIBlueprintProgressTable,
-        HSAITaskBlueprintLinksTable,
-        HSAITaskStateLogsTable,
-        HSAITasks,
+        HSAITask,
+        HSAITaskStateLog,
     )
-    from open_webui.models.hsai_projects import HSAIProjects
-    from open_webui.models.hsai_companies import Companies
+    from open_webui.models.hsai_blueprint_progress import (
+        HSAIBlueprintProgress,
+        HSAIBlueprintProgressHistory,
+        HSAITaskBlueprintLink,
+    )
+    from open_webui.models.hsai_projects import HSAIProject
+    from open_webui.models.hsai_companies import Company
     from open_webui.models.users import User
 
     with get_db() as session:
@@ -131,7 +133,7 @@ def reset_user_task_data(
         ids = _collect_ids(session, user_id)
         companies = list(
             session.scalars(
-                select(Companies.id).where(Companies.owner_user_id == user_id)
+                select(Company.id).where(Company.owner_user_id == user_id)
             )
         )
 
@@ -151,19 +153,19 @@ def reset_user_task_data(
 
         if ids["log_ids"]:
             session.execute(
-                delete(HSAITaskStateLogsTable).where(
-                    HSAITaskStateLogsTable.id.in_(ids["log_ids"])
+                delete(HSAITaskStateLog).where(
+                    HSAITaskStateLog.id.in_(ids["log_ids"])
                 )
             )
         if ids["link_ids"]:
             session.execute(
-                delete(HSAITaskBlueprintLinksTable).where(
-                    HSAITaskBlueprintLinksTable.id.in_(ids["link_ids"])
+                delete(HSAITaskBlueprintLink).where(
+                    HSAITaskBlueprintLink.id.in_(ids["link_ids"])
                 )
             )
         if ids["task_ids"]:
             session.execute(
-                delete(HSAITasks).where(HSAITasks.id.in_(ids["task_ids"]))
+                delete(HSAITask).where(HSAITask.id.in_(ids["task_ids"]))
             )
         if ids["history_ids"]:
             session.execute(
@@ -173,19 +175,19 @@ def reset_user_task_data(
             )
         if ids["progress_ids"]:
             session.execute(
-                delete(HSAIBlueprintProgressTable).where(
-                    HSAIBlueprintProgressTable.id.in_(ids["progress_ids"])
+                delete(HSAIBlueprintProgress).where(
+                    HSAIBlueprintProgress.id.in_(ids["progress_ids"])
                 )
             )
         if ids["project_ids"]:
             session.execute(
-                delete(HSAIProjects).where(
-                    HSAIProjects.id.in_(ids["project_ids"])
+                delete(HSAIProject).where(
+                    HSAIProject.id.in_(ids["project_ids"])
                 )
             )
         if companies:
             session.execute(
-                delete(Companies).where(Companies.id.in_(companies))
+                delete(Company).where(Company.id.in_(companies))
             )
 
         session.execute(

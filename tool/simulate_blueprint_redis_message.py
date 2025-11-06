@@ -32,6 +32,7 @@ def get_redis_connection(
     port: int = 6379,
     db: int = 0,
     password: Optional[str] = None,
+    username: Optional[str] = None,
     decode_responses: bool = True,
 ) -> redis.Redis:
     """根据参数返回 Redis 连接实例，并校验连通性。"""
@@ -40,6 +41,7 @@ def get_redis_connection(
         port=port,
         db=db,
         password=password,
+        username=username,
         decode_responses=decode_responses,
     )
     client.ping()  # 如果连接失败会抛出异常
@@ -110,6 +112,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--port", type=int, default=6379, help="Redis 端口")
     parser.add_argument("--db", type=int, default=0, help="Redis 数据库编号")
     parser.add_argument("--password", help="Redis 密码（可选）")
+    parser.add_argument("--username", help="Redis 用户名（可选）")
     parser.add_argument(
         "--blueprint-json",
         help="自定义蓝图字段（JSON 字符串），会 merge 到默认 payload",
@@ -123,6 +126,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             port=args.port,
             db=args.db,
             password=args.password,
+            username=args.username,
         )
     except Exception as exc:  # pylint: disable=broad-except
         print(f"[错误] 连接 Redis 失败: {exc}")

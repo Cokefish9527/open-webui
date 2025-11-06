@@ -152,7 +152,9 @@ def run_orchestration(
         redis_client = get_redis_connection(
             host=config.redis.host,
             port=config.redis.port,
-            db=0,
+            db=config.redis.db,
+            password=config.redis.password,
+            username=config.redis.username,
         )
         message = generate_blueprint_message(user_id=account.user["id"])
         send_blueprint_message(redis_client, message, queue_name=config.redis.queue)
@@ -242,7 +244,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         dry_run=args.dry_run,
     )
 
-    report_dir = config.report.ensure_report_dir()
+    report_dir = config.ensure_report_dir()
     report_path = _write_report(report_dir, report_payload)
     logger.info("报告已生成: %s", report_path)
     if report_payload["status"] == "passed":

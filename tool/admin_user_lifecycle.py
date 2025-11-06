@@ -122,12 +122,15 @@ def delete_account(
     if company_id:
         company_url = f"{config.admin_auth.base_url}/external/admin/companies/{company_id}"
         resp = sess.delete(company_url, timeout=30)
-        if resp.status_code not in (200, 204):
+        if resp.status_code in (200, 204, 404):
+            if resp.status_code == 404:
+                logger.debug("公司 %s 已不存在", company_id)
+            else:
+                logger.info("已删除公司 %s", company_id)
+        else:
             logger.warning(
                 "删除公司 %s 失败: %s %s", company_id, resp.status_code, resp.text
             )
-        else:
-            logger.info("已删除公司 %s", company_id)
 
 
 def main(argv: Optional[list[str]] = None) -> int:

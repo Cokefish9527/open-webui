@@ -40,12 +40,16 @@ class AdminAuthConfig:
     client_secret: Optional[str] = None
     scope: Optional[str] = None
     token_endpoint: str = "/external/admin/oauth/token"
+    skip_auth: bool = False
 
 
 @dataclass
 class RedisConfig:
     host: str = "localhost"
     port: int = 6379
+    db: int = 0
+    password: Optional[str] = None
+    username: Optional[str] = None
     queue: str = "ai-conversation-agent-message-queue"
 
 
@@ -110,12 +114,16 @@ def load_config(path: Optional[str | os.PathLike[str]] = None) -> TaskSystemConf
         client_secret=admin_section.get("client_secret"),
         scope=admin_section.get("scope"),
         token_endpoint=admin_section.get("token_endpoint", "/external/admin/oauth/token"),
+        skip_auth=bool(admin_section.get("skip_auth", False)),
     )
 
     redis_section = data.get("redis") or {}
     redis_conf = RedisConfig(
         host=redis_section.get("host", "localhost"),
         port=int(redis_section.get("port", 6379)),
+        db=int(redis_section.get("db", 0)),
+        password=redis_section.get("password"),
+        username=redis_section.get("username"),
         queue=redis_section.get("queue", "ai-conversation-agent-message-queue"),
     )
 
@@ -183,6 +191,9 @@ def obtain_admin_bearer_token(
     session: Optional[requests.Session] = None,
 ) -> str:
     """根据配置返回 Admin API Bearer Token。优先使用静态 token。"""
+    if config.admin_auth.skip_auth:
+        raise ConfigError("skip_auth 已启用，无法获取令牌")
+
     if config.admin_auth.token:
         return config.admin_auth.token
 
@@ -221,6 +232,10 @@ def create_admin_session(
 ) -> requests.Session:
     """创建带有 Bearer Token 的 requests.Session。"""
     sess = requests.Session()
+    if config.admin_auth.skip_auth:
+        if logger:
+            logger.debug("admin_api.skip_auth=true，使用无授权头的会话")
+        return sess
     token = obtain_admin_bearer_token(config, logger=logger, session=sess)
     sess.headers.update({"Authorization": f"Bearer {token}"})
     return sess
