@@ -15,10 +15,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+BACKEND_ROOT = PROJECT_ROOT / "backend"
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
 
 from task_system_utils import (
     ConfigError,
@@ -38,6 +47,13 @@ from simulate_blueprint_redis_message import (
     get_redis_connection,
     send_blueprint_message,
 )
+try:  # pragma: no cover
+    import zoneinfo as _zoneinfo  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover
+    import backports.zoneinfo as _zoneinfo  # type: ignore
+    sys.modules.setdefault("zoneinfo", _zoneinfo)
+
+from open_webui.services.blueprint_sync_service import sync_blueprint_for_user
 
 
 def _write_report(report_dir: Path, payload: Dict[str, Any]) -> Path:
@@ -148,7 +164,7 @@ def run_orchestration(
         )
         report_payload["reset_summary"] = reset_summary
 
-        logger.info("发送蓝图触发消息到 Redis")
+        logger.info("发送蓝图触发消息到 Redis 并执行同步")
         redis_client = get_redis_connection(
             host=config.redis.host,
             port=config.redis.port,
@@ -158,6 +174,23 @@ def run_orchestration(
         )
         message = generate_blueprint_message(user_id=account.user["id"])
         send_blueprint_message(redis_client, message, queue_name=config.redis.queue)
+        try:
+            os.environ.setdefault("DATABASE_URL", config.database.dsn or "")
+            os.environ.setdefault(
+                "N8N_DATABASE_URL",
+                os.environ.get("N8N_DATABASE_URL", config.raw.get("db", {}).get("n8n_dsn", "")),
+            )
+            sync_result = sync_blueprint_for_user(message)
+            logger.info(
+                "同步蓝图完成: created=%s updated=%s",
+                len(sync_result.created_tasks),
+                len(sync_result.updated_tasks),
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error("调用蓝图同步服务失败: %s", exc, exc_info=True)
+            report_payload.setdefault("warnings", []).append(
+                f"蓝图同步失败: {exc}"
+            )
         report_payload["blueprint"] = {
             "queue": config.redis.queue,
             "message_id": message["data"]["id"],
