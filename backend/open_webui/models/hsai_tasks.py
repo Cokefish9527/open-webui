@@ -650,6 +650,35 @@ class HSAITasksTable:
                 log.exception(f"Error getting tasks by company id: {e}")
                 return []
 
+    def get_tasks_by_project_id(
+        self,
+        project_id: str,
+        status: Optional[str] = None,
+        task_category: Optional[str] = None,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> List[HSAITaskModel]:
+        with _schema_aware_db() as db:
+            try:
+                query = db.query(HSAITask).filter_by(project_id=project_id)
+                if status:
+                    query = query.filter_by(status=status)
+                if task_category:
+                    query = query.filter_by(task_category=task_category)
+                records = (
+                    query.order_by(
+                        HSAITask.priority.desc(),
+                        HSAITask.updated_at.desc(),
+                    )
+                    .limit(limit)
+                    .offset(offset)
+                    .all()
+                )
+                return [HSAITaskModel.model_validate(record) for record in records]
+            except Exception as exc:  # pylint: disable=broad-except
+                log.exception("Error getting tasks by project id: %s", exc)
+                return []
+
     def list_active_recurring_tasks(
         self,
         limit: int = 100,

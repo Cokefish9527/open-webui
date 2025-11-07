@@ -12,6 +12,11 @@ from open_webui.models.hsai_video_learning_status import (
     HSAIVideoLearningStatuses,
     HSAIVideoLearningStatusEnum,
 )
+from open_webui.models.hsai_business_video_content_learned import (
+    HSAIBusinessVideoContentLearneds,
+    UpdateVideoContentLearnedRequest,
+    HSAIBusinessVideoContentLearnedModel,
+)
 from open_webui.utils.auth import get_verified_user
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
@@ -76,6 +81,14 @@ class StartLearningResponse(BaseModel):
     status_id: Optional[int] = Field(default=None, description="Learning status record id")
 
 
+class UpdateVideoContentLearnedResponse(BaseModel):
+    """Response model for update video content learned action."""
+    
+    success: bool = Field(description="Whether the operation succeeded")
+    message: str = Field(description="Response message")
+    updated_content: Optional[HSAIBusinessVideoContentLearnedModel] = Field(default=None, description="Updated video content")
+
+
 def _normalize_status_filter(value: Optional[str]) -> str:
     valid = {"all", "pending", "learning", "learned", "abandoned"}
     result = (value or "all").lower()
@@ -126,13 +139,11 @@ async def get_pending_videos(
         video_ids = [str(video.id) for video in videos]
         status_map = HSAIVideoLearningStatuses.get_status_map_for_business(business_name, video_ids)
 
-        videos_with_status = [
-            VideoWithStatus(
-                video=video,
-                status=status_map.get(str(video.id)).status if status_map.get(str(video.id)) else "pending",
-            )
-            for video in videos
-        ]
+        videos_with_status = []
+        for video in videos:
+            status_entry = status_map.get(str(video.id))
+            status_value = status_entry.status if status_entry is not None else "pending"
+            videos_with_status.append(VideoWithStatus(video=video, status=status_value))
 
         return PaginatedVideosResponse(
             videos=videos_with_status,
@@ -225,6 +236,60 @@ async def start_video_learning(request: StartLearningRequest, user=Depends(get_v
         raise
     except Exception as exc:
         log.exception("Failed to start video learning: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT(),
+        ) from exc
+
+
+@router.put("/update-video-content", response_model=UpdateVideoContentLearnedResponse, summary="Update video content learned")
+async def update_video_content_learned(request: UpdateVideoContentLearnedRequest, user=Depends(get_verified_user)):
+    """Update the video content learned information."""
+    try:
+        log.info("Update video content learned: id=%s", request.id)
+        
+        # 1. 验证视频学习内容是否存在
+        video_content = HSAIBusinessVideoContentLearneds.get_video_content_by_id(request.id)
+        if not video_content:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Video content not found",
+            )
+        
+        # 2. 验证用户是否有权限修改（通过business_name）
+        business_name = _resolve_business_name(user)
+        if video_content.businessname != business_name:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User does not have permission to modify this video content",
+            )
+        
+        # 3. 准备更新数据
+        update_data = {}
+        if request.videotranscript is not None:
+            update_data["videotranscript"] = request.videotranscript
+        if request.newttscontent is not None:
+            update_data["newttscontent"] = request.newttscontent
+            
+        # 4. 执行更新操作
+        updated_content = HSAIBusinessVideoContentLearneds.update_video_content(request.id, update_data)
+        
+        if not updated_content:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update video content",
+            )
+        
+        return UpdateVideoContentLearnedResponse(
+            success=True,
+            message="Video content updated successfully",
+            updated_content=updated_content,
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.exception("Failed to update video content learned: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT(),

@@ -21,6 +21,8 @@ BLUEPRINT_MAIN_TASK_TEMPLATES: Dict[str, Dict[str, Any]] = {
         "priority": 90,
         "config": {
             "blueprint_section": "social_matrix",
+            "platform": "tiktok",
+            "required_accounts": 3,
             "checklist": [
                 "确认目标平台账号是否齐备",
                 "完成品牌素材与简介配置",
@@ -40,6 +42,8 @@ BLUEPRINT_MAIN_TASK_TEMPLATES: Dict[str, Dict[str, Any]] = {
         "priority": 80,
         "config": {
             "blueprint_section": "materials",
+            "checklist_template_code": "MATERIAL_STD_V1",
+            "required_items": 12,
             "checklist": [
                 "汇总蓝图列出的高优先级素材类型",
                 "补充缺失的模板素材与字幕脚本",
@@ -59,6 +63,8 @@ BLUEPRINT_MAIN_TASK_TEMPLATES: Dict[str, Dict[str, Any]] = {
         "priority": 70,
         "config": {
             "blueprint_section": "video_learning",
+            "script_threshold": 10,
+            "status_whitelist": ["pending", "unused", None],
             "checklist": [
                 "完成指定竞品案例学习打卡",
                 "记录学习笔记与可复用套路",

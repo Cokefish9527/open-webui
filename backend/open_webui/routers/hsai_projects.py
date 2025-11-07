@@ -20,14 +20,15 @@ from open_webui.models.hsai_tasks import (
     HSAITaskResponse,
     HSAITaskStatus,
     HSAIRecurringState,
-    HSAITaskStateLogs
+    HSAITaskStateLogs,
 )
 from open_webui.models.hsai_tasks import HSAITaskModel
 from open_webui.models.hsai_blueprint_progress import (
     HSAIBlueprintProgressTable,
     BlueprintProgressState,
-    HSAITaskBlueprintLinksTable
+    HSAITaskBlueprintLinksTable,
 )
+from open_webui.services.task_template_registry import task_template_registry
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.constants import ERROR_MESSAGES
@@ -86,69 +87,6 @@ class ProjectSummaryResponse(BaseModel):
     recent_logs: List[RecurringLogEntry]
     blueprint_links: List[Dict[str, Any]]
 
-
-# 项目模板定义
-PROJECT_MAIN_TASK_TEMPLATES = {
-    "company_info": {
-        "title": "完善企业信息",
-        "description": "收集公司名称、行业、规模等基础资料，用于后续工作流初始化。",
-        "task_type": "workflow_execution",
-        "task_category": "main",
-        "workflow_type": "company_info",
-        "priority": 10,
-        "prompt_config": {
-            "system_prompt": "You are an onboarding assistant. Guide the user to provide the company's basic profile.",
-            "initial_message": "您好！为了后续更好地推进项目，请先补充企业的基础信息。",
-            "guidance_questions": [
-                "公司的全称是什么？",
-                "主营行业属于哪一类？",
-                "目前团队大约有多少人？",
-                "公司成立于哪一年？"
-            ],
-            "completion_criteria": "用户提供了公司名称、行业、规模与成立年份等基础信息。",
-            "success_message": "感谢提供企业资料，我们已完成记录。"
-        }
-    },
-    "project_info": {
-        "title": "完善项目信息",
-        "description": "明确项目目标、交付物、关键时间节点与依赖，为后续执行提供依据。",
-        "task_type": "workflow_execution",
-        "task_category": "main",
-        "workflow_type": "project_info",
-        "priority": 9,
-        "prompt_config": {
-            "system_prompt": "You are a project intake assistant. Collect the key information required to launch this initiative.",
-            "initial_message": "为了明确项目目标与排期，请帮助我们确认项目的核心信息。",
-            "guidance_questions": [
-                "本项目希望达到的主要目标是什么？",
-                "预期产出或交付物有哪些？",
-                "计划的启动时间与结束时间分别是？",
-                "当前是否存在需要重点关注的风险或依赖？"
-            ],
-            "completion_criteria": "用户补充了项目目标、产出、时间计划与关键风险。",
-            "success_message": "感谢提供项目信息，我们会据此安排后续工作。"
-        }
-    },
-    "material_init": {
-        "title": "素材库初始化",
-        "description": "收集图片、视频、文档等关键素材，建立项目专属资源库。",
-        "task_type": "material_processing",
-        "task_category": "main",
-        "workflow_type": "material_init",
-        "priority": 8,
-        "prompt_config": {
-            "system_prompt": "You are a content librarian. Help the user initialise the asset library required for this project.",
-            "initial_message": "我们需要收集项目相关的素材，请根据提示上传现有内容。",
-            "guidance_questions": [
-                "请上传与项目相关的图片或品牌视觉素材。",
-                "如果有既定的视频素材，请一并提供。",
-                "补充能够说明项目背景的文档、方案或案例。"
-            ],
-            "completion_criteria": "用户已经完成图片、视频及文档等核心素材的首次上传。",
-            "success_message": "素材库初始化完成，后续可随时追加或更新。"
-        }
-    }
-}
 
 @router.get("/", response_model=PaginatedHSAIProjectResponse, summary="获取项目列表")
 async def get_projects(
@@ -238,23 +176,39 @@ async def create_project(
         
         # 创建主线任务
         main_tasks = []
-        for template_key, template in PROJECT_MAIN_TASK_TEMPLATES.items():
+        try:
+            seed_templates = list(task_template_registry.iter_project_seed_templates())
+        except Exception as registry_exc:  # pylint: disable=broad-except
+            log.error("Failed to load project seed templates: %s", registry_exc)
+            seed_templates = []
+
+        for template in seed_templates:
+            task_config = dict(template.config or {})
+            task_config.setdefault("template_key", template.key)
+            task_config.setdefault("seed_default_project", True)
+
             task_form = HSAITaskForm(
-                title=template["title"],
-                description=template["description"],
-                task_type=template["task_type"],
-                task_category=template["task_category"],
+                title=template.title,
+                description=template.description,
+                task_type=template.task_type,
+                task_category=template.task_category or "main",
                 project_id=project.id,
-                priority=template["priority"],
-                prompt_config=template["prompt_config"]
+                priority=template.priority,
+                config=task_config,
+                prompt_config=template.prompt_config,
             )
-            
+
             task = HSAITasks.insert_new_task(user.id, task_form)
             if task:
                 main_tasks.append(task)
-        
-        log.info(f"Created {len(main_tasks)} main tasks for project {project.id}")
-        
+
+        log.info(
+            "Created %s main tasks for project %s via template source=%s",
+            len(main_tasks),
+            project.id,
+            task_template_registry.source,
+        )
+
         return HSAIProjectResponse(**project.model_dump())
         
     except HTTPException:

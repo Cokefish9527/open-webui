@@ -6,7 +6,10 @@
 import asyncio
 import json
 import logging
-from typing import Dict, Any, Optional
+import os
+import time
+from collections import deque
+from typing import Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from open_webui.env import SRC_LOG_LEVELS, REDIS_URL
@@ -19,11 +22,21 @@ from open_webui.services.blueprint_sync_service import (
     sync_blueprint_for_user,
     BlueprintSyncResult,
 )
+from open_webui.services.task_template_registry import task_template_registry
 
 # 配置日志
 log = logging.getLogger(__name__)
 # 强制设置日志级别为DEBUG，便于调试
 log.setLevel(logging.DEBUG)
+
+BLUEPRINT_SYNC_DEBOUNCE_SECONDS = int(os.environ.get("BLUEPRINT_SYNC_DEBOUNCE_SECONDS", "20"))
+BLUEPRINT_SYNC_TOKEN_TTL_SECONDS = int(os.environ.get("BLUEPRINT_SYNC_TOKEN_TTL_SECONDS", "300"))
+BLUEPRINT_SYNC_TOKEN_CACHE_SIZE = int(os.environ.get("BLUEPRINT_SYNC_TOKEN_CACHE_SIZE", "256"))
+
+_RECENT_BLUEPRINT_SYNC_TS: Dict[str, float] = {}
+_RECENT_BLUEPRINT_TOKENS: Dict[str, float] = {}
+_RECENT_BLUEPRINT_TOKEN_QUEUE: deque = deque()
+_BLUEPRINT_LOCKS: Dict[str, asyncio.Lock] = {}
 
 
 def get_redis_client():
@@ -63,12 +76,32 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
 
         blueprint_sync_result: Optional[BlueprintSyncResult] = None
         if content_type == "blue_image_content" and status == "FINISHED" and user_id:
-            try:
-                blueprint_sync_result = sync_blueprint_for_user(message)
-                for log_line in blueprint_sync_result.logs:
-                    log.info("[BlueprintSync] %s", log_line)
-            except Exception as sync_exc:
-                log.error("战略蓝图同步失败: %s", sync_exc, exc_info=True)
+            dedupe_token = _extract_blueprint_token(message)
+            should_skip, skip_reason = _should_skip_blueprint_sync(user_id, dedupe_token)
+            if should_skip:
+                log.info(
+                    "[BlueprintSync] 跳过 user_id=%s reason=%s token=%s",
+                    user_id,
+                    skip_reason,
+                    dedupe_token,
+                )
+            else:
+                lock = _get_blueprint_lock(user_id)
+                async with lock:
+                    should_skip, skip_reason = _should_skip_blueprint_sync(user_id, dedupe_token)
+                    if should_skip:
+                        log.info(
+                            "[BlueprintSync] 跳过 user_id=%s reason=%s token=%s",
+                            user_id,
+                            skip_reason,
+                            dedupe_token,
+                        )
+                    else:
+                        blueprint_sync_result = await _run_blueprint_sync(
+                            message,
+                            user_id=user_id,
+                            dedupe_token=dedupe_token,
+                        )
         
         # 检查是否是信息收集完成的消息 (blue_image类型且状态为FINISHED)
         if content_type == "blue_image" and status == "FINISHED" and user_id:
@@ -277,10 +310,100 @@ def _find_socket_by_user_id(user_id: str, USER_POOL, SESSION_POOL) -> Optional[s
                     
         log.debug(f"未找到user_id {user_id} 对应的Socket.IO连接")
         return None
-        
+
     except Exception as e:
         log.error(f"通过user_id查找Socket.IO连接时发生错误: {e}", exc_info=True)
         return None
+
+
+def _extract_blueprint_token(message: Dict[str, Any]) -> Optional[str]:
+    for key in (
+        "blueprint_message_id",
+        "message_id",
+        "reply_id",
+        "operate_id",
+        "request_id",
+        "id",
+    ):
+        value = message.get(key)
+        if value:
+            return f"{key}:{value}"
+    session_id = message.get("session_id")
+    status = message.get("status")
+    if session_id:
+        return f"session:{session_id}:{status}"
+    return None
+
+
+def _should_skip_blueprint_sync(user_id: str, token: Optional[str]) -> Tuple[bool, str]:
+    now = time.time()
+    last_ts = _RECENT_BLUEPRINT_SYNC_TS.get(user_id)
+    if last_ts and now - last_ts < BLUEPRINT_SYNC_DEBOUNCE_SECONDS:
+        return True, f"debounce<{BLUEPRINT_SYNC_DEBOUNCE_SECONDS}s"
+    if token:
+        token_ts = _RECENT_BLUEPRINT_TOKENS.get(token)
+        if token_ts and now - token_ts < BLUEPRINT_SYNC_TOKEN_TTL_SECONDS:
+            return True, "duplicate_token"
+    return False, ""
+
+
+def _mark_blueprint_sync(user_id: str, token: Optional[str]) -> None:
+    now = time.time()
+    _RECENT_BLUEPRINT_SYNC_TS[user_id] = now
+    if not token:
+        return
+    _RECENT_BLUEPRINT_TOKENS[token] = now
+    _RECENT_BLUEPRINT_TOKEN_QUEUE.append((token, now))
+    while len(_RECENT_BLUEPRINT_TOKEN_QUEUE) > BLUEPRINT_SYNC_TOKEN_CACHE_SIZE:
+        old_token, _ = _RECENT_BLUEPRINT_TOKEN_QUEUE.popleft()
+        _RECENT_BLUEPRINT_TOKENS.pop(old_token, None)
+    while _RECENT_BLUEPRINT_TOKEN_QUEUE:
+        old_token, ts = _RECENT_BLUEPRINT_TOKEN_QUEUE[0]
+        if now - ts <= BLUEPRINT_SYNC_TOKEN_TTL_SECONDS:
+            break
+        _RECENT_BLUEPRINT_TOKEN_QUEUE.popleft()
+        _RECENT_BLUEPRINT_TOKENS.pop(old_token, None)
+
+
+def _get_blueprint_lock(user_id: str) -> asyncio.Lock:
+    lock = _BLUEPRINT_LOCKS.get(user_id)
+    if lock is None:
+        lock = asyncio.Lock()
+        _BLUEPRINT_LOCKS[user_id] = lock
+    return lock
+
+
+async def _run_blueprint_sync(
+    message: Dict[str, Any],
+    user_id: str,
+    dedupe_token: Optional[str],
+) -> Optional[BlueprintSyncResult]:
+    try:
+        task_template_registry.refresh(force=False)
+    except Exception as refresh_exc:  # pylint: disable=broad-except
+        log.warning("刷新任务模板缓存失败，将继续使用现有缓存: %s", refresh_exc)
+
+    start_ts = time.perf_counter()
+    try:
+        result = await asyncio.to_thread(sync_blueprint_for_user, message)
+    except Exception as sync_exc:
+        log.error("战略蓝图同步失败 user_id=%s: %s", user_id, sync_exc, exc_info=True)
+        return None
+
+    duration = time.perf_counter() - start_ts
+    for log_line in result.logs:
+        log.info("[BlueprintSync] %s", log_line)
+    log.info(
+        "[BlueprintSync] success user_id=%s template_source=%s created=%s updated=%s subtasks=%s duration=%.2fs",
+        user_id,
+        task_template_registry.source,
+        len(result.created_tasks),
+        len(result.updated_tasks),
+        len(result.generated_subtasks),
+        duration,
+    )
+    _mark_blueprint_sync(user_id, dedupe_token)
+    return result
 
 
 def register_conversation_queue_handler(redis_queue_listener) -> None:

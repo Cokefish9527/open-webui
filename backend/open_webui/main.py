@@ -540,6 +540,13 @@ async def lifespan(app: FastAPI):
     log.info("Installing external dependencies of functions and tools...")
     install_tool_and_function_dependencies()
 
+    try:
+        from open_webui.services.task_template_registry import task_template_registry
+
+        task_template_registry.refresh(force=True)
+    except Exception as exc:  # pylint: disable=broad-except
+        log.error("Initial task template registry refresh failed: %s", exc)
+
     app.state.redis = get_redis_connection(
         redis_url=REDIS_URL,
         redis_sentinels=get_sentinels_from_env(

@@ -17,10 +17,6 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import text
 from zoneinfo import ZoneInfo
 
-from open_webui.config.blueprint_task_templates import (
-    BLUEPRINT_MAIN_TASK_TEMPLATES,
-    get_template,
-)
 from open_webui.internal.db_n8n import get_n8n_db
 from open_webui.models.hsai_blueprint_progress import (
     BlueprintProgressState,
@@ -40,9 +36,17 @@ from open_webui.models.hsai_tasks import (
     HSAITaskStateLogs,
 )
 from open_webui.services.onboarding_orchestrator import ensure_company_project_and_main_tasks
+from open_webui.services.task_completion_service import evaluate_project_tasks
+from open_webui.services.task_template_registry import (
+    TaskTemplate,
+    get_task_template,
+    task_template_registry,
+)
 from open_webui.socket.hsai_events import HSAI_WEBSOCKET_EVENTS
 
 log = logging.getLogger(__name__)
+
+COMPANY_INFO_TEMPLATE_KEY = "company_info_collection"
 
 
 @dataclass
@@ -67,20 +71,20 @@ def _fetch_latest_blueprint_from_n8n() -> Optional[Dict[str, Any]]:
             """
             SELECT
                 id,
-                "blueprintVersion",
-                "executionDurationDays",
-                "plannedTotalPosts",
-                "postingFrequency",
-                "requiredTiktokAccounts",
+                blueprintversion AS "blueprintVersion",
+                executiondurationdays AS "executionDurationDays",
+                plannedtotalposts AS "plannedTotalPosts",
+                postingfrequency AS "postingFrequency",
+                requiredtiktokaccounts AS "requiredTiktokAccounts",
                 session_id,
                 request_id,
                 user_id,
                 socket_id,
                 blue_image,
-                "createdAt",
-                "updatedAt"
+                createdat AS "createdAt",
+                updatedat AS "updatedAt"
             FROM hsai_extraction_blueprint
-            ORDER BY "createdAt" DESC
+            ORDER BY createdat DESC
             LIMIT 1
             """
         )
@@ -116,7 +120,10 @@ def _derive_daily_cycle_config(
     blueprint_row: Dict[str, Any],
     existing_config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    base_window = get_template("daily_publish_cycle").get("config", {}).get("default_window", {})
+    cycle_template = get_task_template("daily_publish_cycle")
+    base_window = {}
+    if cycle_template:
+        base_window = (cycle_template.config or {}).get("default_window", {})
     frequency_text = blueprint_row.get("postingFrequency") or "1条/天"
 
     occurrences_per_day = 1
@@ -170,7 +177,7 @@ def _build_progress_payload(
 
 def _create_or_update_task_from_template(
     template_key: str,
-    template: Dict[str, Any],
+    template: TaskTemplate,
     user_id: str,
     project_id: str,
     link: Optional[HSAITaskBlueprintLinkModel],
@@ -178,7 +185,7 @@ def _create_or_update_task_from_template(
     progress_id: str,
 ) -> Tuple[Optional[HSAITaskModel], Optional[HSAITaskModel]]:
     """Return (created_task, updated_task)."""
-    config = template.get("config", {}).copy()
+    config = dict(template.config or {})
     config.setdefault("blueprint_version", blueprint_version)
     config.setdefault("template_key", template_key)
     config.setdefault("progress_id", progress_id)
@@ -192,11 +199,11 @@ def _create_or_update_task_from_template(
         else:
             needs_update = False
             update_payload: Dict[str, Any] = {}
-            if existing_task.title != template["title"]:
-                update_payload["title"] = template["title"]
+            if existing_task.title != template.title:
+                update_payload["title"] = template.title
                 needs_update = True
-            if template.get("description") and existing_task.description != template["description"]:
-                update_payload["description"] = template["description"]
+            if template.description and existing_task.description != template.description:
+                update_payload["description"] = template.description
                 needs_update = True
             merged_config = existing_task.config or {}
             merged = {**merged_config, **config}
@@ -225,19 +232,55 @@ def _create_or_update_task_from_template(
             return (None, None)
 
     form = HSAITaskForm(
-        title=template["title"],
-        description=template.get("description"),
-        task_type=template["task_type"],
-        task_category=template.get("task_category"),
+        title=template.title,
+        description=template.description,
+        task_type=template.task_type,
+        task_category=template.task_category,
         project_id=project_id,
         config=config,
-        prompt_config=template.get("prompt_config"),
-        priority=int(template.get("priority") or 0),
+        prompt_config=template.prompt_config,
+        priority=int(template.priority or 0),
         is_recurring=is_recurring,
         recurring_state=HSAIRecurringState.IDLE.value if is_recurring else None,
     )
     created = HSAITasks.insert_new_task(user_id, form)
     return (created, None)
+
+
+def _complete_company_info_task(project_id: str, user_id: str) -> Optional[HSAITaskModel]:
+    if not COMPANY_INFO_TEMPLATE_KEY:
+        return None
+    tasks = HSAITasks.get_tasks_by_user_id(
+        user_id=user_id,
+        project_id=project_id,
+        limit=50,
+    )
+    for task in tasks:
+        config = task.config or {}
+        if config.get("template_key") != COMPANY_INFO_TEMPLATE_KEY:
+            continue
+        if task.status == HSAITaskStatus.COMPLETED.value:
+            return None
+        updated = HSAITasks.update_task_by_id(
+            task.id,
+            HSAITaskUpdateForm(status=HSAITaskStatus.COMPLETED.value),
+        )
+        if updated:
+            try:
+                HSAITaskStateLogs.append_log(
+                    task_id=updated.id,
+                    from_state=task.status,
+                    to_state=HSAITaskStatus.COMPLETED.value,
+                    operator_id=user_id,
+                    operator_name=None,
+                    source="blueprint_sync",
+                    message="蓝图同步完成，企业信息收集任务自动完成",
+                    snapshot_json={"auto_completed": True},
+                )
+            except Exception as exc:  # pylint: disable=broad-except
+                log.warning("Failed to append info collection task log: %s", exc)
+        return updated or task
+    return None
 
 
 def _sync_task_links(
@@ -247,7 +290,14 @@ def _sync_task_links(
     created: List[HSAITaskModel] = []
     updated: List[HSAITaskModel] = []
 
-    for template_key, template in BLUEPRINT_MAIN_TASK_TEMPLATES.items():
+    try:
+        blueprint_templates = list(task_template_registry.iter_blueprint_templates())
+    except Exception as registry_exc:  # pylint: disable=broad-except
+        log.error("Failed to load blueprint task templates: %s", registry_exc)
+        blueprint_templates = []
+
+    for template in blueprint_templates:
+        template_key = template.key
         link = None
         links = HSAITaskBlueprintLinksTable.get_by_progress(progress.id, template_key=template_key)
         if links:
@@ -307,7 +357,9 @@ def _all_prerequisites_completed(
     user_id: str,
     project_id: str,
 ) -> bool:
-    prerequisite_keys = get_template("daily_publish_cycle").get("config", {}).get("dependencies", [])
+    cycle_template = get_task_template("daily_publish_cycle")
+    config = cycle_template.config if cycle_template else {}
+    prerequisite_keys = (config or {}).get("dependencies", [])
     if not prerequisite_keys:
         return True
     links = HSAITaskBlueprintLinksTable.get_by_progress(progress_id)
@@ -493,5 +545,17 @@ def sync_blueprint_for_user(
             },
         )
     )
+
+    info_task = _complete_company_info_task(project_id=project_id, user_id=user_id)
+    if info_task:
+        result.updated_tasks.append(info_task)
+        result.logs.append("企业信息收集任务已在蓝图同步后标记为完成")
+
+    try:
+        evaluations = evaluate_project_tasks(project_id=project_id, user_id=user_id)
+        for summary in evaluations:
+            result.logs.append(f"任务评估: {summary}")
+    except Exception as exc:  # pylint: disable=broad-except
+        log.error("任务评估失败 project=%s: %s", project_id, exc, exc_info=True)
 
     return result

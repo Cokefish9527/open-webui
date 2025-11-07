@@ -134,7 +134,7 @@ class HSAITaskBlueprintLinkModel(BaseModel):
     progress_id: str
     task_id: str
     template_key: str
-    link_metadata: Optional[Dict[str, Any]] = Field(default=None, alias="metadata")
+    link_metadata: Optional[Dict[str, Any]] = None
     created_at: int
     updated_at: int
 

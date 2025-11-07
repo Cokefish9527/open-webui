@@ -613,3 +613,34 @@ flowchart TD
 ## 容器化与部署参考
 - 通用 Docker 技术使用方案：docs/docker_tech_general_plan.md
 - 项目 Docker 方案参考（基于本仓库实践）：docs/docker_solution_reference.md
+## 任务系统自动化测试（2025-11-07）
+
+- **覆盖范围**：`tool/orchestrate_task_system_auto_test.py` 自动执行“账号初始化 → 数据回滚 → Redis 蓝图注入 → 服务端同步 → 数据校验 → 报告输出”，最新报告 `reports/task_system_auto_test_report_20251107_070656.md` 显示 PASS（7 条主线任务 + 1 条蓝图进度 + Outbox outbox_summary=1）。
+- **关键修复**：
+  - `backend/open_webui/services/blueprint_sync_service.py` 兼容 n8n 表字段并在自动化流程中直接调用 `sync_blueprint_for_user`，避免依赖外部监听进程。
+  - `backend/open_webui/models/hsai_blueprint_progress.py` 去除 `metadata` alias，防止 Pydantic 将 SQLAlchemy `MetaData()` 解析为 JSON。
+  - PostgreSQL 结构补齐：`hsai_idempotent_operations`、`hsai_outbox_events`、`hsai_blueprint_progress`、`hsai_task_blueprint_links` 表初始化；`hsai_task_state_logs.created_at` 调整为 `timestamptz`；`hsai_tasks.retry_count` 设为默认 0 且非空。
+- **复盘记录**：`docs/task_system_auto_test_log.md` 追加 2025-11-07T07:06:46Z 通过日志，后续回归请先更新配置再执行脚本。
+## 任务模板治理与缓存（2025-11-07）
+- **数据源**：新增 `ADMIN_DATABASE_URL / ADMIN_DATABASE_SCHEMA`，默认指向 Owen_admin；模板读取使用 `backend/open_webui/internal/db_admin.py`。
+- **注册中心**：`backend/open_webui/services/task_template_registry.py` 提供蓝图/项目模板枚举，具备 30s 内存缓存与本地 fallback；`main.py` 生命周期启动时强制刷新。
+- **同步脚本**：
+  ```bash
+  python tool/sync_admin_task_templates.py --dry-run
+  python tool/sync_admin_task_templates.py
+  ```
+- **治理计划**：详见 `docs/task_system_enhancement_plan.md`，四阶段任务（模板、链路、校验、文档）通过表格打勾追踪。
+
+## 蓝图任务自动完成规则（2025-11-07）
+`backend/open_webui/services/task_completion_service.py` 会在蓝图同步后调用，按模板 key 自动更新任务状态并写入 `progress_metrics`：
+
+| 模板 Key | 判定条件 | 数据源 / 统计 | 结果 |
+| --- | --- | --- | --- |
+| `social_matrix_setup` | 活跃账号数 ≥ `required_accounts`（默认 3 或蓝图 `requiredTiktokAccounts`） | Owen_ai.`social_accounts` | 自动完成并记录 platform / active_accounts / required_accounts |
+| `material_enrichment` | 素材数量 ≥ 清单模板 `required_items`（默认 12） | Owen_ai.`hsai_materials` + Owen_admin.`checklist_templates` | 记录素材总数及类型分布，达标即完成 |
+| `video_learning` | 未使用脚本数 ≥ `script_threshold`（默认 10） | n8n_workflow.`hsai_business_video_content_learned` | 记录 business_name / available_scripts / threshold |
+
+## 蓝图消息防抖与可观测性
+- `backend/open_webui/utils/conversation_queue_handler.py` 增加 Debounce（`BLUEPRINT_SYNC_DEBOUNCE_SECONDS`，默认 20s）、Token TTL（`BLUEPRINT_SYNC_TOKEN_TTL_SECONDS`，默认 300s）与 per-user Lock，避免重复同步。
+- 同步结果统一输出 `[BlueprintSync] template_source=… created=… updated=… duration=…`，以及跳过原因（debounce / duplicate_token）。
+- 所有日志可通过 `BlueprintSyncResult.logs` 及 Socket 事件回显，便于排查蓝图耗时与任务生成情况。

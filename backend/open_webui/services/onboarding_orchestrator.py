@@ -27,6 +27,7 @@ from open_webui.models.hsai_idempotent_ops import (
     HSAIIdempotentOperation,
     OperationStatus,
 )
+from open_webui.services.task_template_registry import task_template_registry
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS.get("MAIN", "INFO"))
@@ -142,11 +143,6 @@ def ensure_company_project_and_main_tasks(user_id: str) -> Dict[str, Any]:
                 db.add(project)
                 summary["created_project"] = True
 
-            try:
-                from open_webui.routers.hsai_projects import PROJECT_MAIN_TASK_TEMPLATES
-            except Exception:  # pylint: disable=broad-except
-                PROJECT_MAIN_TASK_TEMPLATES = {}
-
             existing_titles = {
                 row[0]
                 for row in db.query(HSAITask.title).filter_by(
@@ -155,24 +151,34 @@ def ensure_company_project_and_main_tasks(user_id: str) -> Dict[str, Any]:
                 )
             }
             seeded_titles = []
-            for template_key, tmpl in (PROJECT_MAIN_TASK_TEMPLATES or {}).items():
-                title = tmpl.get("title")
+            try:
+                seed_templates = list(task_template_registry.iter_project_seed_templates())
+            except Exception as registry_exc:  # pylint: disable=broad-except
+                log.error("Failed to load project seed templates: %s", registry_exc)
+                seed_templates = []
+
+            for template in seed_templates:
+                title = template.title
                 if not title or title in existing_titles:
                     continue
-                is_recurring = bool((tmpl.get("config") or {}).get("recurring"))
+                is_recurring = bool((template.config or {}).get("recurring"))
+                task_config = dict(template.config or {})
+                task_config.setdefault("template_key", template.key)
+                task_config.setdefault("seed_default_project", True)
+
                 task = HSAITask(
                     id=str(uuid.uuid4()),
                     title=title,
-                    description=tmpl.get("description"),
-                    task_type=tmpl.get("task_type") or "workflow_execution",
-                    task_category=tmpl.get("task_category") or "main",
+                    description=template.description,
+                    task_type=template.task_type or "workflow_execution",
+                    task_category=template.task_category or "main",
                     status=HSAITaskStatus.PENDING.value,
                     user_id=user_id,
                     assignee_id=None,
                     chat_id=None,
                     project_id=project.id,
-                    config=tmpl.get("config"),
-                    prompt_config=tmpl.get("prompt_config") or {},
+                    config=task_config,
+                    prompt_config=template.prompt_config or {},
                     is_recurring=is_recurring,
                     recurring_state=HSAIRecurringState.IDLE.value if is_recurring else None,
                     last_run_at=None,
@@ -181,14 +187,14 @@ def ensure_company_project_and_main_tasks(user_id: str) -> Dict[str, Any]:
                     recurring_meta=None,
                     workflow_id=None,
                     parent_task_id=None,
-                    priority=int(tmpl.get("priority") or 0),
+                    priority=int(template.priority or 0),
                     created_at=now_ts,
                     updated_at=now_ts,
                 )
                 db.add(task)
                 existing_titles.add(title)
                 seeded_titles.append(title)
-                log.debug("主线任务补种 success title=%s template_key=%s", title, template_key)
+                log.debug("主线任务补种 success title=%s template_key=%s", title, template.key)
 
             summary["seeded_main_tasks"].extend(seeded_titles)
 
@@ -249,4 +255,3 @@ def ensure_company_project_and_main_tasks(user_id: str) -> Dict[str, Any]:
                 log.error("Failed to persist idempotent operation failure: %s", inner_exc, exc_info=True)
 
     return summary
-
