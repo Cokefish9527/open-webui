@@ -6,7 +6,7 @@ import zipfile
 import tempfile
 import os
 import logging
-from typing import Optional, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 from datetime import datetime
 
@@ -31,6 +31,10 @@ from open_webui.models.hsai_materials import (
     PaginatedHSAIMaterialResponse
 )
 from open_webui.internal.db import get_db
+from open_webui.services.material_checklist_service import (
+    ChecklistTreeNode,
+    material_checklist_service,
+)
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.utils.access_control import has_permission
@@ -64,6 +68,120 @@ os.makedirs(LOCAL_STORAGE_PATH, exist_ok=True)
 
 DEFAULT_COMPANY_SEGMENT = "default-company"
 DEFAULT_USER_SEGMENT = "unknown-user"
+
+
+def _convert_checklist_node_to_response(
+    node: ChecklistTreeNode,
+    parent_id: Optional[str] = None,
+    parent_name: Optional[str] = None,
+) -> HSAIMaterialFolderResponse:
+    timestamp = int(time.time())
+    children = (
+        [
+            _convert_checklist_node_to_response(child, node.id, node.name)
+            for child in (node.children or [])
+        ]
+        if node.children
+        else []
+    )
+
+    return HSAIMaterialFolderResponse(
+        id=node.id,
+        name=node.name,
+        label=node.name,
+        description=node.description,
+        parent_id=parent_id,
+        parent_name=parent_name,
+        sort_order=0,
+        material_count=node.material_count,
+        children=children,
+        node_type=node.node_type,
+        template_id=node.template_id,
+        template_code=node.template_code,
+        scene_id=node.scene_id,
+        scene_code=node.scene_code,
+        item_id=node.item_id,
+        item_code=node.item_code,
+        is_required=node.is_required,
+        shot_sizes=node.shot_sizes,
+        camera_movements=node.camera_movements,
+        duration_min=node.duration_min,
+        duration_max=node.duration_max,
+        min_resolution=node.min_resolution,
+        priority=node.priority,
+        shooting_tips=node.shooting_tips,
+        quality_standards=node.quality_standards,
+        reference_video=node.reference_video,
+        reference_image=node.reference_image,
+        created_at=timestamp,
+        updated_at=timestamp,
+    )
+
+
+def _filter_folder_responses(
+    nodes: List[HSAIMaterialFolderResponse], query_lower: str
+) -> List[HSAIMaterialFolderResponse]:
+    filtered: List[HSAIMaterialFolderResponse] = []
+    for node in nodes:
+        children = _filter_folder_responses(node.children or [], query_lower)
+        match = False
+        if node.name and query_lower in node.name.lower():
+            match = True
+        elif node.description and query_lower in node.description.lower():
+            match = True
+
+        if match or children:
+            node.children = children
+            filtered.append(node)
+    return filtered
+
+
+def _collect_scene_codes(node: ChecklistTreeNode) -> List[str]:
+    codes: List[str] = []
+    if node.scene_code:
+        codes.append(node.scene_code)
+    for child in node.children or []:
+        codes.extend(_collect_scene_codes(child))
+    return list({code for code in codes if code})
+
+
+def _resolve_folder_context(
+    user,
+    folder_id: Optional[str],
+) -> Tuple[Optional[str], Optional[ChecklistTreeNode]]:
+    if not folder_id or ":" not in folder_id:
+        return folder_id, None
+    node = material_checklist_service.get_node(user, folder_id)
+    if not node:
+        return folder_id, None
+    return None, node
+
+
+def _extract_codes_from_node(
+    node: Optional[ChecklistTreeNode],
+    scene_code: Optional[str],
+    item_code: Optional[str],
+) -> Tuple[Optional[str], Optional[str], Optional[List[str]]]:
+    if not node:
+        return scene_code, item_code, None
+
+    if node.node_type == "item":
+        return scene_code or node.scene_code, item_code or node.item_code, None
+    if node.node_type == "scene":
+        return scene_code or node.scene_code, item_code, None
+    if node.node_type == "template":
+        codes = _collect_scene_codes(node)
+        return scene_code, item_code, codes or None
+    return scene_code, item_code, None
+
+
+def _count_tree_nodes(nodes: List[ChecklistTreeNode]) -> int:
+    total = 0
+    for node in nodes:
+        total += 1
+        if node.children:
+            total += _count_tree_nodes(node.children)
+    return total
 
 
 def _is_oss_mode() -> bool:
@@ -474,101 +592,29 @@ async def get_material_folders(
     user=Depends(get_verified_user)
 ):
     """
-    获取用户的素材文件夹树形结构，包含子文件夹和素材数量统计。
-    
-    Args:
-        query (str, optional): 搜索关键词，用于按文件夹名称进行模糊搜索
-        user: 已认证的用户对象
-        
-    Returns:
-        List[HSAIMaterialFolderResponse]: 文件夹树形结构列表
+    获取用户的素材清单树（模板 → 场景 → 拍摄项目）。
+    可通过 query 关键词对名称/描述进行过滤。
     """
     try:
-        folders = HSAIMaterialFolders.get_folders_by_user_id(user.id)
-        
-        # 如果有搜索关键词，进行过滤
+        checklist_tree = material_checklist_service.get_tree_for_user(user)
+        responses = [
+            _convert_checklist_node_to_response(node)
+            for node in checklist_tree
+        ]
+
         if query:
-            query_lower = query.lower()
-            filtered_folders = []
-            for folder in folders:
-                if query_lower in folder.name.lower() or (folder.description and query_lower in folder.description.lower()):
-                    filtered_folders.append(folder)
-            folders = filtered_folders
-        
-        # 构建树形结构
-        folder_dict = {folder.id: folder for folder in folders}
-        response_dict = {}  # 用于存储HSAIMaterialFolderResponse对象
-        root_folders = []
-        
-        # 调试信息
-        log.info(f"Building folder tree for user {user.id}: {len(folders)} total folders")
-        root_count = sum(1 for f in folders if f.parent_id is None)
-        child_count = sum(1 for f in folders if f.parent_id is not None)
-        log.info(f"Raw data: {root_count} root folders, {child_count} child folders")
-        
-        # 第一轮：创建所有的response对象
-        for folder in folders:
-            folder_response = HSAIMaterialFolderResponse(
-                **folder.model_dump(),
-                label=folder.name,  # 为label字段赋与name字段相同的值
-                children=[],
-                material_count=0,  # 后续可以优化为实际统计
-                parent_name=None  # 初始化父文件夹名称为None
-            )
-            response_dict[folder.id] = folder_response
-            
-            if folder.parent_id is None:
-                root_folders.append(folder_response)
-        
-        # 第二轮：建立父子关系，并设置父文件夹名称
-        children_added = 0
-        for folder in folders:
-            if folder.parent_id is not None:
-                parent_response = response_dict.get(folder.parent_id)
-                child_response = response_dict.get(folder.id)
-                if parent_response and child_response:
-                    parent_response.children.append(child_response)
-                    # 设置子文件夹的父文件夹名称
-                    child_response.parent_name = parent_response.name
-                    children_added += 1
-                elif not parent_response:
-                    log.warning(f"Parent not found for folder {folder.name} (ID: {folder.id}), parent_id: {folder.parent_id}")
-        
-        log.info(f"Tree building complete: {len(root_folders)} root responses, {children_added} children added")
-        
-        # 统计有子目录的根文件夹
-        roots_with_children = sum(1 for root in root_folders if root.children)
-        log.info(f"Final result: {roots_with_children} root folders have children")
-        
-        # 如果没有搜索关键词，添加回收站虚拟目录
-        if not query:
-            recovery_folder = HSAIMaterialFolderResponse(
-                id="recovery",
-                name="回收站",
-                label="回收站",  # 为label字段赋与name字段相同的值
-                description="已删除的素材文件",
-                parent_id=None,
-                settings=None,
-                sort_order=999,  # 排在最后
-                children=[],
-                material_count=0,  # 可以后续优化为实际统计回收站中的素材数量
-                created_at=0,
-                updated_at=0,
-                parent_name=None  # 回收站没有父文件夹
-            )
-            
-            # 将回收站目录添加到根目录列表
-            root_folders.append(recovery_folder)
-        
-        return root_folders
-        
+            responses = _filter_folder_responses(responses, query.lower())
+
+        return responses
+
+    except HTTPException:
+        raise
     except Exception as e:
         log.exception(f"Error getting material folders: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()
         )
-
 
 @router.post("/folders", response_model=HSAIMaterialFolderResponse, summary="创建素材文件夹")
 async def create_material_folder(
@@ -836,6 +882,20 @@ async def upload_material(
     log.info(f"Upload material request received. User ID: {user.id}")
     log.info(f"File name: {file.filename}")
     log.info(f"Form data: name={name}, folder_id={folder_id}, scene_code={scene_code}, technique_code={technique_code}, properties_code={properties_code}")
+
+    # 清单目录映射：如 folder_id 形如 item:xxx，自动填充对应的场景/项目编码
+    folder_id, checklist_node = _resolve_folder_context(user, folder_id)
+    scene_code, technique_code, _ = _extract_codes_from_node(
+        checklist_node,
+        scene_code,
+        technique_code,
+    )
+
+    if checklist_node and checklist_node.node_type == "template":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="请选择具体的场景或拍摄项目后再上传素材",
+        )
     
     try:
         # 验证文件
@@ -1336,6 +1396,14 @@ async def get_materials(
         - pagination: 分页信息
     """
     try:
+        # 解析清单节点上下文
+        folder_filter, checklist_node = _resolve_folder_context(user, folder_id)
+        scene_code_filter, item_code_filter, scene_codes_filter = _extract_codes_from_node(
+            checklist_node,
+            None,
+            None,
+        )
+
         # 计算offset
         offset = (pi - 1) * ps
         
@@ -1343,25 +1411,34 @@ async def get_materials(
         if query:
             # 使用搜索接口
             materials = HSAIMaterials.search_materials(
-                user.id, 
-                query=query, 
+                user.id,
+                query=query,
                 material_type=material_type,
+                scene_code=scene_code_filter,
+                item_code=item_code_filter,
+                scene_codes=scene_codes_filter,
                 limit=ps,
-                offset=offset
+                offset=offset,
             )
             
             # 获取搜索结果总数
             total = HSAIMaterials.count_search_materials(
                 user.id,
                 query=query,
-                material_type=material_type
+                material_type=material_type,
+                scene_code=scene_code_filter,
+                item_code=item_code_filter,
+                scene_codes=scene_codes_filter,
             )
         else:
             # 使用常规列表查询
             materials = HSAIMaterials.get_materials_by_user_id(
-                user.id, 
-                folder_id=folder_id,
+                user.id,
+                folder_id=folder_filter,
                 material_type=material_type,
+                scene_code=scene_code_filter,
+                item_code=item_code_filter,
+                scene_codes=scene_codes_filter,
                 limit=ps,
                 offset=offset
             )
@@ -1369,8 +1446,11 @@ async def get_materials(
             # 获取常规列表总数
             total = HSAIMaterials.get_materials_count(
                 user.id,
-                folder_id=folder_id,
-                material_type=material_type
+                folder_id=folder_filter,
+                material_type=material_type,
+                scene_code=scene_code_filter,
+                item_code=item_code_filter,
+                scene_codes=scene_codes_filter,
             )
         
         responses = []
@@ -1594,7 +1674,7 @@ async def get_material_stats(user=Depends(get_verified_user)):
     """
     try:
         materials = HSAIMaterials.get_materials_by_user_id(user.id)
-        folders = HSAIMaterialFolders.get_folders_by_user_id(user.id)
+        checklist_tree = material_checklist_service.get_tree_for_user(user)
         
         # 统计各类型数量
         type_stats = {}
@@ -1618,7 +1698,7 @@ async def get_material_stats(user=Depends(get_verified_user)):
         
         return MaterialStatsResponse(
             total_materials=len(materials),
-            folders_count=len(folders),
+            folders_count=_count_tree_nodes(checklist_tree),
             type_distribution=type_stats,
             total_size_mb=total_size // (1024 * 1024),
             recent_uploads=recent_uploads

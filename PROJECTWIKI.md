@@ -609,6 +609,39 @@ flowchart LR
 - 验证：按方案执行单元/集成/性能/安全测试；在灰度阶段通过监控验证签名链接有效性与过期策略。
 
 - 回滚：保留 `USE_FFMPEG_OSS`、`STORAGE_PROVIDER` 等配置开关，可快速退回本地存储 / 直接 boto3 上传流程；详情见上述文档。
+
+### 2025-11-08 素材清单驱动改造
+
+- 背景：客户端反馈“素材目录应与 Admin 侧发布的拍摄清单保持一致”，旧的 `hsai_material_folders` 无法体现模板 → 场景 → 项目结构，也无法展示拍摄要求。
+- 变更：
+  - `backend/open_webui/models/admin_checklists.py` 补齐 `checklist_scenes/items/publications/user_checklists` ORM；
+  - 新增 `backend/open_webui/services/material_checklist_service.py`，将 Admin DB 数据聚合为树（60s 缓存）并统计 `hsai_materials` 中各场景/项目的素材数量；
+  - `backend/open_webui/routers/hsai_materials.py` 的 `/folders`、`/`、`/statistics`、`/upload` 复用原路由但基于清单树解析 `folder_id=template|scene|item`，响应新增 `node_type/template_code/scene_code/item_code/shot_sizes/...` 字段；
+  - `HSAIMaterialFolderResponse` 与 `HSAIMaterials` 查询函数扩展，支持按 `scene_code/technique_code` 批量过滤并继续复用既有字段。
+- 验证：
+  - Admin 发布模板 → `/hsai/materials/folders` 返回模板树，节点 `material_count` 与 `hsai_materials` 统计一致；
+  - 选择 `item:<id>` 上传时自动写入 `scene_code/technique_code`，模板节点上传会抛出 400，避免数据落地异常；
+  - `/hsai/materials` 在带清单节点和关键词条件下分页正确，`/statistics` 的 `folders_count` 与树节点数量一致。
+- 回滚：如需恢复旧目录，可将路由回退并跳过 `material_checklist_service`；Admin 表模型变更不影响旧逻辑，可保留。
+
+```mermaid
+flowchart TD
+    AdminDB[(Checklist Templates)] --> Service[material_checklist_service]
+    Service --> FoldersAPI[GET /hsai/materials/folders]
+    FoldersAPI --> UploadAPI[POST /hsai/materials/upload]
+    UploadAPI --> MaterialsDB[(hsai_materials)]
+    FoldersAPI --> ListAPI[GET /hsai/materials]
+    ListAPI --> MaterialsDB
+```
+
+### 2025-11-09 素材清单接口热修
+
+- 背景：生产调用 `/hsai/materials/folders` 报 500，日志提示 `user_checklists.company_id` 列不存在（Admin 库实际表结构没有该列），同时 `HSAIMaterialFolderResponse` 要求的 `created_at/updated_at` 字段缺失导致 Pydantic 校验失败。
+- 处置：
+  - `backend/open_webui/models/admin_checklists.py`：移除不存在的 `company_id` 字段，并将 `list_by_user_or_company()` 退回按 `user_id` 精确查询，避免 ORM 访问不存在列；日志仍保留 company_id 以便后续扩展。
+  - `backend/open_webui/routers/hsai_materials.py`：`_convert_checklist_node_to_response()` 生成节点时注入当前时间戳填充 `created_at/updated_at`，保证响应满足模型约束。
+- 验证：`python3 -m compileall backend/open_webui/models/admin_checklists.py backend/open_webui/routers/hsai_materials.py` 通过；本地复现 `/api/v1/hsai/materials/folders` 请求返回 200 且节点包含时间戳。
+- 后续：若未来 Admin 表新增企业级分发字段，再恢复 `company_id` 并同步迁移；同时考虑在 material_checklist_service 中加入缓存失效事件，避免长时间使用旧模板树。
 ## 2025-10-31 编码统一化（移除路由模块 BOM）
 - 背景：同目录多文件存在 UTF‑8 BOM，虽未立即导致崩溃，但增加跨平台与编辑器差异风险。
 - 处置：统一将以下文件重写为 UTF‑8（无 BOM），不改任何业务逻辑：

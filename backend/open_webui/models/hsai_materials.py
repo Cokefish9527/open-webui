@@ -2,14 +2,14 @@ import logging
 import logging
 import time
 import uuid
-from typing import Optional, List
+from typing import Optional, List, Sequence
 
 from open_webui.internal.db import Base, JSONField, get_db
 from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean, Integer, cast
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.orm import relationship
 
 from ._timestamp_utils import (
@@ -422,6 +422,24 @@ class HSAIMaterialFolderResponse(BaseModel):
     sort_order: int = Field(default=0, description="排序权重")
     children: Optional[List['HSAIMaterialFolderResponse']] = Field(default=None, description="子文件夹列表")
     material_count: Optional[int] = Field(default=None, description="文件夹内素材数量")
+    node_type: Optional[str] = Field(default=None, description="节点类型：template/scene/item")
+    template_id: Optional[str] = Field(default=None, description="清单模板ID")
+    template_code: Optional[str] = Field(default=None, description="清单模板编码")
+    scene_id: Optional[str] = Field(default=None, description="场景ID")
+    scene_code: Optional[str] = Field(default=None, description="场景编码")
+    item_id: Optional[str] = Field(default=None, description="拍摄项目ID")
+    item_code: Optional[str] = Field(default=None, description="拍摄项目编码")
+    is_required: Optional[bool] = Field(default=None, description="是否必拍")
+    shot_sizes: Optional[str] = Field(default=None, description="景别要求")
+    camera_movements: Optional[str] = Field(default=None, description="运镜要求")
+    duration_min: Optional[int] = Field(default=None, description="最短时长")
+    duration_max: Optional[int] = Field(default=None, description="最长时长")
+    min_resolution: Optional[str] = Field(default=None, description="最低分辨率")
+    priority: Optional[str] = Field(default=None, description="优先级")
+    shooting_tips: Optional[str] = Field(default=None, description="拍摄技巧")
+    quality_standards: Optional[str] = Field(default=None, description="质量标准")
+    reference_video: Optional[str] = Field(default=None, description="参考视频链接")
+    reference_image: Optional[str] = Field(default=None, description="参考图片链接")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -763,8 +781,16 @@ class HSAIMaterialsTable:
                 return None
 
     def get_materials_by_user_id(
-        self, user_id: str, folder_id: Optional[str] = None, material_type: Optional[str] = None,
-        limit: int = 20, offset: int = 0
+        self,
+        user_id: str,
+        folder_id: Optional[str] = None,
+        material_type: Optional[str] = None,
+        scene_code: Optional[str] = None,
+        item_code: Optional[str] = None,
+        scene_codes: Optional[Sequence[str]] = None,
+        item_codes: Optional[Sequence[str]] = None,
+        limit: int = 20,
+        offset: int = 0,
     ) -> List[HSAIMaterialModel]:
         with get_db() as db:
             try:
@@ -774,6 +800,14 @@ class HSAIMaterialsTable:
                     query = query.filter_by(folder_id=folder_id)
                 if material_type:
                     query = query.filter_by(material_type=material_type)
+                if scene_codes:
+                    query = query.filter(HSAIMaterial.scene_code.in_(scene_codes))
+                elif scene_code:
+                    query = query.filter(HSAIMaterial.scene_code == scene_code)
+                if item_codes:
+                    query = query.filter(HSAIMaterial.technique_code.in_(item_codes))
+                elif item_code:
+                    query = query.filter(HSAIMaterial.technique_code == item_code)
                     
                 materials = query.order_by(HSAIMaterial.updated_at.desc()).limit(limit).offset(offset).all()
                 return [HSAIMaterialModel.model_validate(material) for material in materials]
@@ -782,7 +816,14 @@ class HSAIMaterialsTable:
                 return []
 
     def get_materials_count(
-        self, user_id: str, folder_id: Optional[str] = None, material_type: Optional[str] = None
+        self,
+        user_id: str,
+        folder_id: Optional[str] = None,
+        material_type: Optional[str] = None,
+        scene_code: Optional[str] = None,
+        item_code: Optional[str] = None,
+        scene_codes: Optional[Sequence[str]] = None,
+        item_codes: Optional[Sequence[str]] = None,
     ) -> int:
         """获取素材总数"""
         with get_db() as db:
@@ -793,11 +834,52 @@ class HSAIMaterialsTable:
                     query = query.filter_by(folder_id=folder_id)
                 if material_type:
                     query = query.filter_by(material_type=material_type)
+                if scene_codes:
+                    query = query.filter(HSAIMaterial.scene_code.in_(scene_codes))
+                elif scene_code:
+                    query = query.filter(HSAIMaterial.scene_code == scene_code)
+                if item_codes:
+                    query = query.filter(HSAIMaterial.technique_code.in_(item_codes))
+                elif item_code:
+                    query = query.filter(HSAIMaterial.technique_code == item_code)
                     
                 return query.count()
             except Exception as e:
                 log.exception(f"Error counting materials: {e}")
                 return 0
+
+    def aggregate_by_scene_and_item(self, user_id: str) -> List[dict]:
+        """按场景与项目分组统计素材数量"""
+        with get_db() as db:
+            try:
+                rows = (
+                    db.query(
+                        HSAIMaterial.scene_code.label("scene_code"),
+                        HSAIMaterial.technique_code.label("item_code"),
+                        func.count().label("materials_count"),
+                    )
+                    .filter(
+                        HSAIMaterial.user_id == user_id,
+                        HSAIMaterial.status == "active",
+                        or_(
+                            HSAIMaterial.is_deleted.is_(False),
+                            HSAIMaterial.is_deleted.is_(None),
+                        ),
+                    )
+                    .group_by(HSAIMaterial.scene_code, HSAIMaterial.technique_code)
+                    .all()
+                )
+                return [
+                    {
+                        "scene_code": row.scene_code,
+                        "item_code": row.item_code,
+                        "materials_count": int(row.materials_count or 0),
+                    }
+                    for row in rows
+                ]
+            except Exception as e:
+                log.exception("Error aggregating materials by checklist: %s", e)
+                return []
 
     def get_material_by_id(self, material_id: str) -> Optional[HSAIMaterialModel]:
         with get_db() as db:
@@ -841,7 +923,16 @@ class HSAIMaterialsTable:
                 return False
 
     def search_materials(
-        self, user_id: str, query: str, material_type: Optional[str] = None, limit: int = 20, offset: int = 0
+        self,
+        user_id: str,
+        query: str,
+        material_type: Optional[str] = None,
+        scene_code: Optional[str] = None,
+        item_code: Optional[str] = None,
+        scene_codes: Optional[Sequence[str]] = None,
+        item_codes: Optional[Sequence[str]] = None,
+        limit: int = 20,
+        offset: int = 0,
     ) -> List[HSAIMaterialModel]:
         """搜索素材"""
         with get_db() as db:
@@ -850,6 +941,14 @@ class HSAIMaterialsTable:
                 
                 if material_type:
                     search_query = search_query.filter_by(material_type=material_type)
+                if scene_codes:
+                    search_query = search_query.filter(HSAIMaterial.scene_code.in_(scene_codes))
+                elif scene_code:
+                    search_query = search_query.filter(HSAIMaterial.scene_code == scene_code)
+                if item_codes:
+                    search_query = search_query.filter(HSAIMaterial.technique_code.in_(item_codes))
+                elif item_code:
+                    search_query = search_query.filter(HSAIMaterial.technique_code == item_code)
                 
                 # 搜索名称、描述、标签与分类编码
                 like_pattern = f"%{query}%"
@@ -871,7 +970,14 @@ class HSAIMaterialsTable:
                 return []
 
     def count_search_materials(
-        self, user_id: str, query: str, material_type: Optional[str] = None
+        self,
+        user_id: str,
+        query: str,
+        material_type: Optional[str] = None,
+        scene_code: Optional[str] = None,
+        item_code: Optional[str] = None,
+        scene_codes: Optional[Sequence[str]] = None,
+        item_codes: Optional[Sequence[str]] = None,
     ) -> int:
         """获取搜索结果总数"""
         with get_db() as db:
@@ -880,6 +986,14 @@ class HSAIMaterialsTable:
                 
                 if material_type:
                     search_query = search_query.filter_by(material_type=material_type)
+                if scene_codes:
+                    search_query = search_query.filter(HSAIMaterial.scene_code.in_(scene_codes))
+                elif scene_code:
+                    search_query = search_query.filter(HSAIMaterial.scene_code == scene_code)
+                if item_codes:
+                    search_query = search_query.filter(HSAIMaterial.technique_code.in_(item_codes))
+                elif item_code:
+                    search_query = search_query.filter(HSAIMaterial.technique_code == item_code)
                 
                 # 搜索名称、描述、标签与分类编码
                 like_pattern = f"%{query}%"
