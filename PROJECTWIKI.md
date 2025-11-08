@@ -390,6 +390,13 @@ erDiagram
 - **调试工具**：`websocket-test.html` 调试页与 `static/ws-tester.js` 客户端脚本；任务标签页采用双列布局（左列操作中心，右列覆盖项目概览、任务列表、循环运行概览、循环状态日志、事件时间轴），按钮内置加载/禁用状态，事件卡片展示状态徽章、进度和会话信息；操作中心支持主线模板初始化、循环任务启动/暂停/恢复/交接/同步、子任务回放以及“填充到消息调试”快捷键；循环运行概览渲染蓝图关联与运行快照，循环状态日志支持一键刷新调用 `/api/v1/hsai/tasks/{task_id}/recurring/logs`；项目概览数据源保持 `/api/v1/hsai/projects/{project_id}/summary` + `/api/v1/hsai/projects/{project_id}/tasks`。操作手册见 `docs/410_websocket_test_page_manual.md`（2025-11-01 更新）。
 - **后台对接缺口方案（2025-11-01）**：见 `docs/backend_integration_alignment_plan.md`，明确客户/公司/项目/任务/计费/审计的接口补齐计划、OAuth2 + HMAC 鉴权要求、审计 ID 返回格式，以及文档与 OpenAPI 同步流程；后续所有后台↔服务端契约调整需引用该方案并在完成后更新 `CHANGELOG.md` 与本节。
 
+### Ops Dashboard 采集配置（2025-11-08）
+
+- **配置项**：`.env` / `.env.example` 新增 `OPS_DASHBOARD_ENABLED`（开关）、`OPS_DASHBOARD_BASE_URL`（后台采集 host，当前内网为 `http://192.168.20.32:5000`）、`OPS_DASHBOARD_API_KEY`、`OPS_DASHBOARD_TIMEOUT`、`OPS_DASHBOARD_MAX_RETRY`、`OPS_DASHBOARD_ALLOW_CONTENT`。所有上报逻辑必须通过这些变量拼接 host + API，禁止硬编码地址。
+- **设计文档**：`docs/500-599_后端设计/ops_dashboard_backend_plan.md` 描述采集接口契约、字段字典、组件划分与重试/鉴权策略；上线前需依据该方案完成联调并在 CHANGELOG 留痕。
+- **运维提示**：后台接口不可达时可将 `OPS_DASHBOARD_ENABLED=false` 暂停上报；更换 host/API Key 后必须重启服务并观察 `ops_dashboard` 相关日志与重试队列深度，确认无堆积。
+
+
 ## 术语表
 | 术语 | 说明 |
 |------|------|

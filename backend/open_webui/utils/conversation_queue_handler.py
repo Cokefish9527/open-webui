@@ -23,6 +23,7 @@ from open_webui.services.blueprint_sync_service import (
     BlueprintSyncResult,
 )
 from open_webui.services.task_template_registry import task_template_registry
+from open_webui.services.ops_dashboard_ingestor import enqueue_conversation_event
 
 # 配置日志
 log = logging.getLogger(__name__)
@@ -155,6 +156,10 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
                 log.error(f"记录SESSION_POOL信息时发生错误: {e}")
             return
             
+        # 当会话完成时推送统计事件
+        if status in {"FINISHED", "FAILED", "ERROR"}:
+            enqueue_conversation_event(message)
+
         # Reformat message for frontend rendering
         frontend_message = reformat_for_frontend(message)
         

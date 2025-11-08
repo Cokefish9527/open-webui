@@ -60,6 +60,7 @@ from open_webui.utils.auth import (
 )
 from open_webui.utils.webhook import post_webhook
 from open_webui.utils.access_control import get_permissions
+from open_webui.services.ops_dashboard_ingestor import enqueue_user_activity_event
 
 from typing import Optional, List
 
@@ -603,6 +604,17 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         )
 
         credit = Credits.init_credit_by_user_id(user.id)
+
+        client_host = request.client.host if request.client else None
+        enqueue_user_activity_event(
+            event_type="login",
+            user_id=user.id,
+            company_id=getattr(user, "company_id", None),
+            metadata={
+                "ip": client_host,
+                "user_agent": request.headers.get("user-agent"),
+            },
+        )
 
         return {
             "token": token,

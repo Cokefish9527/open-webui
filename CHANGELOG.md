@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `tool/add_company_credit_columns.py` to backfill `company_id` columns for `credit`/`credit_log` across SQLite and PostgreSQL deployments, ensuring legacy数据迁移平滑可追溯。
 - Added UTF-8 BOM guardrails: `tool/clean_special_chars.py`, `.githooks/pre-commit`, and `.github/workflows/bom-scan.yml` now prevent BOM-laden `*.py` files from landing in main.
 - Added `backend/open_webui/models/external_admin_tokens.py` to persist OAuth2 client-credential tokens issued给外部后台；新增 `tool/remove_legacy_organization_schema.py` 帮助清理遗留 `organizations` 表及字段。
+- Added Ops Dashboard ingestion client/config (`backend/open_webui/services/ops_dashboard_client.py`, `backend/open_webui/services/ops_dashboard_ingestor.py`) plus `.env(.example)` 与 PROJECTWIKI 配置，统一通过 `OPS_DASHBOARD_BASE_URL` 将会话、登录与计费事件上报后台采集接口。
 
 ### Changed
 - Conversation queue handler now handles `blue_image_content` messages, emitting blueprint task updates and leveraging the new blueprint progress tables.

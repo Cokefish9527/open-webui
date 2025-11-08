@@ -612,6 +612,35 @@ AIOHTTP_CLIENT_READ_BUFFER_SIZE = int(
     os.environ.get("AIOHTTP_CLIENT_READ_BUFFER_SIZE", 2**16)
 )
 
+####################################
+# OPS DASHBOARD INTEGRATION
+####################################
+
+OPS_DASHBOARD_ENABLED = os.environ.get(
+    "OPS_DASHBOARD_ENABLED", "false"
+).lower() == "true"
+OPS_DASHBOARD_BASE_URL = os.environ.get("OPS_DASHBOARD_BASE_URL", "").rstrip("/")
+OPS_DASHBOARD_API_KEY = os.environ.get("OPS_DASHBOARD_API_KEY", "")
+
+
+def _positive_int(value: str, default: int) -> int:
+    try:
+        parsed = int(str(value).strip())
+        return parsed if parsed > 0 else default
+    except Exception:
+        return default
+
+
+OPS_DASHBOARD_TIMEOUT = _positive_int(
+    os.environ.get("OPS_DASHBOARD_TIMEOUT", 5), 5
+)
+OPS_DASHBOARD_MAX_RETRY = _positive_int(
+    os.environ.get("OPS_DASHBOARD_MAX_RETRY", 3), 3
+)
+OPS_DASHBOARD_ALLOW_CONTENT = (
+    os.environ.get("OPS_DASHBOARD_ALLOW_CONTENT", "false").lower() == "true"
+)
+
 
 ####################################
 # SENTENCE TRANSFORMERS

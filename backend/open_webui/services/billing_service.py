@@ -10,6 +10,7 @@ from open_webui.models.api_usage_log import APIUsageLogs, APIUsageLogForm
 from open_webui.models.hsai_tasks import HSAITasks
 from open_webui.models.hsai_companies import Companies
 from open_webui.models.credits import Credits, AddCreditForm, SetCreditFormDetail
+from open_webui.services.ops_dashboard_ingestor import enqueue_user_activity_event
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -84,6 +85,17 @@ class BillingService:
             )
             
             result = self.api_usage_logs.insert_new_log(api_log_form)
+            if result:
+                enqueue_user_activity_event(
+                    event_type="api_call",
+                    user_id=user_id,
+                    metadata={
+                        "session_id": session_id,
+                        "service_provider": service_provider,
+                        "model_name": model_name,
+                        "credits_consumed": float(credits_consumed),
+                    },
+                )
             return result is not None
         except Exception as e:
             log.error(f"记录API调用失败: {e}")
