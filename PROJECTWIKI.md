@@ -304,10 +304,31 @@ erDiagram
 
 ### backend/open_webui/models
 - **hsai_video_learning_status.py**：联合唯一约束保障 `business_name + video_id` 唯一，提供租户级批量查询与状态列表接口，写入阶段捕获自增序列异常并回滚。
-- **hsai_business_good_video_v1.py**：视频列表与统计接口提供全局数据视图，同时结合学习状态表按 `business_name` 区分 pending / learning / learned / abandoned。
+- **hsai_business_good_video_v1.py**：视频列表与统计接口提供全局数据视图，并在 2025-11-08 起强制结合审核字段 `review_status` 只返回 approved 数据，同时继续按 `business_name` 区分 pending / learning / learned / abandoned。
 - **credits.py**：定义 `Credit`, `CreditLog`, `TradeTicket` ORM 表及 `CreditsTable` 操作。新增 `company_id` 字段后，`_resolve_credit_owner` 负责基于用户推导公司负责人。
 - **hsai_companies.py / hsai_projects.py / hsai_tasks.py**：提供 Pydantic 校验与 SQLAlchemy 表结构（含时间戳归一化）。
 - **billing_config.py / api_usage_log.py**：计费费率配置与日志模型。
+#### hsai_business_good_video_v1 审核链路（2025-11-08）
+
+- 新增审核字段：eview_status(varchar20，默认 pending)、eview_time(timestamptz)、eviewer_id(varchar50)、eview_comments(text)，用于沉淀后台人工审核记录与追溯轨迹。
+- API 约束：ackend/open_webui/models/hsai_business_good_video_v1.py 通过 _approved_query 统一追加 eview_status = 'approved' 过滤，确保只返回已通过审核的视频。
+- 业务影响：ackend/open_webui/routers/hsai_video_learning.py 的 /hsai/video-learning/videos 列表与 start-learning 只会消费审核通过的视频，防止未审核素材进入学习流水线。
+
+`mermaid
+flowchart LR
+    crawler[视频采集\n(n8n workflow)] -->|pending| goodvideo[(hsai_business_good_video_v1)]
+    reviewer[HSAI Admin\n审核员] -->|更新 review_status| goodvideo
+    service[ackend/open_webui/\nrouters/hsai_video_learning.py] -->|仅查询 approved| goodvideo
+    service --> frontend[WebUI/智能体]
+`
+
+| 节点 | 代码 / 模块 |
+| --- | --- |
+| goodvideo | ackend/open_webui/models/hsai_business_good_video_v1.py |
+| service | ackend/open_webui/routers/hsai_video_learning.py |
+| crawler | n8n 建表及查博主信息的流 / 3异步-视频爬取关键词分析 |
+| eviewer | 后台审批（参见 docs/backend_service_integration.md） |
+
 
 ### 工具与脚本
 - **tool/fix_hsai_video_learning_status_sequence.py**：检测 `business_name + video_id` 重复、补齐联合唯一约束/索引，并同步 `hsai_video_learning_status` / `hsai_video_learning_logs` 自增序列（支持 PostgreSQL/SQLite），`--apply` 可一键执行修复。

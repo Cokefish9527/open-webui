@@ -12,6 +12,8 @@ from sqlalchemy import BigInteger, Column, String, Text, Boolean, DateTime
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
+REVIEW_STATUS_APPROVED = "approved"
+
 ####################
 # ORM definitions
 ####################
@@ -42,6 +44,10 @@ class HSAIBusinessGoodVideoV1(N8NBase):
     commentcount = Column(BigInteger, nullable=False, default=0)
     createdat = Column(DateTime, nullable=False, default=datetime.now)
     updatedat = Column(DateTime, nullable=False, default=datetime.now)
+    review_status = Column(String(20), nullable=True, default="pending")
+    review_time = Column(DateTime, nullable=True)
+    reviewer_id = Column(String(50), nullable=True)
+    review_comments = Column(Text, nullable=True)
 
 
 ####################
@@ -74,10 +80,20 @@ class HSAIBusinessGoodVideoV1Model(BaseModel):
     commentcount: int = Field(default=0, description="Comments count")
     createdat: datetime = Field(description="Created at")
     updatedat: datetime = Field(description="Updated at")
+    review_status: Optional[str] = Field(default=None, description="Moderation status")
+    review_time: Optional[datetime] = Field(default=None, description="Moderation timestamp")
+    reviewer_id: Optional[str] = Field(default=None, description="Moderator identifier")
+    review_comments: Optional[str] = Field(default=None, description="Moderation remarks")
 
 
 class HSAIBusinessGoodVideoV1Table:
     """Table operations for hsai_business_good_video_v1."""
+
+    @staticmethod
+    def _approved_query(postgres_db):
+        return postgres_db.query(HSAIBusinessGoodVideoV1).filter(
+            HSAIBusinessGoodVideoV1.review_status == REVIEW_STATUS_APPROVED
+        )
 
     def get_videos(
         self,
@@ -87,7 +103,7 @@ class HSAIBusinessGoodVideoV1Table:
     ) -> List[HSAIBusinessGoodVideoV1Model]:
         """Return videos. business_name is preserved for compatibility but not used for filtering."""
         with get_n8n_db() as db:
-            query = db.query(HSAIBusinessGoodVideoV1)
+            query = self._approved_query(db)
             videos = query.offset(skip).limit(limit).all()
             return [HSAIBusinessGoodVideoV1Model.model_validate(video) for video in videos]
 
@@ -105,7 +121,7 @@ class HSAIBusinessGoodVideoV1Table:
         )
 
         with get_n8n_db() as postgres_db:
-            query = postgres_db.query(HSAIBusinessGoodVideoV1)
+            query = self._approved_query(postgres_db)
 
             if status_filter == "all":
                 videos = query.offset(skip).limit(limit).all()
@@ -154,7 +170,7 @@ class HSAIBusinessGoodVideoV1Table:
         )
 
         with get_n8n_db() as postgres_db:
-            query = postgres_db.query(HSAIBusinessGoodVideoV1)
+            query = self._approved_query(postgres_db)
 
             if status_filter == "all":
                 return query.count()
@@ -191,13 +207,17 @@ class HSAIBusinessGoodVideoV1Table:
     def get_video_by_id(self, video_id: int) -> Optional[HSAIBusinessGoodVideoV1Model]:
         """Return a single video by id."""
         with get_n8n_db() as db:
-            video = db.query(HSAIBusinessGoodVideoV1).filter(HSAIBusinessGoodVideoV1.id == video_id).first()
+            video = (
+                self._approved_query(db)
+                .filter(HSAIBusinessGoodVideoV1.id == video_id)
+                .first()
+            )
             return HSAIBusinessGoodVideoV1Model.model_validate(video) if video else None
 
     def get_total_count(self) -> int:
         """Return total video count."""
         with get_n8n_db() as db:
-            return db.query(HSAIBusinessGoodVideoV1).count()
+            return self._approved_query(db).count()
 
 
 # Global helper
