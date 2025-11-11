@@ -104,6 +104,7 @@ class HSAIMaterial(Base):
     # OSS信息
     oss_bucket = Column(String, nullable=True)
     oss_key = Column(String, nullable=True)
+    oss_object_path = Column(String, nullable=True)
     
     # 回收站功能相关字段
     is_deleted = Column(Boolean, default=False)     # 删除标志位（true表示已删除）
@@ -373,6 +374,7 @@ class HSAIMaterialForm(BaseModel):
     resolution: Optional[str] = None
     oss_bucket: Optional[str] = None
     oss_key: Optional[str] = None
+    oss_object_path: Optional[str] = None
     # 回收站相关字段
     is_deleted: bool = False
     original_directory: Optional[str] = None
@@ -427,6 +429,7 @@ class HSAIMaterialFolderResponse(BaseModel):
     template_code: Optional[str] = Field(default=None, description="清单模板编码")
     scene_id: Optional[str] = Field(default=None, description="场景ID")
     scene_code: Optional[str] = Field(default=None, description="场景编码")
+    scene_name: Optional[str] = Field(default=None, description="场景名称")
     item_id: Optional[str] = Field(default=None, description="拍摄项目ID")
     item_code: Optional[str] = Field(default=None, description="拍摄项目编码")
     is_required: Optional[bool] = Field(default=None, description="是否必拍")
@@ -440,6 +443,9 @@ class HSAIMaterialFolderResponse(BaseModel):
     quality_standards: Optional[str] = Field(default=None, description="质量标准")
     reference_video: Optional[str] = Field(default=None, description="参考视频链接")
     reference_image: Optional[str] = Field(default=None, description="参考图片链接")
+    oss_object_path: Optional[str] = Field(default=None, description="OSS对象相对路径")
+    oss_last_modified: Optional[int] = Field(default=None, description="OSS对象最后修改时间")
+    sync_status: Optional[str] = Field(default=None, description="与OSS/DB同步状态")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
 
@@ -469,6 +475,7 @@ class HSAIMaterialResponse(BaseModel):
     resolution: Optional[str] = Field(default=None, description="视频分辨率")
     oss_bucket: Optional[str] = Field(default=None, description="OSS Bucket")
     oss_key: Optional[str] = Field(default=None, description="OSS对象键")
+    oss_object_path: Optional[str] = Field(default=None, description="OSS完整对象路径")
     # 回收站相关字段
     is_deleted: bool = Field(default=False, description="删除标志位（true表示已删除）")
     original_directory: Optional[str] = Field(default=None, description="原始目录（软删除时保存文件原始所在目录）")

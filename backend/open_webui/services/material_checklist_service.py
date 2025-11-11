@@ -30,6 +30,7 @@ class ChecklistTreeNode:
     template_code: Optional[str] = None
     scene_id: Optional[str] = None
     scene_code: Optional[str] = None
+    scene_name: Optional[str] = None
     item_id: Optional[str] = None
     item_code: Optional[str] = None
     description: Optional[str] = None
@@ -126,6 +127,7 @@ class MaterialChecklistService:
                     template_code=template.code,
                     scene_id=scene.id,
                     scene_code=scene.scene_code,
+                    scene_name=scene.scene_name,
                     description=scene.description,
                     is_required=scene.is_required,
                     children=[],
@@ -141,6 +143,7 @@ class MaterialChecklistService:
                         template_code=template.code,
                         scene_id=scene.id,
                         scene_code=scene.scene_code,
+                        scene_name=scene.scene_name,
                         item_id=item.id,
                         item_code=item.item_code,
                         description=item.description,

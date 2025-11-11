@@ -70,6 +70,18 @@ DEFAULT_COMPANY_SEGMENT = "default-company"
 DEFAULT_USER_SEGMENT = "unknown-user"
 
 
+def _normalize_segment_for_oss(value: Optional[str], fallback: str) -> str:
+    """Allow中文, but strip characters that break object keys (newline, slash, etc.)."""
+    if not value:
+        return fallback
+    segment = value.strip()
+    if not segment:
+        return fallback
+    for ch in ("/", "\\", "\n", "\r", "\t"):
+        segment = segment.replace(ch, "-")
+    return segment or fallback
+
+
 def _convert_checklist_node_to_response(
     node: ChecklistTreeNode,
     parent_id: Optional[str] = None,
@@ -161,18 +173,28 @@ def _extract_codes_from_node(
     node: Optional[ChecklistTreeNode],
     scene_code: Optional[str],
     item_code: Optional[str],
-) -> Tuple[Optional[str], Optional[str], Optional[List[str]]]:
+) -> Tuple[Optional[str], Optional[str], Optional[List[str]], Optional[str]]:
     if not node:
-        return scene_code, item_code, None
+        return scene_code, item_code, None, None
 
     if node.node_type == "item":
-        return scene_code or node.scene_code, item_code or node.item_code, None
+        return (
+            scene_code or node.scene_code,
+            item_code or node.item_code,
+            None,
+            node.scene_name or node.scene_code,
+        )
     if node.node_type == "scene":
-        return scene_code or node.scene_code, item_code, None
+        return (
+            scene_code or node.scene_code,
+            item_code,
+            None,
+            node.name,
+        )
     if node.node_type == "template":
         codes = _collect_scene_codes(node)
-        return scene_code, item_code, codes or None
-    return scene_code, item_code, None
+        return scene_code, item_code, codes or None, None
+    return scene_code, item_code, None, None
 
 
 def _count_tree_nodes(nodes: List[ChecklistTreeNode]) -> int:
@@ -246,12 +268,16 @@ def _store_material_file(
     user,
     material_type: str,
     original_filename: str,
+    *,
+    oss_object_path: Optional[str] = None,
 ) -> dict:
     """
     将素材文件保存到本地或 OSS，返回存储元数据。
     """
     business_segment, user_segment = _get_storage_segments(user)
-    storage_key = _build_storage_key(storage_filename, business_segment, user_segment)
+    storage_key = oss_object_path or _build_storage_key(
+        storage_filename, business_segment, user_segment
+    )
 
     storage_provider = "local"
     file_url = ""
@@ -307,6 +333,7 @@ def _store_material_file(
         "storage_key": storage_key,
         "business_segment": business_segment,
         "user_segment": user_segment,
+        "oss_object_path": storage_key if storage_provider == "oss" else None,
     }
 
 ############################
@@ -885,7 +912,7 @@ async def upload_material(
 
     # 清单目录映射：如 folder_id 形如 item:xxx，自动填充对应的场景/项目编码
     folder_id, checklist_node = _resolve_folder_context(user, folder_id)
-    scene_code, technique_code, _ = _extract_codes_from_node(
+    scene_code, technique_code, _, scene_display_name = _extract_codes_from_node(
         checklist_node,
         scene_code,
         technique_code,
@@ -1398,7 +1425,7 @@ async def get_materials(
     try:
         # 解析清单节点上下文
         folder_filter, checklist_node = _resolve_folder_context(user, folder_id)
-        scene_code_filter, item_code_filter, scene_codes_filter = _extract_codes_from_node(
+        scene_code_filter, item_code_filter, scene_codes_filter, _ = _extract_codes_from_node(
             checklist_node,
             None,
             None,

@@ -196,7 +196,9 @@ async def start_video_learning(request: StartLearningRequest, user=Depends(get_v
 
         webhook_url = "https://webhook-n8n.hsai.cc/webhook/video2new_tts_text"
         video_payload: Dict[str, Any] = video.model_dump()
-        for field in ("publishedtime", "createdat", "updatedat"):
+        # Convert all datetime fields to ISO format strings for JSON serialization
+        datetime_fields = ("publishedtime", "createdat", "updatedat", "review_time")
+        for field in datetime_fields:
             if field in video_payload and video_payload[field] and hasattr(video_payload[field], "isoformat"):
                 video_payload[field] = video_payload[field].isoformat()
         video_payload["businessname"] = business_name
