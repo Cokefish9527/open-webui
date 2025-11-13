@@ -237,6 +237,10 @@ def _resolve_business_name(user) -> str:
     return DEFAULT_COMPANY_SEGMENT
 
 
+def _resolve_company_display(user) -> str:
+    return _normalize_segment_for_oss(_resolve_business_name(user), DEFAULT_COMPANY_SEGMENT)
+
+
 def _get_storage_segments(user) -> Tuple[str, str]:
     """
     计算存储路径使用的公司与用户目录片段。
@@ -260,6 +264,21 @@ def _build_storage_filename(base_filename: str, content_hash: str) -> str:
     path = Path(base_filename)
     safe_stem = path.stem or "material"
     return f"{safe_stem}_{content_hash}{path.suffix}"
+
+
+def _build_project_filename(project_name: Optional[str], original_filename: str) -> str:
+    original_suffix = Path(original_filename).suffix or ""
+    base = _normalize_segment_for_oss(project_name or Path(original_filename).stem, "material")
+    return f"{base}{original_suffix}"
+
+
+def _build_oss_relative_path(
+    company_segment: str,
+    scene_segment: str,
+    filename: str,
+) -> str:
+    cleaned_filename = filename.lstrip("/")
+    return f"{company_segment}/{scene_segment}/{cleaned_filename}"
 
 
 def _store_material_file(
