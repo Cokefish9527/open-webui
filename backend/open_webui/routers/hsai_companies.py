@@ -33,7 +33,7 @@ def _is_super_admin(user) -> bool:
     return bool(getattr(user, "is_super_admin", False))
 
 
-@router.get("/", response_model=PaginatedCompanyResponse, summary="获取公司列表")
+@router.get("", response_model=PaginatedCompanyResponse, summary="获取公司列表")
 async def get_companies(
     company_status: Optional[str] = Query(None, description="公司状态过滤"),
     ps: int = Query(20, description="分页大小", ge=1, le=100),
@@ -98,7 +98,7 @@ async def get_companies(
         )
 
 
-@router.post("/", response_model=CompanyResponse, summary="创建公司")
+@router.post("", response_model=CompanyResponse, summary="创建公司")
 async def create_company(
     form_data: CompanyForm,
     user=Depends(get_verified_user)

@@ -90,6 +90,7 @@ from open_webui.routers import (
     hsai_workflows,
     hsai_woc,  # 添加WOC路由导入
     hsai_video_learning,  # 添加视频学习路由导入
+    hsai_companies,  # 添加公司管理路由导入
     hsai_projects,  # 添加项目管理路由导入
     external_admin,  # 添加外部管理路由导入
     # 移除hsai_websocket路由以避免与Socket.IO冲突
@@ -482,6 +483,10 @@ from open_webui.tasks import (
 )  # Import from tasks.py
 
 from open_webui.utils.redis import get_sentinels_from_env
+from open_webui.services.ops_dashboard_ingestor import (
+    start_conversation_ingestion,
+    stop_conversation_ingestion,
+)
 
 if SAFE_MODE:
     print("SAFE MODE ENABLED")
@@ -599,6 +604,12 @@ async def lifespan(app: FastAPI):
     from open_webui.utils.conversation_queue_handler import register_conversation_queue_handler
     register_conversation_queue_handler(redis_signal_handler)
 
+    try:
+        await start_conversation_ingestion()
+        app.state.conversation_ingestion_ready = True
+    except Exception as exc:
+        log.error("Conversation ingestion dispatcher start failed: %s", exc)
+
     # 注册视频学习通知队列处理器
     from open_webui.utils.video_learning_notifier import register_video_learning_queue_handler
     register_video_learning_queue_handler(redis_signal_handler)
@@ -619,6 +630,11 @@ async def lifespan(app: FastAPI):
     if hasattr(app.state, "redis_signal_monitoring_task"):
         app.state.redis_signal_monitoring_task.cancel()
         await redis_signal_handler.stop_monitoring()
+
+    try:
+        await stop_conversation_ingestion()
+    except Exception as exc:
+        log.error(f"Conversation ingestion dispatcher stop failed: {exc}")
 
     if hasattr(app.state, "redis_task_command_listener"):
         app.state.redis_task_command_listener.cancel()
@@ -1309,6 +1325,7 @@ app.include_router(hsai_workflows.router, prefix="/api/v1")
 app.include_router(hsai_video_learning.router, prefix="/api/v1")  # 添加视频学习路由
 # 根据新流程说明，不再需要爆款视频路由
 # app.include_router(hsai_viral_videos.router, prefix="/api/v1")  # 添加爆款视频路由
+app.include_router(hsai_companies.router, prefix="/api/v1")  # 添加公司管理路由
 app.include_router(hsai_projects.router, prefix="/api/v1")  # 添加项目管理路由
 
 # 添加组织管理路由

@@ -139,6 +139,14 @@ class OpsDashboardClient:
             idempotency_key=idempotency_key,
         )
 
+    async def close(self) -> None:
+        async with self._session_lock:
+            if self._session is None:
+                return
+            session = self._session
+            self._session = None
+        await session.close()
+
 
 def _safe_json(payload: Any) -> str:
     try:

@@ -96,6 +96,7 @@ class HSAIProjectUpdateForm(BaseModel):
     status: Optional[str] = None
     config: Optional[dict] = None
     user_id: Optional[str] = None
+    company_id: Optional[str] = None
 
 
 ####################

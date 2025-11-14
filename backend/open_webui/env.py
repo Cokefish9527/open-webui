@@ -640,6 +640,12 @@ OPS_DASHBOARD_MAX_RETRY = _positive_int(
 OPS_DASHBOARD_ALLOW_CONTENT = (
     os.environ.get("OPS_DASHBOARD_ALLOW_CONTENT", "false").lower() == "true"
 )
+OPS_DASHBOARD_QUEUE_MAXSIZE = _positive_int(
+    os.environ.get("OPS_DASHBOARD_QUEUE_MAXSIZE", 1000), 1000
+)
+OPS_DASHBOARD_MAX_ATTEMPTS = _positive_int(
+    os.environ.get("OPS_DASHBOARD_MAX_ATTEMPTS", 3), 3
+)
 
 
 ####################################

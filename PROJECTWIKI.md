@@ -33,6 +33,26 @@ flowchart LR
 - 影响：`external_admin` 现在具备幂等的企业侧效应；后台只需提交企业名称即可完成联动。
 - 回滚：可在 `external_admin` 中跳过 `provision_enterprise_membership()` 调用并将 `business_name` 设为可选，但需同时通知后台移除必填约束。
 
+### ADR-2025-11-14：External Admin 企业 / 项目直连（ackend/open_webui/routers/external_admin.py, ackend/open_webui/main.py）
+- 后台与脚本若需跨租户管理企业/项目，优先调用 /api/v1/external/admin/companies|projects（配合 erify_external_request 的 IP+Token 鉴权）；仅在携带 JWT 的 WebUI 内部操作时才使用 /api/v1/hsai/*。
+- 决策：
+  1. 在 external_admin 下新增 /companies、/companies/{id}/projects、/projects 全量 CRUD，并共用 PaginatedCompanyResponse / PaginatedHSAIProjectResponse；
+  2. 通过 _build_company_pagination() 与 _build_project_pagination() 保证分页 schema 与后台客户端一致；
+  3. 在 main.py 重新注册 hsai_companies 路由（/api/v1/hsai/companies），供 WebUI 内 JWT 用户继续使用，同时后台改调 /api/v1/external/admin/*。
+- 影响：hsai_admin 的 MainSystemAPIClient 现以 external_admin 路径为唯一数据源，external_admin 也成为企业 / 项目运维的对外入口。
+- 回滚：若 external_admin 暂不可用，可移除该路由并回退到 /api/v1/hsai/* + JWT 的旧链路，同时同步恢复后台客户端配置。
+
+### ADR-2025-11-14：Ops Dashboard 异步派发（`backend/open_webui/services/ops_dashboard_ingestor.py`）
+- 背景：`handle_conversation_agent_message()` 在 status ∈ {FINISHED,FAILED,ERROR} 时直接 `_fire_and_forget(_record_conversation_event)`，Redis 消费器基于一次性 `asyncio.run` 退出，未完成的上报任务会被销毁并丢失事件。
+- 决策：实现 `ConversationEventDispatcher`（`asyncio.Queue` + worker）并在 FastAPI `lifespan` 中同步 start_conversation_ingestion()/stop_conversation_ingestion()；主流程仅 put_nowait，worker 负责 `await ops_dashboard_client.send_conversations()` 并按 `OPS_DASHBOARD_MAX_ATTEMPTS` 指数退避，停机阶段注入哨兵并关闭 `aiohttp` session。
+- 影响：
+  - `backend/open_webui/services/ops_dashboard_ingestor.py`：新增 dispatcher 与队列降级逻辑；
+  - `backend/open_webui/services/ops_dashboard_client.py`：新增 `close()`；
+  - `backend/open_webui/main.py`：在 `lifespan` 启停 dispatcher；
+  - `backend/open_webui/env.py`：暴露 `OPS_DASHBOARD_QUEUE_MAXSIZE/OPS_DASHBOARD_MAX_ATTEMPTS`；
+  - `backend/test/test_ops_dashboard_ingestor.py`：新增异步派发自测。
+- 验证：`python -m pytest test/test_ops_dashboard_ingestor.py`；并在本地触发一条工作流后优雅关闭服务，确认日志无 pending task。
+- 回滚：若需降级，可设置 `OPS_DASHBOARD_ENABLED=false`（停用埋点）或暂时移除 start_conversation_ingestion() 调用恢复旧的 `_fire_and_forget` 路径，并在 WIKI/CHANGELOG 记录。
 ### ADR-2025-11-13：HSAI 素材 OSS 列运行时自愈
 - 背景：`hsai_materials` 表缺少 `oss_object_path` 列时，`HSAIMaterials.get_materials_count()` 的 `query.count()` 触发 `psycopg2.errors.UndefinedColumn`。
 - 方案：新增 `ensure_materials_storage_schema()`（`backend/open_webui/internal/migrations/materials_storage.py`），并在 `HSAIMaterials` 所有 DB 访问前调用 `_schema_aware_db()`，首次连接即补列。
@@ -56,12 +76,17 @@ flowchart LR
 
 ### External Admin Router（`backend/open_webui/routers/external_admin.py`）
 - `POST /external/admin/users`：新增 `business_name` 校验，并在创建用户后调用企业编排服务。
-- `PUT /external/admin/users/{id}`：允许在更新时重新绑定企业名称，自动触发企业/项目同步。
-- 仍提供 `/companies/*`、`/users/*` 细粒度接口，供批量脚本或运营工具使用。
+- `PUT /external/admin/users/{id}`：允许在更新时重新绑定企业名称，自动触发企业 / 项目同步。
+- `/external/admin/companies|projects`：提供完整的分页列表、详情、创建、更新、删除与企业内项目列表接口，统一输出 `PaginatedCompanyResponse` / `PaginatedHSAIProjectResponse`，并沿用 `_build_*_pagination()` 计算分页信息。
+- `/external/admin/companies/{company_id}/users/{user_id}`：允许后台批量绑定 / 解绑企业管理员，保持用户 `business_name`、`company_id` 一致。
 
 ### HSAI Companies / Projects Routers（`backend/open_webui/routers/hsai_companies.py`, `hsai_projects.py`）
 - 超级管理员 (`is_super_admin=True`) 可以查询/管理全部企业与项目，并可通过请求体中的 `owner_user_id` 或 `user_id` 来指定企业负责人或项目负责人。
+- 2025-11-14：GET /hsai/projects/{project_id} 在 backend/open_webui/routers/hsai_projects.py:244-251 修复 if 语句多余 “)” 导致的 SyntaxError，并确保无权限或缺少项目时正确返回 404。
+- 2025-11-14：`GET /hsai/projects/{project_id}/tasks`（路径 `backend/open_webui/routers/hsai_projects.py:368-410`）补全 try/except 缩进并在权限校验通过后返回任务列表，避免 Uvicorn 导入期的 IndentationError。
+- 2025-11-14：`GET /hsai/projects` 参数描述文本因编码损坏触发 SyntaxError（`backend/open_webui/routers/hsai_projects.py:96-101`），现已还原为 UTF-8 中文说明，保障 Uvicorn 可正常导入。
 - 普通用户保持原有边界，仅能访问自身资源，从而保证 API 既能支撑后台联动，也不会破坏多租户隔离。
+- 为兼容 WebUI 内部场景，main.py 重新注册 hsai_companies.router，携带 JWT 的用户继续走 /api/v1/hsai/companies|projects，后台统一使用 /api/v1/external/admin/*。
 
 ### HSAI Materials（`backend/open_webui/models/hsai_materials.py`）
 - 职责：定义素材/标签/分类 ORM、Pydantic 模型与业务访问层。

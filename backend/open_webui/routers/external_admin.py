@@ -5,7 +5,7 @@ from collections import defaultdict, deque
 from secrets import token_urlsafe
 from threading import Lock
 from typing import Optional, List, Deque, Dict
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
 from open_webui.models.users import Users, UserModel
@@ -13,7 +13,17 @@ from open_webui.models.hsai_companies import (
     Companies,
     CompanyForm,
     CompanyUpdateForm,
-    CompanyModel,
+    CompanyResponse,
+    PaginatedCompanyResponse,
+    PaginationData as CompanyPaginationData,
+)
+from open_webui.models.hsai_projects import (
+    HSAIProjects,
+    HSAIProjectForm,
+    HSAIProjectUpdateForm,
+    HSAIProjectResponse,
+    PaginatedHSAIProjectResponse,
+    PaginationData as ProjectPaginationData,
 )
 from open_webui.models.auths import (
     Auths,
@@ -170,14 +180,28 @@ class UserListResponse(BaseModel):
     total: int = Field(description="用户总数")
 
 
-class CompanyListResponse(BaseModel):
-    """公司列表响应模型"""
-    companies: List[CompanyModel] = Field(description="公司列表")
-    total: int = Field(description="公司总数")
-
-
 class CompanyCreateRequest(CompanyForm):
     owner_user_id: str = Field(description="公司负责人用户ID")
+
+
+class ProjectCreateRequest(HSAIProjectForm):
+    user_id: str = Field(description="项目负责人用户ID")
+    company_id: Optional[str] = Field(default=None, description="所属公司ID")
+
+
+class ProjectUpdateRequest(HSAIProjectUpdateForm):
+    user_id: Optional[str] = Field(default=None, description="项目负责人用户ID")
+    company_id: Optional[str] = Field(default=None, description="所属公司ID")
+
+
+def _build_company_pagination(total: int, page: int, size: int) -> CompanyPaginationData:
+    total_pages = (total + size - 1) // size if size else 0
+    return CompanyPaginationData(total=total, page=page, size=size, total_pages=total_pages)
+
+
+def _build_project_pagination(total: int, page: int, size: int) -> ProjectPaginationData:
+    total_pages = (total + size - 1) // size if size else 0
+    return ProjectPaginationData(total=total, page=page, size=size, total_pages=total_pages)
 
 
 class OAuthTokenRequest(BaseModel):
@@ -461,7 +485,77 @@ async def get_users(
     return users_response
 
 # 公司管理接口
-@router.post("/companies", response_model=CompanyModel)
+@router.get("/companies", response_model=PaginatedCompanyResponse)
+async def list_companies_admin(
+    request: Request,
+    company_status: Optional[str] = Query(None, description="公司状态过滤"),
+    ps: int = Query(20, ge=1, le=100, description="分页大小"),
+    pi: int = Query(1, ge=1, description="分页索引，从1开始"),
+):
+    """获取公司列表（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
+    offset = (pi - 1) * ps
+    companies = Companies.get_all_companies(
+        status=company_status,
+        limit=ps,
+        offset=offset,
+    )
+    total = Companies.get_all_companies_count(status=company_status)
+    responses = [CompanyResponse(**company.model_dump()) for company in companies]
+    pagination = _build_company_pagination(total, pi, ps)
+    return PaginatedCompanyResponse(data=responses, pagination=pagination)
+
+
+@router.get("/companies/{company_id}", response_model=CompanyResponse)
+async def get_company_admin(company_id: str, request: Request):
+    """获取公司详情（仅外部管理系统可访问）"""
+    verify_external_request(request)
+    company = Companies.get_company_by_id(company_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="公司不存在",
+        )
+    return CompanyResponse(**company.model_dump())
+
+
+@router.get(
+    "/companies/{company_id}/projects",
+    response_model=PaginatedHSAIProjectResponse,
+)
+async def list_company_projects_admin(
+    company_id: str,
+    request: Request,
+    status_filter: Optional[str] = Query(None, description="项目状态过滤"),
+    ps: int = Query(20, ge=1, le=100, description="分页大小"),
+    pi: int = Query(1, ge=1, description="分页索引，从1开始"),
+):
+    """获取公司下项目列表（仅外部管理系统可访问）"""
+    verify_external_request(request)
+    company = Companies.get_company_by_id(company_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="公司不存在",
+        )
+    offset = (pi - 1) * ps
+    projects = HSAIProjects.get_projects_by_company_id(
+        company_id,
+        status=status_filter,
+        limit=ps,
+        offset=offset,
+    )
+    total = HSAIProjects.get_projects_count_by_company_id(
+        company_id,
+        status=status_filter,
+    )
+    responses = [HSAIProjectResponse(**project.model_dump()) for project in projects]
+    pagination = _build_project_pagination(total, pi, ps)
+    return PaginatedHSAIProjectResponse(data=responses, pagination=pagination)
+
+
+@router.post("/companies", response_model=CompanyResponse)
 async def create_company(payload: CompanyCreateRequest, request: Request):
     """创建公司（仅外部管理系统可访问）"""
     verify_external_request(request)
@@ -485,10 +579,10 @@ async def create_company(payload: CompanyCreateRequest, request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="创建公司失败",
         )
-    return company
+    return CompanyResponse(**company.model_dump())
 
 
-@router.put("/companies/{company_id}", response_model=CompanyModel)
+@router.put("/companies/{company_id}", response_model=CompanyResponse)
 async def update_company(company_id: str, form_data: CompanyUpdateForm, request: Request):
     """更新公司信息（仅外部管理系统可访问）"""
     verify_external_request(request)
@@ -506,7 +600,7 @@ async def update_company(company_id: str, form_data: CompanyUpdateForm, request:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="更新公司失败",
         )
-    return updated_company
+    return CompanyResponse(**updated_company.model_dump())
 
 
 @router.delete("/companies/{company_id}")
@@ -546,29 +640,156 @@ async def delete_company(company_id: str, request: Request):
     return {"message": "公司删除成功"}
 
 
-@router.get("/companies", response_model=CompanyListResponse)
-async def list_companies(
+@router.get("/projects", response_model=PaginatedHSAIProjectResponse)
+async def list_projects_admin(
     request: Request,
-    page: int = 1,
-    size: int = 20,
-    status_filter: Optional[str] = None,
+    status_filter: Optional[str] = Query(None, description="项目状态过滤"),
+    company_id: Optional[str] = Query(None, description="所属公司ID"),
+    ps: int = Query(20, ge=1, le=100, description="分页大小"),
+    pi: int = Query(1, ge=1, description="分页索引，从1开始"),
 ):
-    """获取公司列表（仅外部管理系统可访问）"""
+    """获取项目列表（仅外部管理系统可访问）"""
+    verify_external_request(request)
+    offset = (pi - 1) * ps
+
+    if company_id:
+        company = Companies.get_company_by_id(company_id)
+        if not company:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="公司不存在",
+            )
+        projects = HSAIProjects.get_projects_by_company_id(
+            company_id,
+            status=status_filter,
+            limit=ps,
+            offset=offset,
+        )
+        total = HSAIProjects.get_projects_count_by_company_id(
+            company_id,
+            status=status_filter,
+        )
+    else:
+        projects = HSAIProjects.get_projects(
+            status=status_filter,
+            limit=ps,
+            offset=offset,
+        )
+        total = HSAIProjects.get_projects_count_all(status=status_filter)
+
+    responses = [HSAIProjectResponse(**project.model_dump()) for project in projects]
+    pagination = _build_project_pagination(total, pi, ps)
+    return PaginatedHSAIProjectResponse(data=responses, pagination=pagination)
+
+
+@router.get("/projects/{project_id}", response_model=HSAIProjectResponse)
+async def get_project_admin(project_id: str, request: Request):
+    """获取项目详情（仅外部管理系统可访问）"""
+    verify_external_request(request)
+    project = HSAIProjects.get_project_by_id(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目不存在",
+        )
+    return HSAIProjectResponse(**project.model_dump())
+
+
+@router.post("/projects", response_model=HSAIProjectResponse)
+async def create_project_admin(payload: ProjectCreateRequest, request: Request):
+    """创建项目（仅外部管理系统可访问）"""
     verify_external_request(request)
 
-    if page < 1:
-        page = 1
-    if size < 1 or size > 100:
-        size = 20
+    owner = Users.get_user_by_id(payload.user_id)
+    if not owner:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目负责人不存在",
+        )
+    if payload.company_id:
+        company = Companies.get_company_by_id(payload.company_id)
+        if not company:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="公司不存在",
+            )
 
-    offset = (page - 1) * size
-    companies = Companies.get_all_companies(
-        status=status_filter,
-        limit=size,
-        offset=offset,
+    form = HSAIProjectForm(
+        name=payload.name,
+        description=payload.description,
+        business_name=payload.business_name,
+        company_info=payload.company_info,
+        config=payload.config,
+        company_id=payload.company_id,
+        user_id=payload.user_id,
+        status=payload.status,
     )
-    total = Companies.get_all_companies_count(status=status_filter)
-    return CompanyListResponse(companies=companies, total=total)
+    project = HSAIProjects.insert_new_project(payload.user_id, form)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="创建项目失败",
+        )
+    return HSAIProjectResponse(**project.model_dump())
+
+
+@router.put("/projects/{project_id}", response_model=HSAIProjectResponse)
+async def update_project_admin(
+    project_id: str,
+    form_data: ProjectUpdateRequest,
+    request: Request,
+):
+    """更新项目信息（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
+    project = HSAIProjects.get_project_by_id(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目不存在",
+        )
+
+    if form_data.user_id:
+        owner = Users.get_user_by_id(form_data.user_id)
+        if not owner:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="项目负责人不存在",
+            )
+    if form_data.company_id:
+        company = Companies.get_company_by_id(form_data.company_id)
+        if not company:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="公司不存在",
+            )
+
+    updated_project = HSAIProjects.update_project_by_id(project_id, form_data)
+    if not updated_project:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="更新项目失败",
+        )
+    return HSAIProjectResponse(**updated_project.model_dump())
+
+
+@router.delete("/projects/{project_id}")
+async def delete_project_admin(project_id: str, request: Request):
+    """删除项目（仅外部管理系统可访问）"""
+    verify_external_request(request)
+    project = HSAIProjects.get_project_by_id(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目不存在",
+        )
+    if not HSAIProjects.delete_project_by_id(project_id):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="删除项目失败",
+        )
+    return {"message": "项目删除成功"}
+
 
 
 @router.post("/companies/{company_id}/users/{user_id}")

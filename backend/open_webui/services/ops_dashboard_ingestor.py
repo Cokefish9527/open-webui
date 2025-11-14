@@ -10,11 +10,138 @@ from typing import Any, Dict, Optional, Coroutine
 from open_webui.env import (
     OPS_DASHBOARD_ALLOW_CONTENT,
     OPS_DASHBOARD_ENABLED,
+    OPS_DASHBOARD_MAX_ATTEMPTS,
+    OPS_DASHBOARD_QUEUE_MAXSIZE,
 )
 from open_webui.models.users import Users, UserModel
 from open_webui.services.ops_dashboard_client import ops_dashboard_client
 
 log = logging.getLogger(__name__)
+
+
+class _ConversationEventDispatcher:
+    def __init__(self) -> None:
+        self._queue: Optional[asyncio.Queue[Optional[Dict[str, Any]]]] = None
+        self._worker_task: Optional[asyncio.Task[None]] = None
+        self._lock = asyncio.Lock()
+        self._running = False
+
+    async def start(self) -> None:
+        if not OPS_DASHBOARD_ENABLED:
+            return
+        async with self._lock:
+            if self._running:
+                return
+            self._queue = asyncio.Queue(maxsize=OPS_DASHBOARD_QUEUE_MAXSIZE)
+            self._running = True
+            self._worker_task = asyncio.create_task(self._worker())
+            log.info(
+                "Ops dashboard dispatcher started (queue_max=%s)", OPS_DASHBOARD_QUEUE_MAXSIZE
+            )
+
+    async def stop(self, timeout: float = 5.0) -> None:
+        task: Optional[asyncio.Task[None]] = None
+        async with self._lock:
+            if not self._running:
+                return
+            self._running = False
+            queue = self._queue
+            if queue is not None:
+                try:
+                    queue.put_nowait(None)
+                except asyncio.QueueFull:
+                    pass
+            task = self._worker_task
+            self._worker_task = None
+        if task:
+            try:
+                await asyncio.wait_for(task, timeout=timeout)
+            except asyncio.TimeoutError:
+                log.warning("Ops dashboard dispatcher stop timeout; cancelling worker")
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+        async with self._lock:
+            self._queue = None
+        await ops_dashboard_client.close()
+        log.info("Ops dashboard dispatcher stopped")
+
+    def enqueue(self, message: Dict[str, Any]) -> bool:
+        queue = self._queue
+        if not self._running or queue is None:
+            return False
+        try:
+            queue.put_nowait(message)
+            return True
+        except asyncio.QueueFull:
+            log.warning(
+                "Ops dashboard dispatcher queue full (max=%s); dropped session_id=%s",
+                OPS_DASHBOARD_QUEUE_MAXSIZE,
+                message.get("session_id"),
+            )
+            return True
+
+    async def _worker(self) -> None:
+        queue = self._queue
+        if queue is None:
+            return
+        try:
+            while True:
+                message = await queue.get()
+                if message is None:
+                    break
+                try:
+                    await self._process_message(message)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    log.error(
+                        "Unexpected error while processing ops dashboard event: %s",
+                        exc,
+                        exc_info=True,
+                    )
+        except asyncio.CancelledError:
+            log.info("Ops dashboard dispatcher worker cancelled")
+
+    async def _process_message(self, message: Dict[str, Any]) -> None:
+        attempt = 0
+        delay = 0.5
+        while True:
+            attempt += 1
+            try:
+                success = await _record_conversation_event(message)
+            except Exception as exc:  # pylint: disable=broad-except
+                log.warning(
+                    "Ops dashboard ingestion raised error attempt=%s: %s",
+                    attempt,
+                    exc,
+                    exc_info=True,
+                )
+                success = False
+            if success:
+                return
+            if attempt >= OPS_DASHBOARD_MAX_ATTEMPTS:
+                log.error(
+                    "Ops dashboard ingestion failed after %s attempts (session_id=%s); dropping event",
+                    attempt,
+                    message.get("session_id"),
+                )
+                return
+            await asyncio.sleep(delay)
+            delay = min(delay * 2, 5)
+
+
+_conversation_dispatcher = _ConversationEventDispatcher()
+
+
+async def start_conversation_ingestion() -> None:
+    await _conversation_dispatcher.start()
+
+
+async def stop_conversation_ingestion(timeout: float = 5.0) -> None:
+    await _conversation_dispatcher.stop(timeout=timeout)
 
 
 def _fire_and_forget(coro: Coroutine[Any, Any, Any]) -> None:
@@ -27,6 +154,8 @@ def _fire_and_forget(coro: Coroutine[Any, Any, Any]) -> None:
 
 def enqueue_conversation_event(message: Dict[str, Any]) -> None:
     if not OPS_DASHBOARD_ENABLED:
+        return
+    if _conversation_dispatcher.enqueue(message):
         return
     _fire_and_forget(_record_conversation_event(message))
 
