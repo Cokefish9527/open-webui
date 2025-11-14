@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 
@@ -38,6 +38,10 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
 router = APIRouter(prefix="/hsai/projects", tags=["HSAI 项目管理"])
+
+
+def _is_super_admin(user) -> bool:
+    return bool(getattr(user, "is_super_admin", False))
 
 
 class BlueprintSummary(BaseModel):
@@ -111,18 +115,24 @@ async def get_projects(
         # 计算offset
         offset = (pi - 1) * ps
         
-        projects = HSAIProjects.get_projects_by_user_id(
-            user.id,
-            status=status,
-            limit=ps,
-            offset=offset
-        )
-        
-        # 获取总数
-        total = HSAIProjects.get_projects_count(
-            user.id,
-            status=status
-        )
+        if _is_super_admin(user):
+            projects = HSAIProjects.get_projects(
+                status=status,
+                limit=ps,
+                offset=offset,
+            )
+            total = HSAIProjects.get_projects_count_all(status=status)
+        else:
+            projects = HSAIProjects.get_projects_by_user_id(
+                user.id,
+                status=status,
+                limit=ps,
+                offset=offset
+            )
+            total = HSAIProjects.get_projects_count(
+                user.id,
+                status=status
+            )
         
         responses = [HSAIProjectResponse(**project.model_dump()) for project in projects]
         
@@ -167,7 +177,10 @@ async def create_project(
         HSAIProjectResponse: 创建的项目信息
     """
     try:
-        project = HSAIProjects.insert_new_project(user.id, form_data)
+        target_user_id = (
+            form_data.user_id if (_is_super_admin(user) and form_data.user_id) else user.id
+        )
+        project = HSAIProjects.insert_new_project(target_user_id, form_data)
         if not project:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -198,7 +211,7 @@ async def create_project(
                 prompt_config=template.prompt_config,
             )
 
-            task = HSAITasks.insert_new_task(user.id, task_form)
+            task = HSAITasks.insert_new_task(target_user_id, task_form)
             if task:
                 main_tasks.append(task)
 
@@ -229,7 +242,9 @@ async def get_project(
     """获取单个项目详情"""
     try:
         project = HSAIProjects.get_project_by_id(project_id)
-        if not project or project.user_id != user.id:
+        is_admin = _is_super_admin(user)
+        if not project or (project.user_id != user.id and not is_admin):
+        ):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Project not found"
@@ -273,7 +288,9 @@ async def update_project(
     try:
         # 楠岃瘉椤圭洰鎵€鏈夋潈
         existing_project = HSAIProjects.get_project_by_id(project_id)
-        if not existing_project or existing_project.user_id != user.id:
+        if not existing_project or (
+            existing_project.user_id != user.id and not _is_super_admin(user)
+        ):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Project not found"
@@ -322,7 +339,9 @@ async def delete_project(
     try:
         # 楠岃瘉椤圭洰鎵€鏈夋潈
         existing_project = HSAIProjects.get_project_by_id(project_id)
-        if not existing_project or existing_project.user_id != user.id:
+        if not existing_project or (
+            existing_project.user_id != user.id and not _is_super_admin(user)
+        ):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Project not found"
@@ -370,22 +389,22 @@ async def get_project_tasks(
     - metadata：附加信息
     """
     try:
-        # 楠岃瘉椤圭洰鎵€鏈夋潈
+    try:
+        # 校验项目所属
         project = HSAIProjects.get_project_by_id(project_id)
-        if not project or project.user_id != user.id:
+        is_admin = _is_super_admin(user)
+        if not project or (project.user_id != user.id and not is_admin):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Project not found"
             )
         
-        # 鑾峰彇椤圭洰鍏宠仈鐨勪换鍔?
-        tasks = HSAITasks.get_tasks_by_user_id(user.id, project_id=project_id)
+        # 获取项目关联任务
+        if is_admin:
+            tasks = HSAITasks.get_tasks_by_project_id(project_id=project_id)
+        else:
+            tasks = HSAITasks.get_tasks_by_user_id(user.id, project_id=project_id)
         responses = [HSAITaskResponse(**task.model_dump()) for task in tasks]
-        
-        return responses
-        
-    except HTTPException:
-        raise
     except Exception as e:
         log.exception(f"Error getting project tasks: {e}")
         raise HTTPException(
@@ -415,7 +434,8 @@ async def get_project_summary(
     """
     try:
         project = HSAIProjects.get_project_by_id(project_id)
-        if not project or project.user_id != user.id:
+        is_admin = _is_super_admin(user)
+        if not project or (project.user_id != user.id and not is_admin):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Project not found",
@@ -467,9 +487,14 @@ async def get_project_summary(
                             }
                         )
 
-        tasks: List[HSAITaskModel] = HSAITasks.get_tasks_by_user_id(
-            user.id, project_id=project_id, limit=500
-        )
+        if is_admin:
+            tasks: List[HSAITaskModel] = HSAITasks.get_tasks_by_project_id(
+                project_id=project_id, limit=500
+            )
+        else:
+            tasks = HSAITasks.get_tasks_by_user_id(
+                user.id, project_id=project_id, limit=500
+            )
 
         main_total = 0
         main_completed = 0

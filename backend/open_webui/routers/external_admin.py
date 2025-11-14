@@ -24,6 +24,7 @@ from open_webui.utils.auth import get_password_hash
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.models.external_admin_tokens import ExternalAdminTokens
+from open_webui.services.enterprise_provisioning import provision_enterprise_membership
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS.get("CONFIG", "INFO"))
@@ -248,33 +249,55 @@ async def issue_oauth_token(payload: OAuthTokenRequest):
 async def create_user(form_data: AddUserForm, request: Request):
     """创建用户（仅外部管理系统可访问）"""
     verify_external_request(request)
-    
-    # 检查用户是否已存在
+
+    business_name = (form_data.business_name or "").strip()
+    if not business_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="business_name is required",
+        )
+
     if Users.get_user_by_email(form_data.email.lower()):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="用户邮箱已存在"
+            detail="用户邮箱已存在",
         )
-    
-    # 创建认证信息
+
     hashed_password = get_password_hash(form_data.password)
-    
-    # 创建用户
+
     user = Auths.insert_new_auth(
         email=form_data.email.lower(),
         password=hashed_password,
         name=form_data.name,
         profile_image_url=form_data.profile_image_url or "/user.png",
-        role=form_data.role or "pending"
+        role=form_data.role or "pending",
     )
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.CREATE_USER_ERROR
+            detail=ERROR_MESSAGES.CREATE_USER_ERROR,
         )
-    
+
+    try:
+        provision_enterprise_membership(
+            user_id=user.id,
+            business_name=business_name,
+            promote_as_admin=True,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        ) from exc
+
     return user
+
 
 @router.put("/users/{user_id}", response_model=UserModel)
 async def update_user(
@@ -282,35 +305,51 @@ async def update_user(
 ):
     """更新用户信息（仅外部管理系统可访问）"""
     verify_external_request(request)
-    
-    # 检查用户是否存在
+
     user = Users.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="用户不存在"
+            detail="用户不存在",
         )
-    
-    # 更新用户信息
+
     update_data = {
         "name": form_data.name,
         "email": form_data.email.lower(),
         "role": form_data.role or "pending",
-        "profile_image_url": form_data.profile_image_url or "/user.png"
+        "profile_image_url": form_data.profile_image_url or "/user.png",
     }
-    
-    # 如果提供了新密码，则更新密码
+
     if form_data.password:
         hashed_password = get_password_hash(form_data.password)
         Auths.update_user_password_by_id(user_id, hashed_password)
-    
+
     updated_user = Users.update_user_by_id(user_id, update_data)
     if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="更新用户失败"
+            detail="更新用户失败",
         )
-    
+
+    business_name = (form_data.business_name or "").strip() if form_data.business_name else None
+    if business_name:
+        try:
+            provision_enterprise_membership(
+                user_id=user_id,
+                business_name=business_name,
+                promote_as_admin=False,
+            )
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(exc),
+            ) from exc
+        except RuntimeError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(exc),
+            ) from exc
+
     return updated_user
 
 

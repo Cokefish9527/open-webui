@@ -91,6 +91,7 @@ class SignupForm(BaseModel):
 
 
 class AddUserForm(SignupForm):
+    business_name: Optional[str] = None
     role: Optional[str] = "pending"
 
 
@@ -102,6 +103,7 @@ class ExternalAdminUserUpdateForm(BaseModel):
     password: Optional[str] = None
     profile_image_url: Optional[str] = "/user.png"
     role: Optional[str] = "pending"
+    business_name: Optional[str] = None
 
 
 class AuthsTable:

@@ -75,6 +75,7 @@ class CompanyForm(BaseModel):
     description: Optional[str] = None
     company_info: Optional[dict] = None
     config: Optional[dict] = None
+    owner_user_id: Optional[str] = None
 
 
 class CompanyUpdateForm(BaseModel):
@@ -83,6 +84,7 @@ class CompanyUpdateForm(BaseModel):
     company_info: Optional[dict] = None
     status: Optional[str] = None
     config: Optional[dict] = None
+    owner_user_id: Optional[str] = None
 
 
 ####################
@@ -127,11 +129,13 @@ class CompaniesTable:
     ) -> Optional[CompanyModel]:
         with get_db() as db:
             id = str(uuid.uuid4())
+            form_payload = form_data.model_dump(exclude_unset=True)
+            explicit_owner = form_payload.pop("owner_user_id", None)
             company = CompanyModel(
                 **{
                     "id": id,
-                    "owner_user_id": owner_user_id,
-                    **form_data.model_dump(),
+                    "owner_user_id": explicit_owner or owner_user_id,
+                    **form_payload,
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                 }
@@ -214,8 +218,12 @@ class CompaniesTable:
             try:
                 company = db.get(Company, company_id)
                 if company:
-                    for key, value in form_data.model_dump(exclude_unset=True).items():
+                    payload = form_data.model_dump(exclude_unset=True)
+                    owner_override = payload.pop("owner_user_id", None)
+                    for key, value in payload.items():
                         setattr(company, key, value)
+                    if owner_override:
+                        company.owner_user_id = owner_override
                     company.updated_at = int(time.time())
                     
                     db.commit()

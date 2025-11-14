@@ -24,6 +24,15 @@ flowchart LR
 - Traceability：`PROJECTWIKI.md` 段落引用具体代码路径（如 `backend/open_webui/models/hsai_materials.py:100`）。
 
 ## 架构决策记录（ADR）
+### ADR-2025-11-14：外部开户企业编排（`backend/open_webui/services/enterprise_provisioning.py`）
+- 背景：后台（hsai_admin）创建客户账号时，需要在业务服务端同步企业查重、默认项目与“企业信息收集”主线任务，历史上 `external_admin` 仅创建用户记录。
+- 决策：
+  1. `AddUserForm/ExternalAdminUserUpdateForm` 新增 `business_name` 字段，`external_admin` 路由强制要求该字段；
+  2. 新建 `provision_enterprise_membership()` 服务，负责企业查重 → 公司创建 → 用户绑定 → 默认项目/任务编排；
+  3. `ensure_company_project_and_main_tasks()` 在缺少 `company_info_collection` 模板时自动写入 fallback 任务（终止条件：收到战略蓝图）。
+- 影响：`external_admin` 现在具备幂等的企业侧效应；后台只需提交企业名称即可完成联动。
+- 回滚：可在 `external_admin` 中跳过 `provision_enterprise_membership()` 调用并将 `business_name` 设为可选，但需同时通知后台移除必填约束。
+
 ### ADR-2025-11-13：HSAI 素材 OSS 列运行时自愈
 - 背景：`hsai_materials` 表缺少 `oss_object_path` 列时，`HSAIMaterials.get_materials_count()` 的 `query.count()` 触发 `psycopg2.errors.UndefinedColumn`。
 - 方案：新增 `ensure_materials_storage_schema()`（`backend/open_webui/internal/migrations/materials_storage.py`），并在 `HSAIMaterials` 所有 DB 访问前调用 `_schema_aware_db()`，首次连接即补列。
@@ -36,6 +45,24 @@ flowchart LR
 - 素材 OSS 元数据没有冗余校验（如桶名称合法性），可在下个迭代补充约束。
 
 ## 模块文档
+### Enterprise Provisioning（`backend/open_webui/services/enterprise_provisioning.py`）
+- 职责：`provision_enterprise_membership()` 幂等化企业查重、公司创建、用户绑定以及触发 `ensure_company_project_and_main_tasks()`。
+- 入口：`external_admin.create_user/update_user` 成功后调用，确保后台开户即同步企业资产。
+- 风险：`business_name` 为空会抛出 400；若 `Companies.insert_new_company()` 返回空需要关注数据库连接/约束问题。
+
+### Onboarding Orchestrator（`backend/open_webui/services/onboarding_orchestrator.py`）
+- 更新点：当 `task_template_registry` 中缺少 `company_info_collection` 模板时，自动注入 fallback 任务（模板 key `company_info_collection_fallback`，完成条件“收到战略蓝图”）。
+- 输出：`seeded_main_tasks` 现在可能包含 fallback 记录，外部系统可据此识别模板缺失情况。
+
+### External Admin Router（`backend/open_webui/routers/external_admin.py`）
+- `POST /external/admin/users`：新增 `business_name` 校验，并在创建用户后调用企业编排服务。
+- `PUT /external/admin/users/{id}`：允许在更新时重新绑定企业名称，自动触发企业/项目同步。
+- 仍提供 `/companies/*`、`/users/*` 细粒度接口，供批量脚本或运营工具使用。
+
+### HSAI Companies / Projects Routers（`backend/open_webui/routers/hsai_companies.py`, `hsai_projects.py`）
+- 超级管理员 (`is_super_admin=True`) 可以查询/管理全部企业与项目，并可通过请求体中的 `owner_user_id` 或 `user_id` 来指定企业负责人或项目负责人。
+- 普通用户保持原有边界，仅能访问自身资源，从而保证 API 既能支撑后台联动，也不会破坏多租户隔离。
+
 ### HSAI Materials（`backend/open_webui/models/hsai_materials.py`）
 - 职责：定义素材/标签/分类 ORM、Pydantic 模型与业务访问层。
 - 入口：`HSAIMaterialsTable` (`HSAIMaterials` 单例) 提供 CRUD / 聚合。
@@ -54,6 +81,24 @@ flowchart LR
 - 软删除由 `is_deleted`, `deleted_at`, `deleted_by` 维护，查询需过滤。
 
 ## 核心流程
+```mermaid
+sequenceDiagram
+    participant Admin as 后台（hsai_admin）
+    participant ExternalAPI as external_admin.create_user
+    participant Provision as EnterpriseProvisioning
+    participant Orchestrator as ensure_company_project_and_main_tasks
+    participant DB as DB
+
+    Admin->>ExternalAPI: POST /external/admin/users\n{ name,email,password,business_name }
+    ExternalAPI->>Provision: provision_enterprise_membership(user_id,business_name)
+    Provision->>DB: 查重 Companies / 插入公司
+    Provision->>DB: Users.update_user_by_id(... business_name ...)
+    Provision->>Orchestrator: ensure_company_project_and_main_tasks(user_id)
+    Orchestrator->>DB: 创建默认项目 + 主线任务/蓝图任务
+    Orchestrator->>DB: 若缺模板 => fallback 任务（completion=战略蓝图）
+    ExternalAPI-->>Admin: UserModel（含 business_name 映射）
+```
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -80,6 +125,7 @@ sequenceDiagram
 - 启动前监控日志中是否存在 `[MIGRATION] ensure_materials_storage_schema` 相关输出，确保 schema 自愈成功。
 - 新增列时同步扩展 `_column_defs_for()`，避免 PostgreSQL/SQLite 定义不一致。
 - 建议在 CI 中最低运行 `pytest backend/test/test_materials_storage_schema.py` 以防回归。
+- 当后台或脚本需要跨租户管理企业/项目时，请使用 `is_super_admin` 账号调用 `/hsai/companies`、`/hsai/projects` API，避免直接写库。
 
 ## 术语表
 - **OSS**：阿里云对象存储，保存大文件。

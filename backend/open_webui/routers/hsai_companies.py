@@ -29,6 +29,10 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 router = APIRouter(prefix="/hsai/companies", tags=["HSAI 公司管理"])
 
 
+def _is_super_admin(user) -> bool:
+    return bool(getattr(user, "is_super_admin", False))
+
+
 @router.get("/", response_model=PaginatedCompanyResponse, summary="获取公司列表")
 async def get_companies(
     company_status: Optional[str] = Query(None, description="公司状态过滤"),
@@ -49,21 +53,25 @@ async def get_companies(
         PaginatedCompanyResponse: 分页的公司列表
     """
     try:
-        # 计算offset
         offset = (pi - 1) * ps
-        
-        companies = Companies.get_companies_by_owner_user_id(
-            user.id,
-            status=company_status,
-            limit=ps,
-            offset=offset
-        )
-        
-        # 获取总数
-        total = Companies.get_companies_count(
-            user.id,
-            status=company_status
-        )
+        if _is_super_admin(user):
+            companies = Companies.get_all_companies(
+                status=company_status,
+                limit=ps,
+                offset=offset,
+            )
+            total = Companies.get_all_companies_count(status=company_status)
+        else:
+            companies = Companies.get_companies_by_owner_user_id(
+                user.id,
+                status=company_status,
+                limit=ps,
+                offset=offset,
+            )
+            total = Companies.get_companies_count(
+                user.id,
+                status=company_status,
+            )
         
         responses = [CompanyResponse(**company.model_dump()) for company in companies]
         
@@ -106,7 +114,12 @@ async def create_company(
         CompanyResponse: 创建的公司信息
     """
     try:
-        company = Companies.insert_new_company(user.id, form_data)
+        target_owner_id = (
+            form_data.owner_user_id
+            if (_is_super_admin(user) and form_data.owner_user_id)
+            else user.id
+        )
+        company = Companies.insert_new_company(target_owner_id, form_data)
         if not company:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -133,7 +146,9 @@ async def get_company(
     """获取单个公司详情"""
     try:
         company = Companies.get_company_by_id(company_id)
-        if not company or company.owner_user_id != user.id:
+        if not company or (
+            company.owner_user_id != user.id and not _is_super_admin(user)
+        ):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Company not found"
@@ -161,7 +176,9 @@ async def update_company(
     try:
         # 验证公司所有权
         existing_company = Companies.get_company_by_id(company_id)
-        if not existing_company or existing_company.owner_user_id != user.id:
+        if not existing_company or (
+            existing_company.owner_user_id != user.id and not _is_super_admin(user)
+        ):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Company not found"
@@ -195,7 +212,9 @@ async def delete_company(
     try:
         # 验证公司所有权
         existing_company = Companies.get_company_by_id(company_id)
-        if not existing_company or existing_company.owner_user_id != user.id:
+        if not existing_company or (
+            existing_company.owner_user_id != user.id and not _is_super_admin(user)
+        ):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Company not found"

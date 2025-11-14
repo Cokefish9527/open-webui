@@ -2,13 +2,10 @@ import logging
 import logging
 import time
 import uuid
-from contextlib import contextmanager
-from threading import Lock
 from typing import Optional, List, Sequence
 
 from open_webui.internal.db import Base, JSONField, get_db
-from open_webui.env import DATABASE_SCHEMA, SRC_LOG_LEVELS
-from open_webui.internal.migrations import ensure_materials_storage_schema
+from open_webui.env import SRC_LOG_LEVELS
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean, Integer, cast
@@ -24,31 +21,6 @@ from ._timestamp_utils import (
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-_SCHEMA_LOCK = Lock()
-_SCHEMA_READY = False
-
-
-def _ensure_materials_schema(session) -> None:
-    global _SCHEMA_READY
-    if _SCHEMA_READY:
-        return
-    with _SCHEMA_LOCK:
-        if _SCHEMA_READY:
-            return
-        ensure_materials_storage_schema(
-            session.get_bind(),
-            schema=DATABASE_SCHEMA,
-            logger=log.debug,
-        )
-        _SCHEMA_READY = True
-
-
-@contextmanager
-def _schema_aware_db():
-    with _schema_aware_db() as db:
-        _ensure_materials_schema(db)
-        yield db
-
 ####################
 # HSAI Materials DB Schema
 ####################
@@ -62,13 +34,13 @@ class HSAIMaterialFolder(Base):
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     
-    # 父级文件夹ID，支持树形结�?
+    # 父级文件夹ID，支持树形结构
     parent_id = Column(String, ForeignKey("hsai_material_folders.id"), nullable=True)
     
-    # 所属用�?
+    # 所属用户
     user_id = Column(String, nullable=False)
     
-    # 文件夹配�?
+    # 文件夹配置
     settings = Column(JSON, nullable=True)
     
     # 排序权重
@@ -79,7 +51,7 @@ class HSAIMaterialFolder(Base):
 
 
 class HSAIMaterial(Base):
-    """HSAI素材文件�?""
+    """HSAI素材文件表"""
     __tablename__ = "hsai_materials"
 
     id = Column(String, primary_key=True)
@@ -92,29 +64,29 @@ class HSAIMaterial(Base):
     # 所属文件夹
     folder_id = Column(String, ForeignKey("hsai_material_folders.id"), nullable=True)
     
-    # 所属用�?
+    # 所属用户
     user_id = Column(String, nullable=False)
     
     # 文件相关信息
     file_path = Column(String, nullable=True)  # 实际文件路径
     file_size = Column(BigInteger, nullable=True)  # 文件大小(字节)
-    file_hash = Column(String, nullable=True)  # 文件哈希�?
+    file_hash = Column(String, nullable=True)  # 文件哈希值
     mime_type = Column(String, nullable=True)  # MIME类型
     
-    # 素材元数�?
+    # 素材元数据
     material_metadata = Column(JSON, nullable=True)  # 视频分辨率、时长等
     
     # 标签系统
     tags = Column(JSON, nullable=True)  # 标签数组
     
     # AI分析结果
-    ai_analysis = Column(JSON, nullable=True)  # AI分析的结�?
+    ai_analysis = Column(JSON, nullable=True)  # AI分析的结果
     
     # 使用统计
     usage_count = Column(BigInteger, default=0)  # 使用次数
-    last_used_at = Column(EpochTimestamp(), nullable=True)  # 最后使用时�?
+    last_used_at = Column(EpochTimestamp(), nullable=True)  # 最后使用时间
     
-    # 状态管�?
+    # 状态管理
     status = Column(String, default="active")  # active, archived, deleted
     
     # 访问控制
@@ -125,19 +97,19 @@ class HSAIMaterial(Base):
     technique_code = Column(String, nullable=True)  # 手法代码
     properties_code = Column(String, nullable=True) # 属性代码（多个属性用下划线分隔）
     
-    # 视频元数�?
-    duration = Column(Integer, nullable=True)       # 视频时长（秒�?
-    resolution = Column(String, nullable=True)      # 视频分辨�?
+    # 视频元数据
+    duration = Column(Integer, nullable=True)       # 视频时长（秒）
+    resolution = Column(String, nullable=True)      # 视频分辨率
     
     # OSS信息
     oss_bucket = Column(String, nullable=True)
     oss_key = Column(String, nullable=True)
     oss_object_path = Column(String, nullable=True)
     
-    # 回收站功能相关字�?
+    # 回收站功能相关字段
     is_deleted = Column(Boolean, default=False)     # 删除标志位（true表示已删除）
     original_directory = Column(String, nullable=True)  # 原始目录（软删除时保存文件原始所在目录）
-    deleted_at = Column(EpochTimestamp(), nullable=True)      # 删除时间（软删除时间�?
+    deleted_at = Column(EpochTimestamp(), nullable=True)      # 删除时间（软删除时间）
     deleted_by = Column(String, nullable=True)          # 删除人ID（软删除操作人）
     
     created_at = Column(EpochTimestamp())
@@ -145,7 +117,7 @@ class HSAIMaterial(Base):
 
 
 class HSAIMaterialTag(Base):
-    """HSAI素材标签�?""
+    """HSAI素材标签表"""
     __tablename__ = "hsai_material_tags"
 
     id = Column(String, primary_key=True)
@@ -153,7 +125,7 @@ class HSAIMaterialTag(Base):
     color = Column(String, nullable=True)  # 标签颜色
     category = Column(String, nullable=True)  # 标签分类
     
-    # 所属用�?
+    # 所属用户
     user_id = Column(String, nullable=False)
     
     # 使用统计
@@ -164,7 +136,7 @@ class HSAIMaterialTag(Base):
 
 
 class HSAIMaterialCategory(Base):
-    """HSAI素材分类�?""
+    """HSAI素材分类表"""
     __tablename__ = "hsai_material_categories"
     
     id = Column(String, primary_key=True)
@@ -179,18 +151,18 @@ class HSAIMaterialCategory(Base):
 
 
 class HSAIFileOperationLog(Base):
-    """HSAI文件操作日志�?""
+    """HSAI文件操作日志表"""
     __tablename__ = "hsai_file_operation_logs"
     
     id = Column(String, primary_key=True)
     material_id = Column(String, ForeignKey("hsai_materials.id"), nullable=False)  # 素材ID
-    operation_type = Column(String, nullable=False)  # 操作类型（upload/delete/restore/move/modify�?
-    source_path = Column(String, nullable=False)     # 源文件路�?
+    operation_type = Column(String, nullable=False)  # 操作类型（upload/delete/restore/move/modify）
+    source_path = Column(String, nullable=False)     # 源文件路径
     target_path = Column(String, nullable=True)      # 目标文件路径
     operator_id = Column(String, nullable=False)     # 操作人ID
     operation_time = Column(BigInteger, nullable=False)  # 操作时间
     details = Column(JSON, nullable=True)            # 操作详情
-    enterprise_id = Column(String, nullable=True)    # 企业ID（用于企业级过滤�?
+    enterprise_id = Column(String, nullable=True)    # 企业ID（用于企业级过滤）
     
     created_at = Column(EpochTimestamp())
     updated_at = Column(EpochTimestamp())
@@ -202,18 +174,18 @@ class HSAIFileOperationLog(Base):
 
 
 class HSAIMaterialFolderModel(BaseModel):
-    """HSAI素材文件夹模�?""
+    """HSAI素材文件夹模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = Field(description="文件夹唯一标识�?)
-    name: str = Field(description="文件夹名�?)
-    description: Optional[str] = Field(default=None, description="文件夹描�?)
+    id: str = Field(description="文件夹唯一标识符")
+    name: str = Field(description="文件夹名称")
+    description: Optional[str] = Field(default=None, description="文件夹描述")
     parent_id: Optional[str] = Field(default=None, description="父级文件夹ID")
     user_id: str = Field(description="用户ID")
-    settings: Optional[dict] = Field(default=None, description="文件夹配�?)
+    settings: Optional[dict] = Field(default=None, description="文件夹配置")
     sort_order: int = Field(default=0, description="排序权重")
-    created_at: int = Field(description="创建时间�?)
-    updated_at: int = Field(description="更新时间�?)
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
     
     @field_validator('parent_id', mode='before')
     @classmethod
@@ -238,7 +210,7 @@ class HSAIMaterialModel(BaseModel):
     """HSAI素材文件模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = Field(description="素材唯一标识�?)
+    id: str = Field(description="素材唯一标识符")
     name: str = Field(description="素材名称")
     description: Optional[str] = Field(default=None, description="素材描述")
     material_type: str = Field(description="素材类型：video, image, audio, text, document")
@@ -246,28 +218,28 @@ class HSAIMaterialModel(BaseModel):
     user_id: str = Field(description="用户ID")
     file_path: Optional[str] = Field(default=None, description="文件路径")
     file_size: Optional[int] = Field(default=None, description="文件大小(字节)")
-    file_hash: Optional[str] = Field(default=None, description="文件哈希�?)
+    file_hash: Optional[str] = Field(default=None, description="文件哈希值")
     mime_type: Optional[str] = Field(default=None, description="MIME类型")
-    material_metadata: Optional[dict] = Field(default=None, description="素材元数�?)
+    material_metadata: Optional[dict] = Field(default=None, description="素材元数据")
     tags: Optional[List[str]] = Field(default=None, description="标签数组")
     ai_analysis: Optional[dict] = Field(default=None, description="AI分析结果")
     usage_count: int = Field(default=0, description="使用次数")
-    last_used_at: Optional[int] = Field(default=None, description="最后使用时�?)
-    status: str = Field(default="active", description="状态管�?)
+    last_used_at: Optional[int] = Field(default=None, description="最后使用时间")
+    status: str = Field(default="active", description="状态管理")
     access_control: Optional[dict] = Field(default=None, description="访问控制")
     scene_code: Optional[str] = Field(default=None, description="场景代码")
     technique_code: Optional[str] = Field(default=None, description="手法代码")
-    properties_code: Optional[List[str]] = Field(default=None, description="属性代码列�?)
-    duration: Optional[int] = Field(default=None, description="视频时长（秒�?)
-    resolution: Optional[str] = Field(default=None, description="视频分辨�?)
+    properties_code: Optional[List[str]] = Field(default=None, description="属性代码列表")
+    duration: Optional[int] = Field(default=None, description="视频时长（秒）")
+    resolution: Optional[str] = Field(default=None, description="视频分辨率")
     oss_bucket: Optional[str] = Field(default=None, description="OSS Bucket")
-    oss_key: Optional[str] = Field(default=None, description="OSS对象�?)
-    is_deleted: bool = Field(default=False, description="删除标志�?)
+    oss_key: Optional[str] = Field(default=None, description="OSS对象键")
+    is_deleted: bool = Field(default=False, description="删除标志位")
     original_directory: Optional[str] = Field(default=None, description="原始目录")
     deleted_at: Optional[int] = Field(default=None, description="删除时间")
     deleted_by: Optional[str] = Field(default=None, description="删除人ID")
-    created_at: int = Field(description="创建时间�?)
-    updated_at: int = Field(description="更新时间�?)
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
@@ -304,14 +276,14 @@ class HSAIMaterialTagModel(BaseModel):
     """HSAI素材标签模型"""
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = Field(description="标签唯一标识�?)
+    id: str = Field(description="标签唯一标识符")
     name: str = Field(description="标签名称")
     color: Optional[str] = Field(default=None, description="标签颜色")
     category: Optional[str] = Field(default=None, description="标签分类")
     user_id: str = Field(description="用户ID")
     usage_count: int = Field(default=0, description="使用统计")
-    created_at: int = Field(description="创建时间�?)
-    updated_at: int = Field(description="更新时间�?)
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
@@ -326,14 +298,14 @@ class HSAIMaterialCategoryModel(BaseModel):
     """HSAI素材分类模型"""
     model_config = ConfigDict(from_attributes=True)
     
-    id: str = Field(description="分类唯一标识�?)
+    id: str = Field(description="分类唯一标识符")
     name: str = Field(description="分类名称（英文）")
     display_name: str = Field(description="显示名称（中文）")
     category_type: str = Field(description="分类类型：scene, technique, property")
     description: Optional[str] = Field(default=None, description="描述")
     is_active: bool = Field(default=True, description="是否启用")
-    created_at: int = Field(description="创建时间�?)
-    updated_at: int = Field(description="更新时间�?)
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
@@ -348,17 +320,17 @@ class HSAIFileOperationLogModel(BaseModel):
     """HSAI文件操作日志模型"""
     model_config = ConfigDict(from_attributes=True)
     
-    id: str = Field(description="日志唯一标识�?)
+    id: str = Field(description="日志唯一标识符")
     material_id: str = Field(description="素材ID")
-    operation_type: str = Field(description="操作类型（upload/delete/restore/move/modify�?)
-    source_path: str = Field(description="源文件路�?)
+    operation_type: str = Field(description="操作类型（upload/delete/restore/move/modify）")
+    source_path: str = Field(description="源文件路径")
     target_path: Optional[str] = Field(default=None, description="目标文件路径")
     operator_id: str = Field(description="操作人ID")
     operation_time: int = Field(description="操作时间")
     details: Optional[dict] = Field(default=None, description="操作详情")
     enterprise_id: Optional[str] = Field(default=None, description="企业ID")
-    created_at: int = Field(description="创建时间�?)
-    updated_at: int = Field(description="更新时间�?)
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
     @field_validator("operation_time", "created_at", "updated_at", mode="before")
     @classmethod
@@ -403,7 +375,7 @@ class HSAIMaterialForm(BaseModel):
     oss_bucket: Optional[str] = None
     oss_key: Optional[str] = None
     oss_object_path: Optional[str] = None
-    # 回收站相关字�?
+    # 回收站相关字段
     is_deleted: bool = False
     original_directory: Optional[str] = None
     deleted_at: Optional[int] = None
@@ -433,7 +405,7 @@ class HSAIFileOperationLogForm(BaseModel):
     operation_time: int
     details: Optional[dict] = None
     enterprise_id: Optional[str] = None
-    # 移除�?operator_id 字段，直接使用当前登录用户信�?
+    # 移除了 operator_id 字段，直接使用当前登录用户信息
 
 
 ####################
@@ -442,13 +414,13 @@ class HSAIFileOperationLogForm(BaseModel):
 
 
 class HSAIMaterialFolderResponse(BaseModel):
-    id: str = Field(description="文件夹唯一标识�?)
-    name: str = Field(description="文件夹名�?)
-    label: str = Field(description="文件夹标签，与name字段相同，仅供前端使�?)
-    description: Optional[str] = Field(default=None, description="文件夹描�?)
+    id: str = Field(description="文件夹唯一标识符")
+    name: str = Field(description="文件夹名称")
+    label: str = Field(description="文件夹标签，与name字段相同，仅供前端使用")
+    description: Optional[str] = Field(default=None, description="文件夹描述")
     parent_id: Optional[str] = Field(default=None, description="父文件夹ID")
     parent_name: Optional[str] = Field(default=None, description="父文件夹名称")  # 添加父文件夹名称字段
-    settings: Optional[dict] = Field(default=None, description="文件夹配�?)
+    settings: Optional[dict] = Field(default=None, description="文件夹配置")
     sort_order: int = Field(default=0, description="排序权重")
     children: Optional[List['HSAIMaterialFolderResponse']] = Field(default=None, description="子文件夹列表")
     material_count: Optional[int] = Field(default=None, description="文件夹内素材数量")
@@ -463,23 +435,23 @@ class HSAIMaterialFolderResponse(BaseModel):
     is_required: Optional[bool] = Field(default=None, description="是否必拍")
     shot_sizes: Optional[str] = Field(default=None, description="景别要求")
     camera_movements: Optional[str] = Field(default=None, description="运镜要求")
-    duration_min: Optional[int] = Field(default=None, description="最短时�?)
-    duration_max: Optional[int] = Field(default=None, description="最长时�?)
+    duration_min: Optional[int] = Field(default=None, description="最短时长")
+    duration_max: Optional[int] = Field(default=None, description="最长时长")
     min_resolution: Optional[str] = Field(default=None, description="最低分辨率")
-    priority: Optional[str] = Field(default=None, description="优先�?)
-    shooting_tips: Optional[str] = Field(default=None, description="拍摄技�?)
+    priority: Optional[str] = Field(default=None, description="优先级")
+    shooting_tips: Optional[str] = Field(default=None, description="拍摄技巧")
     quality_standards: Optional[str] = Field(default=None, description="质量标准")
-    reference_video: Optional[str] = Field(default=None, description="参考视频链�?)
-    reference_image: Optional[str] = Field(default=None, description="参考图片链�?)
+    reference_video: Optional[str] = Field(default=None, description="参考视频链接")
+    reference_image: Optional[str] = Field(default=None, description="参考图片链接")
     oss_object_path: Optional[str] = Field(default=None, description="OSS对象相对路径")
-    oss_last_modified: Optional[int] = Field(default=None, description="OSS对象最后修改时�?)
-    sync_status: Optional[str] = Field(default=None, description="与OSS/DB同步状�?)
-    created_at: int = Field(description="创建时间�?)
-    updated_at: int = Field(description="更新时间�?)
+    oss_last_modified: Optional[int] = Field(default=None, description="OSS对象最后修改时间")
+    sync_status: Optional[str] = Field(default=None, description="与OSS/DB同步状态")
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIMaterialResponse(BaseModel):
-    id: str = Field(description="素材唯一标识�?)
+    id: str = Field(description="素材唯一标识符")
     name: str = Field(description="素材名称")
     description: Optional[str] = Field(default=None, description="素材描述")
     material_type: str = Field(description="素材类型 (video, image, audio, text, document)")
@@ -487,30 +459,30 @@ class HSAIMaterialResponse(BaseModel):
     file_path: Optional[str] = Field(default=None, description="文件路径")
     file_size: Optional[int] = Field(default=None, description="文件大小(字节)")
     mime_type: Optional[str] = Field(default=None, description="MIME类型")
-    material_metadata: Optional[dict] = Field(default=None, description="素材元数�?分辨率、时长等)")
+    material_metadata: Optional[dict] = Field(default=None, description="素材元数据(分辨率、时长等)")
     tags: Optional[List[str]] = Field(default=None, description="标签列表")
     ai_analysis: Optional[dict] = Field(default=None, description="AI分析结果")
     usage_count: int = Field(default=0, description="使用次数")
     last_used_at: Optional[int] = Field(default=None, description="最后使用时间戳")
-    status: str = Field(default="active", description="状�?(active, archived, deleted)")
+    status: str = Field(default="active", description="状态 (active, archived, deleted)")
     thumbnail_url: Optional[str] = Field(default=None, description="缩略图URL")
     download_url: Optional[str] = Field(default=None, description="下载URL")
     # 新增字段
     scene_code: Optional[str] = Field(default=None, description="场景代码")
     technique_code: Optional[str] = Field(default=None, description="手法代码")
-    properties_code: Optional[List[str]] = Field(default=None, description="属性代码列�?)
-    duration: Optional[int] = Field(default=None, description="视频时长（秒�?)
-    resolution: Optional[str] = Field(default=None, description="视频分辨�?)
+    properties_code: Optional[List[str]] = Field(default=None, description="属性代码列表")
+    duration: Optional[int] = Field(default=None, description="视频时长（秒）")
+    resolution: Optional[str] = Field(default=None, description="视频分辨率")
     oss_bucket: Optional[str] = Field(default=None, description="OSS Bucket")
-    oss_key: Optional[str] = Field(default=None, description="OSS对象�?)
+    oss_key: Optional[str] = Field(default=None, description="OSS对象键")
     oss_object_path: Optional[str] = Field(default=None, description="OSS完整对象路径")
-    # 回收站相关字�?
+    # 回收站相关字段
     is_deleted: bool = Field(default=False, description="删除标志位（true表示已删除）")
     original_directory: Optional[str] = Field(default=None, description="原始目录（软删除时保存文件原始所在目录）")
-    deleted_at: Optional[int] = Field(default=None, description="删除时间（软删除时间�?)
+    deleted_at: Optional[int] = Field(default=None, description="删除时间（软删除时间）")
     deleted_by: Optional[str] = Field(default=None, description="删除人ID（软删除操作人）")
-    created_at: int = Field(description="创建时间�?)
-    updated_at: int = Field(description="更新时间�?)
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 # 添加分页响应模型
@@ -519,49 +491,49 @@ class PaginationData(BaseModel):
     total: int = Field(description="总记录数")
     page: int = Field(description="当前页码")
     size: int = Field(description="每页大小")
-    total_pages: int = Field(description="总页�?)
+    total_pages: int = Field(description="总页数")
 
 
 class HSAIMaterialCategoryResponse(BaseModel):
-    id: str = Field(description="分类唯一标识�?)
+    id: str = Field(description="分类唯一标识符")
     name: str = Field(description="分类名称（英文）")
     display_name: str = Field(description="显示名称（中文）")
     category_type: str = Field(description="分类类型：scene, technique, property")
     description: Optional[str] = Field(default=None, description="分类描述")
     is_active: bool = Field(default=True, description="是否启用")
-    created_at: int = Field(description="创建时间�?)
-    updated_at: int = Field(description="更新时间�?)
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class HSAIFileOperationLogResponse(BaseModel):
     """文件操作日志响应模型"""
-    id: str = Field(description="日志唯一标识�?)
-    material_id: str = Field(description="素材唯一标识�?)
-    operation_type: str = Field(description="操作类型（upload/delete/restore/move/modify�?)
-    source_path: str = Field(description="源文件路�?)
+    id: str = Field(description="日志唯一标识符")
+    material_id: str = Field(description="素材唯一标识符")
+    operation_type: str = Field(description="操作类型（upload/delete/restore/move/modify）")
+    source_path: str = Field(description="源文件路径")
     target_path: Optional[str] = Field(default=None, description="目标文件路径")
     operator_id: str = Field(description="操作人ID")
     operation_time: int = Field(description="操作时间")
     details: Optional[dict] = Field(default=None, description="操作详情")
     enterprise_id: Optional[str] = Field(default=None, description="企业ID")
-    created_at: int = Field(description="创建时间�?)
-    updated_at: int = Field(description="更新时间�?)
+    created_at: int = Field(description="创建时间戳")
+    updated_at: int = Field(description="更新时间戳")
 
 
 class PaginatedHSAIMaterialResponse(BaseModel):
-    """分页的素材响应模�?""
+    """分页的素材响应模型"""
     data: List[HSAIMaterialResponse] = Field(description="素材数据列表")
     pagination: PaginationData = Field(description="分页信息")
 
 
 class PaginatedHSAIMaterialCategoryResponse(BaseModel):
-    """分页的素材分类响应模�?""
+    """分页的素材分类响应模型"""
     data: List[HSAIMaterialCategoryResponse] = Field(description="素材分类数据列表")
     pagination: PaginationData = Field(description="分页信息")
 
 
 class PaginatedHSAIFileOperationLogResponse(BaseModel):
-    """分页的文件操作日志响应模�?""
+    """分页的文件操作日志响应模型"""
     data: List[HSAIFileOperationLogResponse] = Field(description="文件操作日志数据列表")
     pagination: PaginationData = Field(description="分页信息")
 
@@ -575,8 +547,8 @@ class HSAIMaterialFoldersTable:
     def insert_new_folder(
         self, user_id: str, form_data: HSAIMaterialFolderForm
     ) -> Optional[HSAIMaterialFolderModel]:
-        with _schema_aware_db() as db:
-            # 验证 parent_id 是否有效（如果提供了的话�?
+        with get_db() as db:
+            # 验证 parent_id 是否有效（如果提供了的话）
             if form_data.parent_id:
                 parent_folder = db.query(HSAIMaterialFolder).filter_by(
                     id=form_data.parent_id, user_id=user_id
@@ -585,7 +557,7 @@ class HSAIMaterialFoldersTable:
                     log.error(f"Invalid parent_id: {form_data.parent_id} for user {user_id}")
                     return None
             
-            # 检查同一父目录下是否已有同名文件�?
+            # 检查同一父目录下是否已有同名文件夹
             existing_folder = db.query(HSAIMaterialFolder).filter_by(
                 name=form_data.name,
                 parent_id=form_data.parent_id,
@@ -618,7 +590,7 @@ class HSAIMaterialFoldersTable:
                 return None
 
     def get_folders_by_user_id(self, user_id: str) -> List[HSAIMaterialFolderModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 folders = db.query(HSAIMaterialFolder).filter_by(user_id=user_id).all()
                 
@@ -629,7 +601,7 @@ class HSAIMaterialFoldersTable:
                 raw_child_count = sum(1 for f in folders if f.parent_id is not None)
                 log.info(f"Raw DB data: {raw_root_count} roots, {raw_child_count} children")
                 
-                # 显示一些有parent_id的示�?
+                # 显示一些有parent_id的示例
                 children_examples = [f for f in folders if f.parent_id is not None][:3]
                 for example in children_examples:
                     log.info(f"DB child example: {example.name} (ID: {example.id}) -> parent: {example.parent_id}")
@@ -666,7 +638,7 @@ class HSAIMaterialFoldersTable:
                         log.error(f"Failed to validate folder {folder.name}: {e}")
                         continue
                 
-                # 调试信息：检查转换后的数�?
+                # 调试信息：检查转换后的数据
                 validated_root_count = sum(1 for f in result if f.parent_id is None)
                 validated_child_count = sum(1 for f in result if f.parent_id is not None)
                 log.info(f"After manual validation: {validated_root_count} roots, {validated_child_count} children")
@@ -682,7 +654,7 @@ class HSAIMaterialFoldersTable:
                 return []
 
     def get_folder_by_id(self, folder_id: str) -> Optional[HSAIMaterialFolderModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 folder = db.get(HSAIMaterialFolder, folder_id)
                 return HSAIMaterialFolderModel.model_validate(folder) if folder else None
@@ -692,7 +664,7 @@ class HSAIMaterialFoldersTable:
     def update_folder_by_id(
         self, folder_id: str, form_data: HSAIMaterialFolderForm
     ) -> Optional[HSAIMaterialFolderModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 folder = db.get(HSAIMaterialFolder, folder_id)
                 if folder:
@@ -708,7 +680,7 @@ class HSAIMaterialFoldersTable:
                 return None
 
     def delete_folder_by_id(self, folder_id: str) -> bool:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 folder = db.get(HSAIMaterialFolder, folder_id)
                 if folder:
@@ -724,24 +696,24 @@ class HSAIMaterialFoldersTable:
         self, folder_id: str, name: str
     ) -> Optional[HSAIMaterialFolderModel]:
         """
-        更新素材文件夹名�?
+        更新素材文件夹名称
         
         Args:
             folder_id (str): 文件夹ID
-            name (str): 新的文件夹名�?
+            name (str): 新的文件夹名称
             
         Returns:
-            Optional[HSAIMaterialFolderModel]: 更新后的文件夹模�?
+            Optional[HSAIMaterialFolderModel]: 更新后的文件夹模型
         """
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
-                # 获取文件夹信息（后续在路由层验证所有权�?
+                # 获取文件夹信息（后续在路由层验证所有权）
                 folder = db.query(HSAIMaterialFolder).filter_by(id=folder_id).first()
                 
                 if not folder:
                     return None
                 
-                # 检查同一父目录下是否已有同名文件�?
+                # 检查同一父目录下是否已有同名文件夹
                 existing_folder = db.query(HSAIMaterialFolder).filter_by(
                     name=name,
                     parent_id=folder.parent_id,
@@ -752,7 +724,7 @@ class HSAIMaterialFoldersTable:
                     # 同名文件夹已存在
                     return None
                 
-                # 更新文件夹名�?
+                # 更新文件夹名称
                 folder.name = name
                 folder.updated_at = int(time.time())
                 db.commit()
@@ -768,7 +740,7 @@ class HSAIMaterialsTable:
     def insert_new_material(
         self, user_id: str, form_data: HSAIMaterialForm
     ) -> Optional[HSAIMaterialModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 id = str(uuid.uuid4())
                 material_data = {
@@ -779,7 +751,7 @@ class HSAIMaterialsTable:
                     "updated_at": int(time.time()),
                 }
                 
-                # 确保所有必填字段都有�?
+                # 确保所有必填字段都有值
                 if material_data.get("material_type") is None:
                     log.error("Missing required field: material_type")
                     log.error(f"Form data: {form_data}")
@@ -827,7 +799,7 @@ class HSAIMaterialsTable:
         limit: int = 20,
         offset: int = 0,
     ) -> List[HSAIMaterialModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
                 
@@ -861,7 +833,7 @@ class HSAIMaterialsTable:
         item_codes: Optional[Sequence[str]] = None,
     ) -> int:
         """获取素材总数"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
                 
@@ -885,7 +857,7 @@ class HSAIMaterialsTable:
 
     def aggregate_by_scene_and_item(self, user_id: str) -> List[dict]:
         """按场景与项目分组统计素材数量"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 rows = (
                     db.query(
@@ -917,7 +889,7 @@ class HSAIMaterialsTable:
                 return []
 
     def get_material_by_id(self, material_id: str) -> Optional[HSAIMaterialModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 material = db.get(HSAIMaterial, material_id)
                 return HSAIMaterialModel.model_validate(material) if material else None
@@ -927,7 +899,7 @@ class HSAIMaterialsTable:
     def update_material_by_id(
         self, material_id: str, form_data: HSAIMaterialForm
     ) -> Optional[HSAIMaterialModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 material = db.get(HSAIMaterial, material_id)
                 if material:
@@ -944,7 +916,7 @@ class HSAIMaterialsTable:
 
     def increment_usage_count(self, material_id: str) -> bool:
         """增加素材使用次数"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 material = db.get(HSAIMaterial, material_id)
                 if material:
@@ -970,7 +942,7 @@ class HSAIMaterialsTable:
         offset: int = 0,
     ) -> List[HSAIMaterialModel]:
         """搜索素材"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 search_query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
                 
@@ -1015,7 +987,7 @@ class HSAIMaterialsTable:
         item_codes: Optional[Sequence[str]] = None,
     ) -> int:
         """获取搜索结果总数"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 search_query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
                 
@@ -1052,7 +1024,7 @@ class HSAIMaterialsTable:
         self, user_id: str, limit: int = 20, offset: int = 0
     ) -> List[HSAIMaterialModel]:
         """获取用户已删除的素材列表"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 materials = db.query(HSAIMaterial).filter_by(user_id=user_id, is_deleted=True).order_by(HSAIMaterial.deleted_at.desc()).limit(limit).offset(offset).all()
                 return [HSAIMaterialModel.model_validate(material) for material in materials]
@@ -1062,7 +1034,7 @@ class HSAIMaterialsTable:
 
     def count_deleted_materials_by_user_id(self, user_id: str) -> int:
         """获取用户已删除的素材总数"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 return db.query(HSAIMaterial).filter_by(user_id=user_id, is_deleted=True).count()
             except Exception as e:
@@ -1073,9 +1045,9 @@ class HSAIMaterialsTable:
         self, enterprise_id: str, limit: int = 20, offset: int = 0
     ) -> List[HSAIMaterialModel]:
         """获取企业已删除的素材列表"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
-                # 注意：这里假设enterprise_id存储在user_id字段�?
+                # 注意：这里假设enterprise_id存储在user_id字段中
                 # 在实际实现中，可能需要根据具体的数据结构进行调整
                 materials = db.query(HSAIMaterial).filter_by(user_id=enterprise_id, is_deleted=True).order_by(HSAIMaterial.deleted_at.desc()).limit(limit).offset(offset).all()
                 return [HSAIMaterialModel.model_validate(material) for material in materials]
@@ -1085,9 +1057,9 @@ class HSAIMaterialsTable:
 
     def count_deleted_materials_by_enterprise(self, enterprise_id: str) -> int:
         """获取企业已删除的素材总数"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
-                # 注意：这里假设enterprise_id存储在user_id字段�?
+                # 注意：这里假设enterprise_id存储在user_id字段中
                 # 在实际实现中，可能需要根据具体的数据结构进行调整
                 return db.query(HSAIMaterial).filter_by(user_id=enterprise_id, is_deleted=True).count()
             except Exception as e:
@@ -1095,8 +1067,8 @@ class HSAIMaterialsTable:
                 return 0
 
     def delete_material_by_id(self, material_id: str) -> bool:
-        """软删除素�?""
-        with _schema_aware_db() as db:
+        """软删除素材"""
+        with get_db() as db:
             try:
                 material = db.get(HSAIMaterial, material_id)
                 if material:
@@ -1114,7 +1086,7 @@ class HSAIMaterialCategoriesTable:
     def insert_new_category(
         self, form_data: HSAIMaterialCategoryForm
     ) -> Optional[HSAIMaterialCategoryModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             id = str(uuid.uuid4())
             category = HSAIMaterialCategoryModel(
                 **{
@@ -1136,7 +1108,7 @@ class HSAIMaterialCategoriesTable:
                 return None
 
     def get_categories_by_type(self, category_type: str, limit: int = 20, offset: int = 0) -> List[HSAIMaterialCategoryModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 categories = db.query(HSAIMaterialCategory).filter_by(category_type=category_type, is_active=True).limit(limit).offset(offset).all()
                 return [HSAIMaterialCategoryModel.model_validate(category) for category in categories]
@@ -1145,7 +1117,7 @@ class HSAIMaterialCategoriesTable:
                 return []
 
     def get_all_categories(self, limit: int = 20, offset: int = 0) -> List[HSAIMaterialCategoryModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 categories = db.query(HSAIMaterialCategory).filter_by(is_active=True).limit(limit).offset(offset).all()
                 return [HSAIMaterialCategoryModel.model_validate(category) for category in categories]
@@ -1155,7 +1127,7 @@ class HSAIMaterialCategoriesTable:
 
     def get_categories_count(self, category_type: Optional[str] = None) -> int:
         """获取分类总数"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 query = db.query(HSAIMaterialCategory).filter_by(is_active=True)
                 
@@ -1168,7 +1140,7 @@ class HSAIMaterialCategoriesTable:
                 return 0
 
     def get_category_by_id(self, category_id: str) -> Optional[HSAIMaterialCategoryModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 category = db.get(HSAIMaterialCategory, category_id)
                 return HSAIMaterialCategoryModel.model_validate(category) if category else None
@@ -1178,7 +1150,7 @@ class HSAIMaterialCategoriesTable:
     def update_category_by_id(
         self, category_id: str, form_data: HSAIMaterialCategoryForm
     ) -> Optional[HSAIMaterialCategoryModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 category = db.get(HSAIMaterialCategory, category_id)
                 if category:
@@ -1194,7 +1166,7 @@ class HSAIMaterialCategoriesTable:
                 return None
 
     def delete_category_by_id(self, category_id: str) -> bool:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 category = db.get(HSAIMaterialCategory, category_id)
                 if category:
@@ -1212,7 +1184,7 @@ class HSAIFileOperationLogsTable:
     def insert_new_log(
         self, form_data: HSAIFileOperationLogForm
     ) -> Optional[HSAIFileOperationLogModel]:
-        with _schema_aware_db() as db:
+        with get_db() as db:
             id = str(uuid.uuid4())
             log_entry = HSAIFileOperationLogModel(
                 **{
@@ -1245,7 +1217,7 @@ class HSAIFileOperationLogsTable:
         offset: int = 0
     ) -> List[HSAIFileOperationLogModel]:
         """获取文件操作日志列表"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 query = db.query(HSAIFileOperationLog)
                 
@@ -1278,7 +1250,7 @@ class HSAIFileOperationLogsTable:
         end_time: Optional[int] = None
     ) -> int:
         """获取文件操作日志总数"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 query = db.query(HSAIFileOperationLog)
                 
@@ -1302,7 +1274,7 @@ class HSAIFileOperationLogsTable:
 
     def get_log_by_id(self, log_id: str) -> Optional[HSAIFileOperationLogModel]:
         """根据ID获取文件操作日志"""
-        with _schema_aware_db() as db:
+        with get_db() as db:
             try:
                 log_entry = db.get(HSAIFileOperationLog, log_id)
                 return HSAIFileOperationLogModel.model_validate(log_entry) if log_entry else None

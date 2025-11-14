@@ -83,6 +83,9 @@ class HSAIProjectForm(BaseModel):
     business_name: str
     company_info: Optional[dict] = None
     config: Optional[dict] = None
+    company_id: Optional[str] = None
+    user_id: Optional[str] = None
+    status: Optional[str] = "active"
 
 
 class HSAIProjectUpdateForm(BaseModel):
@@ -92,6 +95,7 @@ class HSAIProjectUpdateForm(BaseModel):
     company_info: Optional[dict] = None
     status: Optional[str] = None
     config: Optional[dict] = None
+    user_id: Optional[str] = None
 
 
 ####################
@@ -138,11 +142,13 @@ class HSAIProjectsTable:
     ) -> Optional[HSAIProjectModel]:
         with get_db() as db:
             id = str(uuid.uuid4())
+            payload = form_data.model_dump(exclude_unset=True)
+            explicit_user_id = payload.pop("user_id", None)
             project = HSAIProjectModel(
                 **{
                     "id": id,
-                    "user_id": user_id,
-                    **form_data.model_dump(),
+                    "user_id": explicit_user_id or user_id,
+                    **payload,
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                 }
@@ -181,6 +187,28 @@ class HSAIProjectsTable:
                 log.exception(f"Error getting projects: {e}")
                 return []
 
+    def get_projects(
+        self,
+        status: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> List[HSAIProjectModel]:
+        with get_db() as db:
+            try:
+                query = db.query(HSAIProject)
+                if status:
+                    query = query.filter_by(status=status)
+                projects = (
+                    query.order_by(HSAIProject.updated_at.desc())
+                    .limit(limit)
+                    .offset(offset)
+                    .all()
+                )
+                return [HSAIProjectModel.model_validate(project) for project in projects]
+            except Exception as e:
+                log.exception(f"Error getting projects (admin): {e}")
+                return []
+
     def get_projects_count(
         self,
         user_id: str,
@@ -197,6 +225,20 @@ class HSAIProjectsTable:
                 return query.count()
             except Exception as e:
                 log.exception(f"Error counting projects: {e}")
+                return 0
+
+    def get_projects_count_all(
+        self,
+        status: Optional[str] = None,
+    ) -> int:
+        with get_db() as db:
+            try:
+                query = db.query(HSAIProject)
+                if status:
+                    query = query.filter_by(status=status)
+                return query.count()
+            except Exception as e:
+                log.exception(f"Error counting projects (admin): {e}")
                 return 0
 
     def get_project_by_id(self, project_id: str) -> Optional[HSAIProjectModel]:

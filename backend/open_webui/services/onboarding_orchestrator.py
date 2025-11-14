@@ -17,6 +17,7 @@ from open_webui.models.hsai_projects import HSAIProject
 from open_webui.models.hsai_tasks import (
     HSAITask,
     HSAITaskStatus,
+    HSAITaskType,
     HSAIRecurringState,
 )
 from open_webui.models.hsai_outbox import (
@@ -157,6 +158,12 @@ def ensure_company_project_and_main_tasks(user_id: str) -> Dict[str, Any]:
                 log.error("Failed to load project seed templates: %s", registry_exc)
                 seed_templates = []
 
+            company_info_template_present = any(
+                (template.key == "company_info_collection")
+                or ((template.config or {}).get("template_key") == "company_info_collection")
+                for template in seed_templates
+            )
+
             for template in seed_templates:
                 title = template.title
                 if not title or title in existing_titles:
@@ -195,6 +202,55 @@ def ensure_company_project_and_main_tasks(user_id: str) -> Dict[str, Any]:
                 existing_titles.add(title)
                 seeded_titles.append(title)
                 log.debug("主线任务补种 success title=%s template_key=%s", title, template.key)
+
+            if not company_info_template_present:
+                fallback_title = "企业信息收集（待战略蓝图）"
+                if fallback_title not in existing_titles:
+                    fallback_task = HSAITask(
+                        id=str(uuid.uuid4()),
+                        title=fallback_title,
+                        description="收集企业基础信息并在收到战略蓝图后完成。",
+                        task_type=HSAITaskType.WORKFLOW_EXECUTION.value,
+                        task_category="main",
+                        status=HSAITaskStatus.PENDING.value,
+                        user_id=user_id,
+                        assignee_id=None,
+                        chat_id=None,
+                        project_id=project.id,
+                        config={
+                            "template_key": "company_info_collection_fallback",
+                            "completion_condition": "收到战略蓝图",
+                            "checklist": [
+                                "确认企业工商主体与品牌名称",
+                                "补充主营行业、规模与成立年份",
+                                "收集企业联系人与可用渠道",
+                            ],
+                            "seed_default_project": True,
+                        },
+                        prompt_config={
+                            "system_prompt": "You are an enterprise intake assistant. Guide the user to provide company info until the strategic blueprint is delivered.",
+                            "completion_criteria": "当战略蓝图上传且企业基础信息完整后标记完成。",
+                            "success_message": "企业信息收集完成，进入战略蓝图阶段。",
+                        },
+                        is_recurring=False,
+                        recurring_state=None,
+                        last_run_at=None,
+                        next_run_at=None,
+                        external_controller=None,
+                        recurring_meta=None,
+                        workflow_id=None,
+                        parent_task_id=None,
+                        priority=95,
+                        created_at=now_ts,
+                        updated_at=now_ts,
+                    )
+                    db.add(fallback_task)
+                    existing_titles.add(fallback_title)
+                    seeded_titles.append(fallback_title)
+                    log.warning(
+                        "company_info_collection template missing, fallback task seeded for project_id=%s",
+                        project.id,
+                    )
 
             summary["seeded_main_tasks"].extend(seeded_titles)
 
