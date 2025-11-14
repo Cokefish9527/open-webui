@@ -150,7 +150,8 @@ sequenceDiagram
 - 启动前监控日志中是否存在 `[MIGRATION] ensure_materials_storage_schema` 相关输出，确保 schema 自愈成功。
 - 新增列时同步扩展 `_column_defs_for()`，避免 PostgreSQL/SQLite 定义不一致。
 - 建议在 CI 中最低运行 `pytest backend/test/test_materials_storage_schema.py` 以防回归。
-- 当后台或脚本需要跨租户管理企业/项目时，请使用 `is_super_admin` 账号调用 `/hsai/companies`、`/hsai/projects` API，避免直接写库。
+- 后台与脚本若需跨租户管理企业/项目，优先调用 `/api/v1/external/admin/companies|projects`（配合 `verify_external_request` 的 IP+Token 鉴权）；仅在携带 JWT 的 WebUI 内部操作时才使用 `/api/v1/hsai/*`。
+- 统一使用 `tool/clean_special_chars.py` + `tool/auto_fix_bom.py` 进行字符治理：先执行 `python tool/clean_special_chars.py --extensions .py --check` 收集报告，再用 `python tool/auto_fix_bom.py --report report.txt` 自动剥离 BOM，并在提交信息中备注“fix: clean BOM via auto_fix_bom”。
 
 ## 术语表
 - **OSS**：阿里云对象存储，保存大文件。

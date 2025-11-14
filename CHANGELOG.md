@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Runtime migration `ensure_materials_storage_schema()` plus SQLite regression test (`backend/test/test_materials_storage_schema.py`) to guarantee OSS 列自动补齐，详见 `PROJECTWIKI.md` “ADR-2025-11-13”。
+- `tool/auto_fix_bom.py`：可根据 `clean_special_chars` 日志或显式路径，批量移除 UTF-8 BOM，方便挂到字符扫描流程之后自动修复异常文件。
 
 ### Fixed
 - 修复 `GET /api/v1/hsai/materials/` 因缺少 `oss_object_path` 列触发 `psycopg2.errors.UndefinedColumn` 的问题，`HSAIMaterials` 查询统一由 `_schema_aware_db()` 保证 schema。
