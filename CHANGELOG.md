@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Runtime migration `ensure_materials_storage_schema()` plus SQLite regression test (`backend/test/test_materials_storage_schema.py`) to guarantee OSS 列自动补齐，详见 `PROJECTWIKI.md` 《ADR-2025-11-13》。
 - `tool/auto_fix_bom.py`：可根据 `clean_special_chars` 日志或显式路径批量移除 UTF-8 BOM，便于串在字符扫描流程之后自动修复异常文件。
 - feat: support WebSocket attachment forwarding——WebSocket 消息现在支持附件转发到 n8n webhook，详见 `PROJECTWIKI.md` 《WebSocket 附件透传》章节。
+- POST `/hsai/video-learning/revoke-learning`：允许手动撤销爆款学习，删除 `hsai_business_video_content_learned` 副本并将 `hsai_video_learning_status` 恢复为 `pending`，细节见 `PROJECTWIKI.md` 《爆款学习状态机与撤销流程》。
+
+### Changed
+- `hsai_video_learning_status` 枚举现显式包含 `pending`，并追加 `mark_pending`/`upsert_status` 和新测试用例；Redis `video_learning_notification` 监听器重写为统一调用上述助手，杜绝删除行表示 pending 的隐患。
 ### Fixed
 - 修复 `GET /api/v1/hsai/materials/` 因缺少 `oss_object_path` 列触发 `psycopg2.errors.UndefinedColumn` 的问题，`HSAIMaterials` 查询统一由 `_schema_aware_db()` 保证 schema。
 - 追加修复：`HSAIMaterialsTable` 仍有 CRUD 直接使用 `get_db()`，`GET /api/v1/hsai/dashboard/recent-activities`/`GET /api/v1/hsai/materials/folders` 在未迁移库上读取 `oss_object_path` 会崩溃；现由 `backend/open_webui/models/hsai_materials.py:_schema_aware_db()` 全面托管，并新增 `backend/test/test_materials_storage_schema.py::{test_schema_guard_invokes_migration_once,test_get_materials_by_user_id_uses_schema_guard}` 防止回归。

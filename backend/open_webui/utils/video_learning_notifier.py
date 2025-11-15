@@ -20,119 +20,80 @@ def get_redis_client():
 
 async def handle_video_learning_notification(message: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> None:
     """
-    处理视频学习完成通知队列中的消息
-    根据视频学习结果更新视频学习状态
+    ������Ƶѧϰ���֪ͨ�����е���Ϣ
+    ������Ƶѧϰ���������Ƶѧϰ״̬
     
     Args:
-        message: 从Redis队列中获取的消息数据
-        config: 配置信息（可选）
+        message: ��Redis�����л�ȡ����Ϣ����
+        config: ������Ϣ����ѡ��
     """
     try:
-        log.info(f"处理视频学习通知: video_id={message.get('video_id')}, status={message.get('status')}")
-        log.debug(f"完整消息内容: {message}")
+        log.info(f"������Ƶѧϰ֪ͨ: video_id={message.get('video_id')}, status={message.get('status')}")
+        log.debug(f"������Ϣ����: {message}")
         
-        # 获取消息关键字段
         video_id = message.get("video_id")
         status = message.get("status")  # success/failed
-        business_name = message.get("business_name", "HSAI")  # 从消息中获取business_name，如果没有则使用默认值
+        business_name = message.get("business_name", "HSAI")
         
-        # 验证必要字段
         if video_id is None or not status:
-            log.error(f"消息缺少必要字段: video_id={video_id}, status={status}")
+            log.error(f"��Ϣȱ�ٱ�Ҫ�ֶ�: video_id={video_id}, status={status}")
             return
             
-        # 验证状态值
         if status not in ["success", "failed"]:
-            log.error(f"无效的状态值: {status}")
+            log.error(f"��Ч��״ֵ̬: {status}")
             return
             
-        # 查找现有的学习状态记录
         existing_status = HSAIVideoLearningStatuses.get_status_by_business_and_video(business_name, str(video_id))
-        
-        # 记录原始状态
         original_status = existing_status.status if existing_status else None
+        target_status = (
+            HSAIVideoLearningStatusEnum.LEARNED
+            if status == "success"
+            else HSAIVideoLearningStatusEnum.PENDING
+        )
         
-        if status == "success":
-            # 学习成功：将视频状态设为已学习
-            learning_status = HSAIVideoLearningStatusEnum.LEARNED
-            
-            if existing_status:
-                # 更新现有记录
-                update_data = {
-                    "status": learning_status.value,  # 转换枚举为字符串
-                    "updated_at": int(time.time())
-                }
-                updated_status = HSAIVideoLearningStatuses.update_status(existing_status.id, update_data)
-                if updated_status:
-                    log.info(f"成功更新视频学习状态: video_id={video_id}, status={learning_status.value}")
-                else:
-                    log.error(f"更新视频学习状态失败: video_id={video_id}")
+        try:
+            if status == "success":
+                result_status = HSAIVideoLearningStatuses.upsert_status(
+                    business_name=business_name,
+                    video_id=str(video_id),
+                    status_value=target_status.value,
+                )
             else:
-                # 创建新的学习状态记录
-                status_form = {
-                    "business_name": business_name,
-                    "video_id": str(video_id),
-                    "status": learning_status.value  # 转换枚举为字符串
-                }
-                new_status = HSAIVideoLearningStatuses.insert_new_status(status_form)
-                if new_status:
-                    log.info(f"成功创建视频学习状态记录: video_id={video_id}, status={learning_status.value}")
-                else:
-                    log.error(f"创建视频学习状态记录失败: video_id={video_id}")
-        else:
-            # 学习失败：将视频状态重置为待学习（删除记录）
-            try:
-                # 记录日志
-                log_form = {
-                    "business_name": business_name,
-                    "video_id": str(video_id),
-                    "from_status": original_status,
-                    "to_status": "pending",  # 重置为待学习状态
-                    "change_reason": "视频学习任务失败，重置为待学习状态",
-                    "changed_by": "system"
-                }
-                log_entry = HSAIVideoLearningLogs.insert_new_log(log_form)
-                if log_entry:
-                    log.info(f"成功记录视频学习失败日志: video_id={video_id}")
-                else:
-                    log.error(f"记录视频学习失败日志失败: video_id={video_id}")
-            except Exception as e:
-                log.error(f"记录视频学习失败日志时发生错误: {e}")
-            
-            # 删除视频学习状态记录，使其重置为待学习
-            if existing_status:
-                try:
-                    result = HSAIVideoLearningStatuses.delete_status_by_id(existing_status.id)
-                    if result:
-                        log.info(f"成功删除视频学习状态记录，重置为待学习: video_id={video_id}")
-                    else:
-                        log.error(f"删除视频学习状态记录失败: video_id={video_id}")
-                except Exception as e:
-                    log.error(f"删除视频学习状态记录时发生错误: {e}")
+                result_status = HSAIVideoLearningStatuses.mark_pending(
+                    business_name=business_name,
+                    video_id=str(video_id),
+                )
+            if result_status:
+                log.info(f"�ɹ�������Ƶѧϰ״̬: video_id={video_id}, status={target_status.value}")
             else:
-                log.info(f"视频学习状态记录不存在，无需删除: video_id={video_id}")
-                
-        # 记录状态变更日志（仅对成功情况）
-        if status == "success":
-            try:
-                log_form = {
-                    "business_name": business_name,
-                    "video_id": str(video_id),
-                    "from_status": original_status,
-                    "to_status": HSAIVideoLearningStatusEnum.LEARNED.value if status == "success" else "pending",
-                    "change_reason": f"视频学习任务完成，结果: {status}",
-                    "changed_by": "system"
-                }
-                log_entry = HSAIVideoLearningLogs.insert_new_log(log_form)
-                if log_entry:
-                    log.info(f"成功记录视频学习状态变更日志: video_id={video_id}")
-                else:
-                    log.error(f"记录视频学习状态变更日志失败: video_id={video_id}")
-            except Exception as e:
-                log.error(f"记录视频学习状态变更日志时发生错误: {e}")
-                
+                log.error(f"�޷������Ƶѧϰ״̬: video_id={video_id}")
+        except Exception as exc:
+            log.error(f"����/������Ƶѧϰ״̬ʱ��������: {exc}")
+            raise
+        
+        try:
+            reason = (
+                "��Ƶѧϰ������ɣ�״̬��ΪLEARNED"
+                if status == "success"
+                else "��Ƶѧϰ����ʧ�ܣ�״̬��ΪPENDING"
+            )
+            log_entry = HSAIVideoLearningLogs.record_status_change(
+                business_name=business_name,
+                video_id=str(video_id),
+                from_status=original_status,
+                to_status=target_status.value,
+                reason=reason,
+                operator="system",
+            )
+            if log_entry:
+                log.info(f"�ɹ���¼��Ƶѧϰ״̬�����־: video_id={video_id}")
+            else:
+                log.error(f"��¼��Ƶѧϰ״̬�����־ʧ��: video_id={video_id}")
+        except Exception as err:
+            log.error(f"��¼��Ƶѧϰ״̬�����־ʱ��������: {err}")
+            
     except Exception as e:
-        log.error(f"处理视频学习通知时发生错误: {e}", exc_info=True)
+        log.error(f"������Ƶѧϰ֪ͨʱ��������: {e}", exc_info=True)
         raise
 
 

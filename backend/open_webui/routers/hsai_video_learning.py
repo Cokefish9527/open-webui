@@ -12,6 +12,7 @@ from open_webui.models.hsai_video_learning_status import (
     HSAIVideoLearningStatuses,
     HSAIVideoLearningStatusEnum,
 )
+from open_webui.models.hsai_video_learning_log import HSAIVideoLearningLogs
 from open_webui.models.hsai_business_video_content_learned import (
     HSAIBusinessVideoContentLearneds,
     UpdateVideoContentLearnedRequest,
@@ -42,7 +43,7 @@ class VideoWithStatus(BaseModel):
     video: HSAIBusinessGoodVideoV1Model = Field(description="Video information")
     status: str = Field(
         description="Learning status: pending, learning, learned, abandoned",
-        default="pending",
+        default=HSAIVideoLearningStatusEnum.PENDING.value,
     )
 
 
@@ -89,8 +90,27 @@ class UpdateVideoContentLearnedResponse(BaseModel):
     updated_content: Optional[HSAIBusinessVideoContentLearnedModel] = Field(default=None, description="Updated video content")
 
 
+class RevokeLearningRequest(BaseModel):
+    """Request model for revoking learned videos."""
+
+    learned_id: int = Field(description="Identifier of hsai_business_video_content_learned entry")
+    reason: Optional[str] = Field(
+        default=None,
+        description="Optional reason for revoking the learning result",
+        max_length=500,
+    )
+
+
+class RevokeLearningResponse(BaseModel):
+    """Response model for revoke learning action."""
+
+    success: bool = Field(description="Whether the operation succeeded")
+    message: str = Field(description="Response message")
+    restored_status: str = Field(description="Resulting learning status after revocation")
+
+
 def _normalize_status_filter(value: Optional[str]) -> str:
-    valid = {"all", "pending", "learning", "learned", "abandoned"}
+    valid = {"all", *[status.value for status in HSAIVideoLearningStatusEnum]}
     result = (value or "all").lower()
     if result not in valid:
         raise HTTPException(
@@ -292,6 +312,77 @@ async def update_video_content_learned(request: UpdateVideoContentLearnedRequest
         raise
     except Exception as exc:
         log.exception("Failed to update video content learned: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT(),
+        ) from exc
+
+
+@router.post(
+    "/revoke-learning",
+    response_model=RevokeLearningResponse,
+    summary="Revoke learned video and reset status to pending",
+)
+async def revoke_video_learning(request: RevokeLearningRequest, user=Depends(get_verified_user)):
+    """Delete a learned video entry and revert learning status."""
+    try:
+        business_name = _resolve_business_name(user)
+        log.info(
+            "Revoke learned video content: learned_id=%s business=%s",
+            request.learned_id,
+            business_name,
+        )
+
+        video_content = HSAIBusinessVideoContentLearneds.get_video_content_by_id(request.learned_id)
+        if not video_content:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Learned video not found",
+            )
+
+        if video_content.businessname != business_name:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User does not have permission to revoke this video",
+            )
+
+        video_id = str(video_content.videoid)
+        existing_status = HSAIVideoLearningStatuses.get_status_by_business_and_video(
+            business_name=business_name,
+            video_id=video_id,
+        )
+
+        deleted = HSAIBusinessVideoContentLearneds.delete_video_content(request.learned_id, business_name)
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to remove learned video entry",
+            )
+
+        pending_status = HSAIVideoLearningStatuses.mark_pending(
+            business_name=business_name,
+            video_id=video_id,
+        )
+
+        HSAIVideoLearningLogs.record_status_change(
+            business_name=business_name,
+            video_id=video_id,
+            from_status=existing_status.status if existing_status else None,
+            to_status=HSAIVideoLearningStatusEnum.PENDING.value,
+            reason=request.reason or "Manual revoke: reset to pending",
+            operator=getattr(user, "id", "system"),
+        )
+
+        return RevokeLearningResponse(
+            success=True,
+            message="Learning revoked and status reset to pending",
+            restored_status=HSAIVideoLearningStatusEnum.PENDING.value,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.exception("Failed to revoke video learning: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT(),

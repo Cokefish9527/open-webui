@@ -23,6 +23,7 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 class HSAIVideoLearningStatusEnum(str, Enum):
     """Valid learning status values."""
 
+    PENDING = "pending"
     LEARNING = "learning"
     LEARNED = "learned"
     ABANDONED = "abandoned"
@@ -172,14 +173,21 @@ class HSAIVideoLearningStatusTable:
         self,
         business_name: str,
         status_filter: Optional[str] = None,
+        include_pending: bool = False,
     ) -> List[str]:
-        """List video ids for the given tenant and (optional) status filter."""
+        """List video ids for the given tenant and (optional) status filter.
+
+        When status_filter is None and include_pending=False (default),
+        only non-pending statuses will be returned so that“待学习”视频仍被视为可用。
+        """
         with get_db() as db:
             query = db.query(HSAIVideoLearningStatus.video_id).filter(
                 HSAIVideoLearningStatus.business_name == business_name
             )
             if status_filter and status_filter != "all":
                 query = query.filter(HSAIVideoLearningStatus.status == status_filter)
+            elif not include_pending:
+                query = query.filter(HSAIVideoLearningStatus.status != HSAIVideoLearningStatusEnum.PENDING.value)
 
             return [row[0] for row in query.all()]
 
@@ -202,6 +210,37 @@ class HSAIVideoLearningStatusTable:
 
                 return HSAIVideoLearningStatusModel.model_validate(status)
             return None
+
+    def upsert_status(
+        self,
+        business_name: str,
+        video_id: str,
+        status_value: str,
+    ) -> HSAIVideoLearningStatusModel:
+        """Create or update a learning status entry for the target business/video."""
+        existing = self.get_status_by_business_and_video(business_name, video_id)
+        if existing:
+            return self.update_status(existing.id, {"status": status_value}) or existing
+
+        return self.insert_new_status(
+            {
+                "business_name": business_name,
+                "video_id": video_id,
+                "status": status_value,
+            }
+        )
+
+    def mark_pending(
+        self,
+        business_name: str,
+        video_id: str,
+    ) -> HSAIVideoLearningStatusModel:
+        """Reset the target video status to pending (create entry if missing)."""
+        return self.upsert_status(
+            business_name=business_name,
+            video_id=video_id,
+            status_value=HSAIVideoLearningStatusEnum.PENDING.value,
+        )
 
     def delete_status_by_id(self, id: int) -> bool:
         """Delete a learning status entry by id."""

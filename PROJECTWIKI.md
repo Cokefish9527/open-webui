@@ -188,6 +188,46 @@ WebSocket 消息中可通过 `files` 或 `attachments` 字段携带附件信息�
 
 无附件时继续使用 application/json 格式发送请求。
 
+## 爆款学习状态机与撤销流程（2025-11-15）
+### 状态定义
+- `pending`（待学习）：未触发任何学习动作或已撤销学习，列表中需要展示。
+- `learning`（学习中）：调用 `POST /hsai/video-learning/start-learning` 后立即创建，等待 n8n 消化。
+- `learned`（已学习）：Redis `video_learning_notification` 队列收到 `status=success` 时写入。
+- `abandoned`（已放弃）：预留状态，后续供手动放弃接口使用。
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending
+    Pending --> Learning: POST /hsai/video-learning/start-learning
+    Learning --> Learned: Redis video_learning_notification (status=success)
+    Learning --> Pending: Redis video_learning_notification (status=failed)
+    Learned --> Pending: POST /hsai/video-learning/revoke-learning
+    Pending --> Abandoned: future API（手动放弃）
+```
+
+### 数据一致性
+| 组件/表 | 职责 | 关键代码 |
+| --- | --- | --- |
+| `hsai_business_video_content_learned` | 存储爆款学习后的素材副本；撤销时删除 | `backend/open_webui/models/hsai_business_video_content_learned.py:delete_video_content` |
+| `hsai_video_learning_status` | 记录租户-视频的学习态；新增 `pending/learning/learned/abandoned` 枚举与 `mark_pending`/`upsert_status` | `backend/open_webui/models/hsai_video_learning_status.py` |
+| `hsai_video_learning_logs` | 落地状态切换审计；新增 `record_status_change` 便捷方法 | `backend/open_webui/models/hsai_video_learning_log.py` |
+| Redis `video_learning_notification` | 接收 n8n 任务完成事件，驱动学习/撤销 | `backend/open_webui/utils/video_learning_notifier.py` |
+
+### API 更新
+- `POST /hsai/video-learning/revoke-learning`
+  - 请求：`learned_id`（必填）、`reason`（可选），鉴权沿用 `get_verified_user`
+  - 流程：校验租户 → 删除 learned 副本 → `mark_pending` 重置状态 → `record_status_change` 写日志
+  - 响应：返回 `restored_status=pending`
+- `video_learning_notification` 监听器：统一通过 `upsert_status/mark_pending` 对 `success/failed` 分支写入状态，杜绝“删除行表示 pending”导致的租户漂移。
+- 列表筛选逻辑复用新的 `list_video_ids_by_business(include_pending=False)`，保证显式 pending 记录不会被错误排除。
+
+### 验证/回归
+- `python -m pytest backend/test/test_video_learning_status.py`
+  - 覆盖 `mark_pending` 插入/更新
+  - 校验 `list_video_ids_by_business` 默认不返回 pending；`include_pending=True` 时可见所有状态
+- FastAPI 路由位于 `backend/open_webui/routers/hsai_video_learning.py`，新增 `RevokeLearningRequest/Response` 及接口日志，便于与 `PROJECTWIKI.md` 互链。
+- Redis 监听器 `backend/open_webui/utils/video_learning_notifier.py` 重写，保证成功/失败路径都会调用日志助手记录 `reason` 与操作人（系统）。
+
 ## 变更日志
 - 2025-11-13：引入 `ensure_materials_storage_schema()` 修复 `oss_object_path` 缺列导致的计数查询奔溃（参阅 ADR-2025-11-13）。
 - 2025-11-15：`HSAIMaterialsTable` 全量 DB 操作接入 `_schema_aware_db()`，`pytest backend/test/test_materials_storage_schema.py` 新增双测试验证 schema guard 缓存与材料列表查询均触发迁移，彻底解决 `GET /api/v1/hsai/materials/folders` / `/api/v1/hsai/dashboard/recent-activities` 因缺列抛错。

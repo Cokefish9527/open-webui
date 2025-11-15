@@ -25,6 +25,7 @@ from open_webui.models.hsai_video_learning_status import (
     Base,
     HSAIVideoLearningStatuses,
     HSAIVideoLearningStatus,
+    HSAIVideoLearningStatusEnum,
 )
 
 ENGINE = create_engine("sqlite:///:memory:", echo=False)
@@ -96,5 +97,30 @@ def test_list_video_ids_by_business_filters_status():
     learning_ids = HSAIVideoLearningStatuses.list_video_ids_by_business("COMPANY_A", status_filter="learning")
     assert set(learning_ids) == {"3001"}
 
-    all_ids = HSAIVideoLearningStatuses.list_video_ids_by_business("COMPANY_A")
-    assert set(all_ids) == {"3001", "3002", "3003"}
+    all_ids_non_pending = HSAIVideoLearningStatuses.list_video_ids_by_business("COMPANY_A")
+    assert set(all_ids_non_pending) == {"3001", "3002", "3003"}
+
+    # pending entries should be excluded unless include_pending=True
+    HSAIVideoLearningStatuses.mark_pending("COMPANY_A", "3999")
+    all_ids_default = HSAIVideoLearningStatuses.list_video_ids_by_business("COMPANY_A")
+    assert "3999" not in set(all_ids_default)
+
+    all_ids_with_pending = HSAIVideoLearningStatuses.list_video_ids_by_business("COMPANY_A", include_pending=True)
+    assert "3999" in set(all_ids_with_pending)
+
+
+def test_mark_pending_inserts_when_missing():
+    pending = HSAIVideoLearningStatuses.mark_pending("COMPANY_C", "4001")
+    assert pending is not None
+    assert pending.status == HSAIVideoLearningStatusEnum.PENDING.value
+
+
+def test_mark_pending_updates_existing_status():
+    created = HSAIVideoLearningStatuses.insert_new_status(
+        {"business_name": "COMPANY_D", "video_id": "5001", "status": HSAIVideoLearningStatusEnum.LEARNING.value}
+    )
+    assert created is not None
+
+    updated = HSAIVideoLearningStatuses.mark_pending("COMPANY_D", "5001")
+    assert updated is not None
+    assert updated.status == HSAIVideoLearningStatusEnum.PENDING.value

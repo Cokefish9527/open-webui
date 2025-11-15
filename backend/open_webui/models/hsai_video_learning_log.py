@@ -100,6 +100,26 @@ class HSAIVideoLearningLogTable:
             
             return HSAIVideoLearningLogModel.model_validate(log_entry) if log_entry else None
     
+    def record_status_change(
+        self,
+        business_name: str,
+        video_id: str,
+        from_status: Optional[str],
+        to_status: str,
+        reason: str,
+        operator: str,
+    ) -> Optional[HSAIVideoLearningLogModel]:
+        """Convenience helper wrapping insert_new_log for status transitions."""
+        payload = {
+            "business_name": business_name,
+            "video_id": video_id,
+            "from_status": from_status,
+            "to_status": to_status,
+            "change_reason": reason,
+            "changed_by": operator,
+        }
+        return self.insert_new_log(payload)
+
     def get_logs_by_video_id(self, video_id: str) -> List[HSAIVideoLearningLogModel]:
         """根据视频ID获取学习日志"""
         with get_db() as db:

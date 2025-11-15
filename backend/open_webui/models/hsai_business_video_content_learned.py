@@ -101,6 +101,28 @@ class HSAIBusinessVideoContentLearnedTable:
             video_content = db.query(HSAIBusinessVideoContentLearned).filter(HSAIBusinessVideoContentLearned.id == id).first()
             return HSAIBusinessVideoContentLearnedModel.model_validate(video_content) if video_content else None
 
+    def delete_video_content(
+        self,
+        id: int,
+        business_name: str,
+    ) -> bool:
+        """Delete learned video content scoped to the business."""
+        with get_n8n_db() as db:
+            entry = (
+                db.query(HSAIBusinessVideoContentLearned)
+                .filter(
+                    HSAIBusinessVideoContentLearned.id == id,
+                    HSAIBusinessVideoContentLearned.businessname == business_name,
+                )
+                .first()
+            )
+            if not entry:
+                return False
+
+            db.delete(entry)
+            db.commit()
+            return True
+
     def update_video_content(self, id: int, form_data: Dict[str, Any]) -> Optional[HSAIBusinessVideoContentLearnedModel]:
         """Update video content learned by id."""
         with get_n8n_db() as db:
