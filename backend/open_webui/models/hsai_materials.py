@@ -1,11 +1,13 @@
 import logging
-import logging
 import time
 import uuid
+from contextlib import contextmanager
+from threading import Lock
 from typing import Optional, List, Sequence
 
 from open_webui.internal.db import Base, JSONField, get_db
-from open_webui.env import SRC_LOG_LEVELS
+from open_webui.env import SRC_LOG_LEVELS, DATABASE_SCHEMA
+from open_webui.internal.migrations import ensure_materials_storage_schema
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import BigInteger, Column, String, Text, JSON, ForeignKey, Boolean, Integer, cast
@@ -20,6 +22,31 @@ from ._timestamp_utils import (
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
+
+_SCHEMA_LOCK = Lock()
+_SCHEMA_READY = False
+
+
+def _ensure_materials_schema(session) -> None:
+    global _SCHEMA_READY
+    if _SCHEMA_READY:
+        return
+    with _SCHEMA_LOCK:
+        if _SCHEMA_READY:
+            return
+        ensure_materials_storage_schema(
+            session.get_bind(),
+            schema=DATABASE_SCHEMA,
+            logger=log.debug,
+        )
+        _SCHEMA_READY = True
+
+
+@contextmanager
+def _schema_aware_db():
+    with get_db() as db:
+        _ensure_materials_schema(db)
+        yield db
 
 ####################
 # HSAI Materials DB Schema
@@ -547,7 +574,7 @@ class HSAIMaterialFoldersTable:
     def insert_new_folder(
         self, user_id: str, form_data: HSAIMaterialFolderForm
     ) -> Optional[HSAIMaterialFolderModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             # 验证 parent_id 是否有效（如果提供了的话）
             if form_data.parent_id:
                 parent_folder = db.query(HSAIMaterialFolder).filter_by(
@@ -590,7 +617,7 @@ class HSAIMaterialFoldersTable:
                 return None
 
     def get_folders_by_user_id(self, user_id: str) -> List[HSAIMaterialFolderModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 folders = db.query(HSAIMaterialFolder).filter_by(user_id=user_id).all()
                 
@@ -654,7 +681,7 @@ class HSAIMaterialFoldersTable:
                 return []
 
     def get_folder_by_id(self, folder_id: str) -> Optional[HSAIMaterialFolderModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 folder = db.get(HSAIMaterialFolder, folder_id)
                 return HSAIMaterialFolderModel.model_validate(folder) if folder else None
@@ -664,7 +691,7 @@ class HSAIMaterialFoldersTable:
     def update_folder_by_id(
         self, folder_id: str, form_data: HSAIMaterialFolderForm
     ) -> Optional[HSAIMaterialFolderModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 folder = db.get(HSAIMaterialFolder, folder_id)
                 if folder:
@@ -680,7 +707,7 @@ class HSAIMaterialFoldersTable:
                 return None
 
     def delete_folder_by_id(self, folder_id: str) -> bool:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 folder = db.get(HSAIMaterialFolder, folder_id)
                 if folder:
@@ -705,7 +732,7 @@ class HSAIMaterialFoldersTable:
         Returns:
             Optional[HSAIMaterialFolderModel]: 更新后的文件夹模型
         """
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 # 获取文件夹信息（后续在路由层验证所有权）
                 folder = db.query(HSAIMaterialFolder).filter_by(id=folder_id).first()
@@ -740,7 +767,7 @@ class HSAIMaterialsTable:
     def insert_new_material(
         self, user_id: str, form_data: HSAIMaterialForm
     ) -> Optional[HSAIMaterialModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 id = str(uuid.uuid4())
                 material_data = {
@@ -799,7 +826,7 @@ class HSAIMaterialsTable:
         limit: int = 20,
         offset: int = 0,
     ) -> List[HSAIMaterialModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
                 
@@ -833,7 +860,7 @@ class HSAIMaterialsTable:
         item_codes: Optional[Sequence[str]] = None,
     ) -> int:
         """获取素材总数"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
                 
@@ -857,7 +884,7 @@ class HSAIMaterialsTable:
 
     def aggregate_by_scene_and_item(self, user_id: str) -> List[dict]:
         """按场景与项目分组统计素材数量"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 rows = (
                     db.query(
@@ -889,7 +916,7 @@ class HSAIMaterialsTable:
                 return []
 
     def get_material_by_id(self, material_id: str) -> Optional[HSAIMaterialModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 material = db.get(HSAIMaterial, material_id)
                 return HSAIMaterialModel.model_validate(material) if material else None
@@ -899,7 +926,7 @@ class HSAIMaterialsTable:
     def update_material_by_id(
         self, material_id: str, form_data: HSAIMaterialForm
     ) -> Optional[HSAIMaterialModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 material = db.get(HSAIMaterial, material_id)
                 if material:
@@ -916,7 +943,7 @@ class HSAIMaterialsTable:
 
     def increment_usage_count(self, material_id: str) -> bool:
         """增加素材使用次数"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 material = db.get(HSAIMaterial, material_id)
                 if material:
@@ -942,7 +969,7 @@ class HSAIMaterialsTable:
         offset: int = 0,
     ) -> List[HSAIMaterialModel]:
         """搜索素材"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 search_query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
                 
@@ -987,7 +1014,7 @@ class HSAIMaterialsTable:
         item_codes: Optional[Sequence[str]] = None,
     ) -> int:
         """获取搜索结果总数"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 search_query = db.query(HSAIMaterial).filter_by(user_id=user_id, status="active")
                 
@@ -1024,7 +1051,7 @@ class HSAIMaterialsTable:
         self, user_id: str, limit: int = 20, offset: int = 0
     ) -> List[HSAIMaterialModel]:
         """获取用户已删除的素材列表"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 materials = db.query(HSAIMaterial).filter_by(user_id=user_id, is_deleted=True).order_by(HSAIMaterial.deleted_at.desc()).limit(limit).offset(offset).all()
                 return [HSAIMaterialModel.model_validate(material) for material in materials]
@@ -1034,7 +1061,7 @@ class HSAIMaterialsTable:
 
     def count_deleted_materials_by_user_id(self, user_id: str) -> int:
         """获取用户已删除的素材总数"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 return db.query(HSAIMaterial).filter_by(user_id=user_id, is_deleted=True).count()
             except Exception as e:
@@ -1045,7 +1072,7 @@ class HSAIMaterialsTable:
         self, enterprise_id: str, limit: int = 20, offset: int = 0
     ) -> List[HSAIMaterialModel]:
         """获取企业已删除的素材列表"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 # 注意：这里假设enterprise_id存储在user_id字段中
                 # 在实际实现中，可能需要根据具体的数据结构进行调整
@@ -1057,7 +1084,7 @@ class HSAIMaterialsTable:
 
     def count_deleted_materials_by_enterprise(self, enterprise_id: str) -> int:
         """获取企业已删除的素材总数"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 # 注意：这里假设enterprise_id存储在user_id字段中
                 # 在实际实现中，可能需要根据具体的数据结构进行调整
@@ -1068,7 +1095,7 @@ class HSAIMaterialsTable:
 
     def delete_material_by_id(self, material_id: str) -> bool:
         """软删除素材"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 material = db.get(HSAIMaterial, material_id)
                 if material:
@@ -1086,7 +1113,7 @@ class HSAIMaterialCategoriesTable:
     def insert_new_category(
         self, form_data: HSAIMaterialCategoryForm
     ) -> Optional[HSAIMaterialCategoryModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             id = str(uuid.uuid4())
             category = HSAIMaterialCategoryModel(
                 **{
@@ -1108,7 +1135,7 @@ class HSAIMaterialCategoriesTable:
                 return None
 
     def get_categories_by_type(self, category_type: str, limit: int = 20, offset: int = 0) -> List[HSAIMaterialCategoryModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 categories = db.query(HSAIMaterialCategory).filter_by(category_type=category_type, is_active=True).limit(limit).offset(offset).all()
                 return [HSAIMaterialCategoryModel.model_validate(category) for category in categories]
@@ -1117,7 +1144,7 @@ class HSAIMaterialCategoriesTable:
                 return []
 
     def get_all_categories(self, limit: int = 20, offset: int = 0) -> List[HSAIMaterialCategoryModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 categories = db.query(HSAIMaterialCategory).filter_by(is_active=True).limit(limit).offset(offset).all()
                 return [HSAIMaterialCategoryModel.model_validate(category) for category in categories]
@@ -1127,7 +1154,7 @@ class HSAIMaterialCategoriesTable:
 
     def get_categories_count(self, category_type: Optional[str] = None) -> int:
         """获取分类总数"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(HSAIMaterialCategory).filter_by(is_active=True)
                 
@@ -1140,7 +1167,7 @@ class HSAIMaterialCategoriesTable:
                 return 0
 
     def get_category_by_id(self, category_id: str) -> Optional[HSAIMaterialCategoryModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 category = db.get(HSAIMaterialCategory, category_id)
                 return HSAIMaterialCategoryModel.model_validate(category) if category else None
@@ -1150,7 +1177,7 @@ class HSAIMaterialCategoriesTable:
     def update_category_by_id(
         self, category_id: str, form_data: HSAIMaterialCategoryForm
     ) -> Optional[HSAIMaterialCategoryModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 category = db.get(HSAIMaterialCategory, category_id)
                 if category:
@@ -1166,7 +1193,7 @@ class HSAIMaterialCategoriesTable:
                 return None
 
     def delete_category_by_id(self, category_id: str) -> bool:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 category = db.get(HSAIMaterialCategory, category_id)
                 if category:
@@ -1184,7 +1211,7 @@ class HSAIFileOperationLogsTable:
     def insert_new_log(
         self, form_data: HSAIFileOperationLogForm
     ) -> Optional[HSAIFileOperationLogModel]:
-        with get_db() as db:
+        with _schema_aware_db() as db:
             id = str(uuid.uuid4())
             log_entry = HSAIFileOperationLogModel(
                 **{
@@ -1217,7 +1244,7 @@ class HSAIFileOperationLogsTable:
         offset: int = 0
     ) -> List[HSAIFileOperationLogModel]:
         """获取文件操作日志列表"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(HSAIFileOperationLog)
                 
@@ -1250,7 +1277,7 @@ class HSAIFileOperationLogsTable:
         end_time: Optional[int] = None
     ) -> int:
         """获取文件操作日志总数"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(HSAIFileOperationLog)
                 
@@ -1274,7 +1301,7 @@ class HSAIFileOperationLogsTable:
 
     def get_log_by_id(self, log_id: str) -> Optional[HSAIFileOperationLogModel]:
         """根据ID获取文件操作日志"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 log_entry = db.get(HSAIFileOperationLog, log_id)
                 return HSAIFileOperationLogModel.model_validate(log_entry) if log_entry else None

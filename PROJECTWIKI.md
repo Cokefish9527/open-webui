@@ -94,6 +94,7 @@ flowchart LR
 - 外部依赖：`open_webui.internal.db` (SQLAlchemy Session)、`open_webui.internal.migrations.materials_storage`.
 - 测试基线：`backend/test/test_materials_storage_schema.py`、`tests/materials_e2e_test.py`。
 - 风险：大量方法直接暴露 Session；需保持 `_schema_aware_db()` 包裹，避免绕过迁移。
+- 2025-11-15：`backend/open_webui/models/hsai_materials.py:_schema_aware_db()` 现包裹全部 `HSAIMaterialsTable` Session 入口，并新增 `test_schema_guard_invokes_migration_once`/`test_get_materials_by_user_id_uses_schema_guard`，防止 `GET /api/v1/hsai/dashboard/recent-activities` 再次在缺失 `oss_object_path` 的库上崩溃。
 
 ## API 手册
 ### GET `/api/v1/hsai/materials/`
@@ -149,7 +150,7 @@ sequenceDiagram
 ## 维护建议
 - 启动前监控日志中是否存在 `[MIGRATION] ensure_materials_storage_schema` 相关输出，确保 schema 自愈成功。
 - 新增列时同步扩展 `_column_defs_for()`，避免 PostgreSQL/SQLite 定义不一致。
-- 建议在 CI 中最低运行 `pytest backend/test/test_materials_storage_schema.py` 以防回归。
+- 建议在 CI 中至少运行 `pytest backend/test/test_materials_storage_schema.py`（覆盖 `test_schema_guard_invokes_migration_once` / `test_get_materials_by_user_id_uses_schema_guard`）以防自愈护栏被绕过。
 - 后台与脚本若需跨租户管理企业/项目，优先调用 `/api/v1/external/admin/companies|projects`（配合 `verify_external_request` 的 IP+Token 鉴权）；仅在携带 JWT 的 WebUI 内部操作时才使用 `/api/v1/hsai/*`。
 - 统一使用 `tool/clean_special_chars.py` + `tool/auto_fix_bom.py` 进行字符治理：先执行 `python tool/clean_special_chars.py --extensions .py --check` 收集报告，再用 `python tool/auto_fix_bom.py --report report.txt` 自动剥离 BOM，并在提交信息中备注“fix: clean BOM via auto_fix_bom”。
 
@@ -189,3 +190,4 @@ WebSocket 消息中可通过 `files` 或 `attachments` 字段携带附件信息�
 
 ## 变更日志
 - 2025-11-13：引入 `ensure_materials_storage_schema()` 修复 `oss_object_path` 缺列导致的计数查询奔溃（参阅 ADR-2025-11-13）。
+- 2025-11-15：`HSAIMaterialsTable` 全量 DB 操作接入 `_schema_aware_db()`，`pytest backend/test/test_materials_storage_schema.py` 新增双测试验证 schema guard 缓存与材料列表查询均触发迁移，彻底解决 `GET /api/v1/hsai/materials/folders` / `/api/v1/hsai/dashboard/recent-activities` 因缺列抛错。
