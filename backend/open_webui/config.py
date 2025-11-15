@@ -1022,6 +1022,18 @@ DEFAULT_USER_ROLE = PersistentConfig(
     os.getenv("DEFAULT_USER_ROLE", "pending"),
 )
 
+DEFAULT_CUSTOMER_ROLE = PersistentConfig(
+    "DEFAULT_CUSTOMER_ROLE",
+    "ui.default_customer_role",
+    os.getenv("DEFAULT_CUSTOMER_ROLE", "user"),
+)
+
+CUSTOMER_PERMISSION_TEMPLATE = PersistentConfig(
+    "CUSTOMER_PERMISSION_TEMPLATE",
+    "ui.customer_permission_template",
+    os.getenv("CUSTOMER_PERMISSION_TEMPLATE", "{}"),
+)
+
 PENDING_USER_OVERLAY_TITLE = PersistentConfig(
     "PENDING_USER_OVERLAY_TITLE",
     "ui.pending_user_overlay_title",
@@ -1267,6 +1279,12 @@ ENABLE_USER_WEBHOOKS = PersistentConfig(
     "ENABLE_USER_WEBHOOKS",
     "ui.enable_user_webhooks",
     os.environ.get("ENABLE_USER_WEBHOOKS", "True").lower() == "true",
+)
+
+ENABLE_CUSTOMER_PERMISSION_API = PersistentConfig(
+    "ENABLE_CUSTOMER_PERMISSION_API",
+    "features.enable_customer_permission_api",
+    os.environ.get("ENABLE_CUSTOMER_PERMISSION_API", "True").lower() == "true",
 )
 
 # FastAPI / AnyIO settings

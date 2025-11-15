@@ -37,7 +37,7 @@ from open_webui.env import SRC_LOG_LEVELS
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-router = APIRouter(prefix="/hsai/projects", tags=["HSAI 椤圭洰绠＄悊"])
+router = APIRouter(prefix="/hsai/projects", tags=["HSAI 项目管理"])
 
 
 def _is_super_admin(user) -> bool:
@@ -92,7 +92,7 @@ class ProjectSummaryResponse(BaseModel):
     blueprint_links: List[Dict[str, Any]]
 
 
-@router.get("", response_model=PaginatedHSAIProjectResponse, summary="鑾峰彇椤圭洰鍒楄〃")
+@router.get("", response_model=PaginatedHSAIProjectResponse, summary="获取项目列表")
 async def get_projects(
     status: Optional[str] = Query(None, description="项目状态过滤"),
     ps: int = Query(20, description="分页大小", ge=1, le=100),
@@ -100,19 +100,19 @@ async def get_projects(
     user=Depends(get_verified_user)
 ):
     """
-    鑾峰彇鐢ㄦ埛鐨勯」鐩垪琛紙鍒嗛〉锛夈€?
+    获取用户的项目列表（分页）。
     
     Args:
-        status (Optional[str]): 椤圭洰鐘舵€佽繃婊?
-        ps (int): 鍒嗛〉澶у皬锛岃寖鍥?-100
-        pi (int): 鍒嗛〉绱㈠紩锛屼粠1寮€濮?
-        user: 宸茶璇佺殑鐢ㄦ埛瀵硅薄
+        status (Optional[str]): 项目状态过滤
+        ps (int): 分页大小，范围1-100
+        pi (int): 分页索引，从1开始
+        user: 已认证的用户对象
         
     Returns:
-        PaginatedHSAIProjectResponse: 鍒嗛〉鐨勯」鐩垪琛?
+        PaginatedHSAIProjectResponse: 分页的项目列表
     """
     try:
-        # 璁＄畻offset
+        # 计算offset
         offset = (pi - 1) * ps
         
         if _is_super_admin(user):
@@ -136,8 +136,8 @@ async def get_projects(
         
         responses = [HSAIProjectResponse(**project.model_dump()) for project in projects]
         
-        # 璁＄畻鍒嗛〉鏁版嵁
-        total_pages = (total + ps - 1) // ps  # 鍚戜笂鍙栨暣
+        # 计算分页数据
+        total_pages = (total + ps - 1) // ps  # 向上取整
         
         pagination = PaginationData(
             total=total,
@@ -159,22 +159,22 @@ async def get_projects(
         )
 
 
-@router.post("", response_model=HSAIProjectResponse, summary="鍒涘缓椤圭洰")
+@router.post("", response_model=HSAIProjectResponse, summary="创建项目")
 async def create_project(
     form_data: HSAIProjectForm,
     user=Depends(get_verified_user)
 ):
     """
-    鍒涘缓鏂扮殑椤圭洰銆?
+    创建新的项目。
     
-    鍒涘缓椤圭洰鍚庝細鑷姩鍒涘缓涓荤嚎浠诲姟銆?
+    创建项目后会自动创建主线任务。
     
     Args:
-        form_data (HSAIProjectForm): 椤圭洰鍒涘缓琛ㄥ崟
-        user: 宸茶璇佺殑鐢ㄦ埛瀵硅薄
+        form_data (HSAIProjectForm): 项目创建表单
+        user: 已认证的用户对象
         
     Returns:
-        HSAIProjectResponse: 鍒涘缓鐨勯」鐩俊鎭?
+        HSAIProjectResponse: 创建的项目信息
     """
     try:
         target_user_id = (
@@ -187,7 +187,7 @@ async def create_project(
                 detail="Failed to create project"
             )
         
-        # 鍒涘缓涓荤嚎浠诲姟
+        # 创建主线任务
         main_tasks = []
         try:
             seed_templates = list(task_template_registry.iter_project_seed_templates())
@@ -234,12 +234,12 @@ async def create_project(
         )
 
 
-@router.get("/{project_id}", response_model=HSAIProjectResponse, summary="鑾峰彇椤圭洰璇︽儏")
+@router.get("/{project_id}", response_model=HSAIProjectResponse, summary="获取项目详情")
 async def get_project(
     project_id: str,
     user=Depends(get_verified_user)
 ):
-    """鑾峰彇鍗曚釜椤圭洰璇︽儏"""
+    """获取单个项目详情"""
     try:
         project = HSAIProjects.get_project_by_id(project_id)
         is_admin = _is_super_admin(user)
@@ -261,31 +261,31 @@ async def get_project(
         )
 
 
-@router.put("/{project_id}", response_model=HSAIProjectResponse, summary="鏇存柊椤圭洰")
+@router.put("/{project_id}", response_model=HSAIProjectResponse, summary="更新项目")
 async def update_project(
     project_id: str,
     form_data: HSAIProjectUpdateForm,
     user=Depends(get_verified_user)
 ):
-    """鏇存柊椤圭洰銆?
+    """更新项目。
     
-    鏇存柊鎸囧畾椤圭洰鐨勮缁嗕俊鎭€?
+    更新指定项目的详细信息。
     
     Args:
-        project_id (str): 椤圭洰ID
-        form_data (HSAIProjectUpdateForm): 椤圭洰鏇存柊琛ㄥ崟
-        user: 宸茶璇佺殑鐢ㄦ埛瀵硅薄
+        project_id (str): 项目ID
+        form_data (HSAIProjectUpdateForm): 项目更新表单
+        user: 已认证的用户对象
         
     Returns:
-        HSAIProjectResponse: 鏇存柊鍚庣殑椤圭洰淇℃伅
+        HSAIProjectResponse: 更新后的项目信息
         
     Raises:
-        HTTPException: 404 - 椤圭洰鏈壘鍒?
-        HTTPException: 400 - 椤圭洰鏇存柊澶辫触
-        HTTPException: 500 - 鏈嶅姟鍣ㄥ唴閮ㄩ敊璇?
+        HTTPException: 404 - 项目未找到
+        HTTPException: 400 - 项目更新失败
+        HTTPException: 500 - 服务器内部错误
     """
     try:
-        # 妤犲矁鐦夋い鍦窗閹碘偓閺堝娼?
+        # 校验项目归属
         existing_project = HSAIProjects.get_project_by_id(project_id)
         if not existing_project or (
             existing_project.user_id != user.id and not _is_super_admin(user)
@@ -314,29 +314,29 @@ async def update_project(
         )
 
 
-@router.delete("/{project_id}", response_model=bool, summary="鍒犻櫎椤圭洰")
+@router.delete("/{project_id}", response_model=bool, summary="删除项目")
 async def delete_project(
     project_id: str,
     user=Depends(get_verified_user)
 ):
-    """鍒犻櫎椤圭洰銆?
+    """删除项目。
     
-    鍒犻櫎鎸囧畾椤圭洰鍙婂叾鍏宠仈鐨勬墍鏈変换鍔°€?
+    删除指定项目及其关联的所有任务。
     
     Args:
-        project_id (str): 椤圭洰ID
-        user: 宸茶璇佺殑鐢ㄦ埛瀵硅薄
+        project_id (str): 项目ID
+        user: 已认证的用户对象
         
     Returns:
-        bool: 鍒犻櫎鎴愬姛杩斿洖True
+        bool: 删除成功返回True
         
     Raises:
-        HTTPException: 404 - 椤圭洰鏈壘鍒?
-        HTTPException: 400 - 椤圭洰鍒犻櫎澶辫触
-        HTTPException: 500 - 鏈嶅姟鍣ㄥ唴閮ㄩ敊璇?
+        HTTPException: 404 - 项目未找到
+        HTTPException: 400 - 项目删除失败
+        HTTPException: 500 - 服务器内部错误
     """
     try:
-        # 妤犲矁鐦夋い鍦窗閹碘偓閺堝娼?
+        # 校验项目归属
         existing_project = HSAIProjects.get_project_by_id(project_id)
         if not existing_project or (
             existing_project.user_id != user.id and not _is_super_admin(user)
@@ -365,27 +365,29 @@ async def delete_project(
         )
 
 
-@router.get("/{project_id}/tasks", response_model=List[HSAITaskResponse], summary="鑾峰彇椤圭洰浠诲姟鍒楄〃")
+@router.get("/{project_id}/tasks", response_model=List[HSAITaskResponse], summary="获取项目任务列表")
 async def get_project_tasks(
     project_id: str,
     user=Depends(get_verified_user)
 ):
-    """鑾峰彇鎸囧畾椤圭洰涓嬬殑浠诲姟鍒楄〃銆?
+    """获取指定项目下的任务列表。
 
-    鏉冮檺杈圭晫锛?
-    - 浠呴」鐩墍灞炵敤鎴峰彲璁块棶锛涚鐞嗗憳闇€鍏峰鐩稿簲鍚庨棬寮€鍏虫柟鍙唬鏌ャ€?
+    权限要求：
+    - 项目所属用户或超级管理员
 
-    杩囨护椤癸細
-    - 鏃犻澶栨煡璇㈠弬鏁帮紙濡傞渶鍒嗛〉/绛涢€夎鍦ㄤ笂灞傚垪琛ㄦ帴鍙ｅ畬鎴愬悗鍦ㄥ鎴风杩囨护锛夈€?
+    权限保护：
+    - 超级管理员可以查看所有项目下的任务
+    - 普通用户只能查看自己项目下的任务
 
-    杩斿洖瀛楁锛圚SAITaskResponse 鍒楄〃锛夛細
-    - id锛氫换鍔D
-    - title锛氭爣棰?
-    - status锛氱姸鎬侊紙濡?pending/running/paused/done锛?
-    - type锛氫换鍔＄被鍨嬶紙main/recurring锛?
-    - project_id锛氶」鐩甀D
-    - created_at/updated_at锛氭椂闂存埑锛堢锛?
-    - metadata锛氶檮鍔犱俊鎭?
+    返回结果：
+    - HSAITaskResponse 列表
+    - id：任务ID
+    - title：任务标题
+    - status：任务状态，如pending/running/paused/done
+    - type：任务类型，如main/recurring
+    - project_id：项目ID
+    - created_at/updated_at：时间戳
+    - metadata：元数据
     """
     try:
         # 校验项目归属
@@ -414,24 +416,25 @@ async def get_project_tasks(
         )
 
 
-@router.get("/{project_id}/summary", response_model=ProjectSummaryResponse, summary="椤圭洰浠诲姟鎽樿")
+@router.get("/{project_id}/summary", response_model=ProjectSummaryResponse, summary="项目任务摘要")
 async def get_project_summary(
     project_id: str,
     user=Depends(get_verified_user),
 ):
-    """杩斿洖椤圭洰浠诲姟鎽樿淇℃伅銆?
+    """返回项目任务摘要信息。
 
-    鏉冮檺杈圭晫锛?
-    - 浠呴」鐩墍灞炵敤鎴峰彲璁块棶锛涚鐞嗗憳闇€鍏峰鐩稿簲鍚庨棬寮€鍏虫柟鍙唬鏌ャ€?
+    权限要求：
+    - 项目所属用户或超级管理员
 
-    杩斿洖瀛楁锛圥rojectSummaryResponse锛夛細
-    - project锛氶」鐩熀鏈俊鎭?
-    - blueprint锛氳摑鍥剧増鏈?鍚屾鐘舵€?鏈€鍚庡悓姝ユ椂闂?
-    - main_tasks锛氫富瑕佷换鍔″畬鎴愬害缁熻
-    - recurring_tasks锛氬惊鐜换鍔＄粺璁℃眹鎬?
-    - recurring_items锛氬惊鐜换鍔℃潯鐩垪琛?
-    - recent_logs锛氳繎鏈熺姸鎬佹棩蹇?
-    - blueprint_links锛氳摑鍥惧叧鑱斾俊鎭?
+    返回结果：
+    - ProjectSummaryResponse
+    - project：项目信息
+    - blueprint：蓝图进度信息，包括版本、进度状态、最后同步时间、执行天数、计划总帖子数、发帖频率、所需TikTok账号、计划结束时间、每日周期配置
+    - main_tasks：主线任务统计，包括总数和已完成数
+    - recurring_tasks：周期任务统计，包括总数和活跃数
+    - recurring_items：周期任务列表
+    - recent_logs：最近的日志条目
+    - blueprint_links：蓝图链接信息
     """
     try:
         project = HSAIProjects.get_project_by_id(project_id)

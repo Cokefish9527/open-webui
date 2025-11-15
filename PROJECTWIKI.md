@@ -79,6 +79,8 @@ flowchart LR
 - `PUT /external/admin/users/{id}`：允许在更新时重新绑定企业名称，自动触发企业 / 项目同步。
 - `/external/admin/companies|projects`：提供完整的分页列表、详情、创建、更新、删除与企业内项目列表接口，统一输出 `PaginatedCompanyResponse` / `PaginatedHSAIProjectResponse`，并沿用 `_build_*_pagination()` 计算分页信息。
 - `/external/admin/companies/{company_id}/users/{user_id}`：允许后台批量绑定 / 解绑企业管理员，保持用户 `business_name`、`company_id` 一致。
+- `GET|PATCH /external/admin/users/{user_id}/permissions`：当 `ENABLE_CUSTOMER_PERMISSION_API` 启用时，后台可查询/修改账号角色与 `settings.permissions`，供 hsai_admin 客户管理面板使用；若 WebUI 客户端被裁剪，仍可通过该接口完成权限联动。
+- `GET|PATCH /external/admin/companies/{company_id}/permissions`：提供企业维度的角色/权限分页列表，并支持批量更新（可套用 `CUSTOMER_PERMISSION_TEMPLATE`），方便一次性同步多个账号的授权策略。
 
 ### HSAI Companies / Projects Routers（`backend/open_webui/routers/hsai_companies.py`, `hsai_projects.py`）
 - 超级管理员 (`is_super_admin=True`) 可以查询/管理全部企业与项目，并可通过请求体中的 `owner_user_id` 或 `user_id` 来指定企业负责人或项目负责人。

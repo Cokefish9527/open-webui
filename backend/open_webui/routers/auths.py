@@ -1028,6 +1028,9 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "ENABLE_API_KEY_ENDPOINT_RESTRICTIONS": request.app.state.config.ENABLE_API_KEY_ENDPOINT_RESTRICTIONS,
         "API_KEY_ALLOWED_ENDPOINTS": request.app.state.config.API_KEY_ALLOWED_ENDPOINTS,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
+        "DEFAULT_CUSTOMER_ROLE": request.app.state.config.DEFAULT_CUSTOMER_ROLE,
+        "CUSTOMER_PERMISSION_TEMPLATE": request.app.state.config.CUSTOMER_PERMISSION_TEMPLATE,
+        "ENABLE_CUSTOMER_PERMISSION_API": request.app.state.config.ENABLE_CUSTOMER_PERMISSION_API,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_COMMUNITY_SHARING": request.app.state.config.ENABLE_COMMUNITY_SHARING,
         "ENABLE_MESSAGE_RATING": request.app.state.config.ENABLE_MESSAGE_RATING,
@@ -1050,6 +1053,9 @@ class AdminConfig(BaseModel):
     ENABLE_API_KEY_ENDPOINT_RESTRICTIONS: bool
     API_KEY_ALLOWED_ENDPOINTS: str
     DEFAULT_USER_ROLE: str
+    DEFAULT_CUSTOMER_ROLE: Optional[str] = Field(default="user")
+    CUSTOMER_PERMISSION_TEMPLATE: Optional[str] = Field(default=None)
+    ENABLE_CUSTOMER_PERMISSION_API: bool = Field(default=True)
     JWT_EXPIRES_IN: str
     ENABLE_COMMUNITY_SHARING: bool
     ENABLE_MESSAGE_RATING: bool
@@ -1112,6 +1118,14 @@ async def update_admin_config(
     )
 
     request.app.state.config.RESPONSE_WATERMARK = form_data.RESPONSE_WATERMARK
+    if form_data.DEFAULT_CUSTOMER_ROLE in ["pending", "user", "admin"]:
+        request.app.state.config.DEFAULT_CUSTOMER_ROLE = form_data.DEFAULT_CUSTOMER_ROLE
+    request.app.state.config.CUSTOMER_PERMISSION_TEMPLATE = (
+        form_data.CUSTOMER_PERMISSION_TEMPLATE or ""
+    )
+    request.app.state.config.ENABLE_CUSTOMER_PERMISSION_API = (
+        form_data.ENABLE_CUSTOMER_PERMISSION_API
+    )
 
     return {
         "SHOW_ADMIN_DETAILS": request.app.state.config.SHOW_ADMIN_DETAILS,
@@ -1123,6 +1137,9 @@ async def update_admin_config(
         "ENABLE_API_KEY_ENDPOINT_RESTRICTIONS": request.app.state.config.ENABLE_API_KEY_ENDPOINT_RESTRICTIONS,
         "API_KEY_ALLOWED_ENDPOINTS": request.app.state.config.API_KEY_ALLOWED_ENDPOINTS,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
+        "DEFAULT_CUSTOMER_ROLE": request.app.state.config.DEFAULT_CUSTOMER_ROLE,
+        "CUSTOMER_PERMISSION_TEMPLATE": request.app.state.config.CUSTOMER_PERMISSION_TEMPLATE,
+        "ENABLE_CUSTOMER_PERMISSION_API": request.app.state.config.ENABLE_CUSTOMER_PERMISSION_API,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_COMMUNITY_SHARING": request.app.state.config.ENABLE_COMMUNITY_SHARING,
         "ENABLE_MESSAGE_RATING": request.app.state.config.ENABLE_MESSAGE_RATING,

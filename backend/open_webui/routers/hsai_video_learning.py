@@ -130,7 +130,7 @@ async def get_pending_videos(
     ),
     user=Depends(get_verified_user),
 ):
-    """List videos and merge learning status under the current business tenant."""
+    """列出视频并合并当前业务租户的学习状态。"""
     try:
         normalized_filter = _normalize_status_filter(status_filter)
         business_name = _resolve_business_name(user)
@@ -185,7 +185,7 @@ async def get_pending_videos(
 
 @router.post("/start-learning", response_model=StartLearningResponse, summary="Start learning a video")
 async def start_video_learning(request: StartLearningRequest, user=Depends(get_verified_user)):
-    """Trigger the learning workflow for a given video."""
+    """触发给定视频的学习工作流程。"""
     try:
         business_name = _resolve_business_name(user)
         log.info("Start video learning: video_id=%s business=%s", request.video_id, business_name)
@@ -266,7 +266,7 @@ async def start_video_learning(request: StartLearningRequest, user=Depends(get_v
 
 @router.put("/update-video-content", response_model=UpdateVideoContentLearnedResponse, summary="Update video content learned")
 async def update_video_content_learned(request: UpdateVideoContentLearnedRequest, user=Depends(get_verified_user)):
-    """Update the video content learned information."""
+    """更新视频内容学习信息。"""
     try:
         log.info("Update video content learned: id=%s", request.id)
         
@@ -324,7 +324,7 @@ async def update_video_content_learned(request: UpdateVideoContentLearnedRequest
     summary="Revoke learned video and reset status to pending",
 )
 async def revoke_video_learning(request: RevokeLearningRequest, user=Depends(get_verified_user)):
-    """Delete a learned video entry and revert learning status."""
+    """删除已学习的视频条目并恢复学习状态。"""
     try:
         business_name = _resolve_business_name(user)
         log.info(
@@ -389,7 +389,7 @@ async def revoke_video_learning(request: RevokeLearningRequest, user=Depends(get
         ) from exc
 
 
-@router.get("/test", summary="Health check for video learning router")
+@router.get("/test", summary="视频学习路由健康检查")
 async def test_endpoint():
-    """Simple test endpoint."""
+    """简单的测试端点。"""
     return {"message": "Video learning API is operational"}

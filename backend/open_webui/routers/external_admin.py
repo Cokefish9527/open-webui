@@ -30,11 +30,13 @@ from open_webui.models.auths import (
     AddUserForm,
     ExternalAdminUserUpdateForm,
 )
+from open_webui.config import ENABLE_CUSTOMER_PERMISSION_API
 from open_webui.utils.auth import get_password_hash
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.models.external_admin_tokens import ExternalAdminTokens
 from open_webui.services.enterprise_provisioning import provision_enterprise_membership
+from open_webui.services.customer_permissions import customer_permissions_service
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS.get("CONFIG", "INFO"))
@@ -180,13 +182,25 @@ class UserListResponse(BaseModel):
     total: int = Field(description="用户总数")
 
 
-class CompanyCreateRequest(CompanyForm):
+class CompanyCreateRequest(BaseModel):
+    """公司创建请求模型"""
+    name: str
+    description: Optional[str] = None
+    company_info: Optional[dict] = None
+    config: Optional[dict] = None
     owner_user_id: str = Field(description="公司负责人用户ID")
 
 
-class ProjectCreateRequest(HSAIProjectForm):
-    user_id: str = Field(description="项目负责人用户ID")
+class ProjectCreateRequest(BaseModel):
+    """项目创建请求模型"""
+    name: str
+    description: Optional[str] = None
+    business_name: str
+    company_info: Optional[dict] = None
+    config: Optional[dict] = None
     company_id: Optional[str] = Field(default=None, description="所属公司ID")
+    user_id: str = Field(description="项目负责人用户ID")
+    status: Optional[str] = "active"
 
 
 class ProjectUpdateRequest(HSAIProjectUpdateForm):
@@ -236,7 +250,7 @@ async def issue_oauth_token(payload: OAuthTokenRequest):
         raise _oauth_error(
             status.HTTP_400_BAD_REQUEST,
             "invalid_grant",
-            "grant_type must be client_credentials",
+            "授权类型必须为 client_credentials",
         )
 
     client_id = payload.client_id or ""
@@ -375,6 +389,212 @@ async def update_user(
             ) from exc
 
     return updated_user
+
+
+class UserPermissionsResponse(BaseModel):
+    role: str = Field(description="用户角色")
+    permissions: Optional[dict] = Field(default=None, description="用户自定义权限(settings.permissions)")
+
+
+class UpdateUserPermissionsRequest(BaseModel):
+    role: Optional[str] = Field(default=None, description="新的角色，pending/user/admin")
+    permissions: Optional[dict] = Field(default=None, description="要写入 settings.permissions 的 JSON")
+    use_template: bool = Field(default=False, description="是否应用 CUSTOMER_PERMISSION_TEMPLATE")
+
+
+class CompanyUserPermission(BaseModel):
+    user_id: str
+    name: Optional[str] = None
+    email: Optional[str] = None
+    role: str
+    permissions: Optional[dict] = None
+
+
+class CompanyPermissionsResponse(BaseModel):
+    company_id: str
+    company_name: Optional[str] = None
+    page: int
+    page_size: int
+    total: int
+    users: List[CompanyUserPermission]
+
+
+class CompanyPermissionsUpdateItem(BaseModel):
+    user_id: str
+    role: Optional[str] = None
+    permissions: Optional[dict] = None
+    use_template: bool = False
+
+
+class BulkUpdateCompanyPermissionsRequest(BaseModel):
+    users: List[CompanyPermissionsUpdateItem]
+    fallback_to_template: bool = Field(default=False, description="当 payload 中缺少 permissions 时是否自动套用模板")
+    page: Optional[int] = Field(default=1, description="批量更新后返回的分页页码")
+    page_size: Optional[int] = Field(default=50, description="批量更新后返回的分页大小")
+
+
+def _ensure_permission_api_enabled():
+    if not ENABLE_CUSTOMER_PERMISSION_API.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACTION_PROHIBITED,
+        )
+
+
+def _format_company_permissions_payload(
+    company_id: str,
+    company_name: Optional[str],
+    users: List[UserModel],
+    *,
+    page: int,
+    page_size: int,
+    total: int,
+) -> CompanyPermissionsResponse:
+    items: List[CompanyUserPermission] = []
+    for item in users:
+        permissions = (item.settings or {}).get("permissions") if item.settings else None
+        items.append(
+            CompanyUserPermission(
+                user_id=item.id,
+                name=item.name,
+                email=item.email,
+                role=item.role,
+                permissions=permissions,
+            )
+        )
+    return CompanyPermissionsResponse(
+        company_id=company_id,
+        company_name=company_name,
+        page=page,
+        page_size=page_size,
+        total=total,
+        users=items,
+    )
+
+
+@router.get("/users/{user_id}/permissions", response_model=UserPermissionsResponse)
+async def get_user_permissions(user_id: str, request: Request):
+    """
+    查询用户角色与 permissions（供后台客户管理调用）
+    """
+    verify_external_request(request)
+    _ensure_permission_api_enabled()
+
+    user, perms = customer_permissions_service.get_user_permissions(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
+        )
+
+    return UserPermissionsResponse(role=user.role, permissions=perms)
+
+
+@router.patch("/users/{user_id}/permissions", response_model=UserPermissionsResponse)
+async def update_user_permissions(
+    user_id: str, payload: UpdateUserPermissionsRequest, request: Request
+):
+    """
+    更新用户角色或 permissions（供后台客户管理调用）
+    """
+    verify_external_request(request)
+    _ensure_permission_api_enabled()
+
+    try:
+        updated = customer_permissions_service.update_user_permissions(
+            user_id,
+            role=payload.role,
+            explicit_permissions=payload.permissions,
+            use_template=payload.use_template,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
+        )
+
+    user, perms = updated
+    return UserPermissionsResponse(role=user.role, permissions=perms)
+
+
+@router.get(
+    "/companies/{company_id}/permissions",
+    response_model=CompanyPermissionsResponse,
+)
+async def get_company_permissions(
+    company_id: str,
+    request: Request,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=200),
+):
+    verify_external_request(request)
+    _ensure_permission_api_enabled()
+
+    company, user_list, normalized_page, normalized_size = (
+        customer_permissions_service.list_company_permissions(
+            company_id, page=page, page_size=page_size
+        )
+    )
+
+    return _format_company_permissions_payload(
+        company_id=company_id,
+        company_name=company.name if company else None,
+        users=user_list.users,
+        page=normalized_page,
+        page_size=normalized_size,
+        total=user_list.total,
+    )
+
+
+@router.patch(
+    "/companies/{company_id}/permissions",
+    response_model=CompanyPermissionsResponse,
+)
+async def update_company_permissions(
+    company_id: str,
+    payload: BulkUpdateCompanyPermissionsRequest,
+    request: Request,
+):
+    verify_external_request(request)
+    _ensure_permission_api_enabled()
+
+    if not payload.users:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="users payload is empty"
+        )
+
+    try:
+        customer_permissions_service.bulk_update_company_permissions(
+            company_id,
+            [item.dict() for item in payload.users],
+            fallback_to_template=payload.fallback_to_template,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+    company, user_list, normalized_page, normalized_size = (
+        customer_permissions_service.list_company_permissions(
+            company_id, page=payload.page or 1, page_size=payload.page_size or 50
+        )
+    )
+
+    return _format_company_permissions_payload(
+        company_id=company_id,
+        company_name=company.name if company else None,
+        users=user_list.users,
+        page=normalized_page,
+        page_size=normalized_size,
+        total=user_list.total,
+    )
 
 
 @router.post("/users/{user_id}/reset-password", response_model=OperationResponse)
