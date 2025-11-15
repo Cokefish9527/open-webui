@@ -158,5 +158,34 @@ sequenceDiagram
 - **Runtime Migration**：应用启动时执行的最小化 schema 校验/修复逻辑。
 - **Schema Guard**：`_schema_aware_db()`，用于确保数据库结构满足模型需求。
 
+## WebSocket 附件透传
+### 消息字段格式
+WebSocket 消息中可通过 `files` 或 `attachments` 字段携带附件信息，格式如下：
+
+``json
+{
+  "type": "chat",
+  "content": "请分析这个文件",
+  "files": [
+    {
+      "id": "file_1234567890"
+    }
+  ]
+}
+```
+
+### 附件校验规则
+1. 消息中最多只能包含一个附件（仅处理 `files[0]`）
+2. 必须提供文件 `id` 字段
+3. 文件必须存在且属于当前用户
+4. 文件路径和元数据将被封装为 `AttachmentDescriptor` 对象
+
+### n8n 字段要求
+当附件存在时，n8n client 会使用 multipart/form-data 格式发送请求：
+- `data` 字段：包含原始文件二进制数据，filename 和 content-type 来自附件描述
+- `payload_json` 字段：包含完整的 JSON 负载，以字符串形式传递
+
+无附件时继续使用 application/json 格式发送请求。
+
 ## 变更日志
 - 2025-11-13：引入 `ensure_materials_storage_schema()` 修复 `oss_object_path` 缺列导致的计数查询奔溃（参阅 ADR-2025-11-13）。

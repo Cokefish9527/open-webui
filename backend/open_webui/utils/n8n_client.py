@@ -18,6 +18,7 @@ from .n8n_workflow_manager import WorkflowConfig
 from .performance_monitor import monitor_n8n_operation, async_perf_context
 from .hsai_monitor import ComponentType
 from .hsai_logger import hsai_logger
+from ..models.attachments import AttachmentDescriptor
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class ExecutionRequest:
     message: str
     business_name: Optional[str] = None
     additional_data: Optional[Dict[str, Any]] = None
+    attachment: Optional[AttachmentDescriptor] = None
     priority: int = 1
     timeout: int = 30
     # 添加n8n_webhook_url字段以支持自定义端点
@@ -65,6 +67,10 @@ class ExecutionRequest:
             # 添加除了socket_id之外的其他数据
             additional_payload = {k: v for k, v in self.additional_data.items() if k != "socket_id"}
             payload.update(additional_payload)
+            
+        # 注意：附件信息不会直接添加到payload中，
+        # 而是在发送multipart请求时作为独立的文件字段处理
+        # 这里我们只保留payload中的其他信息
             
         # 直接返回payload，而不是包装在body字段中
         # 这样可以避免n8n工作流中的多层body嵌套问题
@@ -190,6 +196,11 @@ class N8NClient:
                 # 添加日志打印
                 log.info(f"Prepared webhook payload for execution {execution_id}: {payload}")
                 
+                # 打印附件信息
+                log.info(f"Request attachment: {request.attachment}")
+                if request.attachment:
+                    log.info(f"Attachment details: file_id={request.attachment.file_id}, filename={request.attachment.filename}, size={request.attachment.size}")
+                
                 # 确定使用的工作流URL
                 # 如果请求中指定了自定义URL，则使用该URL，否则使用工作流配置中的URL
                 webhook_url = request.n8n_webhook_url or workflow.webhook_url
@@ -200,7 +211,8 @@ class N8NClient:
                     webhook_url,
                     payload,
                     workflow.timeout or request.timeout,
-                    workflow.retry_count or self.max_retries
+                    workflow.retry_count or self.max_retries,
+                    request.attachment
                 )
                 
                 # 添加日志打印
@@ -243,9 +255,14 @@ class N8NClient:
         return result
         
     async def _execute_with_retry(self, url: str, payload: Dict[str, Any],
-                                timeout: int, max_retries: int) -> Dict[str, Any]:
+                                timeout: int, max_retries: int, attachment: Optional[AttachmentDescriptor] = None) -> Dict[str, Any]:
         """带重试的HTTP请求执行"""
         last_exception = None
+        
+        # 添加调试日志
+        log.info(f"_execute_with_retry called with attachment: {attachment}")
+        if attachment:
+            log.info(f"Attachment details: file_id={attachment.file_id}, filename={attachment.filename}, size={attachment.size}")
         
         # 确保session已初始化
         if self.session is None:
@@ -262,38 +279,106 @@ class N8NClient:
                 # 添加日志打印
                 log.info(f"Making HTTP POST request to {url} (attempt {attempt + 1})")
                 
-                async with self.session.post(
-                    url,
-                    json=payload,
-                    timeout=aiohttp.ClientTimeout(total=timeout)
-                ) as response:
+                # 如果有附件，使用multipart/form-data发送请求
+                if attachment is not None:
+                    # 创建multipart表单数据
+                    form_data = aiohttp.FormData()
                     
-                    # 添加日志打印
-                    log.info(f"Received HTTP response - Status: {response.status}, URL: {url}")
+                    # 添加payload_json字段
+                    payload_json = json.dumps(payload, ensure_ascii=False)
+                    form_data.add_field('payload_json', payload_json, content_type='application/json')
                     
-                    # 检查HTTP状态码
-                    if response.status >= 400:
-                        error_text = await response.text()
-                        log.error(f"HTTP error {response.status} for URL {url}: {error_text}")
-                        raise aiohttp.ClientResponseError(
-                            request_info=response.request_info,
-                            history=response.history,
-                            status=response.status,
-                            message=f"HTTP {response.status}: {error_text}"
-                        )
+                    # 添加文件数据
+                    try:
+                        # 打开文件并添加到表单数据中
+                        with open(attachment.local_path, 'rb') as f:
+                            form_data.add_field(
+                                'data',  # n8n webhook配置的binaryPropertyName
+                                f,
+                                filename=attachment.filename,
+                                content_type=attachment.mime_type or 'application/octet-stream'
+                            )
+                        
+                        # 打印请求信息用于调试
+                        log.info(f"Sending multipart request to {url}")
+                        log.info(f"Request payload: {payload}")
+                        log.info(f"Attachment info: file_id={attachment.file_id}, filename={attachment.filename}, size={attachment.size}")
+                        
+                        async with self.session.post(
+                            url,
+                            data=form_data,
+                            timeout=aiohttp.ClientTimeout(total=timeout)
+                        ) as response:
+                            # 添加日志打印
+                            log.info(f"Received HTTP response - Status: {response.status}, URL: {url}")
+                            
+                            # 检查HTTP状态码
+                            if response.status >= 400:
+                                error_text = await response.text()
+                                log.error(f"HTTP error {response.status} for URL {url}: {error_text}")
+                                raise aiohttp.ClientResponseError(
+                                    request_info=response.request_info,
+                                    history=response.history,
+                                    status=response.status,
+                                    message=f"HTTP {response.status}: {error_text}"
+                                )
+                            
+                            # 解析响应
+                            content_type = response.headers.get('content-type', '')
+                            if 'application/json' in content_type:
+                                json_response = await response.json()
+                                # 添加日志打印
+                                log.info(f"Returning JSON response: {json_response}")
+                                return json_response
+                            else:
+                                text_response = await response.text()
+                                # 添加日志打印
+                                log.info(f"Returning text response: {text_response}")
+                                return {"raw_response": text_response}
+                    except FileNotFoundError:
+                        log.error(f"Attachment file not found: {attachment.local_path}")
+                        raise RuntimeError(f"Attachment file not found: {attachment.local_path}")
+                    except Exception as file_error:
+                        log.error(f"Error reading attachment file: {file_error}")
+                        raise RuntimeError(f"Error reading attachment file: {file_error}")
+                else:
+                    # 无附件时继续发送application/json
+                    # 打印请求信息用于调试
+                    log.info(f"Sending JSON request to {url}")
+                    log.info(f"Request payload: {payload}")
                     
-                    # 解析响应
-                    content_type = response.headers.get('content-type', '')
-                    if 'application/json' in content_type:
-                        json_response = await response.json()
+                    async with self.session.post(
+                        url,
+                        json=payload,
+                        timeout=aiohttp.ClientTimeout(total=timeout)
+                    ) as response:
+                        
                         # 添加日志打印
-                        log.info(f"Returning JSON response: {json_response}")
-                        return json_response
-                    else:
-                        text_response = await response.text()
-                        # 添加日志打印
-                        log.info(f"Returning text response: {text_response}")
-                        return {"raw_response": text_response}
+                        log.info(f"Received HTTP response - Status: {response.status}, URL: {url}")
+                        
+                        # 检查HTTP状态码
+                        if response.status >= 400:
+                            error_text = await response.text()
+                            log.error(f"HTTP error {response.status} for URL {url}: {error_text}")
+                            raise aiohttp.ClientResponseError(
+                                request_info=response.request_info,
+                                history=response.history,
+                                status=response.status,
+                                message=f"HTTP {response.status}: {error_text}"
+                            )
+                        
+                        # 解析响应
+                        content_type = response.headers.get('content-type', '')
+                        if 'application/json' in content_type:
+                            json_response = await response.json()
+                            # 添加日志打印
+                            log.info(f"Returning JSON response: {json_response}")
+                            return json_response
+                        else:
+                            text_response = await response.text()
+                            # 添加日志打印
+                            log.info(f"Returning text response: {text_response}")
+                            return {"raw_response": text_response}
                         
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 last_exception = e

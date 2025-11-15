@@ -19,6 +19,7 @@ from open_webui.config.n8n_workflows import (
 from open_webui.utils.n8n_workflow_manager import workflow_manager, WorkflowConfig, WorkflowType
 from open_webui.utils.n8n_client import N8NClient, ExecutionRequest
 from open_webui.utils.n8n_response_processor import N8NResponseProcessor
+from open_webui.models.attachments import AttachmentDescriptor
 
 log = logging.getLogger(__name__)
 
@@ -188,13 +189,28 @@ class CommunicationManager:
                 enabled=True
             )
             
+            # 从context中获取附件（如果存在）
+            attachment = context.get("attachment")
+            log.info(f"[工作流编排中心] 从context获取附件: {attachment}")
+            if attachment and not isinstance(attachment, AttachmentDescriptor):
+                # 如果attachment存在但不是AttachmentDescriptor类型，尝试转换
+                try:
+                    attachment = AttachmentDescriptor(**attachment)
+                    log.info(f"[工作流编排中心] 附件转换成功: {attachment}")
+                except Exception as e:
+                    log.warning(f"附件转换失败: {e}")
+                    attachment = None
+            elif attachment:
+                log.info(f"[工作流编排中心] 附件已经是AttachmentDescriptor类型: {attachment}")
+            
             # 构建请求数据，包含socket_id用于后续消息发送
             request = ExecutionRequest(
                 workflow_id=workflow_type.value,
                 session_id=session_id,
                 user_id=user_id,
                 message=user_input,
-                additional_data=context
+                additional_data=context,
+                attachment=attachment
             )
             
             # 发送请求到n8n

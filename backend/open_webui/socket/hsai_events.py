@@ -5,6 +5,10 @@ from typing import Dict, Any
 
 # 导入用户模型
 from open_webui.models.users import Users
+# 导入文件模型
+from open_webui.models.files import Files
+# 导入附件描述对象
+from open_webui.models.attachments import AttachmentDescriptor
 
 log = logging.getLogger(__name__)
 
@@ -81,6 +85,58 @@ def register_hsai_events(sio, emitter):
                     "additional_data": data.get("metadata", {}),
                     "socket_id": sid  # 传递socket_id用于后续消息发送
                 }
+                
+                # 解析附件信息
+                attachment = None
+                files_data = data.get("files") or data.get("attachments")
+                if files_data and isinstance(files_data, list) and len(files_data) > 0:
+                    # 仅保留首个条目
+                    file_info = files_data[0]
+                    if isinstance(file_info, dict) and "id" in file_info:
+                        file_id = file_info["id"]
+                        # 校验文件是否存在且属于当前用户
+                        file_model = Files.get_file_by_id(file_id)
+                        if file_model and file_model.user_id == user_id:
+                            # 创建附件描述对象
+                            attachment = AttachmentDescriptor(
+                                file_id=file_model.id,
+                                filename=file_model.filename,
+                                mime_type=file_model.meta.get("content_type") if file_model.meta else None,
+                                local_path=file_model.path or "",
+                                size=file_model.meta.get("size", 0) if file_model.meta else 0
+                            )
+                            # 写入context["attachment"]
+                            context["attachment"] = attachment
+                            log.info(f"[HSAI统一事件] 成功解析附件: {attachment.filename}")
+                            log.info(f"[HSAI统一事件] 附件详情: file_id={attachment.file_id}, mime_type={attachment.mime_type}, size={attachment.size}")
+                        else:
+                            log.warning(f"[HSAI统一事件] 附件校验失败: file_id={file_id}, user_id={user_id}")
+                            # 返回错误给客户端
+                            error_data = {
+                                "type": "attachment_validation_failed",
+                                "success": False,
+                                "content": "附件校验失败，请确保文件存在且属于当前用户",
+                                "timestamp": int(__import__('time').time() * 1000),
+                                "messageType": "error",
+                                "displayText": "附件校验失败，请确保文件存在且属于当前用户"
+                            }
+                            await sio.emit("hsai_error", error_data, to=sid)
+                            return
+                    else:
+                        log.warning(f"[HSAI统一事件] 附件信息格式不正确: {file_info}")
+                elif files_data and isinstance(files_data, list) and len(files_data) > 1:
+                    log.warning(f"[HSAI统一事件] 超过一个附件，仅处理第一个附件")
+                    # 返回错误给客户端
+                    error_data = {
+                        "type": "attachment_validation_failed",
+                        "success": False,
+                        "content": "单条消息仅支持一个附件",
+                        "timestamp": int(__import__('time').time() * 1000),
+                        "messageType": "error",
+                        "displayText": "单条消息仅支持一个附件"
+                    }
+                    await sio.emit("hsai_error", error_data, to=sid)
+                    return
                 
                 # 尝试从用户信息中获取business_name
                 if user_id:
