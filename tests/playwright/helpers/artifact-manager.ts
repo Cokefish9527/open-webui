@@ -44,4 +44,69 @@ export class ArtifactManager {
       contentType,
     });
   }
+  
+  // 添加截图功能
+  async takeScreenshot(page: any, name: string): Promise<string> {
+    const filePath = this.pathFor(name, "png");
+    await page.screenshot({ path: filePath, fullPage: true });
+    this.testInfo.attachments.push({
+      name,
+      path: filePath,
+      contentType: "image/png",
+    });
+    return filePath;
+  }
+  
+  // 添加网络跟踪功能
+  async startNetworkTrace(page: any, name: string): Promise<string> {
+    const filePath = this.pathFor(name, "zip");
+    await page.context().tracing.start({ 
+      screenshots: true, 
+      snapshots: true,
+      sources: true
+    });
+    return filePath;
+  }
+  
+  async stopNetworkTrace(page: any, filePath: string, name: string): Promise<void> {
+    await page.context().tracing.stop({ path: filePath });
+    this.testInfo.attachments.push({
+      name,
+      path: filePath,
+      contentType: "application/zip",
+    });
+  }
+  
+  // 添加HAR文件捕获功能
+  async startHARRecording(page: any, name: string): Promise<string> {
+    const filePath = this.pathFor(name, "har");
+    await page.route("**/*", async (route: any) => {
+      await route.continue();
+    });
+    return filePath;
+  }
+  
+  // 添加文本写入功能
+  writeText(name: string, content: string, extension = "txt"): string {
+    const filePath = this.pathFor(name, extension);
+    fs.writeFileSync(filePath, content, "utf8");
+    this.testInfo.attachments.push({
+      name,
+      path: filePath,
+      contentType: "text/plain",
+    });
+    return filePath;
+  }
+  
+  // 添加二进制文件写入功能
+  writeBinary(name: string, buffer: Buffer, extension = "bin"): string {
+    const filePath = this.pathFor(name, extension);
+    fs.writeFileSync(filePath, buffer);
+    this.testInfo.attachments.push({
+      name,
+      path: filePath,
+      contentType: "application/octet-stream",
+    });
+    return filePath;
+  }
 }

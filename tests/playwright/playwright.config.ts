@@ -1,13 +1,10 @@
 ﻿import { defineConfig, devices } from "@playwright/test";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const artifactsRoot = path.resolve(__dirname, "artifacts");
+const artifactsRoot = path.resolve(process.cwd(), "tests", "playwright", "artifacts");
 
 export default defineConfig({
-  testDir: path.resolve(__dirname, "scenarios"),
+  testDir: path.resolve(process.cwd(), "tests", "playwright", "scenarios"),
   fullyParallel: true,
   timeout: 2 * 60 * 1000,
   expect: {
@@ -19,7 +16,7 @@ export default defineConfig({
   reporter: [
     ["list"],
     ["html", { open: "never", outputFolder: path.join(artifactsRoot, "html-report") }],
-    [path.join(__dirname, "reporters", "defect-reporter.ts")],
+    ["./reporters/defect-reporter.ts"],
   ],
   outputDir: path.join(artifactsRoot, "results"),
   use: {
@@ -37,21 +34,67 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"], channel: process.env.E2E_CHROME_CHANNEL || undefined },
+      use: { 
+        ...devices["Desktop Chrome"], 
+        channel: process.env.E2E_CHROME_CHANNEL || undefined,
+        // 添加浏览器启动参数
+        launchOptions: {
+          args: [
+            '--disable-web-security',
+            '--disable-features=IsolateOrigins',
+            '--disable-site-isolation-trials'
+          ]
+        }
+      },
     },
     {
       name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
+      use: { 
+        ...devices["Desktop Firefox"],
+        // Firefox特定配置
+        launchOptions: {
+          firefoxUserPrefs: {
+            'network.proxy.type': 0,
+            'browser.cache.disk.enable': false,
+          }
+        }
+      },
     },
     {
       name: "webkit",
-      use: { ...devices["Desktop Safari"] },
+      use: { 
+        ...devices["Desktop Safari"],
+        // WebKit特定配置
+        launchOptions: {
+          args: [
+            '--disable-web-security'
+          ]
+        }
+      },
+    },
+    
+    // 移动端浏览器配置
+    {
+      name: "Mobile Chrome",
+      use: { 
+        ...devices["Pixel 5"],
+        baseURL: process.env.E2E_BASE_URL || "http://localhost:8080",
+      },
+    },
+    {
+      name: "Mobile Safari",
+      use: { 
+        ...devices["iPhone 12"],
+        baseURL: process.env.E2E_BASE_URL || "http://localhost:8080",
+      },
     },
   ],
+  // 添加全局设置
+  globalSetup: './global-setup.ts',
   metadata: {
     tenant: "福州华商时代自动化测试",
     accounts: "test001@hsai.cc ~ test010@hsai.cc",
+    testEnvironment: process.env.E2E_BASE_URL || "http://localhost:8080",
+    testType: "full-journey",
   },
 });
-
-

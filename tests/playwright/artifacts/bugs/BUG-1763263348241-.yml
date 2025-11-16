@@ -1,0 +1,13 @@
+id: BUG-2025-11-16T03-22-16-597Z-
+discovered_at: 2025-11-16T03:22:16.597Z
+scenario:  > chromium > full-journey.spec.ts > S3-WORKFLOW > 对话工作流串联
+status: failed
+expected: 参见测试用例
+actual: Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveTitle[2m([22m[32mexpected[39m[2m)[22m failed\n\nExpected pattern: [32m/HSAI/i[39m\nReceived string:  [31m"华商 AI"[39m\nTimeout: 10000ms\n\nCall log:\n[2m  - Expect "toHaveTitle" with timeout 10000ms[22m\n[2m    13 × unexpected value "华商 AI"[22m\n
+account_pool: test001@test010@hsai.cc
+frontend-log: tests/playwright/artifacts/full-journey-spec-ts__s3-workflow__/frontend-log.log
+backend-log: tests/playwright/artifacts/full-journey-spec-ts__s3-workflow__/backend-log.log
+screenshot: tests/playwright/artifacts/results/full-journey-S3-WORKFLOW-对话工作流串联-chromium/test-failed-1.png
+ws-health: tests/playwright/artifacts/full-journey-spec-ts__s3-workflow__/ws-health.json
+context-state: tests/playwright/artifacts/full-journey-spec-ts__s3-workflow__/context-state.json
+error-context: tests/playwright/artifacts/results/full-journey-S3-WORKFLOW-对话工作流串联-chromium/error-context.md

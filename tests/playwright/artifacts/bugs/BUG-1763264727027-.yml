@@ -1,0 +1,22 @@
+id: BUG-2025-11-16T03-45-16-168Z-
+discovered_at: 2025-11-16T03:45:16.168Z
+scenario:  > chromium > smoke-test.spec.ts > 冒烟测试 > 验证页面可以正常访问
+status: failed
+expected: 参见测试用例
+actual: Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed\n\nLocator: locator('h1, h2').first()\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n[2m  - Expect "toBeVisible" with timeout 10000ms[22m\n[2m  - waiting for locator('h1, h2').first()[22m\n
+account_pool: test001@test010@hsai.cc
+test_environment: http://192.168.20.62:5174
+browser: chromium
+retry_count: 0
+frontend-log: tests/playwright/artifacts/smoke-test-spec-ts__-__/frontend-log.log
+backend-log: tests/playwright/artifacts/smoke-test-spec-ts__-__/backend-log.log
+screenshot: tests/playwright/artifacts/results/smoke-test-冒烟测试-验证页面可以正常访问-chromium/test-failed-1.png
+ws-health: tests/playwright/artifacts/smoke-test-spec-ts__-__/ws-health.json
+ws-detailed: tests/playwright/artifacts/smoke-test-spec-ts__-__/ws-detailed.json
+context-state: tests/playwright/artifacts/smoke-test-spec-ts__-__/context-state.json
+error-context: tests/playwright/artifacts/results/smoke-test-冒烟测试-验证页面可以正常访问-chromium/error-context.md
+metadata_tenant: 福州华商时代自动化测试
+metadata_accounts: test001@hsai.cc ~ test010@hsai.cc
+metadata_testEnvironment: http://192.168.20.62:5174
+metadata_testType: full-journey
+metadata_actualWorkers: 2

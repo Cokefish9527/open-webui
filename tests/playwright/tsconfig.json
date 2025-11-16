@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "types": ["@playwright/test"],
+    "types": ["@playwright/test", "node"],
     "module": "commonjs",
     "target": "ES2019",
     "moduleResolution": "node",

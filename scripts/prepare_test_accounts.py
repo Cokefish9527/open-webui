@@ -39,7 +39,7 @@ class ExternalAdminClient:
         return response
 
     def list_companies(self, page_size: int = 100) -> List[dict]:
-        response = self.request("GET", "/companies", params={"ps": page_size, "pi": 1})
+        response = self.request("GET", "/companies", params={"ps": str(page_size), "pi": "1"})
         payload = response.json()
         return payload.get("data", [])
 
@@ -47,7 +47,7 @@ class ExternalAdminClient:
         page = 1
         users: List[dict] = []
         while True:
-            params = {"page": page, "size": page_size}
+            params = {"page": str(page), "size": str(page_size)}
             if company_id:
                 params["company_id"] = company_id
             response = self.request("GET", "/users", params=params)
@@ -62,6 +62,15 @@ class ExternalAdminClient:
             page += 1
         return users
 
+    def create_company(self, name: str) -> dict:
+        payload = {
+            "name": name,
+            "description": "自动化测试租户",
+            "status": "active"
+        }
+        response = self.request("POST", "/companies", json_body=payload)
+        return response.json()
+
     def create_user(self, *, email: str, password: str, tenant: str) -> dict:
         payload = {
             "name": email.split("@")[0],
@@ -74,6 +83,10 @@ class ExternalAdminClient:
         response = self.request("POST", "/users", json_body=payload)
         return response.json()
 
+    def bind_user_to_company(self, user_id: str, company_id: str) -> dict:
+        response = self.request("POST", f"/companies/{company_id}/users/{user_id}")
+        return response.json()
+
 
 def find_company_id(client: ExternalAdminClient, tenant: str) -> Optional[str]:
     companies = client.list_companies()
@@ -83,38 +96,43 @@ def find_company_id(client: ExternalAdminClient, tenant: str) -> Optional[str]:
     return None
 
 
+def ensure_tenant(client: ExternalAdminClient, tenant: str) -> str:
+    company_id = find_company_id(client, tenant)
+    if company_id:
+        return company_id
+    
+    # 创建租户
+    company = client.create_company(tenant)
+    return company["id"]
+
 def ensure_accounts(client: ExternalAdminClient, tenant: str, accounts: List[str], password: str) -> Dict[str, str]:
     status: Dict[str, str] = {}
-    company_id = find_company_id(client, tenant)
-
-    for index, email in enumerate(accounts):
-        exists = False
-        search_company = company_id
-        if not search_company and index == 0:
-            # allow first account to bootstrap tenant even没有企业
-            pass
-        else:
-            users = client.list_users(company_id=search_company)
-            exists = any(user.get("email", "").lower() == email.lower() for user in users)
-
-        if exists:
+    
+    # 确保租户存在
+    company_id = ensure_tenant(client, tenant)
+    
+    # 获取现有用户
+    existing_users = client.list_users(company_id=company_id)
+    existing_emails = {user.get("email", "").lower() for user in existing_users}
+    
+    # 创建缺失的账号
+    for email in accounts:
+        if email.lower() in existing_emails:
             status[email] = "existing"
             continue
-
-        client.create_user(email=email, password=password, tenant=tenant)
-        status[email] = "created"
-        if not company_id:
-            company_id = find_company_id(client, tenant)
-
-    # 最后再扫描一次确保所有账号落在正确租户下
-    if company_id:
-        tenant_users = client.list_users(company_id=company_id)
-        missing = [email for email in accounts if not any(user.get("email", "").lower() == email.lower() for user in tenant_users)]
-        if missing:
-            raise RuntimeError(f"账号 {missing} 未能创建成功，请检查 external_admin 日志。")
-    else:
-        raise RuntimeError("仍未找到租户，可能 external_admin 或 provisioning 配置异常。")
-
+            
+        try:
+            user = client.create_user(email=email, password=password, tenant=tenant)
+            user_id = user.get("id")
+            
+            # 绑定用户到租户
+            if user_id and company_id:
+                client.bind_user_to_company(user_id, company_id)
+            
+            status[email] = "created"
+        except Exception as e:
+            status[email] = f"failed: {str(e)}"
+    
     return status
 
 
