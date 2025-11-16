@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: support WebSocket attachment forwarding——WebSocket 消息现在支持附件转发到 n8n webhook，详见 `PROJECTWIKI.md` 《WebSocket 附件透传》章节。
 - POST `/hsai/video-learning/revoke-learning`：允许手动撤销爆款学习，删除 `hsai_business_video_content_learned` 副本并将 `hsai_video_learning_status` 恢复为 `pending`，细节见 `PROJECTWIKI.md` 《爆款学习状态机与撤销流程》。
 - `GET|PATCH /api/v1/external/admin/users/{user_id}/permissions` 与 `GET|PATCH /api/v1/external/admin/companies/{company_id}/permissions`：后台客户管理可直接查询/批量更新账号角色与 `settings.permissions`，配套新增 `DEFAULT_CUSTOMER_ROLE`、`CUSTOMER_PERMISSION_TEMPLATE`、`ENABLE_CUSTOMER_PERMISSION_API` 配置，详见 `PROJECTWIKI.md` 《External Admin Router》。
+- Playwright 端到端测试脚手架（`tests/playwright`）与 `npm run test:e2e` 流水线：包含自定义 fixtures、WebSocket 健康检查、缺陷报告器与示例场景，配套 `@playwright/test` 依赖。
+- `scripts/prepare_test_accounts.py`：启动自动化测试前校验/创建租户“福州华商时代自动化测试”与 `test001@hsai.cc`~`test010@hsai.cc` 账号池，并在 `tests/playwright/artifacts/setup` 输出 JSON 报告，已绑定 `npm run pretest:e2e`。
 
 ### Changed
 - `hsai_video_learning_status` 枚举现显式包含 `pending`，并追加 `mark_pending`/`upsert_status` 和新测试用例；Redis `video_learning_notification` 监听器重写为统一调用上述助手，杜绝删除行表示 pending 的隐患。

@@ -1,0 +1,7 @@
+id: BUG-2025-11-15T10-08-50-326Z-
+discovered_at: 2025-11-15T10:08:50.326Z
+scenario:  > chromium > full-journey.spec.ts > S1-ONBOARD > 首登策略引导
+status: failed
+expected: 参见测试用例
+actual: Error: browserType.launch: Executable doesn't exist at C:\Users\GuoYC\AppData\Local\ms-playwright\chromium_headless_shell-1194\chrome-win\headless_shell.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝
+account_pool: test001@test010@hsai.cc

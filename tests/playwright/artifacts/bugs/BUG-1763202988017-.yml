@@ -1,0 +1,13 @@
+id: BUG-2025-11-15T10-36-15-328Z-
+discovered_at: 2025-11-15T10:36:15.328Z
+scenario:  > chromium > full-journey.spec.ts > S1-ONBOARD > 首登策略引导
+status: failed
+expected: 参见测试用例
+actual: Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveTitle[2m([22m[32mexpected[39m[2m)[22m failed\n\nExpected pattern: [32m/HSAI/i[39m\nReceived string:  [31m""[39m\nTimeout: 10000ms\n\nCall log:\n[2m  - Expect "toHaveTitle" with timeout 10000ms[22m\n[2m    13 × unexpected value ""[22m\n
+account_pool: test001@test010@hsai.cc
+frontend-log: tests/playwright/artifacts/full-journey-spec-ts__s1-onboard__/frontend-log.log
+backend-log: tests/playwright/artifacts/full-journey-spec-ts__s1-onboard__/backend-log.log
+screenshot: tests/playwright/artifacts/results/full-journey-S1-ONBOARD-首登策略引导-chromium/test-failed-1.png
+ws-health: tests/playwright/artifacts/full-journey-spec-ts__s1-onboard__/ws-health.json
+context-state: tests/playwright/artifacts/full-journey-spec-ts__s1-onboard__/context-state.json
+error-context: tests/playwright/artifacts/results/full-journey-S1-ONBOARD-首登策略引导-chromium/error-context.md
