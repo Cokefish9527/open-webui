@@ -40,12 +40,19 @@ test.describe("S1-ONBOARD", () => {
     await page.waitForLoadState('networkidle');
     
     // 通过包含特定文本的 span 来定位父级链接
-    await page.locator('a:has(span:has-text("AI秘书"))').click();
+    // 检查当前是否已经停留在"AI秘书"标签，如果不是再点击
+    const aiSecretaryTab = page.locator('a:has(span:has-text("AI秘书"))');
+    const isActive = await aiSecretaryTab.getAttribute('aria-selected');
+    if (isActive !== 'true') {
+      await aiSecretaryTab.click();
+    }
     await page.waitForTimeout(2000);
     
     // 模拟战略问答过程
-    await page.fill('textarea[placeholder*="请输入"]', "我们的战略目标是提高市场占有率");
-    await page.click('button:has-text("发送")');
+    // 使用新的选择器定位可编辑的输入框
+    await page.locator('#chat-input').fill("我们的战略目标是提高市场占有率");
+    // 使用更精确的ID选择器定位发送按钮
+    await page.locator('#send-message-button').click();
     await page.waitForTimeout(2000);
     
     // 截图：策略卡片
