@@ -1,6 +1,6 @@
 {
-  "status": "passed",
-  "startTime": "2025-11-16T03:45:48.770Z",
-  "duration": 5959.811,
-  "generatedAt": "2025-11-16T03:45:54.775Z"
+  "status": "failed",
+  "startTime": "2025-11-16T04:44:35.781Z",
+  "duration": 143793.382,
+  "generatedAt": "2025-11-16T04:47:00.228Z"
 }

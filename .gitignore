@@ -309,3 +309,6 @@ cypress/screenshots
 .vscode/settings.json
 backend/data/
 backend/data/webui.db
+/tests/playwright/artifacts/results
+/tests/playwright/artifacts/bugs
+/tests/playwright/artifacts/html-report
