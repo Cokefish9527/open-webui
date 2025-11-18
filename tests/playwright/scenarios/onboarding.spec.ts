@@ -48,12 +48,192 @@ test.describe("S1-ONBOARD", () => {
     }
     await page.waitForTimeout(2000);
     
-    // 模拟战略问答过程
-    // 使用新的选择器定位可编辑的输入框
-    await page.locator('#chat-input').fill("我们的战略目标是提高市场占有率");
-    // 使用更精确的ID选择器定位发送按钮
-    await page.locator('#send-message-button').click();
-    await page.waitForTimeout(2000);
+    // 模拟与AI秘书的完整交互过程，直到策略卡片出现
+    const messages = [
+      "你好，告诉我需要提供给你哪些信息才能够进行视频的合成",
+      "我们的公司网站是 www.aokledlight.com",
+      "确认",
+      "确认",
+      "确认",
+      "请根据以上信息帮我生成战略蓝图"
+    ];
+    
+    let strategyCardVisible = false;
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    console.log("开始与AI秘书交互...");
+    
+    while (!strategyCardVisible && attempts < maxAttempts) {
+      console.log(`第 ${attempts + 1} 轮交互开始`);
+      
+      // 发送消息
+      if (attempts < messages.length) {
+        console.log(`发送预设消息: ${messages[attempts]}`);
+        await page.locator('#chat-input').fill(messages[attempts]);
+      } else {
+        // 如果预设消息用完了，发送默认消息
+        console.log("发送默认消息: 请根据以上信息帮我生成战略蓝图");
+        await page.locator('#chat-input').fill("请根据以上信息帮我生成战略蓝图");
+      }
+      
+      // 点击发送按钮
+      console.log("点击发送按钮");
+      await page.locator('#send-message-button').click();
+      
+      // 等待AI响应完成，通过检测停止按钮的出现来判断
+      try {
+        console.log("等待AI响应完成...");
+        // 等待停止按钮出现，表示AI响应完成
+        await page.waitForSelector('button:has(svg path[d*="M2.25 12c0-5.385 4.365-9.75 9.75-9.75"])', { timeout: 240000 });
+        console.log("AI响应已完成");
+        
+        // 等待停止按钮消失或者发送按钮重新变为可用，表示响应完全完成
+        try {
+          await page.waitForSelector('button:has(svg path[d*="M2.25 12c0-5.385 4.365-9.75 9.75-9.75"])', { 
+            state: 'detached', 
+            timeout: 60000 
+          });
+          console.log("停止按钮已消失，响应完全完成");
+        } catch (error) {
+          console.log("停止按钮未消失，但AI响应已完成");
+        }
+      } catch (error) {
+        console.log(`等待AI响应完成超时: ${error}`);
+      }
+      
+      // 智能等待发送按钮变为可用状态
+      try {
+        console.log("等待发送按钮重新变为可用...");
+        // 使用更智能的轮询等待发送按钮变为可用
+        const sendButton = page.locator('#send-message-button');
+        let sendButtonAvailable = false;
+        const maxWaitTime = 30000; // 最大等待时间30秒
+        const pollInterval = 500; // 轮询间隔500毫秒
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < maxWaitTime) {
+          try {
+            // 检查发送按钮是否存在且启用（不禁用）
+            if (await sendButton.isEnabled() && !(await sendButton.isDisabled())) {
+              sendButtonAvailable = true;
+              break;
+            }
+          } catch (e) {
+            // 元素可能还不存在，继续等待
+          }
+          
+          // 等待下一个轮询周期
+          await page.waitForTimeout(pollInterval);
+        }
+        
+        if (sendButtonAvailable) {
+          console.log("发送按钮已重新变为可用");
+        } else {
+          console.log("等待发送按钮变为可用超时");
+        }
+      } catch (error) {
+        console.log(`等待发送按钮变为可用时出错: ${error}`);
+        // 如果页面已关闭，则退出循环
+        if (error instanceof Error && error.message.includes('Target page, context or browser has been closed')) {
+          console.log('页面已关闭，退出交互循环');
+          break;
+        }
+      }
+      
+      // 获取AI回复内容
+      try {
+        console.log("尝试获取AI回复内容...");
+        // 等待AI回复消息出现并获取内容
+        const responseLocator = page.locator('div[class*="message-"]:has(div[class*="chat-assistant"])').last();
+        await responseLocator.waitFor({ timeout: 10000 });
+        
+        if (await responseLocator.isVisible()) {
+          // 尝试获取回复内容，使用更广泛的选择器
+          const responseContent = responseLocator.locator('.w-full.space-y-1, .tiptap, [class*="prose"]');
+          try {
+            await responseContent.waitFor({ timeout: 5000 });
+            if (await responseContent.isVisible()) {
+              const responseText = await responseContent.textContent();
+              console.log(`AI回复 (${attempts + 1}): ${responseText}`);
+            }
+          } catch (error) {
+            console.log(`无法获取回复内容 (${attempts + 1}): ${error}`);
+            // 即使无法获取内容，我们也认为AI已经响应了
+          }
+        }
+      } catch (error) {
+        console.log(`等待AI回复消息超时 (${attempts + 1}): ${error}`);
+        // 如果页面已关闭，则退出循环
+        if (error instanceof Error && error.message.includes('Target page, context or browser has been closed')) {
+          console.log('页面已关闭，退出交互循环');
+          break;
+        }
+      }
+      
+      console.log("检查策略卡片是否出现...");
+      // 智能检查策略卡片是否出现
+      // 使用多种方式定位策略卡片，基于提供的HTML结构
+      // 优化策略卡片选择器，优先使用稳定的HTML元素特征而非文字内容
+      const strategyCardSelectors = [
+        // 基于提供的HTML结构的更精确选择器
+        'div.relative.px-2.py-4.mb-4.border.border-gray-800.rounded-xl.border-dashed.bg-\\[\\#0e1322\\]',
+        'div:has(img[src="/static/ai_strategic.png"])',
+        'div[class*="strategy-card"]',
+        '[data-testid="strategy-card"]',
+        '.strategy-card',
+        'div:has([class*="strategy"]):has([class*="card"])',
+        // 移除依赖文字内容的选择器以避免AI返回内容变化导致检测失败
+      ];
+      
+      // 智能轮询检查策略卡片是否出现
+      let strategyCardCheckComplete = false;
+      let strategyCardVisible = false;
+      let usedSelector = '';
+      const maxWaitTime = 20000; // 最大等待时间20秒
+      const pollInterval = 1000; // 轮询间隔1秒
+      const startTime = Date.now();
+      
+      while (Date.now() - startTime < maxWaitTime && !strategyCardCheckComplete) {
+        for (const selector of strategyCardSelectors) {
+          try {
+            const strategyCard = page.locator(selector).first();
+            if (await strategyCard.isVisible()) {
+              strategyCardVisible = true;
+              usedSelector = selector;
+              console.log(`找到策略卡片，使用选择器: ${selector}`);
+              strategyCardCheckComplete = true;
+              break;
+            }
+          } catch (error) {
+            // 如果页面已关闭，则退出循环
+            if (error instanceof Error && error.message.includes('Target page, context or browser has been closed')) {
+              console.log('页面已关闭，退出交互循环');
+              strategyCardCheckComplete = true;
+              break;
+            }
+            // 继续尝试下一个选择器
+          }
+        }
+        
+        if (!strategyCardCheckComplete) {
+          // 等待下一个轮询周期
+          await page.waitForTimeout(pollInterval);
+        }
+      }
+      
+      if (!strategyCardVisible && Date.now() - startTime >= maxWaitTime) {
+        console.log("检查策略卡片超时，未找到策略卡片");
+      }
+      
+      console.log(`第 ${attempts + 1} 轮交互结束，策略卡片${strategyCardVisible ? '已' : '未'}出现`);
+      attempts++;
+    }
+    
+    console.log(`交互结束，总共尝试 ${attempts} 轮，策略卡片${strategyCardVisible ? '已' : '未'}出现`);
+    
+    // 验证策略卡片出现
+    expect(strategyCardVisible).toBeTruthy();
     
     // 截图：策略卡片
     await screenshotHelper.takeScenarioScreenshot(page, "S1-ONBOARD", "03", "strategy-card");

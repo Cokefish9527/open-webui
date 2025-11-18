@@ -1,4 +1,4 @@
-﻿import { defineConfig, devices } from "@playwright/test";
+﻿﻿import { defineConfig, devices } from "@playwright/test";
 import path from "path";
 
 const artifactsRoot = path.resolve(process.cwd(), "tests", "playwright", "artifacts");
@@ -6,7 +6,7 @@ const artifactsRoot = path.resolve(process.cwd(), "tests", "playwright", "artifa
 export default defineConfig({
   testDir: path.resolve(process.cwd(), "tests", "playwright", "scenarios"),
   fullyParallel: true,
-  timeout: 2 * 60 * 1000,
+  timeout: 3 * 60 * 1000, // 将超时时间从2分钟延长到3分钟
   expect: {
     timeout: 10_000,
   },
