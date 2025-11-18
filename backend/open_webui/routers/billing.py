@@ -292,7 +292,18 @@ async def get_api_usage_logs(
         offset = (pi - 1) * ps
         
         # 如果不是管理员用户，只能查看自己的记录
-        target_user_id = user_id if user_id and get_admin_user(user) else user.id
+        target_user_id = user.id
+        if user_id:
+            try:
+                # 检查是否是管理员
+                get_admin_user(user)
+                # 如果是管理员，可以查看指定用户的记录
+                target_user_id = user_id
+            except HTTPException:
+                # 如果不是管理员，只能查看自己的记录
+                target_user_id = user.id
+        else:
+            target_user_id = user.id
         
         logs = APIUsageLogs.get_logs_by_user_id(
             user_id=target_user_id,
