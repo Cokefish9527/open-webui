@@ -123,7 +123,8 @@ class _ConversationEventDispatcher:
             if success:
                 return
             if attempt >= OPS_DASHBOARD_MAX_ATTEMPTS:
-                log.error(
+                # 采集失败视为可降级事件，使用 WARNING 避免干扰主流程错误监控
+                log.warning(
                     "Ops dashboard ingestion failed after %s attempts (session_id=%s); dropping event",
                     attempt,
                     message.get("session_id"),

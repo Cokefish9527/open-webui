@@ -1,0 +1,215 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>登录</title>
+    <meta charset="utf-8">
+<meta name="renderer" content="webkit">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<script src="/static/system/component/layui/layui.js"></script>
+<script src="/static/system/component/pear/pear.js"></script>
+<script>
+    // 兼容旧代码中的 popup 模块调用，代理到 layer
+    if (window.layui) {
+        layui.define(['layer'], function (exports) {
+            const layer = layui.layer;
+            const popup = {
+                success(msg, callback) {
+                    layer.msg(msg || '操作成功', {icon: 1, time: 1200}, callback || function () {});
+                },
+                failure(msg, callback) {
+                    layer.msg(msg || '操作失败', {icon: 2, time: 1800}, callback || function () {});
+                },
+                warning(msg, callback) {
+                    layer.msg(msg || '提示', {icon: 0, time: 1500}, callback || function () {});
+                },
+                msg(msg, options, callback) {
+                    layer.msg(msg, options, callback);
+                }
+            };
+            exports('popup', popup);
+        });
+    }
+</script>
+<link rel="stylesheet" href="/static/system/component/pear/css/pear.css"/>
+<link rel="stylesheet" href="/static/system/admin/css/variables.css"/>
+<link rel="stylesheet" href="/static/system/admin/css/reset.css"/>
+<link rel="stylesheet" href="/static/system/admin/css/admin.css"/>
+<link rel="stylesheet" href="/static/system/admin/css/admin.dark.css"/>
+
+<script>
+    // 自动切换夜间模式
+    if (window.self != window.top) {
+        requestAnimationFrame(function () {
+            try {
+                const admin = window.parent.PearAdmin;
+                let checked = admin.isdrak;
+                if (checked === true || checked === "true") {
+                    document.querySelector("body").classList.add("pear-admin-dark");
+                }
+            } catch (error) {
+            }
+        })
+    }
+</script>
+    <link rel="stylesheet" href="/static/system/admin/css/other/login.css"/>
+    <script>if (window.self != window.top) {
+        top.location.reload();
+    }</script>
+</head>
+
+<body>
+<div class="login-page"
+     style="background-image: url(/static/system/admin/images/background.svg)">
+    <div class="layui-row">
+        <div class="layui-col-sm6 login-bg layui-hide-xs">
+            <img class="login-bg-img" src="/static/system/admin/images/banner.png" alt=""/>
+        </div>
+        <div class="layui-col-sm6 layui-col-xs12 login-form">
+            <div class="layui-form">
+                <div class="form-center">
+                    <div class="form-center-box">
+                        <div class="top-log-title">
+                            <img class="top-log"
+                                 src="/static/system/admin/images/logo-vue.png" alt=""/>
+                            <span>HSAI后台管理系统</span>
+                        </div>
+                        <div class="top-desc">
+                            以 超 乎 想 象 的 速 度 构 建 内 部 工 具
+                        </div>
+                        <div style="margin-top: 30px;">
+                            <div class="layui-form-item">
+                                <div class="layui-input-wrap">
+                                    <div class="layui-input-prefix">
+                                        <i class="layui-icon layui-icon-username"></i>
+                                    </div>
+                                    <input lay-verify="required" placeholder="账户" autocomplete="off"
+                                           name="username" class="layui-input" value="admin">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-input-wrap">
+                                    <div class="layui-input-prefix">
+                                        <i class="layui-icon layui-icon-password"></i>
+                                    </div>
+                                    <input type="password" name="password" value="123456"
+                                           lay-verify="required|confirmPassword" placeholder="密码" autocomplete="off"
+                                           class="layui-input" lay-affix="eye">
+                                </div>
+                            </div>
+                            <div class="tab-log-verification">
+                                <div class="verification-text">
+                                    <div class="layui-input-wrap">
+                                        <div class="layui-input-prefix">
+                                            <i class="layui-icon layui-icon-auz"></i>
+                                        </div>
+                                        <input lay-verify="required" value="" placeholder="验证码" autocomplete="off"
+                                               name="captcha" class="layui-input">
+                                    </div>
+                                </div>
+                                <img id="captchaImage"
+                                     class="verification-img"/>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="remember-passsword">
+                                    <div class="remember-cehcked">
+                                        <input type="checkbox" name="remember-me" lay-skin="primary" title="自动登录">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="login-btn">
+                                <button type="button" lay-submit lay-filter="login" class="layui-btn login">登 录
+                                </button>
+                            </div>
+                            <div class="other-login">
+                                <div class="other-login-methods">
+                                    其他方式
+                                </div>
+                                <div class="greenText">注册账号</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 资 源 引 入 -->
+<script>
+    // 自动变换主题色
+    const variableKey = "--global-primary-color";
+    const variableVal = localStorage.getItem("theme-color-color");
+    document.documentElement.style.setProperty(variableKey, variableVal);
+</script>
+<script>
+    layui.use(['form', 'button', 'popup', 'layer'], function () {
+        var form = layui.form;
+        var button = layui.button;
+        var popup = layui.popup;
+        let layer = layui.layer;
+        let $ = layui.jquery;
+        let captchaPath = "/system/passport/getCaptcha";
+
+
+        /**
+         * 刷新验证码函数
+         */
+        const refreshCaptchaImage = (function () {
+            let captchaImage = document.getElementById("captchaImage")
+            return function () {
+                captchaImage.src = captchaPath + "?" + Math.random()
+            }
+        })()
+
+        /**
+         * 立即刷新验证码并且每隔 30秒 刷新
+         */
+        const initCaptchaImageTimer = (function () {
+            let captchaImageTimer = null
+            return function () {
+                clearInterval(captchaImageTimer)
+                captchaImageTimer = setInterval(function () {
+                    refreshCaptchaImage()
+                }, 30 * 1000);
+                refreshCaptchaImage()
+            }
+        })()
+        initCaptchaImageTimer()
+
+
+        $("#captchaImage").click(function () {
+            initCaptchaImageTimer()
+        });
+
+        // 登 录 提 交
+        form.on('submit(login)', function (data) {
+            let loader = layer.load();
+            let btn = button.load({elem: '.login'});
+            $.ajax({
+                data: data.field,
+                type: "post",
+                dataType: 'json',
+                success: function (result) {
+                    layer.close(loader);
+                    btn.stop(function () {
+                        if (result.success) {
+                            popup.success(result.msg, function () {
+                                location.href = "/";
+                            })
+                        } else {
+                            popup.failure(result.msg, function () {
+                                initCaptchaImageTimer()
+                            });
+                        }
+                    })
+                }
+            });
+            return false;
+        });
+    })
+</script>
+</body>
+
+</html>

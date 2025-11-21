@@ -87,18 +87,19 @@ class OpsDashboardClient:
                         return True
                     body = await resp.text()
                     if 400 <= resp.status < 500:
-                        log.error(
+                        # 对于4xx认为是可预期的配置/权限问题，降级为 WARNING，并截断响应体
+                        log.warning(
                             "OpsDashboard request failed (status=%s, endpoint=%s, body=%s)",
                             resp.status,
                             endpoint,
-                            body,
+                            _shorten_text(body),
                         )
                         return False
                     log.warning(
                         "OpsDashboard server error (status=%s, endpoint=%s, body=%s)",
                         resp.status,
                         endpoint,
-                        body,
+                        _shorten_text(body),
                     )
             except Exception as exc:
                 log.warning(
@@ -111,7 +112,8 @@ class OpsDashboardClient:
             await asyncio.sleep(min(backoff, 30))
             backoff *= 2
 
-        log.error(
+        # 重试用尽同样降级为 WARNING，避免在启动阶段污染错误日志
+        log.warning(
             "OpsDashboard request exhausted retries (endpoint=%s, payload=%s)",
             endpoint,
             _safe_json(payload),
@@ -153,6 +155,18 @@ def _safe_json(payload: Any) -> str:
         return json.dumps(payload, ensure_ascii=False)[:500]
     except Exception:
         return str(payload)[:500]
+
+
+def _shorten_text(text: str, max_len: int = 500) -> str:
+    try:
+        if not text:
+            return ""
+        text = str(text).strip()
+        if len(text) <= max_len:
+            return text
+        return text[:max_len] + "…[truncated]"
+    except Exception:
+        return str(text)[:max_len]
 
 
 ops_dashboard_client = OpsDashboardClient()

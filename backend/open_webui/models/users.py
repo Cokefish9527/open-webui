@@ -316,18 +316,17 @@ class UsersTable:
             else:
                 query = query.order_by(User.created_at.desc())
 
+            total_query = query
             if skip:
                 query = query.offset(skip)
             if limit:
                 query = query.limit(limit)
 
             users = query.all()
-            total_query = db.query(User)
-            if company_id:
-                total_query = total_query.filter_by(company_id=company_id)
+            total = total_query.count()
             return UserListResponse(
                 users=[UserModel.model_validate(user) for user in users],
-                total=total_query.count(),
+                total=total,
             )
 
     def get_users_by_user_ids(self, user_ids: List[str]) -> List[UserModel]:

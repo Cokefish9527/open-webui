@@ -1,0 +1,18 @@
+/* Owen AI Admin */
+@import url("../../layui/css/layui.css");
+@import url("../font/iconfont.css");
+@import url("module/nprogress.css");
+@import url("module/messageCenter.css");
+@import url("module/global.css");
+@import url("module/menu.css");
+@import url("module/menuSearch.css");
+@import url("module/page.css");
+@import url("module/tabPage.css");
+@import url("module/toast.css");
+
+/* Owen AI Admin */
+@import url("module/dtree/font/dtreefont.css");
+@import url("module/dtree/dtree.css");
+@import url("module/layer.css");
+@import url("module/layout.css");
+@import url("module/popover.min.css");

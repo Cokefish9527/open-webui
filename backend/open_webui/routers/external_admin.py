@@ -8,7 +8,7 @@ from typing import Optional, List, Deque, Dict
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
-from open_webui.models.users import Users, UserModel
+from open_webui.models.users import Users, UserModel, UserListResponse
 from open_webui.models.hsai_companies import (
     Companies,
     CompanyForm,
@@ -684,25 +684,65 @@ async def delete_user(user_id: str, request: Request):
     
     return {"message": "用户删除成功"}
 
-@router.get("/users")
+@router.get("/users", response_model=UserListResponse)
 async def get_users(
     request: Request,
-    page: int = 1,
-    size: int = 20,
-    company_id: Optional[str] = None,
+    page: int = Query(1, ge=1, description="分页页码，从1开始"),
+    size: int = Query(20, ge=1, le=100, description="分页大小"),
+    company_id: Optional[str] = Query(None, description="按公司筛选"),
+    query: Optional[str] = Query(None, description="名称/邮箱模糊匹配"),
+    order_by: Optional[str] = Query(
+        None,
+        description="排序字段，可选 name/email/created_at/last_active_at/updated_at/role",
+    ),
+    direction: Optional[str] = Query(
+        None,
+        description="排序方向 asc/desc（默认 desc）",
+    ),
+    user_id: Optional[str] = Query(None, description="指定用户ID时直接返回单条记录"),
 ):
     """获取用户列表（仅外部管理系统可访问）"""
     verify_external_request(request)
-    
-    if page < 1:
-        page = 1
-    if size < 1 or size > 100:
-        size = 20
-    
+
+    if user_id:
+        user = Users.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=ERROR_MESSAGES.USER_NOT_FOUND,
+            )
+        return UserListResponse(users=[user], total=1)
+
     offset = (page - 1) * size
-    users_response = Users.get_users(skip=offset, limit=size, company_id=company_id)
-    
+    filter_params: Dict[str, Any] = {}
+    if query:
+        filter_params["query"] = query
+    if order_by:
+        filter_params["order_by"] = order_by
+    if direction:
+        filter_params["direction"] = direction
+
+    users_response = Users.get_users(
+        filter=filter_params or None,
+        skip=offset,
+        limit=size,
+        company_id=company_id,
+    )
+
     return users_response
+
+
+@router.get("/users/{user_id}", response_model=UserModel)
+async def get_user_detail(user_id: str, request: Request):
+    """获取用户详情（仅外部管理系统可访问）"""
+    verify_external_request(request)
+    user = Users.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
+        )
+    return user
 
 # 公司管理接口
 @router.get("/companies", response_model=PaginatedCompanyResponse)
@@ -747,7 +787,11 @@ async def get_company_admin(company_id: str, request: Request):
 async def list_company_projects_admin(
     company_id: str,
     request: Request,
-    status_filter: Optional[str] = Query(None, description="项目状态过滤"),
+    status_filter: Optional[str] = Query(
+        None,
+        alias="status",
+        description="项目状态过滤（可使用 status 参数传入）",
+    ),
     ps: int = Query(20, ge=1, le=100, description="分页大小"),
     pi: int = Query(1, ge=1, description="分页索引，从1开始"),
 ):
@@ -863,7 +907,11 @@ async def delete_company(company_id: str, request: Request):
 @router.get("/projects", response_model=PaginatedHSAIProjectResponse)
 async def list_projects_admin(
     request: Request,
-    status_filter: Optional[str] = Query(None, description="项目状态过滤"),
+    status_filter: Optional[str] = Query(
+        None,
+        alias="status",
+        description="项目状态过滤（可使用 status 参数传入）",
+    ),
     company_id: Optional[str] = Query(None, description="所属公司ID"),
     ps: int = Query(20, ge=1, le=100, description="分页大小"),
     pi: int = Query(1, ge=1, description="分页索引，从1开始"),

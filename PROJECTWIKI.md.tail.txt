@@ -1,0 +1,40 @@
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending
+    Pending --> Learning: POST /hsai/video-learning/start-learning
+    Learning --> Learned: Redis video_learning_notification (status=success)
+    Learning --> Pending: Redis video_learning_notification (status=failed)
+    Learned --> Pending: POST /hsai/video-learning/revoke-learning
+    Pending --> Abandoned: future API（手动放弃）
+```
+
+### 数据一致�?
+| 组件/�?| 职责 | 关键代码 |
+| --- | --- | --- |
+| `hsai_business_video_content_learned` | 存储爆款学习后的素材副本；撤销时删�?| `backend/open_webui/models/hsai_business_video_content_learned.py:delete_video_content` |
+| `hsai_video_learning_status` | 记录租户-视频的学习态；新增 `pending/learning/learned/abandoned` 枚举�?`mark_pending`/`upsert_status` | `backend/open_webui/models/hsai_video_learning_status.py` |
+| `hsai_video_learning_logs` | 落地状态切换审计；新增 `record_status_change` 便捷方法 | `backend/open_webui/models/hsai_video_learning_log.py` |
+| Redis `video_learning_notification` | 接收 n8n 任务完成事件，驱动学�?撤销 | `backend/open_webui/utils/video_learning_notifier.py` |
+
+### API 更新
+- `POST /hsai/video-learning/revoke-learning`
+  - 请求：`learned_id`（必填）、`reason`（可选），鉴权沿�?`get_verified_user`
+  - 流程：校验租�?�?删除 learned 副本 �?`mark_pending` 重置状�?�?`record_status_change` 写日�?
+  - 响应：返�?`restored_status=pending`
+- `video_learning_notification` 监听器：统一通过 `upsert_status/mark_pending` �?`success/failed` 分支写入状态，杜绝“删除行表示 pending”导致的租户漂移�?
+- 列表筛选逻辑复用新的 `list_video_ids_by_business(include_pending=False)`，保证显�?pending 记录不会被错误排除�?
+
+### 验证/回归
+- `python -m pytest backend/test/test_video_learning_status.py`
+  - 覆盖 `mark_pending` 插入/更新
+  - 校验 `list_video_ids_by_business` 默认不返�?pending；`include_pending=True` 时可见所有状�?
+- FastAPI 路由位于 `backend/open_webui/routers/hsai_video_learning.py`，新�?`RevokeLearningRequest/Response` 及接口日志，便于�?`PROJECTWIKI.md` 互链�?
+- Redis 监听�?`backend/open_webui/utils/video_learning_notifier.py` 重写，保证成�?失败路径都会调用日志助手记录 `reason` 与操作人（系统）�?
+
+## 缺陷复盘｜OPS-2025-11-21：Ops Dashboard 404 在启动期输出 ERROR
+- 背景：启动阶段上�?`/system/index/ops_dashboard/conversations` 返回 404，`
+  backend/open_webui/services/ops_dashboard_client.py:_post()` �?ERROR 级别输出完整 HTML，随�?`backend/open_webui/services/ops_dashboard_ingestor.py:_process_message()` 在重试用尽后再次�?ERROR 记录“dropping event”�?- 影响：主流程不受影响，但错误日志噪音较大，易误判为启动失败�?- 修复�?  - �?4xx 与“重试用尽”降级为 WARNING�?  - 截断响应体（�?500 字符），避免整页 HTML 打印�?  - 仍保留异常栈�?5xx �?WARNING/ERROR 以便排障�?- 代码路径�?  - `backend/open_webui/services/ops_dashboard_client.py`（新�?`_shorten_text()`；调�?4xx/重试用尽日志级别并截�?body�?  - `backend/open_webui/services/ops_dashboard_ingestor.py`（重试用尽改�?WARNING�?- 验证：本地复�?404 时仅产生 WARNING，业务路由与 WebSocket 消息正常�?
+## 变更日志
+- 2025-11-13：引�?`ensure_materials_storage_schema()` 修复 `oss_object_path` 缺列导致的计数查询奔溃（参阅 ADR-2025-11-13）�?
+- 2025-11-15：`HSAIMaterialsTable` 全量 DB 操作接入 `_schema_aware_db()`，`pytest backend/test/test_materials_storage_schema.py` 新增双测试验�?schema guard 缓存与材料列表查询均触发迁移，彻底解�?`GET /api/v1/hsai/materials/folders` / `/api/v1/hsai/dashboard/recent-activities` 因缺列抛错�?

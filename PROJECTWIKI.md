@@ -104,6 +104,59 @@ flowchart LR
 - 返回：`{"items": [HSAIMaterialResponse], "total": int}`；每条素材包含 `oss_bucket/oss_key/oss_object_path`。
 - 错误：缺列时曾抛出 500（已由 runtime 迁移修复）。
 
+### External Admin 接口（hsai_admin 后台使用）
+
+#### 认证
+- `POST /api/v1/external/admin/oauth/token`（`backend/open_webui/routers/external_admin.py:156`）
+  - `grant_type=client_credentials`，`client_id`/`client_secret` 为 `EXTERNAL_ADMIN_CLIENT_ID/SECRET`。
+  - 返回 `access_token`/`expires_in`（秒）/`scope`；token 同时写入 `ExternalAdminTokens` 用于后续校验。
+- 每个业务请求均需在 Header 携带 `Authorization: Bearer <token>`，并通过 `verify_external_request()` 进行 IP 白名单与 Token 检查。
+- 可通过 `EXTERNAL_ADMIN_AUTH_BYPASS=true` 临时跳过鉴权，仅供测试。
+
+#### 用户管理
+| 方法 | 路径 | 说明 | 关键参数/体 | 返回 |
+| --- | --- | --- | --- | --- |
+| POST | `/api/v1/external/admin/users` | 创建用户并触发 `provision_enterprise_membership()` | `AddUserForm`（name/email/password/business_name/role/profile_image_url） | `UserModel` |
+| PUT | `/api/v1/external/admin/users/{user_id}` | 更新基础信息/密码/企业绑定 | `ExternalAdminUserUpdateForm` | `UserModel` |
+| DELETE | `/api/v1/external/admin/users/{user_id}` | 删除账号（含聊天/组数据清理） | - | `{"message": "用户删除成功"}` |
+| GET | `/api/v1/external/admin/users` | 分页查询用户列表 | `page`(默认1)、`size`(默认20)、`company_id?` | `UserListResponse`（users/total） |
+| POST | `/api/v1/external/admin/users/{user_id}/reset-password` | 重置密码 | `new_password` | `OperationResponse` |
+| POST | `/api/v1/external/admin/users/{user_id}/enable|disable` | 启用/禁用账号 | - | `OperationResponse` |
+| POST/DELETE | `/api/v1/external/admin/companies/{company_id}/users/{user_id}` | 绑定/解绑公司管理员 | - | `{ "message": ... }` |
+
+#### 权限管理（需 `ENABLE_CUSTOMER_PERMISSION_API=true`）
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/v1/external/admin/users/{user_id}/permissions` | 返回 `role` 与 `settings.permissions`。|
+| PATCH | `/api/v1/external/admin/users/{user_id}/permissions` | 更新角色/显式权限；支持 `use_template`。|
+| GET | `/api/v1/external/admin/companies/{company_id}/permissions` | 分页返回公司下所有用户权限。|
+| PATCH | `/api/v1/external/admin/companies/{company_id}/permissions` | 批量更新公司内多个用户的角色/权限。|
+
+#### 公司管理
+| 方法 | 路径 | 说明 | 关键参数 |
+| --- | --- | --- | --- |
+| GET | `/api/v1/external/admin/companies` | 分页检索公司 | `pi`(≥1)、`ps`(≤100)、`company_status?` |
+| GET | `/api/v1/external/admin/companies/{company_id}` | 公司详情 | - |
+| POST | `/api/v1/external/admin/companies` | 创建公司 | `CompanyForm` + `owner_user_id` |
+| PUT | `/api/v1/external/admin/companies/{company_id}` | 更新公司 | `CompanyUpdateForm` |
+| DELETE | `/api/v1/external/admin/companies/{company_id}` | 删除公司（需无项目/用户绑定） | - |
+| GET | `/api/v1/external/admin/companies/{company_id}/projects` | 某公司项目列表 | `pi`/`ps`、`status_filter?` |
+
+#### 项目管理
+| 方法 | 路径 | 说明 | 关键参数 |
+| --- | --- | --- | --- |
+| GET | `/api/v1/external/admin/projects` | 全局项目分页 | `pi`/`ps`、`company_id?`、`status_filter?` |
+| GET | `/api/v1/external/admin/projects/{project_id}` | 项目详情 | - |
+| POST | `/api/v1/external/admin/projects` | 创建项目 | `ProjectCreateRequest`（name/business_name/user_id/...） |
+| PUT | `/api/v1/external/admin/projects/{project_id}` | 更新项目 | `ProjectUpdateRequest` |
+| DELETE | `/api/v1/external/admin/projects/{project_id}` | 删除项目 | - |
+
+#### 接口对齐差异（2025-11-21 已完成）
+1. **用户列表过滤**：`backend/open_webui/routers/external_admin.py` 现接收 `query/order_by/direction/user_id` 并透传至 `Users.get_users()`；后者同步更新统计逻辑（`backend/open_webui/models/users.py`）以返回与筛选条件一致的 `total`，避免 hsai_admin 表格分页失真。
+2. **状态过滤别名**：`list_company_projects`/`list_projects` 路由新增 `alias="status"`，兼容 Flask 客户端沿用的 `status` 参数，实现在不改动 hsai_admin 代码的前提下过滤项目状态。
+3. **用户详情直连**：`@router.get("/users/{user_id}")` 提供 `UserModel` 响应，hsai_admin `MainSystemAPIClient.get_user()` 改为优先调用该路由，必要时才回退旧版 `/api/v1/users/{id}`，保证 404/鉴权语义一致。
+4. **跨项目自检**：统一的接口对齐矩阵见仓库根目录 `INTERFACE_ALIGNMENT.md`，用于回溯任务范围与代码映射。
+
 ## 数据模型
 - `hsai_materials`：核心列 `id`, `name`, `material_type`, `scene_code`, `oss_bucket`, `oss_key`, `oss_object_path`, `created_at`.
 - 软删除由 `is_deleted`, `deleted_at`, `deleted_by` 维护，查询需过滤。
@@ -229,6 +282,19 @@ stateDiagram-v2
   - 校验 `list_video_ids_by_business` 默认不返回 pending；`include_pending=True` 时可见所有状态
 - FastAPI 路由位于 `backend/open_webui/routers/hsai_video_learning.py`，新增 `RevokeLearningRequest/Response` 及接口日志，便于与 `PROJECTWIKI.md` 互链。
 - Redis 监听器 `backend/open_webui/utils/video_learning_notifier.py` 重写，保证成功/失败路径都会调用日志助手记录 `reason` 与操作人（系统）。
+
+## 缺陷复盘｜OPS-2025-11-21：Ops Dashboard 404 在启动期输出 ERROR
+- 背景：启动阶段上报 `/system/index/ops_dashboard/conversations` 返回 404，`
+  backend/open_webui/services/ops_dashboard_client.py:_post()` 以 ERROR 级别输出完整 HTML，随后 `backend/open_webui/services/ops_dashboard_ingestor.py:_process_message()` 在重试用尽后再次以 ERROR 记录“dropping event”。
+- 影响：主流程不受影响，但错误日志噪音较大，易误判为启动失败。
+- 修复：
+  - 将 4xx 与“重试用尽”降级为 WARNING；
+  - 截断响应体（至 500 字符），避免整页 HTML 打印；
+  - 仍保留异常栈与 5xx 的 WARNING/ERROR 以便排障。
+- 代码路径：
+  - `backend/open_webui/services/ops_dashboard_client.py`（新增 `_shorten_text()`；调整 4xx/重试用尽日志级别并截断 body）
+  - `backend/open_webui/services/ops_dashboard_ingestor.py`（重试用尽改为 WARNING）
+- 验证：本地复现 404 时仅产生 WARNING，业务路由与 WebSocket 消息正常。
 
 ## 变更日志
 - 2025-11-13：引入 `ensure_materials_storage_schema()` 修复 `oss_object_path` 缺列导致的计数查询奔溃（参阅 ADR-2025-11-13）。
