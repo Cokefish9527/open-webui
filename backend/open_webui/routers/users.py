@@ -117,11 +117,15 @@ async def get_all_users(
 ):
     user_data = Users.get_users()
     users = user_data.users  # 修复：使用属性访问而不是字典访问
+    
+    # 批量获取所有用户的信用信息
+    user_ids = [item.id for item in users]
     credit_map = {}
-    for item in users:
-        credit = Credits.get_credit_by_user_id(item.id)
-        if credit:
-            credit_map[item.id] = {"credit": "%.4f" % credit.credit}
+    if user_ids:
+        credits = Credits.list_credits_by_user_id(user_ids)
+        for credit in credits:
+            credit_map[credit.user_id] = {"credit": "%.4f" % credit.credit}
+    
     for user in users:
         setattr(user, "credit", credit_map.get(user.id, {}).get("credit", 0))
     return user_data
