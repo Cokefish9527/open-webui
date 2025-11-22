@@ -105,18 +105,26 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
                         )
         
         # 检查是否是信息收集完成的消息 (blue_image类型且状态为FINISHED)
+        # 注意：blue_image和blue_image_content是同一种消息的不同展示形式
+        # 但我们只在首次处理时更新用户状态，避免重复处理
         if content_type == "blue_image" and status == "FINISHED" and user_id:
-            log.info(f"检测到信息收集完成消息，更新用户 {user_id} 的信息收集状态")
-            # 更新用户信息收集完成状态
-            Users.update_user_info_collection_status(user_id, True)
-            # 触发一次企业/默认项目/主线任务的幂等补种
-            try:
-                from open_webui.services.onboarding_orchestrator import ensure_company_project_and_main_tasks
-                summary = ensure_company_project_and_main_tasks(user_id)
-                log.info(f"Onboarding orchestrator summary: {summary}")
-            except Exception as e:
-                log.error(f"执行 Onboarding Orchestrator 时发生错误: {e}")
-        
+            log.info(f"检测到信息收集完成消息，检查用户 {user_id} 的信息收集状态")
+            # 检查用户当前的信息收集状态
+            is_completed = Users.is_user_info_collection_completed(user_id)
+            if not is_completed:
+                log.info(f"用户 {user_id} 信息收集状态未完成，更新为已完成")
+                # 更新用户信息收集完成状态
+                Users.update_user_info_collection_status(user_id, True)
+                # 触发一次企业/默认项目/主线任务的幂等补种
+                try:
+                    from open_webui.services.onboarding_orchestrator import ensure_company_project_and_main_tasks
+                    summary = ensure_company_project_and_main_tasks(user_id)
+                    log.info(f"Onboarding orchestrator summary: {summary}")
+                except Exception as e:
+                    log.error(f"执行 Onboarding Orchestrator 时发生错误: {e}")
+            else:
+                log.info(f"用户 {user_id} 信息收集状态已为完成，跳过重复处理")
+
         # 查找对应的Socket.IO连接，按照socket_id->session_id->user_id的顺序
         target_sid = None
         

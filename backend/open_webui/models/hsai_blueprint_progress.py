@@ -13,6 +13,7 @@ from sqlalchemy import (
     ForeignKey,
     Enum as SAEnum,
     UniqueConstraint,
+    Boolean,
 )
 from sqlalchemy.orm import relationship
 
@@ -52,6 +53,9 @@ class HSAIBlueprintProgress(Base):
 
     progress_state = Column(SAEnum(BlueprintProgressState), nullable=False, default=BlueprintProgressState.PLANNING)
     daily_cycle_config = Column(JSON, nullable=True)
+    
+    # 新增字段：标记是否已处理信息收集完成状态
+    info_collection_processed = Column(Boolean, default=False, nullable=False)
 
     last_synced_at = Column(EpochTimestamp(), nullable=False)
     created_at = Column(EpochTimestamp(), nullable=False)
@@ -110,6 +114,8 @@ class HSAIBlueprintProgressModel(BaseModel):
     latest_digest: Optional[Dict[str, Any]] = None
     progress_state: BlueprintProgressState
     daily_cycle_config: Optional[Dict[str, Any]] = None
+    # 新增字段
+    info_collection_processed: bool = False
     last_synced_at: int
     created_at: int
     updated_at: int

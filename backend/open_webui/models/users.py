@@ -534,6 +534,33 @@ class UsersTable:
                 return False
         except Exception:
             return False
+    
+    def get_user_info_collection_status(self, id: str) -> Dict[str, Any]:
+        """获取用户信息收集的详细状态"""
+        try:
+            with get_db() as db:
+                user = db.query(User).filter_by(id=id).first()
+                if user:
+                    return {
+                        "completed": bool(user.info_collection_completed),
+                        "business_name": user.business_name,
+                        "company_id": user.company_id,
+                        "updated_at": user.updated_at
+                    }
+                return {
+                    "completed": False,
+                    "business_name": None,
+                    "company_id": None,
+                    "updated_at": None
+                }
+        except Exception as e:
+            log.warning(f"获取用户信息收集状态时发生错误: {e}")
+            return {
+                "completed": False,
+                "business_name": None,
+                "company_id": None,
+                "updated_at": None
+            }
 
 
 Users = UsersTable()

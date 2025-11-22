@@ -248,8 +248,9 @@ def _create_or_update_task_from_template(
 
 
 def _complete_company_info_task(project_id: str, user_id: str) -> Optional[HSAITaskModel]:
-    if not COMPANY_INFO_TEMPLATE_KEY:
-        return None
+    # 处理多种模板键
+    template_keys = ["company_info_collection", "company_info_collection_fallback"]
+    
     tasks = HSAITasks.get_tasks_by_user_id(
         user_id=user_id,
         project_id=project_id,
@@ -257,10 +258,10 @@ def _complete_company_info_task(project_id: str, user_id: str) -> Optional[HSAIT
     )
     for task in tasks:
         config = task.config or {}
-        if config.get("template_key") != COMPANY_INFO_TEMPLATE_KEY:
+        if config.get("template_key") not in template_keys:
             continue
         if task.status == HSAITaskStatus.COMPLETED.value:
-            return None
+            continue  # 已完成的任务跳过
         updated = HSAITasks.update_task_by_id(
             task.id,
             HSAITaskUpdateForm(status=HSAITaskStatus.COMPLETED.value),
@@ -482,6 +483,29 @@ def sync_blueprint_for_user(
     result.progress = progress
     result.logs.append(f"战略蓝图版本 {progress.blueprint_version} 已同步至项目 {project_id}。")
 
+    # 只有在首次处理蓝图时才更新信息收集状态
+    info_task = None
+    if not progress.info_collection_processed:
+        info_task = _complete_company_info_task(project_id=project_id, user_id=user_id)
+        if info_task:
+            result.updated_tasks.append(info_task)
+            result.logs.append("企业信息收集任务已在蓝图同步后标记为完成")
+            
+            # 更新蓝图进度记录，标记信息收集已完成处理
+            try:
+                HSAIBlueprintProgressTable.upsert_progress(
+                    project_id=project_id,
+                    payload={"info_collection_processed": True},
+                    operator_id=user_id,
+                )
+                result.logs.append("已标记信息收集状态为已处理")
+            except Exception as exc:
+                log.warning("更新蓝图信息收集处理状态失败: %s", exc)
+        else:
+            result.logs.append("未找到需要完成的企业信息收集任务")
+    else:
+        result.logs.append("信息收集状态已处理过，跳过重复处理")
+
     created_tasks, updated_tasks = _sync_task_links(progress, user_id=user_id)
     result.created_tasks.extend(created_tasks)
     result.updated_tasks.extend([task for task in updated_tasks if task])
@@ -545,11 +569,6 @@ def sync_blueprint_for_user(
             },
         )
     )
-
-    info_task = _complete_company_info_task(project_id=project_id, user_id=user_id)
-    if info_task:
-        result.updated_tasks.append(info_task)
-        result.logs.append("企业信息收集任务已在蓝图同步后标记为完成")
 
     try:
         evaluations = evaluate_project_tasks(project_id=project_id, user_id=user_id)
