@@ -43,6 +43,7 @@ from open_webui.services.task_template_registry import (
     task_template_registry,
 )
 from open_webui.socket.hsai_events import HSAI_WEBSOCKET_EVENTS
+from open_webui.utils.conversation_ender import end_conversation_for_task_completion
 
 log = logging.getLogger(__name__)
 
@@ -490,6 +491,37 @@ def sync_blueprint_for_user(
         if info_task:
             result.updated_tasks.append(info_task)
             result.logs.append("企业信息收集任务已在蓝图同步后标记为完成")
+            
+            # 使用新的通用对话结束机制
+            try:
+                # 在新线程中运行异步函数
+                import asyncio
+                import threading
+                
+                def run_async(coro):
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        return loop.run_until_complete(coro)
+                    finally:
+                        loop.close()
+                
+                # 获取session_id用于对话结束通知
+                session_id = message.get("session_id")
+                
+                # 在新线程中调用异步函数
+                thread = threading.Thread(
+                    target=run_async,
+                    args=(end_conversation_for_task_completion(
+                        user_id=user_id,
+                        task_id=info_task.id,
+                        session_id=session_id,
+                        task_type="企业信息收集"
+                    ),)
+                )
+                thread.start()
+            except Exception as e:
+                log.error(f"发送对话结束通知时发生错误: {e}")
             
             # 更新蓝图进度记录，标记信息收集已完成处理
             try:
