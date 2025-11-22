@@ -1,4 +1,4 @@
 {
-  "socketIOLoaded": false,
-  "webSocketAvailable": true
+	"socketIOLoaded": false,
+	"webSocketAvailable": true
 }

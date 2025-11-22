@@ -1,1485 +1,1387 @@
 {
-  "name": "前端确认学习流",
-  "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "video2new_tts_text",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        -2624,
-        -480
-      ],
-      "id": "2d9544ab-9e3f-4a81-9139-f47e8a5d2dd8",
-      "name": "Webhook",
-      "webhookId": "325ad21c-b979-49f8-94cc-66b6b3bd7114"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# 爆款文案\n{{ $json.data[3]['召回的原始素材'] }}\n# 产品信息\n{{ $json.data[0].product.toJsonString() }}\n# 公司信息\n{{ $json.data[1].business_message.toJsonString() }}\n# 目标人群\n{{ $json.data[2].object.toJsonString() }}\n# 爆款文案结构\n{{ $('分镜结构').first().json['结构'] }}",
-        "hasOutputParser": true,
-        "options": {
-          "systemMessage": "=# 角色 \n你爆款文案生成专家，快速分析用户提供的信息。你充分理解tiktok、Instagram、Facebook、YouTube、Twitter (X)各大平台的流量密码，能迅速抓住人设/产品特色和优点/文案结构/引流方式，结合目标受众的需求和喜好，生成高质量的各大平台种草内容的标题和文案。最终生成一个版本的新文案。\n# 目标\n1. 结合企业资料里的{目标人群}，同时借鉴爆款文案，生成新文案要有非常吸引人的content，标题的目的是让更多目标人群愿意点击打开这条视频内容\n2. 文案整体结构要与原文案结构相同，将{企业信息}、{企业理念}、{产品特点}，金句亮点与原有的文案结构结合在一起，为{目标人群}生成新的口播稿。\n3. 生成新的标签\n\n**限制\n1.新的文案必须1:1的逐句替换原文案的内容。其中只需要替换{企业信息}、{企业理念}、{产品特点} ，中与本文案相关的部分内容\n2.原文案中与{企业信息}、{企业理念}、{产品特点}，{产品品类}无关的信息，在不影响整体文案内容的情况下尽量保留\n3.不能出现任何线上平台的名称 如 TIKTOK YouTube等。\n\n# 输出的形式\n1.必须先新文案标题、文案内容和话题\n2.不需要输出任何以上以上要求以外的内容，如：原文案拆解、思考过程、创作逻辑等。\n\n** 注意事项\n\n顺序执行: 必须严格按照执行步骤的顺序进行，不得跳过任何步骤。\n检查点: 系统将自动检查每个步骤的完成情况，并在继续前确保所有先决条件均已满足。\n\n**执行步骤：\n\n1. 调取文案后，请调{目标人群}和{企业信息}的内容进行下一步操作。\n2. 请使用第一人称进行1:1的逐句内容替换，根据我的目标对{企业信息} 、{企业理念}、{产品特点}， {产品品类}进行1:1的替换。不需要对其他不影响核心意思的内容进行替换，在不影响内容逻辑性的情况下，尽量小的改动原文中的结构和金句。如果原句中有使用成语或者文言文，替换后的文案应使用意思相近的成语或文言文进行替换。\n\n3. 你要为我制作新的标题，根据原文案的标题为我1:1的替换内容。\n\n# 规则\n- 新的口播稿赋值new_tts_text\n- 爆款文案字数在140个字到240个字之间,使用中文\n- new_content\n- 标签赋值给new_tags\n- 标签使用英文小写,使用#分割\n# 格式\n{\"new_tts_text\":\"\"\n,\"new_content\":\"\"\n,\"new_tags\":\"\"}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2,
-      "position": [
-        -480,
-        -192
-      ],
-      "id": "bb0c3330-4c39-4f92-aabd-28f7a0e68527",
-      "name": "AI Agent4",
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "select * from public.hsai_business_key_messages  where (message_type like '%企业%' or message_type like '%公司%')and business_name ='{{ $json.body.businessname }}'; ",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -1440,
-        -672
-      ],
-      "id": "669474e6-2948-42ab-8518-b3f68c905dd1",
-      "name": "企业信息",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "select * from public.hsai_business_key_messages  where message_type like '%产品%' and business_name ='{{ $json.body.businessname }}'; ",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -1440,
-        -864
-      ],
-      "id": "b4d08610-2157-4d06-81dd-cd23f97099d3",
-      "name": "产品信息",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "select * from public.hsai_business_key_messages  where (message_type like '%客户%' or message_type like '%画像%')and business_name ='{{ $json.body.businessname }}'; ",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -1440,
-        -480
-      ],
-      "id": "1f811c57-4e8c-474d-9c39-18f9afd86285",
-      "name": "目标人群",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "object",
-        "include": "specifiedFields",
-        "fieldsToInclude": "data_info",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        -1152,
-        -480
-      ],
-      "id": "42d630be-eb5f-4d01-96d0-3b4394a5f148",
-      "name": "Aggregate2"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "product",
-        "include": "specifiedFields",
-        "fieldsToInclude": "data_info",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        -1152,
-        -864
-      ],
-      "id": "702565c4-d444-4331-93df-f9d5a2fab667",
-      "name": "Aggregate1"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "business_message",
-        "include": "specifiedFields",
-        "fieldsToInclude": "data_info",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        -1152,
-        -672
-      ],
-      "id": "c626c591-9ba7-4d1b-b5d1-52c42a3ec416",
-      "name": "Aggregate"
-    },
-    {
-      "parameters": {
-        "numberInputs": 6
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        -928,
-        -256
-      ],
-      "id": "c3de200d-0975-4019-bca7-c3711f1e20cc",
-      "name": "Merge"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        -704,
-        -192
-      ],
-      "id": "32bf8930-4ebf-40ad-8f84-c91048fb3b04",
-      "name": "Aggregate3"
-    },
-    {
-      "parameters": {
-        "operation": "push",
-        "list": "video_learning_notification",
-        "messageData": "={\n\"video_id\":{{ $json.videoId }}\n,\"status\":\"success\"\n}"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [
-        96,
-        -96
-      ],
-      "id": "aca94a42-cc01-4b3f-bb36-181a87746fd3",
-      "name": "与后端交互",
-      "credentials": {
-        "redis": {
-          "id": "UkcckENclXgOKcal",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_video_content_learned",
-          "mode": "list",
-          "cachedResultName": "hsai_business_video_content_learned"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "businessname": "={{ $json.businessname }}",
-            "videoid": "={{ $json.videoId }}",
-            "videourl": "={{ $json.videourl }}",
-            "music": "={{ $json.music }}",
-            "musicurl": "={{ $json.musicurl }}",
-            "text": "={{ $json.text }}",
-            "hashtags": "={{ $json.hashtags }}",
-            "videotype": "={{ $json.video_type }}",
-            "publishedtime": "={{ $json.publishedtime }}",
-            "videotranscript": "={{ $json.new_tts_text }}",
-            "videoshots": "={{ $('分镜结构').first().json['结构'] }}",
-            "newttscontent": "={{ $json.new_content }}",
-            "newtags": "={{ $json.new_tags }}",
-            "userid": "={{ $json.user_id }}",
-            "status": "1"
-          },
-          "matchingColumns": [
-            "id"
-          ],
-          "schema": [
-            {
-              "id": "id",
-              "displayName": "id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "videoid",
-              "displayName": "videoid",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "businessname",
-              "displayName": "businessname",
-              "required": true,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "videourl",
-              "displayName": "videourl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "music",
-              "displayName": "music",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "musicurl",
-              "displayName": "musicurl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "text",
-              "displayName": "text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "hashtags",
-              "displayName": "hashtags",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "videotype",
-              "displayName": "videotype",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "publishedtime",
-              "displayName": "publishedtime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "isad",
-              "displayName": "isad",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "boolean",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "diggcount",
-              "displayName": "diggcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "sharecount",
-              "displayName": "sharecount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "playcount",
-              "displayName": "playcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "collectcount",
-              "displayName": "collectcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "commentcount",
-              "displayName": "commentcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "videotranscript",
-              "displayName": "videotranscript",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "videoshots",
-              "displayName": "videoshots",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "newttscontent",
-              "displayName": "newttscontent",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "newtags",
-              "displayName": "newtags",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "userid",
-              "displayName": "userid",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "createdat",
-              "displayName": "createdat",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "updatedat",
-              "displayName": "updatedat",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true,
-              "removed": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        96,
-        -288
-      ],
-      "id": "7fd86da4-0100-4b4a-bee6-e5bbc9b55bbf",
-      "name": "写入已学习的素材",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsonSchemaExample": "{\"new_tts_text\":\"\"\n,\"new_content\":\"\"\n,\"new_tags\":\"\"}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        -352,
-        32
-      ],
-      "id": "f9a0231d-d2ec-49b9-a6c2-b4ed46206cae",
-      "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "o3",
-          "mode": "id"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        -480,
-        32
-      ],
-      "id": "383fb8f2-02e9-4502-89bd-138d1d6c7743",
-      "name": "OpenAI Chat Model",
-      "credentials": {
-        "openAiApi": {
-          "id": "nlFmjkNQkWVpRAF0",
-          "name": "huanxin"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "o3",
-          "mode": "id"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        -1440,
-        464
-      ],
-      "id": "5479752a-a91c-40b9-9b88-fb8348c1fe3b",
-      "name": "OpenAI Chat Model1",
-      "credentials": {
-        "openAiApi": {
-          "id": "nlFmjkNQkWVpRAF0",
-          "name": "huanxin"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# 需要拆解的文案\n {{ $json['视频字幕与分镜镜头'] }}",
-        "messages": {
-          "messageValues": [
-            {
-              "message": "=# 目标\n需要输出视频文案字幕\n\n\n# 规则\n只输出原视频文案字幕"
-            }
-          ]
-        },
-        "batching": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
-      "position": [
-        -1504,
-        240
-      ],
-      "id": "cdfec56f-6bb0-4f57-a5e2-52942530e226",
-      "name": "获取视频字幕"
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "o3",
-          "mode": "id"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        -1440,
-        976
-      ],
-      "id": "488b7e24-07a1-4c91-88f4-2775bd5cc44a",
-      "name": "OpenAI Chat Model2",
-      "credentials": {
-        "openAiApi": {
-          "id": "nlFmjkNQkWVpRAF0",
-          "name": "huanxin"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c5c4c1ee-bc1c-4714-b2df-5b8a53008360",
-              "name": "召回的原始素材",
-              "value": "={{ $json.body.text }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1152,
-        -288
-      ],
-      "id": "d6c16c3b-6460-46d1-8003-3777d37b1f48",
-      "name": "原始视频标题"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "f4305794-876f-4727-8cb2-e71693280762",
-              "name": "字幕",
-              "value": "={{ $json.text }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1152,
-        352
-      ],
-      "id": "abfe3223-3973-4180-b450-5e476b8d8fae",
-      "name": "识别字幕"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "f4305794-876f-4727-8cb2-e71693280762",
-              "name": "结构",
-              "value": "={{ $json.text }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1152,
-        752
-      ],
-      "id": "704f752e-f642-46d8-a453-589aee33853b",
-      "name": "分镜结构"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# 需要拆解的内容\n {{ $json['视频字幕与分镜镜头'] }}",
-        "messages": {
-          "messageValues": [
-            {
-              "message": "=# 目标\n提取分镜结构"
-            }
-          ]
-        },
-        "batching": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
-      "position": [
-        -1504,
-        752
-      ],
-      "id": "406fdae4-4e48-4e80-97b2-43ece5f06666",
-      "name": "获取视频分镜结构"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c5c4c1ee-bc1c-4714-b2df-5b8a53008360",
-              "name": "视频字幕与分镜镜头",
-              "value": "={{ $json.choices[0].message.content }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1728,
-        544
-      ],
-      "id": "a15e8a72-8ab8-4dcd-94a0-e59d0d9b02b4",
-      "name": "视频字幕与分镜镜头"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.gpt.ge/v1/chat/completions",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer sk-P7eWBZs2JfAHahcC442675C308374b5181CaC2Bd1929D84e"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n    \"model\": \"gemini-2.5-pro\",\n    \"messages\": [\n        {\n            \"role\": \"user\",\n            \"content\": [\n                {\n                    \"type\": \"text\",\n                    \"text\":\"你是“视频内容理解与分镜拆解专家”。基于我提供的音视频文件（画面+声音+字幕轨道，如有），完成两件事并一次性输出统一 JSON：\\nA. 字幕转写与对齐（transcript）\\nB. 分镜识别与四段命名（shots）\\n【分镜命名词表（只能从下列中选，严禁自创/改写）】\\ncategory（主类）：企业形象、生产制造、质检与测试、包装与装柜、出货与物流、参展与客户交流、客户现场应用、教学与操作、企业文化与荣誉、人物出镜\\nscene_name（场景）：企业大门、LOGO墙、团队办公、团队会议、团队合影、生产线全貌、工人操作装配、精密设备运作、零件材料细节、产品功能演示、仪器检测、性能测试演示、产品打包、装柜叉车搬运、装柜完成特写、货车离厂、集装箱运输、客户现场签收、展会展台全貌、展会产品展示、客户交流洽谈、客户合影、安装应用场景、产品实操演示、使用效果、操作步骤讲解、注意事项提示、企业文化墙、荣誉资质证书、人物出镜（站在工厂大门前/设备前/装柜前说话）\\nshot_type（景别）：航拍、全景、中景、近景、特写、超特写\\ncamera_move（运镜）：推进、拉远、横移左-右、横移右-左、从下-上摇、从上-下摇、定格、环绕、平移、俯拍视角、低角度仰拍\\n【处理流程】\\n1) 画面：识别镜头切换；判断景别与运镜；据语义匹配最接近的场景与主类；严禁造词。\\n2) 音频：转写人声；如有字幕/屏幕文字，用于辅助分镜语义；字幕需给出起止时间（秒）。\\n3) 输出：只输出 JSON，包含两个顶级键：transcript、shots。\\n【输出要求】\\n- transcript：数组，含 {start,end,text,lang?,speaker?}\\n- shots：数组，含 {start,end,category,scene_name,shot_type,camera_move,description,code_name,code_name_3}\\n- 时间戳单位：秒（浮点数），start < end\\n- 命名主键：code_name = category + '_' + scene_name + '_' + shot_type + '_' + camera_move\\n- 兼容主键：code_name_3 = scene_name + '_' + shot_type + '_' + camera_move\\n- description：≤30字\\n- 仅输出 JSON；找不到完全匹配项时，必须从词表中选“最接近”的合法值\\n\"\n\n                },\n                {\n                    \"type\": \"file\",\n                    \"file\": {\n                        \"filename\": \"api-doc.mp4\",\n                        \"file_data\": \"{{ $('Webhook').first().json.body.videourl }}\"\n                    } \n                }\n            ]\n        }\n    ],\n    \"max_tokens\": 13000,\n    \"temperature\": 0.5,\n    \"stream\": false\n}",
-        "options": {
-          "redirect": {
-            "redirect": {}
-          },
-          "timeout": 10000000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -1952,
-        544
-      ],
-      "id": "0a2e5e14-e352-42fa-a224-df8f985a3bae",
-      "name": "获得视频的字幕和分镜结构",
-      "retryOnFail": true,
-      "waitBetweenTries": 500,
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "35d4607e-cfbb-403a-9250-ab60bbc2bdb7",
-              "leftValue": "={{ $json.video_url }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "exists",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        -2176,
-        96
-      ],
-      "id": "b645ff00-7187-4c6e-a082-72ffea88fa4e",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "8707ae22-8da1-4086-8f7d-6a0483da3a5d",
-              "name": "字幕",
-              "value": "",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1152,
-        -96
-      ],
-      "id": "f37f56d8-0f7e-480d-a99e-020f4f779e53",
-      "name": "字幕"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "8707ae22-8da1-4086-8f7d-6a0483da3a5d",
-              "name": "结构",
-              "value": "",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1152,
-        96
-      ],
-      "id": "ccf1fb56-1ead-436a-bcea-36345fff645a",
-      "name": "结构"
-    },
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_video_content_learned",
-          "mode": "list",
-          "cachedResultName": "hsai_business_video_content_learned"
-        },
-        "limit": 1,
-        "where": {
-          "values": [
-            {
-              "column": "videourl",
-              "value": "={{ $json.body.videourl }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -2400,
-        96
-      ],
-      "id": "159a4305-22c5-4ac1-8c40-e4eae3470edc",
-      "name": "判断是否已经学习",
-      "alwaysOutputData": true,
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_good_video_v1",
-          "mode": "list",
-          "cachedResultName": "hsai_business_good_video_v1"
-        },
-        "limit": 21,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -2624,
-        1072
-      ],
-      "id": "90d20c0e-64e1-4bb7-a39e-15ddf3055eed",
-      "name": "判断是否已经学习1",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "  CREATE TABLE public.hsai_business_video_content_learned (\n    id BIGSERIAL PRIMARY KEY,-- '基础信息'\n    videoId BIGINT NOT NULL DEFAULT 0,\n    businessName VARCHAR(255) NOT NULL,\n    videoUrl TEXT,\n    music VARCHAR(255),\n    musicUrl TEXT,\n    text TEXT,\n    hashtags TEXT,\n    videoType TEXT,\n    -- '统计数据'\n    publishedTime TIMESTAMPTZ,\n    isad BOOLEAN NOT NULL DEFAULT FALSE,\n    diggCount BIGINT NOT NULL DEFAULT 0,\n    shareCount BIGINT NOT NULL DEFAULT 0,\n    playCount BIGINT NOT NULL DEFAULT 0,\n    collectCount BIGINT NOT NULL DEFAULT 0,\n    commentCount BIGINT NOT NULL DEFAULT 0,\n    -- '系统字段'\n    videoTranscript text ,\n    videoShots text ,\n    newTtsContent text ,\n    newTags text ,\n    userId text ,\n    status text ,\n    createdAt TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n    updatedAt TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -2176,
-        -1088
-      ],
-      "id": "6d2a8e23-76d7-4798-bc1e-eb97d9786101",
-      "name": "建表",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "operation": "deleteTable",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_video_content_learned",
-          "mode": "list",
-          "cachedResultName": "hsai_business_video_content_learned"
-        },
-        "deleteCommand": "drop",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -2400,
-        -1088
-      ],
-      "id": "77314c85-cf11-4abe-a8d5-1d8cf55cfbbf",
-      "name": "删表",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -2624,
-        -1088
-      ],
-      "id": "cb5af232-d640-4e15-95a0-cd2022fcd271",
-      "name": "When clicking ‘Execute workflow’",
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c1284098-87c8-45b8-a114-0b7c050c29dd",
-              "name": "videoId",
-              "value": "={{ $('Webhook').first().json.body.id }}",
-              "type": "string"
-            },
-            {
-              "id": "36635c77-72bf-4985-b432-b7a56093f457",
-              "name": "businessname",
-              "value": "={{ $('Webhook').first().json.body.businessname }}",
-              "type": "string"
-            },
-            {
-              "id": "b75c449c-b434-4768-b052-4b8561021cce",
-              "name": "videourl",
-              "value": "={{ $('Webhook').first().json.body.videourl }}",
-              "type": "string"
-            },
-            {
-              "id": "69e9d674-e3fa-4913-89b8-1c2e1bb1ab87",
-              "name": "music",
-              "value": "={{ $('Webhook').first().json.body.music }}",
-              "type": "string"
-            },
-            {
-              "id": "1db69100-1c2a-42c4-b9cc-dab936bb3cc0",
-              "name": "musicurl",
-              "value": "={{ $('Webhook').first().json.body.musicurl }}",
-              "type": "string"
-            },
-            {
-              "id": "87a7f541-39af-4803-9fab-e047bae8d9f6",
-              "name": "text",
-              "value": "={{ $('Webhook').first().json.body.text .split('#')[0]}}",
-              "type": "string"
-            },
-            {
-              "id": "74248d93-fe19-4c1d-adf4-2fa8c6adcb18",
-              "name": "hashtags",
-              "value": "={{ $('Webhook').first().json.body.hashtags }}",
-              "type": "string"
-            },
-            {
-              "id": "f9a30a7f-f95c-40b1-994e-af8ef5ec3105",
-              "name": "video_type",
-              "value": "={{ $('Webhook').first().json.body.video_type }}",
-              "type": "string"
-            },
-            {
-              "id": "687418c2-07e0-40b3-acb4-11bdaefd61b3",
-              "name": "publishedtime",
-              "value": "={{ $('Webhook').first().json.body.publishedtime }}",
-              "type": "string"
-            },
-            {
-              "id": "8b3116f5-fe6a-40f4-87cb-9707bc81a7e6",
-              "name": "user_id",
-              "value": "={{ $('Webhook').first().json.body.user_id }}",
-              "type": "string"
-            },
-            {
-              "id": "7b773520-82e6-470f-ada9-7122b1637583",
-              "name": "new_tts_text",
-              "value": "={{ $json.output.new_tts_text }}",
-              "type": "string"
-            },
-            {
-              "id": "bf9557bd-2bb1-4d55-b556-0cc4cb8a08a3",
-              "name": "new_content",
-              "value": "={{ $json.output.new_content }}",
-              "type": "string"
-            },
-            {
-              "id": "94f635e2-6093-4dfc-b715-dee48fd0cb12",
-              "name": "new_tags",
-              "value": "={{ $json.output.new_tags }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -128,
-        -192
-      ],
-      "id": "8de29ddf-4081-4198-b1ac-832bf557d6e6",
-      "name": "Edit Fields1"
-    }
-  ],
-  "pinData": {
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "webhook-n8n.hsai.cc",
-            "content-type": "application/json",
-            "user-agent": "OpenWebUI-HSAI/1.0",
-            "accept": "*/*",
-            "accept-encoding": "gzip, deflate, br",
-            "content-length": "988",
-            "x-forwarded-for": "27.151.105.162",
-            "x-forwarded-proto": "https",
-            "x-envoy-original-host": "webhook-n8n.hsai.cc",
-            "x-envoy-external-address": "27.151.105.162",
-            "x-request-id": "9456f6ff-df1b-41ce-9009-e59eba050db8",
-            "x-envoy-attempt-count": "1",
-            "req-start-time": "1759133310356",
-            "original-host": "webhook-n8n.hsai.cc",
-            "x-envoy-route-identifier": "true"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "id": 2,
-            "businessname": "HSAI",
-            "authorname": null,
-            "authorid": null,
-            "authorurl": null,
-            "videourl": "https://api.apify.com/v2/key-value-stores/GNghwyTxLg4DafFbU/records/video-ecollabo8-20240926030439-7418782348080106757.mp4",
-            "music": "原创音乐",
-            "musicurl": null,
-            "text": "高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发 #佛山家具工厂 #佛山家具 #沙发 #别墅沙发",
-            "hashtags": "佛山家具工厂#佛山家具#沙发#别墅沙发",
-            "video_type": "待测试脚本库",
-            "publishedtime": null,
-            "isad": false,
-            "diggcount": 0,
-            "sharecount": 0,
-            "playcount": 0,
-            "collectcount": 0,
-            "commentcount": 0,
-            "createdat": "2025-09-23T10:50:56.968033+08:00",
-            "updatedat": "2025-09-23T10:50:56.968033+08:00",
-            "user_id": "496e0f43-8bfa-464a-b333-7738d4b3b76d"
-          },
-          "webhookUrl": "http://localhost:5678/webhook/video2new_tts_text",
-          "executionMode": "production"
-        }
-      }
-    ]
-  },
-  "connections": {
-    "企业信息": {
-      "main": [
-        [
-          {
-            "node": "Aggregate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "产品信息": {
-      "main": [
-        [
-          {
-            "node": "Aggregate1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "目标人群": {
-      "main": [
-        [
-          {
-            "node": "Aggregate2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate2": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 2
-          }
-        ]
-      ]
-    },
-    "Aggregate1": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Aggregate3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate3": {
-      "main": [
-        [
-          {
-            "node": "AI Agent4",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "产品信息",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "企业信息",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "目标人群",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "原始视频标题",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "判断是否已经学习",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Agent4": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Structured Output Parser": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "AI Agent4",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent4",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "获取视频字幕",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "获取视频字幕": {
-      "main": [
-        [
-          {
-            "node": "识别字幕",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model2": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "获取视频分镜结构",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "原始视频标题": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 3
-          }
-        ]
-      ]
-    },
-    "识别字幕": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 4
-          }
-        ]
-      ]
-    },
-    "分镜结构": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 5
-          }
-        ]
-      ]
-    },
-    "获取视频分镜结构": {
-      "main": [
-        [
-          {
-            "node": "分镜结构",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "视频字幕与分镜镜头": {
-      "main": [
-        [
-          {
-            "node": "获取视频分镜结构",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "获取视频字幕",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "获得视频的字幕和分镜结构": {
-      "main": [
-        [
-          {
-            "node": "视频字幕与分镜镜头",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "字幕",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "结构",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "获得视频的字幕和分镜结构",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "字幕": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 4
-          }
-        ]
-      ]
-    },
-    "结构": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 5
-          }
-        ]
-      ]
-    },
-    "判断是否已经学习": {
-      "main": [
-        [
-          {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "删表": {
-      "main": [
-        [
-          {
-            "node": "建表",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "删表",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields1": {
-      "main": [
-        [
-          {
-            "node": "写入已学习的素材",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "与后端交互",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "a72beb7c-9b18-4077-bad9-ea2c7f77301e",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "ZOn1ehGOLikdWSNn",
-  "tags": []
+	"name": "前端确认学习流",
+	"nodes": [
+		{
+			"parameters": {
+				"httpMethod": "POST",
+				"path": "video2new_tts_text",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.webhook",
+			"typeVersion": 2.1,
+			"position": [-2624, -480],
+			"id": "2d9544ab-9e3f-4a81-9139-f47e8a5d2dd8",
+			"name": "Webhook",
+			"webhookId": "325ad21c-b979-49f8-94cc-66b6b3bd7114"
+		},
+		{
+			"parameters": {
+				"promptType": "define",
+				"text": "=# 爆款文案\n{{ $json.data[3]['召回的原始素材'] }}\n# 产品信息\n{{ $json.data[0].product.toJsonString() }}\n# 公司信息\n{{ $json.data[1].business_message.toJsonString() }}\n# 目标人群\n{{ $json.data[2].object.toJsonString() }}\n# 爆款文案结构\n{{ $('分镜结构').first().json['结构'] }}",
+				"hasOutputParser": true,
+				"options": {
+					"systemMessage": "=# 角色 \n你爆款文案生成专家，快速分析用户提供的信息。你充分理解tiktok、Instagram、Facebook、YouTube、Twitter (X)各大平台的流量密码，能迅速抓住人设/产品特色和优点/文案结构/引流方式，结合目标受众的需求和喜好，生成高质量的各大平台种草内容的标题和文案。最终生成一个版本的新文案。\n# 目标\n1. 结合企业资料里的{目标人群}，同时借鉴爆款文案，生成新文案要有非常吸引人的content，标题的目的是让更多目标人群愿意点击打开这条视频内容\n2. 文案整体结构要与原文案结构相同，将{企业信息}、{企业理念}、{产品特点}，金句亮点与原有的文案结构结合在一起，为{目标人群}生成新的口播稿。\n3. 生成新的标签\n\n**限制\n1.新的文案必须1:1的逐句替换原文案的内容。其中只需要替换{企业信息}、{企业理念}、{产品特点} ，中与本文案相关的部分内容\n2.原文案中与{企业信息}、{企业理念}、{产品特点}，{产品品类}无关的信息，在不影响整体文案内容的情况下尽量保留\n3.不能出现任何线上平台的名称 如 TIKTOK YouTube等。\n\n# 输出的形式\n1.必须先新文案标题、文案内容和话题\n2.不需要输出任何以上以上要求以外的内容，如：原文案拆解、思考过程、创作逻辑等。\n\n** 注意事项\n\n顺序执行: 必须严格按照执行步骤的顺序进行，不得跳过任何步骤。\n检查点: 系统将自动检查每个步骤的完成情况，并在继续前确保所有先决条件均已满足。\n\n**执行步骤：\n\n1. 调取文案后，请调{目标人群}和{企业信息}的内容进行下一步操作。\n2. 请使用第一人称进行1:1的逐句内容替换，根据我的目标对{企业信息} 、{企业理念}、{产品特点}， {产品品类}进行1:1的替换。不需要对其他不影响核心意思的内容进行替换，在不影响内容逻辑性的情况下，尽量小的改动原文中的结构和金句。如果原句中有使用成语或者文言文，替换后的文案应使用意思相近的成语或文言文进行替换。\n\n3. 你要为我制作新的标题，根据原文案的标题为我1:1的替换内容。\n\n# 规则\n- 新的口播稿赋值new_tts_text\n- 爆款文案字数在140个字到240个字之间,使用中文\n- new_content\n- 标签赋值给new_tags\n- 标签使用英文小写,使用#分割\n# 格式\n{\"new_tts_text\":\"\"\n,\"new_content\":\"\"\n,\"new_tags\":\"\"}"
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.agent",
+			"typeVersion": 2,
+			"position": [-480, -192],
+			"id": "bb0c3330-4c39-4f92-aabd-28f7a0e68527",
+			"name": "AI Agent4",
+			"onError": "continueRegularOutput"
+		},
+		{
+			"parameters": {
+				"operation": "executeQuery",
+				"query": "select * from public.hsai_business_key_messages  where (message_type like '%企业%' or message_type like '%公司%')and business_name ='{{ $json.body.businessname }}'; ",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-1440, -672],
+			"id": "669474e6-2948-42ab-8518-b3f68c905dd1",
+			"name": "企业信息",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "executeQuery",
+				"query": "select * from public.hsai_business_key_messages  where message_type like '%产品%' and business_name ='{{ $json.body.businessname }}'; ",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-1440, -864],
+			"id": "b4d08610-2157-4d06-81dd-cd23f97099d3",
+			"name": "产品信息",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "executeQuery",
+				"query": "select * from public.hsai_business_key_messages  where (message_type like '%客户%' or message_type like '%画像%')and business_name ='{{ $json.body.businessname }}'; ",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-1440, -480],
+			"id": "1f811c57-4e8c-474d-9c39-18f9afd86285",
+			"name": "目标人群",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"destinationFieldName": "object",
+				"include": "specifiedFields",
+				"fieldsToInclude": "data_info",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [-1152, -480],
+			"id": "42d630be-eb5f-4d01-96d0-3b4394a5f148",
+			"name": "Aggregate2"
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"destinationFieldName": "product",
+				"include": "specifiedFields",
+				"fieldsToInclude": "data_info",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [-1152, -864],
+			"id": "702565c4-d444-4331-93df-f9d5a2fab667",
+			"name": "Aggregate1"
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"destinationFieldName": "business_message",
+				"include": "specifiedFields",
+				"fieldsToInclude": "data_info",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [-1152, -672],
+			"id": "c626c591-9ba7-4d1b-b5d1-52c42a3ec416",
+			"name": "Aggregate"
+		},
+		{
+			"parameters": {
+				"numberInputs": 6
+			},
+			"type": "n8n-nodes-base.merge",
+			"typeVersion": 3.2,
+			"position": [-928, -256],
+			"id": "c3de200d-0975-4019-bca7-c3711f1e20cc",
+			"name": "Merge"
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [-704, -192],
+			"id": "32bf8930-4ebf-40ad-8f84-c91048fb3b04",
+			"name": "Aggregate3"
+		},
+		{
+			"parameters": {
+				"operation": "push",
+				"list": "video_learning_notification",
+				"messageData": "={\n\"video_id\":{{ $json.videoId }}\n,\"status\":\"success\"\n}"
+			},
+			"type": "n8n-nodes-base.redis",
+			"typeVersion": 1,
+			"position": [96, -96],
+			"id": "aca94a42-cc01-4b3f-bb36-181a87746fd3",
+			"name": "与后端交互",
+			"credentials": {
+				"redis": {
+					"id": "UkcckENclXgOKcal",
+					"name": "Redis account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_video_content_learned",
+					"mode": "list",
+					"cachedResultName": "hsai_business_video_content_learned"
+				},
+				"columns": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"businessname": "={{ $json.businessname }}",
+						"videoid": "={{ $json.videoId }}",
+						"videourl": "={{ $json.videourl }}",
+						"music": "={{ $json.music }}",
+						"musicurl": "={{ $json.musicurl }}",
+						"text": "={{ $json.text }}",
+						"hashtags": "={{ $json.hashtags }}",
+						"videotype": "={{ $json.video_type }}",
+						"publishedtime": "={{ $json.publishedtime }}",
+						"videotranscript": "={{ $json.new_tts_text }}",
+						"videoshots": "={{ $('分镜结构').first().json['结构'] }}",
+						"newttscontent": "={{ $json.new_content }}",
+						"newtags": "={{ $json.new_tags }}",
+						"userid": "={{ $json.user_id }}",
+						"status": "1"
+					},
+					"matchingColumns": ["id"],
+					"schema": [
+						{
+							"id": "id",
+							"displayName": "id",
+							"required": false,
+							"defaultMatch": true,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "videoid",
+							"displayName": "videoid",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "businessname",
+							"displayName": "businessname",
+							"required": true,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "videourl",
+							"displayName": "videourl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "music",
+							"displayName": "music",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "musicurl",
+							"displayName": "musicurl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "text",
+							"displayName": "text",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "hashtags",
+							"displayName": "hashtags",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "videotype",
+							"displayName": "videotype",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "publishedtime",
+							"displayName": "publishedtime",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "isad",
+							"displayName": "isad",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "boolean",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "diggcount",
+							"displayName": "diggcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "sharecount",
+							"displayName": "sharecount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "playcount",
+							"displayName": "playcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "collectcount",
+							"displayName": "collectcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "commentcount",
+							"displayName": "commentcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "videotranscript",
+							"displayName": "videotranscript",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "videoshots",
+							"displayName": "videoshots",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "newttscontent",
+							"displayName": "newttscontent",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "newtags",
+							"displayName": "newtags",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "userid",
+							"displayName": "userid",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "status",
+							"displayName": "status",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "createdat",
+							"displayName": "createdat",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "updatedat",
+							"displayName": "updatedat",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true,
+							"removed": true
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [96, -288],
+			"id": "7fd86da4-0100-4b4a-bee6-e5bbc9b55bbf",
+			"name": "写入已学习的素材",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"jsonSchemaExample": "{\"new_tts_text\":\"\"\n,\"new_content\":\"\"\n,\"new_tags\":\"\"}"
+			},
+			"type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+			"typeVersion": 1.3,
+			"position": [-352, 32],
+			"id": "f9a0231d-d2ec-49b9-a6c2-b4ed46206cae",
+			"name": "Structured Output Parser"
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "o3",
+					"mode": "id"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [-480, 32],
+			"id": "383fb8f2-02e9-4502-89bd-138d1d6c7743",
+			"name": "OpenAI Chat Model",
+			"credentials": {
+				"openAiApi": {
+					"id": "nlFmjkNQkWVpRAF0",
+					"name": "huanxin"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "o3",
+					"mode": "id"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [-1440, 464],
+			"id": "5479752a-a91c-40b9-9b88-fb8348c1fe3b",
+			"name": "OpenAI Chat Model1",
+			"credentials": {
+				"openAiApi": {
+					"id": "nlFmjkNQkWVpRAF0",
+					"name": "huanxin"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"promptType": "define",
+				"text": "=# 需要拆解的文案\n {{ $json['视频字幕与分镜镜头'] }}",
+				"messages": {
+					"messageValues": [
+						{
+							"message": "=# 目标\n需要输出视频文案字幕\n\n\n# 规则\n只输出原视频文案字幕"
+						}
+					]
+				},
+				"batching": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.chainLlm",
+			"typeVersion": 1.7,
+			"position": [-1504, 240],
+			"id": "cdfec56f-6bb0-4f57-a5e2-52942530e226",
+			"name": "获取视频字幕"
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "o3",
+					"mode": "id"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [-1440, 976],
+			"id": "488b7e24-07a1-4c91-88f4-2775bd5cc44a",
+			"name": "OpenAI Chat Model2",
+			"credentials": {
+				"openAiApi": {
+					"id": "nlFmjkNQkWVpRAF0",
+					"name": "huanxin"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "c5c4c1ee-bc1c-4714-b2df-5b8a53008360",
+							"name": "召回的原始素材",
+							"value": "={{ $json.body.text }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-1152, -288],
+			"id": "d6c16c3b-6460-46d1-8003-3777d37b1f48",
+			"name": "原始视频标题"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "f4305794-876f-4727-8cb2-e71693280762",
+							"name": "字幕",
+							"value": "={{ $json.text }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-1152, 352],
+			"id": "abfe3223-3973-4180-b450-5e476b8d8fae",
+			"name": "识别字幕"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "f4305794-876f-4727-8cb2-e71693280762",
+							"name": "结构",
+							"value": "={{ $json.text }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-1152, 752],
+			"id": "704f752e-f642-46d8-a453-589aee33853b",
+			"name": "分镜结构"
+		},
+		{
+			"parameters": {
+				"promptType": "define",
+				"text": "=# 需要拆解的内容\n {{ $json['视频字幕与分镜镜头'] }}",
+				"messages": {
+					"messageValues": [
+						{
+							"message": "=# 目标\n提取分镜结构"
+						}
+					]
+				},
+				"batching": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.chainLlm",
+			"typeVersion": 1.7,
+			"position": [-1504, 752],
+			"id": "406fdae4-4e48-4e80-97b2-43ece5f06666",
+			"name": "获取视频分镜结构"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "c5c4c1ee-bc1c-4714-b2df-5b8a53008360",
+							"name": "视频字幕与分镜镜头",
+							"value": "={{ $json.choices[0].message.content }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-1728, 544],
+			"id": "a15e8a72-8ab8-4dcd-94a0-e59d0d9b02b4",
+			"name": "视频字幕与分镜镜头"
+		},
+		{
+			"parameters": {
+				"method": "POST",
+				"url": "https://api.gpt.ge/v1/chat/completions",
+				"sendHeaders": true,
+				"headerParameters": {
+					"parameters": [
+						{
+							"name": "Authorization",
+							"value": "Bearer sk-P7eWBZs2JfAHahcC442675C308374b5181CaC2Bd1929D84e"
+						}
+					]
+				},
+				"sendBody": true,
+				"specifyBody": "json",
+				"jsonBody": "={\n    \"model\": \"gemini-2.5-pro\",\n    \"messages\": [\n        {\n            \"role\": \"user\",\n            \"content\": [\n                {\n                    \"type\": \"text\",\n                    \"text\":\"你是“视频内容理解与分镜拆解专家”。基于我提供的音视频文件（画面+声音+字幕轨道，如有），完成两件事并一次性输出统一 JSON：\\nA. 字幕转写与对齐（transcript）\\nB. 分镜识别与四段命名（shots）\\n【分镜命名词表（只能从下列中选，严禁自创/改写）】\\ncategory（主类）：企业形象、生产制造、质检与测试、包装与装柜、出货与物流、参展与客户交流、客户现场应用、教学与操作、企业文化与荣誉、人物出镜\\nscene_name（场景）：企业大门、LOGO墙、团队办公、团队会议、团队合影、生产线全貌、工人操作装配、精密设备运作、零件材料细节、产品功能演示、仪器检测、性能测试演示、产品打包、装柜叉车搬运、装柜完成特写、货车离厂、集装箱运输、客户现场签收、展会展台全貌、展会产品展示、客户交流洽谈、客户合影、安装应用场景、产品实操演示、使用效果、操作步骤讲解、注意事项提示、企业文化墙、荣誉资质证书、人物出镜（站在工厂大门前/设备前/装柜前说话）\\nshot_type（景别）：航拍、全景、中景、近景、特写、超特写\\ncamera_move（运镜）：推进、拉远、横移左-右、横移右-左、从下-上摇、从上-下摇、定格、环绕、平移、俯拍视角、低角度仰拍\\n【处理流程】\\n1) 画面：识别镜头切换；判断景别与运镜；据语义匹配最接近的场景与主类；严禁造词。\\n2) 音频：转写人声；如有字幕/屏幕文字，用于辅助分镜语义；字幕需给出起止时间（秒）。\\n3) 输出：只输出 JSON，包含两个顶级键：transcript、shots。\\n【输出要求】\\n- transcript：数组，含 {start,end,text,lang?,speaker?}\\n- shots：数组，含 {start,end,category,scene_name,shot_type,camera_move,description,code_name,code_name_3}\\n- 时间戳单位：秒（浮点数），start < end\\n- 命名主键：code_name = category + '_' + scene_name + '_' + shot_type + '_' + camera_move\\n- 兼容主键：code_name_3 = scene_name + '_' + shot_type + '_' + camera_move\\n- description：≤30字\\n- 仅输出 JSON；找不到完全匹配项时，必须从词表中选“最接近”的合法值\\n\"\n\n                },\n                {\n                    \"type\": \"file\",\n                    \"file\": {\n                        \"filename\": \"api-doc.mp4\",\n                        \"file_data\": \"{{ $('Webhook').first().json.body.videourl }}\"\n                    } \n                }\n            ]\n        }\n    ],\n    \"max_tokens\": 13000,\n    \"temperature\": 0.5,\n    \"stream\": false\n}",
+				"options": {
+					"redirect": {
+						"redirect": {}
+					},
+					"timeout": 10000000
+				}
+			},
+			"type": "n8n-nodes-base.httpRequest",
+			"typeVersion": 4.2,
+			"position": [-1952, 544],
+			"id": "0a2e5e14-e352-42fa-a224-df8f985a3bae",
+			"name": "获得视频的字幕和分镜结构",
+			"retryOnFail": true,
+			"waitBetweenTries": 500,
+			"onError": "continueRegularOutput"
+		},
+		{
+			"parameters": {
+				"conditions": {
+					"options": {
+						"caseSensitive": true,
+						"leftValue": "",
+						"typeValidation": "strict",
+						"version": 2
+					},
+					"conditions": [
+						{
+							"id": "35d4607e-cfbb-403a-9250-ab60bbc2bdb7",
+							"leftValue": "={{ $json.video_url }}",
+							"rightValue": "",
+							"operator": {
+								"type": "string",
+								"operation": "exists",
+								"singleValue": true
+							}
+						}
+					],
+					"combinator": "and"
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.if",
+			"typeVersion": 2.2,
+			"position": [-2176, 96],
+			"id": "b645ff00-7187-4c6e-a082-72ffea88fa4e",
+			"name": "If"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "8707ae22-8da1-4086-8f7d-6a0483da3a5d",
+							"name": "字幕",
+							"value": "",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-1152, -96],
+			"id": "f37f56d8-0f7e-480d-a99e-020f4f779e53",
+			"name": "字幕"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "8707ae22-8da1-4086-8f7d-6a0483da3a5d",
+							"name": "结构",
+							"value": "",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-1152, 96],
+			"id": "ccf1fb56-1ead-436a-bcea-36345fff645a",
+			"name": "结构"
+		},
+		{
+			"parameters": {
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_video_content_learned",
+					"mode": "list",
+					"cachedResultName": "hsai_business_video_content_learned"
+				},
+				"limit": 1,
+				"where": {
+					"values": [
+						{
+							"column": "videourl",
+							"value": "={{ $json.body.videourl }}"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-2400, 96],
+			"id": "159a4305-22c5-4ac1-8c40-e4eae3470edc",
+			"name": "判断是否已经学习",
+			"alwaysOutputData": true,
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_good_video_v1",
+					"mode": "list",
+					"cachedResultName": "hsai_business_good_video_v1"
+				},
+				"limit": 21,
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-2624, 1072],
+			"id": "90d20c0e-64e1-4bb7-a39e-15ddf3055eed",
+			"name": "判断是否已经学习1",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "executeQuery",
+				"query": "  CREATE TABLE public.hsai_business_video_content_learned (\n    id BIGSERIAL PRIMARY KEY,-- '基础信息'\n    videoId BIGINT NOT NULL DEFAULT 0,\n    businessName VARCHAR(255) NOT NULL,\n    videoUrl TEXT,\n    music VARCHAR(255),\n    musicUrl TEXT,\n    text TEXT,\n    hashtags TEXT,\n    videoType TEXT,\n    -- '统计数据'\n    publishedTime TIMESTAMPTZ,\n    isad BOOLEAN NOT NULL DEFAULT FALSE,\n    diggCount BIGINT NOT NULL DEFAULT 0,\n    shareCount BIGINT NOT NULL DEFAULT 0,\n    playCount BIGINT NOT NULL DEFAULT 0,\n    collectCount BIGINT NOT NULL DEFAULT 0,\n    commentCount BIGINT NOT NULL DEFAULT 0,\n    -- '系统字段'\n    videoTranscript text ,\n    videoShots text ,\n    newTtsContent text ,\n    newTags text ,\n    userId text ,\n    status text ,\n    createdAt TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n    updatedAt TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-2176, -1088],
+			"id": "6d2a8e23-76d7-4798-bc1e-eb97d9786101",
+			"name": "建表",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			},
+			"disabled": true
+		},
+		{
+			"parameters": {
+				"operation": "deleteTable",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_video_content_learned",
+					"mode": "list",
+					"cachedResultName": "hsai_business_video_content_learned"
+				},
+				"deleteCommand": "drop",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-2400, -1088],
+			"id": "77314c85-cf11-4abe-a8d5-1d8cf55cfbbf",
+			"name": "删表",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			},
+			"disabled": true
+		},
+		{
+			"parameters": {},
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [-2624, -1088],
+			"id": "cb5af232-d640-4e15-95a0-cd2022fcd271",
+			"name": "When clicking ‘Execute workflow’",
+			"disabled": true
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "c1284098-87c8-45b8-a114-0b7c050c29dd",
+							"name": "videoId",
+							"value": "={{ $('Webhook').first().json.body.id }}",
+							"type": "string"
+						},
+						{
+							"id": "36635c77-72bf-4985-b432-b7a56093f457",
+							"name": "businessname",
+							"value": "={{ $('Webhook').first().json.body.businessname }}",
+							"type": "string"
+						},
+						{
+							"id": "b75c449c-b434-4768-b052-4b8561021cce",
+							"name": "videourl",
+							"value": "={{ $('Webhook').first().json.body.videourl }}",
+							"type": "string"
+						},
+						{
+							"id": "69e9d674-e3fa-4913-89b8-1c2e1bb1ab87",
+							"name": "music",
+							"value": "={{ $('Webhook').first().json.body.music }}",
+							"type": "string"
+						},
+						{
+							"id": "1db69100-1c2a-42c4-b9cc-dab936bb3cc0",
+							"name": "musicurl",
+							"value": "={{ $('Webhook').first().json.body.musicurl }}",
+							"type": "string"
+						},
+						{
+							"id": "87a7f541-39af-4803-9fab-e047bae8d9f6",
+							"name": "text",
+							"value": "={{ $('Webhook').first().json.body.text .split('#')[0]}}",
+							"type": "string"
+						},
+						{
+							"id": "74248d93-fe19-4c1d-adf4-2fa8c6adcb18",
+							"name": "hashtags",
+							"value": "={{ $('Webhook').first().json.body.hashtags }}",
+							"type": "string"
+						},
+						{
+							"id": "f9a30a7f-f95c-40b1-994e-af8ef5ec3105",
+							"name": "video_type",
+							"value": "={{ $('Webhook').first().json.body.video_type }}",
+							"type": "string"
+						},
+						{
+							"id": "687418c2-07e0-40b3-acb4-11bdaefd61b3",
+							"name": "publishedtime",
+							"value": "={{ $('Webhook').first().json.body.publishedtime }}",
+							"type": "string"
+						},
+						{
+							"id": "8b3116f5-fe6a-40f4-87cb-9707bc81a7e6",
+							"name": "user_id",
+							"value": "={{ $('Webhook').first().json.body.user_id }}",
+							"type": "string"
+						},
+						{
+							"id": "7b773520-82e6-470f-ada9-7122b1637583",
+							"name": "new_tts_text",
+							"value": "={{ $json.output.new_tts_text }}",
+							"type": "string"
+						},
+						{
+							"id": "bf9557bd-2bb1-4d55-b556-0cc4cb8a08a3",
+							"name": "new_content",
+							"value": "={{ $json.output.new_content }}",
+							"type": "string"
+						},
+						{
+							"id": "94f635e2-6093-4dfc-b715-dee48fd0cb12",
+							"name": "new_tags",
+							"value": "={{ $json.output.new_tags }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-128, -192],
+			"id": "8de29ddf-4081-4198-b1ac-832bf557d6e6",
+			"name": "Edit Fields1"
+		}
+	],
+	"pinData": {
+		"Webhook": [
+			{
+				"json": {
+					"headers": {
+						"host": "webhook-n8n.hsai.cc",
+						"content-type": "application/json",
+						"user-agent": "OpenWebUI-HSAI/1.0",
+						"accept": "*/*",
+						"accept-encoding": "gzip, deflate, br",
+						"content-length": "988",
+						"x-forwarded-for": "27.151.105.162",
+						"x-forwarded-proto": "https",
+						"x-envoy-original-host": "webhook-n8n.hsai.cc",
+						"x-envoy-external-address": "27.151.105.162",
+						"x-request-id": "9456f6ff-df1b-41ce-9009-e59eba050db8",
+						"x-envoy-attempt-count": "1",
+						"req-start-time": "1759133310356",
+						"original-host": "webhook-n8n.hsai.cc",
+						"x-envoy-route-identifier": "true"
+					},
+					"params": {},
+					"query": {},
+					"body": {
+						"id": 2,
+						"businessname": "HSAI",
+						"authorname": null,
+						"authorid": null,
+						"authorurl": null,
+						"videourl": "https://api.apify.com/v2/key-value-stores/GNghwyTxLg4DafFbU/records/video-ecollabo8-20240926030439-7418782348080106757.mp4",
+						"music": "原创音乐",
+						"musicurl": null,
+						"text": "高端中国佛山家具 意大利设计沙发 大户型沙发 别墅沙发 #佛山家具工厂 #佛山家具 #沙发 #别墅沙发",
+						"hashtags": "佛山家具工厂#佛山家具#沙发#别墅沙发",
+						"video_type": "待测试脚本库",
+						"publishedtime": null,
+						"isad": false,
+						"diggcount": 0,
+						"sharecount": 0,
+						"playcount": 0,
+						"collectcount": 0,
+						"commentcount": 0,
+						"createdat": "2025-09-23T10:50:56.968033+08:00",
+						"updatedat": "2025-09-23T10:50:56.968033+08:00",
+						"user_id": "496e0f43-8bfa-464a-b333-7738d4b3b76d"
+					},
+					"webhookUrl": "http://localhost:5678/webhook/video2new_tts_text",
+					"executionMode": "production"
+				}
+			}
+		]
+	},
+	"connections": {
+		"企业信息": {
+			"main": [
+				[
+					{
+						"node": "Aggregate",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"产品信息": {
+			"main": [
+				[
+					{
+						"node": "Aggregate1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"目标人群": {
+			"main": [
+				[
+					{
+						"node": "Aggregate2",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Aggregate2": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 2
+					}
+				]
+			]
+		},
+		"Aggregate1": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Aggregate": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 1
+					}
+				]
+			]
+		},
+		"Merge": {
+			"main": [
+				[
+					{
+						"node": "Aggregate3",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Aggregate3": {
+			"main": [
+				[
+					{
+						"node": "AI Agent4",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Webhook": {
+			"main": [
+				[
+					{
+						"node": "产品信息",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "企业信息",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "目标人群",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "原始视频标题",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "判断是否已经学习",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"AI Agent4": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Structured Output Parser": {
+			"ai_outputParser": [
+				[
+					{
+						"node": "AI Agent4",
+						"type": "ai_outputParser",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenAI Chat Model": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "AI Agent4",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenAI Chat Model1": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "获取视频字幕",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"获取视频字幕": {
+			"main": [
+				[
+					{
+						"node": "识别字幕",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenAI Chat Model2": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "获取视频分镜结构",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"原始视频标题": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 3
+					}
+				]
+			]
+		},
+		"识别字幕": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 4
+					}
+				]
+			]
+		},
+		"分镜结构": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 5
+					}
+				]
+			]
+		},
+		"获取视频分镜结构": {
+			"main": [
+				[
+					{
+						"node": "分镜结构",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"视频字幕与分镜镜头": {
+			"main": [
+				[
+					{
+						"node": "获取视频分镜结构",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "获取视频字幕",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"获得视频的字幕和分镜结构": {
+			"main": [
+				[
+					{
+						"node": "视频字幕与分镜镜头",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"If": {
+			"main": [
+				[
+					{
+						"node": "字幕",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "结构",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "获得视频的字幕和分镜结构",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"字幕": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 4
+					}
+				]
+			]
+		},
+		"结构": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 5
+					}
+				]
+			]
+		},
+		"判断是否已经学习": {
+			"main": [
+				[
+					{
+						"node": "If",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"删表": {
+			"main": [
+				[
+					{
+						"node": "建表",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"When clicking ‘Execute workflow’": {
+			"main": [
+				[
+					{
+						"node": "删表",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Edit Fields1": {
+			"main": [
+				[
+					{
+						"node": "写入已学习的素材",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "与后端交互",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": true,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "a72beb7c-9b18-4077-bad9-ea2c7f77301e",
+	"meta": {
+		"templateCredsSetupCompleted": true,
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "ZOn1ehGOLikdWSNn",
+	"tags": []
 }

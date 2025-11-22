@@ -1,961 +1,916 @@
 {
-  "name": "建表及查博主信息的流",
-  "nodes": [
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "CREATE TABLE public.hsai_business_good_video_v1 (\n    -- '基础信息'\n    id BIGSERIAL PRIMARY KEY,\n    businessName VARCHAR(255) NOT NULL,\n    authorName TEXT,\n    authorId TEXT,\n    authorUrl TEXT,\n    videoUrl TEXT,\n    music VARCHAR(255),\n    musicUrl TEXT,\n    text TEXT,\n    hashtags TEXT,\n    video_type TEXT,\n\n    -- '统计数据'\n    publishedTime TIMESTAMPTZ,\n    isad BOOLEAN NOT NULL DEFAULT FALSE,\n    diggCount BIGINT NOT NULL DEFAULT 0,\n    shareCount BIGINT NOT NULL DEFAULT 0,\n    playCount BIGINT NOT NULL DEFAULT 0,\n    collectCount BIGINT NOT NULL DEFAULT 0,\n    commentCount BIGINT NOT NULL DEFAULT 0,\n\n    -- '系统字段'\n    createdAt TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n    updatedAt TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        448,
-        0
-      ],
-      "id": "138d1ee5-7efc-4165-b47e-25adee9b77e1",
-      "name": "建表",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "value": "public",
-          "mode": "list",
-          "cachedResultName": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_good_video",
-          "mode": "list",
-          "cachedResultName": "hsai_business_good_video"
-        },
-        "limit": 500,
-        "where": {
-          "values": [
-            {
-              "column": "business_name",
-              "condition": "IS NOT NULL"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        672,
-        0
-      ],
-      "id": "c0b5a856-a98b-43c5-825c-90de26a5decd",
-      "name": "查之前的表",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "schema": {
-          "__rl": true,
-          "value": "public",
-          "mode": "list",
-          "cachedResultName": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_good_video_v1",
-          "mode": "list",
-          "cachedResultName": "hsai_business_good_video_v1"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "businessname": "={{ $json.business_name }}",
-            "videourl": "={{ $json.video_url }}",
-            "music": "={{ $json.music }}",
-            "text": "={{ $json.text }}",
-            "hashtags": "={{ $json.hashtags }}",
-            "video_type": "={{ $json.video_type }}"
-          },
-          "matchingColumns": [
-            "id"
-          ],
-          "schema": [
-            {
-              "id": "id",
-              "displayName": "id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "businessname",
-              "displayName": "businessname",
-              "required": true,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "videourl",
-              "displayName": "videourl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "music",
-              "displayName": "music",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "musicurl",
-              "displayName": "musicurl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "text",
-              "displayName": "text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "hashtags",
-              "displayName": "hashtags",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "video_type",
-              "displayName": "video_type",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "publishedtime",
-              "displayName": "publishedtime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "isad",
-              "displayName": "isad",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "boolean",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "diggcount",
-              "displayName": "diggcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "sharecount",
-              "displayName": "sharecount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "playcount",
-              "displayName": "playcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "collectcount",
-              "displayName": "collectcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "commentcount",
-              "displayName": "commentcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "createdat",
-              "displayName": "createdat",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "updatedat",
-              "displayName": "updatedat",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        896,
-        0
-      ],
-      "id": "a3e9f6f7-8388-4014-8df3-3328118d61ca",
-      "name": "写入新表",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "operation": "deleteTable",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_good_video_v1",
-          "mode": "list",
-          "cachedResultName": "hsai_business_good_video_v1"
-        },
-        "deleteCommand": "drop",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        224,
-        0
-      ],
-      "id": "b1565564-2701-4998-83fc-c0ba908e4aa5",
-      "name": "删表",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        0,
-        0
-      ],
-      "id": "25e01a27-ac6f-4b8f-9968-ba3582481daa",
-      "name": "When clicking ‘Execute workflow’",
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "value": "public",
-          "mode": "list",
-          "cachedResultName": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_good_video_v1",
-          "mode": "list",
-          "cachedResultName": "hsai_business_good_video_v1"
-        },
-        "limit": 500,
-        "where": {
-          "values": [
-            {
-              "column": "authorurl",
-              "condition": "IS NOT NULL"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        224,
-        224
-      ],
-      "id": "3203ea77-c616-471a-a3c0-5f1730697493",
-      "name": "查博主",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "schema": {
-          "__rl": true,
-          "value": "public",
-          "mode": "list",
-          "cachedResultName": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_good_video_v1",
-          "mode": "list",
-          "cachedResultName": "hsai_business_good_video_v1"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "isad": "={{ $json.isad }}",
-            "diggcount": "={{ $json.diggCount }}",
-            "sharecount": "={{ $json.shareCount }}",
-            "playcount": "={{ $json.playCount }}",
-            "collectcount": "={{ $json.collectCount }}",
-            "commentcount": "={{ $json.commentCount }}",
-            "businessname": "={{ $json.businessName }}",
-            "videourl": "={{ $json.videoUrl }}",
-            "music": "={{ $json.music }}",
-            "musicurl": "={{ $json.musicUrl }}",
-            "text": "={{ $json.text }}",
-            "hashtags": "={{ $json.hashtags }}",
-            "video_type": "待测试脚本库",
-            "publishedtime": "={{ $json.publishedTime }}",
-            "authorurl": "={{ $json.authorId }}",
-            "authorname": "={{ $json.authorName }}",
-            "authorid": "={{ $json.authorUrl }}"
-          },
-          "matchingColumns": [
-            "id"
-          ],
-          "schema": [
-            {
-              "id": "id",
-              "displayName": "id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "businessname",
-              "displayName": "businessname",
-              "required": true,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "authorname",
-              "displayName": "authorname",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "authorid",
-              "displayName": "authorid",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "authorurl",
-              "displayName": "authorurl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "videourl",
-              "displayName": "videourl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "music",
-              "displayName": "music",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "musicurl",
-              "displayName": "musicurl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "text",
-              "displayName": "text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "hashtags",
-              "displayName": "hashtags",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "video_type",
-              "displayName": "video_type",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "publishedtime",
-              "displayName": "publishedtime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "isad",
-              "displayName": "isad",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "boolean",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "diggcount",
-              "displayName": "diggcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "sharecount",
-              "displayName": "sharecount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "playcount",
-              "displayName": "playcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "collectcount",
-              "displayName": "collectcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "commentcount",
-              "displayName": "commentcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "createdat",
-              "displayName": "createdat",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "updatedat",
-              "displayName": "updatedat",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        1120,
-        224
-      ],
-      "id": "439abed6-afff-4f78-8489-979002a82ec3",
-      "name": "入库1",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "e8955a88-3714-4d19-a969-48f85971827e",
-              "name": "businessName",
-              "value": "={{ $('Webhook').first().json.body.business_name }}",
-              "type": "string"
-            },
-            {
-              "id": "3a1da75f-1bf8-442a-8849-2923c9898ff6",
-              "name": "videoUrl",
-              "value": "={{ $('爬该博主所有视频').item.json.mediaUrls[0] }}",
-              "type": "string"
-            },
-            {
-              "id": "aa76bb0a-1cf7-40f9-b1e8-3b8e4d08f09a",
-              "name": "music",
-              "value": "={{ $('爬该博主所有视频').item.json.musicMeta.musicName }}",
-              "type": "string"
-            },
-            {
-              "id": "f37c6f5b-9fac-4afb-a1a5-936d1bd560b0",
-              "name": "musicUrl",
-              "value": "={{ $json.musicMeta.playUrl }}",
-              "type": "string"
-            },
-            {
-              "id": "3af9b27f-69d4-45ef-9997-41e85c908d97",
-              "name": "text",
-              "value": "={{ $('爬该博主所有视频').item.json.text.replaceAll('\\n','\\\\n') }}",
-              "type": "string"
-            },
-            {
-              "id": "85b55e64-f4ab-4318-bf8e-27968bb21e4f",
-              "name": "hashtags",
-              "value": "={{ $('爬该博主所有视频').item.json.hashtags.map(tag => tag.name).join('#')  }}",
-              "type": "string"
-            },
-            {
-              "id": "47e2667f-d08b-40a3-b1f0-b2f5142efdbe",
-              "name": "publishedTime",
-              "value": "={{ $json.createTimeISO }}",
-              "type": "string"
-            },
-            {
-              "id": "94aaae78-f74d-4b63-a08a-608f03cb5d5d",
-              "name": "isad",
-              "value": "={{ $json.isAd }}",
-              "type": "boolean"
-            },
-            {
-              "id": "7bdce4bf-c565-4c25-a7fc-af37a18c11d7",
-              "name": "diggCount",
-              "value": "={{ $json.diggCount }}",
-              "type": "number"
-            },
-            {
-              "id": "03da7337-ddfd-49c6-b6ab-a114afbcf469",
-              "name": "shareCount",
-              "value": "={{ $json.shareCount }}",
-              "type": "number"
-            },
-            {
-              "id": "8d7fccab-95a8-4888-be80-478203dac301",
-              "name": "playCount",
-              "value": "={{ $json.playCount }}",
-              "type": "number"
-            },
-            {
-              "id": "1648c9ea-ae81-43fa-bb29-10118cef5b34",
-              "name": "collectCount",
-              "value": "={{ $json.collectCount }}",
-              "type": "number"
-            },
-            {
-              "id": "31cff9cc-1416-4f74-83e2-e19e86b01542",
-              "name": "commentCount",
-              "value": "={{ $json.commentCount }}",
-              "type": "number"
-            },
-            {
-              "id": "5af37826-b7d1-4b50-af37-cbe4daa34300",
-              "name": "authorId",
-              "value": "={{ $json.authorMeta.id }}",
-              "type": "string"
-            },
-            {
-              "id": "ec3d524c-8a8e-447f-be0c-83b2de74133f",
-              "name": "authorName",
-              "value": "={{ $json.authorMeta.name }}",
-              "type": "string"
-            },
-            {
-              "id": "7bc5221c-a345-4d69-a978-a3527624bd30",
-              "name": "authorUrl",
-              "value": "={{ $json.authorMeta.profileUrl }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        896,
-        224
-      ],
-      "id": "eb301fb3-b3f7-4e86-9ede-c4754a9066ce",
-      "name": "Edit Fields1"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "ff0d0ec0-56f5-43ba-b67c-657604a9e6d0",
-              "name": "状态",
-              "value": "已完成爬取入库",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1344,
-        224
-      ],
-      "id": "0085e039-8615-422c-ba8a-1231f54088a9",
-      "name": "完成状态1"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Accept",
-              "value": "application/json"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer apify_api_AdT8bYLhHfrhAqI4qQ8oqqabY4PBtK48AxJt"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n    \"excludePinnedPosts\": false,\n    \"oldestPostDateUnified\": \"{{ $now.minus('90','days').format('yyyy-MM-dd') }}\",\n    \"proxyCountryCode\": \"None\",\n    \"resultsPerPage\": 100,\n    \"scrapeRelatedVideos\": false,\n    \"profiles\": [\n       {{ $json.authorname.toJsonString() }}\n    ],\n \"searchSection\": \"/video\",\n    \"shouldDownloadAvatars\": false,\n    \"shouldDownloadCovers\": false,\n    \"shouldDownloadMusicCovers\": false,\n    \"shouldDownloadSlideshowImages\": false,\n    \"shouldDownloadSubtitles\": true,\n    \"shouldDownloadVideos\": true,\n    \"videoKvStoreIdOrName\": \"tkvideo\"\n}",
-        "options": {
-          "redirect": {
-            "redirect": {}
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        672,
-        224
-      ],
-      "id": "daa73434-0c33-4dee-ac9d-9d4a355e21a5",
-      "name": "爬该博主所有视频",
-      "retryOnFail": true
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {}
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        0,
-        224
-      ],
-      "id": "3a07b6f3-0b0c-4911-a0b0-419dd81f06d7",
-      "name": "Schedule Trigger"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "b2a3828f-5669-402e-a0a4-dcb6fee3fbf2",
-              "name": "authorname",
-              "value": "={{ $json.authorname }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        448,
-        224
-      ],
-      "id": "228abc35-50f6-41ab-a62f-637b0a63139c",
-      "name": "Edit Fields2"
-    },
-    {
-      "parameters": {
-        "content": "## 定时爬取一个博主所有的视频",
-        "height": 208,
-        "width": 1600
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -64,
-        176
-      ],
-      "id": "bbd634c6-4848-497c-972d-cb79ceb2246a",
-      "name": "Sticky Note"
-    }
-  ],
-  "pinData": {},
-  "connections": {
-    "建表": {
-      "main": [
-        [
-          {
-            "node": "查之前的表",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "查之前的表": {
-      "main": [
-        [
-          {
-            "node": "写入新表",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "删表": {
-      "main": [
-        [
-          {
-            "node": "建表",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "删表",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "查博主": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "入库1": {
-      "main": [
-        [
-          {
-            "node": "完成状态1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields1": {
-      "main": [
-        [
-          {
-            "node": "入库1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "爬该博主所有视频": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule Trigger": {
-      "main": [
-        [
-          {
-            "node": "查博主",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields2": {
-      "main": [
-        [
-          {
-            "node": "爬该博主所有视频",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "643d8bdf-7847-44f7-afc2-6ccf615038c1",
-  "meta": {
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "aa8IRjiMXMelgeQG",
-  "tags": []
+	"name": "建表及查博主信息的流",
+	"nodes": [
+		{
+			"parameters": {
+				"operation": "executeQuery",
+				"query": "CREATE TABLE public.hsai_business_good_video_v1 (\n    -- '基础信息'\n    id BIGSERIAL PRIMARY KEY,\n    businessName VARCHAR(255) NOT NULL,\n    authorName TEXT,\n    authorId TEXT,\n    authorUrl TEXT,\n    videoUrl TEXT,\n    music VARCHAR(255),\n    musicUrl TEXT,\n    text TEXT,\n    hashtags TEXT,\n    video_type TEXT,\n\n    -- '统计数据'\n    publishedTime TIMESTAMPTZ,\n    isad BOOLEAN NOT NULL DEFAULT FALSE,\n    diggCount BIGINT NOT NULL DEFAULT 0,\n    shareCount BIGINT NOT NULL DEFAULT 0,\n    playCount BIGINT NOT NULL DEFAULT 0,\n    collectCount BIGINT NOT NULL DEFAULT 0,\n    commentCount BIGINT NOT NULL DEFAULT 0,\n\n    -- '系统字段'\n    createdAt TIMESTAMPTZ NOT NULL DEFAULT NOW(),\n    updatedAt TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [448, 0],
+			"id": "138d1ee5-7efc-4165-b47e-25adee9b77e1",
+			"name": "建表",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			},
+			"disabled": true
+		},
+		{
+			"parameters": {
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"value": "public",
+					"mode": "list",
+					"cachedResultName": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_good_video",
+					"mode": "list",
+					"cachedResultName": "hsai_business_good_video"
+				},
+				"limit": 500,
+				"where": {
+					"values": [
+						{
+							"column": "business_name",
+							"condition": "IS NOT NULL"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [672, 0],
+			"id": "c0b5a856-a98b-43c5-825c-90de26a5decd",
+			"name": "查之前的表",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			},
+			"disabled": true
+		},
+		{
+			"parameters": {
+				"schema": {
+					"__rl": true,
+					"value": "public",
+					"mode": "list",
+					"cachedResultName": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_good_video_v1",
+					"mode": "list",
+					"cachedResultName": "hsai_business_good_video_v1"
+				},
+				"columns": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"businessname": "={{ $json.business_name }}",
+						"videourl": "={{ $json.video_url }}",
+						"music": "={{ $json.music }}",
+						"text": "={{ $json.text }}",
+						"hashtags": "={{ $json.hashtags }}",
+						"video_type": "={{ $json.video_type }}"
+					},
+					"matchingColumns": ["id"],
+					"schema": [
+						{
+							"id": "id",
+							"displayName": "id",
+							"required": false,
+							"defaultMatch": true,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "businessname",
+							"displayName": "businessname",
+							"required": true,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "videourl",
+							"displayName": "videourl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "music",
+							"displayName": "music",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "musicurl",
+							"displayName": "musicurl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "text",
+							"displayName": "text",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "hashtags",
+							"displayName": "hashtags",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "video_type",
+							"displayName": "video_type",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "publishedtime",
+							"displayName": "publishedtime",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "isad",
+							"displayName": "isad",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "boolean",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "diggcount",
+							"displayName": "diggcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "sharecount",
+							"displayName": "sharecount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "playcount",
+							"displayName": "playcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "collectcount",
+							"displayName": "collectcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "commentcount",
+							"displayName": "commentcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "createdat",
+							"displayName": "createdat",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "updatedat",
+							"displayName": "updatedat",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [896, 0],
+			"id": "a3e9f6f7-8388-4014-8df3-3328118d61ca",
+			"name": "写入新表",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			},
+			"disabled": true
+		},
+		{
+			"parameters": {
+				"operation": "deleteTable",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_good_video_v1",
+					"mode": "list",
+					"cachedResultName": "hsai_business_good_video_v1"
+				},
+				"deleteCommand": "drop",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [224, 0],
+			"id": "b1565564-2701-4998-83fc-c0ba908e4aa5",
+			"name": "删表",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			},
+			"disabled": true
+		},
+		{
+			"parameters": {},
+			"type": "n8n-nodes-base.manualTrigger",
+			"typeVersion": 1,
+			"position": [0, 0],
+			"id": "25e01a27-ac6f-4b8f-9968-ba3582481daa",
+			"name": "When clicking ‘Execute workflow’",
+			"disabled": true
+		},
+		{
+			"parameters": {
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"value": "public",
+					"mode": "list",
+					"cachedResultName": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_good_video_v1",
+					"mode": "list",
+					"cachedResultName": "hsai_business_good_video_v1"
+				},
+				"limit": 500,
+				"where": {
+					"values": [
+						{
+							"column": "authorurl",
+							"condition": "IS NOT NULL"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [224, 224],
+			"id": "3203ea77-c616-471a-a3c0-5f1730697493",
+			"name": "查博主",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"schema": {
+					"__rl": true,
+					"value": "public",
+					"mode": "list",
+					"cachedResultName": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_good_video_v1",
+					"mode": "list",
+					"cachedResultName": "hsai_business_good_video_v1"
+				},
+				"columns": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"isad": "={{ $json.isad }}",
+						"diggcount": "={{ $json.diggCount }}",
+						"sharecount": "={{ $json.shareCount }}",
+						"playcount": "={{ $json.playCount }}",
+						"collectcount": "={{ $json.collectCount }}",
+						"commentcount": "={{ $json.commentCount }}",
+						"businessname": "={{ $json.businessName }}",
+						"videourl": "={{ $json.videoUrl }}",
+						"music": "={{ $json.music }}",
+						"musicurl": "={{ $json.musicUrl }}",
+						"text": "={{ $json.text }}",
+						"hashtags": "={{ $json.hashtags }}",
+						"video_type": "待测试脚本库",
+						"publishedtime": "={{ $json.publishedTime }}",
+						"authorurl": "={{ $json.authorId }}",
+						"authorname": "={{ $json.authorName }}",
+						"authorid": "={{ $json.authorUrl }}"
+					},
+					"matchingColumns": ["id"],
+					"schema": [
+						{
+							"id": "id",
+							"displayName": "id",
+							"required": false,
+							"defaultMatch": true,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "businessname",
+							"displayName": "businessname",
+							"required": true,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "authorname",
+							"displayName": "authorname",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "authorid",
+							"displayName": "authorid",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "authorurl",
+							"displayName": "authorurl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "videourl",
+							"displayName": "videourl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "music",
+							"displayName": "music",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "musicurl",
+							"displayName": "musicurl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "text",
+							"displayName": "text",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "hashtags",
+							"displayName": "hashtags",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "video_type",
+							"displayName": "video_type",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "publishedtime",
+							"displayName": "publishedtime",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "isad",
+							"displayName": "isad",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "boolean",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "diggcount",
+							"displayName": "diggcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "sharecount",
+							"displayName": "sharecount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "playcount",
+							"displayName": "playcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "collectcount",
+							"displayName": "collectcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "commentcount",
+							"displayName": "commentcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "createdat",
+							"displayName": "createdat",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "updatedat",
+							"displayName": "updatedat",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [1120, 224],
+			"id": "439abed6-afff-4f78-8489-979002a82ec3",
+			"name": "入库1",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "e8955a88-3714-4d19-a969-48f85971827e",
+							"name": "businessName",
+							"value": "={{ $('Webhook').first().json.body.business_name }}",
+							"type": "string"
+						},
+						{
+							"id": "3a1da75f-1bf8-442a-8849-2923c9898ff6",
+							"name": "videoUrl",
+							"value": "={{ $('爬该博主所有视频').item.json.mediaUrls[0] }}",
+							"type": "string"
+						},
+						{
+							"id": "aa76bb0a-1cf7-40f9-b1e8-3b8e4d08f09a",
+							"name": "music",
+							"value": "={{ $('爬该博主所有视频').item.json.musicMeta.musicName }}",
+							"type": "string"
+						},
+						{
+							"id": "f37c6f5b-9fac-4afb-a1a5-936d1bd560b0",
+							"name": "musicUrl",
+							"value": "={{ $json.musicMeta.playUrl }}",
+							"type": "string"
+						},
+						{
+							"id": "3af9b27f-69d4-45ef-9997-41e85c908d97",
+							"name": "text",
+							"value": "={{ $('爬该博主所有视频').item.json.text.replaceAll('\\n','\\\\n') }}",
+							"type": "string"
+						},
+						{
+							"id": "85b55e64-f4ab-4318-bf8e-27968bb21e4f",
+							"name": "hashtags",
+							"value": "={{ $('爬该博主所有视频').item.json.hashtags.map(tag => tag.name).join('#')  }}",
+							"type": "string"
+						},
+						{
+							"id": "47e2667f-d08b-40a3-b1f0-b2f5142efdbe",
+							"name": "publishedTime",
+							"value": "={{ $json.createTimeISO }}",
+							"type": "string"
+						},
+						{
+							"id": "94aaae78-f74d-4b63-a08a-608f03cb5d5d",
+							"name": "isad",
+							"value": "={{ $json.isAd }}",
+							"type": "boolean"
+						},
+						{
+							"id": "7bdce4bf-c565-4c25-a7fc-af37a18c11d7",
+							"name": "diggCount",
+							"value": "={{ $json.diggCount }}",
+							"type": "number"
+						},
+						{
+							"id": "03da7337-ddfd-49c6-b6ab-a114afbcf469",
+							"name": "shareCount",
+							"value": "={{ $json.shareCount }}",
+							"type": "number"
+						},
+						{
+							"id": "8d7fccab-95a8-4888-be80-478203dac301",
+							"name": "playCount",
+							"value": "={{ $json.playCount }}",
+							"type": "number"
+						},
+						{
+							"id": "1648c9ea-ae81-43fa-bb29-10118cef5b34",
+							"name": "collectCount",
+							"value": "={{ $json.collectCount }}",
+							"type": "number"
+						},
+						{
+							"id": "31cff9cc-1416-4f74-83e2-e19e86b01542",
+							"name": "commentCount",
+							"value": "={{ $json.commentCount }}",
+							"type": "number"
+						},
+						{
+							"id": "5af37826-b7d1-4b50-af37-cbe4daa34300",
+							"name": "authorId",
+							"value": "={{ $json.authorMeta.id }}",
+							"type": "string"
+						},
+						{
+							"id": "ec3d524c-8a8e-447f-be0c-83b2de74133f",
+							"name": "authorName",
+							"value": "={{ $json.authorMeta.name }}",
+							"type": "string"
+						},
+						{
+							"id": "7bc5221c-a345-4d69-a978-a3527624bd30",
+							"name": "authorUrl",
+							"value": "={{ $json.authorMeta.profileUrl }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [896, 224],
+			"id": "eb301fb3-b3f7-4e86-9ede-c4754a9066ce",
+			"name": "Edit Fields1"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "ff0d0ec0-56f5-43ba-b67c-657604a9e6d0",
+							"name": "状态",
+							"value": "已完成爬取入库",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [1344, 224],
+			"id": "0085e039-8615-422c-ba8a-1231f54088a9",
+			"name": "完成状态1"
+		},
+		{
+			"parameters": {
+				"method": "POST",
+				"url": "https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items",
+				"sendHeaders": true,
+				"headerParameters": {
+					"parameters": [
+						{
+							"name": "Accept",
+							"value": "application/json"
+						},
+						{
+							"name": "Authorization",
+							"value": "Bearer apify_api_AdT8bYLhHfrhAqI4qQ8oqqabY4PBtK48AxJt"
+						}
+					]
+				},
+				"sendBody": true,
+				"specifyBody": "json",
+				"jsonBody": "={\n    \"excludePinnedPosts\": false,\n    \"oldestPostDateUnified\": \"{{ $now.minus('90','days').format('yyyy-MM-dd') }}\",\n    \"proxyCountryCode\": \"None\",\n    \"resultsPerPage\": 100,\n    \"scrapeRelatedVideos\": false,\n    \"profiles\": [\n       {{ $json.authorname.toJsonString() }}\n    ],\n \"searchSection\": \"/video\",\n    \"shouldDownloadAvatars\": false,\n    \"shouldDownloadCovers\": false,\n    \"shouldDownloadMusicCovers\": false,\n    \"shouldDownloadSlideshowImages\": false,\n    \"shouldDownloadSubtitles\": true,\n    \"shouldDownloadVideos\": true,\n    \"videoKvStoreIdOrName\": \"tkvideo\"\n}",
+				"options": {
+					"redirect": {
+						"redirect": {}
+					}
+				}
+			},
+			"type": "n8n-nodes-base.httpRequest",
+			"typeVersion": 4.2,
+			"position": [672, 224],
+			"id": "daa73434-0c33-4dee-ac9d-9d4a355e21a5",
+			"name": "爬该博主所有视频",
+			"retryOnFail": true
+		},
+		{
+			"parameters": {
+				"rule": {
+					"interval": [{}]
+				}
+			},
+			"type": "n8n-nodes-base.scheduleTrigger",
+			"typeVersion": 1.2,
+			"position": [0, 224],
+			"id": "3a07b6f3-0b0c-4911-a0b0-419dd81f06d7",
+			"name": "Schedule Trigger"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "b2a3828f-5669-402e-a0a4-dcb6fee3fbf2",
+							"name": "authorname",
+							"value": "={{ $json.authorname }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [448, 224],
+			"id": "228abc35-50f6-41ab-a62f-637b0a63139c",
+			"name": "Edit Fields2"
+		},
+		{
+			"parameters": {
+				"content": "## 定时爬取一个博主所有的视频",
+				"height": 208,
+				"width": 1600
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-64, 176],
+			"id": "bbd634c6-4848-497c-972d-cb79ceb2246a",
+			"name": "Sticky Note"
+		}
+	],
+	"pinData": {},
+	"connections": {
+		"建表": {
+			"main": [
+				[
+					{
+						"node": "查之前的表",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"查之前的表": {
+			"main": [
+				[
+					{
+						"node": "写入新表",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"删表": {
+			"main": [
+				[
+					{
+						"node": "建表",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"When clicking ‘Execute workflow’": {
+			"main": [
+				[
+					{
+						"node": "删表",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"查博主": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields2",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"入库1": {
+			"main": [
+				[
+					{
+						"node": "完成状态1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Edit Fields1": {
+			"main": [
+				[
+					{
+						"node": "入库1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"爬该博主所有视频": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Schedule Trigger": {
+			"main": [
+				[
+					{
+						"node": "查博主",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Edit Fields2": {
+			"main": [
+				[
+					{
+						"node": "爬该博主所有视频",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": false,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "643d8bdf-7847-44f7-afc2-6ccf615038c1",
+	"meta": {
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "aa8IRjiMXMelgeQG",
+	"tags": []
 }

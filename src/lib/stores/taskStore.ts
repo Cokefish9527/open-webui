@@ -27,7 +27,7 @@ export function setTaskSteps(steps: HSAITaskStep[]): void {
 
 // 添加任务步骤
 export function addTaskStep(step: HSAITaskStep): void {
-	taskSteps.update(steps => [...steps, step]);
+	taskSteps.update((steps) => [...steps, step]);
 }
 
 // 更新任务列表
@@ -37,19 +37,19 @@ export function setTaskList(tasks: HSAITask[]): void {
 
 // 添加任务到列表
 export function addTask(task: HSAITask): void {
-	taskList.update(tasks => [...tasks, task]);
+	taskList.update((tasks) => [...tasks, task]);
 }
 
 // 更新任务列表中的特定任务
 export function updateTaskInList(updatedTask: HSAITask): void {
-	taskList.update(tasks => 
-		tasks.map(task => task.id === updatedTask.id ? updatedTask : task)
+	taskList.update((tasks) =>
+		tasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
 	);
 }
 
 // 从任务列表中移除任务
 export function removeTaskFromList(taskId: string): void {
-	taskList.update(tasks => tasks.filter(task => task.id !== taskId));
+	taskList.update((tasks) => tasks.filter((task) => task.id !== taskId));
 }
 
 // 设置共享会话列表
@@ -59,7 +59,7 @@ export function setSharedSessions(sessions: string[]): void {
 
 // 添加共享会话
 export function addSharedSession(sessionId: string): void {
-	sharedSessions.update(sessions => {
+	sharedSessions.update((sessions) => {
 		if (!sessions.includes(sessionId)) {
 			return [...sessions, sessionId];
 		}
@@ -69,5 +69,5 @@ export function addSharedSession(sessionId: string): void {
 
 // 移除共享会话
 export function removeSharedSession(sessionId: string): void {
-	sharedSessions.update(sessions => sessions.filter(id => id !== sessionId));
+	sharedSessions.update((sessions) => sessions.filter((id) => id !== sessionId));
 }

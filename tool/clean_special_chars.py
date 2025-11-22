@@ -172,6 +172,46 @@ def clean_content(raw: bytes, text: str) -> bytes:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv or sys.argv[1:])
+    
+    # 如果提供了文件参数，直接检查这些文件
+    if argv and len(argv) > 0 and not argv[0].startswith('-'):
+        # 处理文件参数模式
+        files_to_check = [Path(f) for f in argv if not f.startswith('-')]
+        issues: List[Issue] = []
+        
+        for file_path in files_to_check:
+            if file_path.exists() and file_path.is_file():
+                try:
+                    issue = analyze_file(file_path)
+                    if issue:
+                        issues.append(issue)
+                        if not args.quiet:
+                            details: List[str] = []
+                            if issue.has_bom:
+                                details.append("含BOM")
+                            if issue.has_control_chars:
+                                if args.show_control:
+                                    positions = ", ".join(f"{ln}:{col}" for ln, col in issue.control_positions[:5])
+                                    suffix = "..." if len(issue.control_positions) > 5 else ""
+                                    details.append(f"控制字符(位置 {positions}{suffix})")
+                                else:
+                                    details.append(f"控制字符({len(issue.control_positions)} 处)")
+                            print(f"  - {issue.path}: {', '.join(details)}")
+                except UnicodeError as err:
+                    if not args.quiet:
+                        print(f"[跳过] {err}", file=sys.stderr)
+                    continue
+        
+        if issues:
+            if not args.quiet:
+                print(f"发现异常文件：{len(issues)}")
+            if not args.fix:
+                return 1
+        
+        if not args.quiet:
+            print("未发现 BOM 或控制字符问题。")
+        return 0
+    
     root = Path(args.root).resolve()
     if not root.exists():
         print(f"[错误] 根目录不存在：{root}", file=sys.stderr)
@@ -190,7 +230,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         try:
             issue = analyze_file(file_path)
         except UnicodeError as err:
-            print(f"[跳过] {err}", file=sys.stderr)
+            if not args.quiet:
+                print(f"[跳过] {err}", file=sys.stderr)
             continue
         if issue:
             issues.append(issue)

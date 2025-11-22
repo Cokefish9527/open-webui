@@ -22,16 +22,13 @@ class HSAITaskService {
 			params.append('ps', pageSize.toString());
 			params.append('pi', pageIndex.toString());
 
-			const response = await fetch(
-				`${WEBUI_BASE_URL}/hsai/tasks?${params.toString()}`,
-				{
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					credentials: 'include'
-				}
-			);
+			const response = await fetch(`${WEBUI_BASE_URL}/hsai/tasks?${params.toString()}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include'
+			});
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
@@ -230,24 +227,28 @@ class HSAITaskService {
 	}
 
 	// 添加任务协作者
-	async addTaskCollaborator(taskId: string, userId: string, role: string = 'collaborator'): Promise<boolean> {
+	async addTaskCollaborator(
+		taskId: string,
+		userId: string,
+		role: string = 'collaborator'
+	): Promise<boolean> {
 		try {
 			const task = await this.getTask(taskId);
 			const collaborators = task.collaborators || [];
-			
+
 			// 检查用户是否已经是协作者
-			const existingCollaborator = collaborators.find(c => c.user_id === userId);
+			const existingCollaborator = collaborators.find((c) => c.user_id === userId);
 			if (existingCollaborator) {
 				return true; // 用户已经是协作者
 			}
-			
+
 			// 添加新协作者
 			collaborators.push({
 				user_id: userId,
 				role: role,
 				joined_at: Math.floor(Date.now() / 1000)
 			});
-			
+
 			// 更新任务
 			const updatedTask = await this.updateTask(taskId, { collaborators });
 			return !!updatedTask;
@@ -262,15 +263,15 @@ class HSAITaskService {
 		try {
 			const task = await this.getTask(taskId);
 			const sharedSessions = task.shared_sessions || [];
-			
+
 			// 检查会话是否已经被共享
 			if (sharedSessions.includes(sessionId)) {
 				return true; // 会话已经被共享
 			}
-			
+
 			// 添加新共享会话
 			sharedSessions.push(sessionId);
-			
+
 			// 更新任务
 			const updatedTask = await this.updateTask(taskId, { shared_sessions: sharedSessions });
 			return !!updatedTask;

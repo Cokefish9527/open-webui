@@ -183,7 +183,7 @@
 					<Tooltip content={$i18n.t($showPreview ? '隐藏预览面板' : '显示预览面板')}>
 						<button
 							class="flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
-							on:click={() => showPreview.update(v => !v)}
+							on:click={() => showPreview.update((v) => !v)}
 							aria-label={$i18n.t($showPreview ? '隐藏预览面板' : '显示预览面板')}
 						>
 							<div class="m-auto self-center">

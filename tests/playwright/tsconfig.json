@@ -1,19 +1,17 @@
 ﻿{
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "types": ["@playwright/test", "node"],
-    "module": "commonjs",
-    "target": "ES2019",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "outDir": "../../dist/playwright"
-  },
-  "include": [
-    "./**/*.ts"
-  ]
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"types": ["@playwright/test", "node"],
+		"module": "commonjs",
+		"target": "ES2019",
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"outDir": "../../dist/playwright"
+	},
+	"include": ["./**/*.ts"]
 }

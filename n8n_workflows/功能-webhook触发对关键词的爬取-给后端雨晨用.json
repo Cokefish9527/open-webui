@@ -1,389 +1,347 @@
 {
-  "name": "功能-webhook触发对关键词的爬取-给后端雨晨用",
-  "nodes": [
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_message",
-          "mode": "list",
-          "cachedResultName": "hsai_business_message"
-        },
-        "limit": 500,
-        "where": {
-          "values": [
-            {
-              "column": "business_name",
-              "value": "华商时代开发"
-            },
-            {
-              "column": "keywords"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -1584,
-        -48
-      ],
-      "id": "5867151d-5c79-4d48-bc6f-014c3fd5a3b8",
-      "name": "Select rows from a table",
-      "alwaysOutputData": true,
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://webhook-n8n.hsai.cc/webhook/video_sc",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "keywords",
-              "value": "={{ $json.keywords }}"
-            },
-            {
-              "name": "business_name",
-              "value": "=华商时代开发"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -256,
-        -112
-      ],
-      "id": "cdeafd4b-b241-4dc9-bf59-58798212d10f",
-      "name": "HTTP Request"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        -480,
-        -48
-      ],
-      "id": "407f3668-3bc1-4d3f-8bbe-934076cda293",
-      "name": "Loop Over Items1"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "a774b7f7-4682-4859-87dc-b4087cedb04f",
-              "name": "keywords",
-              "value": "={{ $json.keywords.toLowerCase().split(',') }}",
-              "type": "array"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1360,
-        -48
-      ],
-      "id": "90add732-ee02-48b5-a631-db56a3d879c5",
-      "name": "Edit Fields2"
-    },
-    {
-      "parameters": {
-        "fieldToSplitOut": "keywords",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        -1136,
-        -48
-      ],
-      "id": "e2732c5d-b03a-46d2-b0a4-90a044b2b583",
-      "name": "Split Out1"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.removeDuplicates",
-      "typeVersion": 2,
-      "position": [
-        -704,
-        -48
-      ],
-      "id": "29041aa2-84a8-4a9d-9179-e929f1d41bb8",
-      "name": "Remove Duplicates"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "bfb45a84-95da-4fef-ae23-e007bcb647f0",
-              "name": "keywords",
-              "value": "={{ $json.keywords.trim() }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -928,
-        -48
-      ],
-      "id": "2935604d-2c02-467b-b337-7f2217e7780f",
-      "name": "Edit Fields3"
-    },
-    {
-      "parameters": {
-        "amount": 1,
-        "unit": "minutes"
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        -48,
-        -48
-      ],
-      "id": "d36969a9-e00c-4024-8d60-5b48f6f4842b",
-      "name": "Wait",
-      "webhookId": "0fde2499-7ee8-434a-bb56-b7df7a55a4d0"
-    },
-    {
-      "parameters": {
-        "content": "## 从库里拉出来用户指定的关键词",
-        "height": 240,
-        "width": 220
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -1648,
-        -128
-      ],
-      "id": "d51e3e5a-8d92-4e76-bb22-05af02026bb9",
-      "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "content": "## 调用【3异步-视频爬取关键词分析】这个爬取的子工作流进行爬取",
-        "height": 320,
-        "width": 220
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -320,
-        -288
-      ],
-      "id": "0ee53115-588e-4b92-aba1-1e578b5dd2a5",
-      "name": "Sticky Note1"
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "keywords2video",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        -1808,
-        -144
-      ],
-      "id": "6b6df36e-689a-48ba-9802-6ca581c727a8",
-      "name": "Webhook",
-      "webhookId": "9bda08a9-e333-463c-8445-1ca5e8430b9c"
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "已经开始获取视频",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.4,
-      "position": [
-        -1584,
-        -336
-      ],
-      "id": "bbce7ca8-2dfd-44fc-a0fb-ddcdd48d83cc",
-      "name": "Respond to Webhook"
-    },
-    {
-      "parameters": {
-        "content": "## 告诉用户所选的关键词已经开始爬取",
-        "height": 240,
-        "width": 220
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -1648,
-        -416
-      ],
-      "id": "fa83979c-c584-4ea2-80a7-1764bb82c57e",
-      "name": "Sticky Note2"
-    },
-    {
-      "parameters": {
-        "content": "## 设计思路\n- 这个工作流主要是对库里已有的关键词进行每天定时的爬取，主要是维护关键词对应最新视频的获取\n## 实现功能\n- 实现关键词对应最新视频的获取\n## 实现原理\n- 从pg数据库查沉淀的关键词，然后去重，然后使用【3异步-视频爬取关键词分析】进行爬取",
-        "height": 240,
-        "width": 800,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -1296,
-        -576
-      ],
-      "id": "19ef057b-d33c-442f-bc22-9fc9c1224768",
-      "name": "Sticky Note3"
-    }
-  ],
-  "pinData": {},
-  "connections": {
-    "Select rows from a table": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request": {
-      "main": [
-        [
-          {
-            "node": "Wait",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Loop Over Items1": {
-      "main": [
-        [],
-        [
-          {
-            "node": "HTTP Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields2": {
-      "main": [
-        [
-          {
-            "node": "Split Out1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Out1": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Remove Duplicates": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields3": {
-      "main": [
-        [
-          {
-            "node": "Remove Duplicates",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Select rows from a table",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Respond to Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "2a794fd5-63a6-4478-839a-9b5ffd234380",
-  "meta": {
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "VuLYqKoSILQRHJ1r",
-  "tags": []
+	"name": "功能-webhook触发对关键词的爬取-给后端雨晨用",
+	"nodes": [
+		{
+			"parameters": {
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_message",
+					"mode": "list",
+					"cachedResultName": "hsai_business_message"
+				},
+				"limit": 500,
+				"where": {
+					"values": [
+						{
+							"column": "business_name",
+							"value": "华商时代开发"
+						},
+						{
+							"column": "keywords"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-1584, -48],
+			"id": "5867151d-5c79-4d48-bc6f-014c3fd5a3b8",
+			"name": "Select rows from a table",
+			"alwaysOutputData": true,
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"method": "POST",
+				"url": "https://webhook-n8n.hsai.cc/webhook/video_sc",
+				"sendBody": true,
+				"bodyParameters": {
+					"parameters": [
+						{
+							"name": "keywords",
+							"value": "={{ $json.keywords }}"
+						},
+						{
+							"name": "business_name",
+							"value": "=华商时代开发"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.httpRequest",
+			"typeVersion": 4.2,
+			"position": [-256, -112],
+			"id": "cdeafd4b-b241-4dc9-bf59-58798212d10f",
+			"name": "HTTP Request"
+		},
+		{
+			"parameters": {
+				"options": {}
+			},
+			"type": "n8n-nodes-base.splitInBatches",
+			"typeVersion": 3,
+			"position": [-480, -48],
+			"id": "407f3668-3bc1-4d3f-8bbe-934076cda293",
+			"name": "Loop Over Items1"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "a774b7f7-4682-4859-87dc-b4087cedb04f",
+							"name": "keywords",
+							"value": "={{ $json.keywords.toLowerCase().split(',') }}",
+							"type": "array"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-1360, -48],
+			"id": "90add732-ee02-48b5-a631-db56a3d879c5",
+			"name": "Edit Fields2"
+		},
+		{
+			"parameters": {
+				"fieldToSplitOut": "keywords",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.splitOut",
+			"typeVersion": 1,
+			"position": [-1136, -48],
+			"id": "e2732c5d-b03a-46d2-b0a4-90a044b2b583",
+			"name": "Split Out1"
+		},
+		{
+			"parameters": {
+				"options": {}
+			},
+			"type": "n8n-nodes-base.removeDuplicates",
+			"typeVersion": 2,
+			"position": [-704, -48],
+			"id": "29041aa2-84a8-4a9d-9179-e929f1d41bb8",
+			"name": "Remove Duplicates"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "bfb45a84-95da-4fef-ae23-e007bcb647f0",
+							"name": "keywords",
+							"value": "={{ $json.keywords.trim() }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-928, -48],
+			"id": "2935604d-2c02-467b-b337-7f2217e7780f",
+			"name": "Edit Fields3"
+		},
+		{
+			"parameters": {
+				"amount": 1,
+				"unit": "minutes"
+			},
+			"type": "n8n-nodes-base.wait",
+			"typeVersion": 1.1,
+			"position": [-48, -48],
+			"id": "d36969a9-e00c-4024-8d60-5b48f6f4842b",
+			"name": "Wait",
+			"webhookId": "0fde2499-7ee8-434a-bb56-b7df7a55a4d0"
+		},
+		{
+			"parameters": {
+				"content": "## 从库里拉出来用户指定的关键词",
+				"height": 240,
+				"width": 220
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-1648, -128],
+			"id": "d51e3e5a-8d92-4e76-bb22-05af02026bb9",
+			"name": "Sticky Note"
+		},
+		{
+			"parameters": {
+				"content": "## 调用【3异步-视频爬取关键词分析】这个爬取的子工作流进行爬取",
+				"height": 320,
+				"width": 220
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-320, -288],
+			"id": "0ee53115-588e-4b92-aba1-1e578b5dd2a5",
+			"name": "Sticky Note1"
+		},
+		{
+			"parameters": {
+				"httpMethod": "POST",
+				"path": "keywords2video",
+				"responseMode": "responseNode",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.webhook",
+			"typeVersion": 2,
+			"position": [-1808, -144],
+			"id": "6b6df36e-689a-48ba-9802-6ca581c727a8",
+			"name": "Webhook",
+			"webhookId": "9bda08a9-e333-463c-8445-1ca5e8430b9c"
+		},
+		{
+			"parameters": {
+				"respondWith": "text",
+				"responseBody": "已经开始获取视频",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.respondToWebhook",
+			"typeVersion": 1.4,
+			"position": [-1584, -336],
+			"id": "bbce7ca8-2dfd-44fc-a0fb-ddcdd48d83cc",
+			"name": "Respond to Webhook"
+		},
+		{
+			"parameters": {
+				"content": "## 告诉用户所选的关键词已经开始爬取",
+				"height": 240,
+				"width": 220
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-1648, -416],
+			"id": "fa83979c-c584-4ea2-80a7-1764bb82c57e",
+			"name": "Sticky Note2"
+		},
+		{
+			"parameters": {
+				"content": "## 设计思路\n- 这个工作流主要是对库里已有的关键词进行每天定时的爬取，主要是维护关键词对应最新视频的获取\n## 实现功能\n- 实现关键词对应最新视频的获取\n## 实现原理\n- 从pg数据库查沉淀的关键词，然后去重，然后使用【3异步-视频爬取关键词分析】进行爬取",
+				"height": 240,
+				"width": 800,
+				"color": 5
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-1296, -576],
+			"id": "19ef057b-d33c-442f-bc22-9fc9c1224768",
+			"name": "Sticky Note3"
+		}
+	],
+	"pinData": {},
+	"connections": {
+		"Select rows from a table": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields2",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"HTTP Request": {
+			"main": [
+				[
+					{
+						"node": "Wait",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Loop Over Items1": {
+			"main": [
+				[],
+				[
+					{
+						"node": "HTTP Request",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Edit Fields2": {
+			"main": [
+				[
+					{
+						"node": "Split Out1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Split Out1": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields3",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Remove Duplicates": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Edit Fields3": {
+			"main": [
+				[
+					{
+						"node": "Remove Duplicates",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Wait": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Webhook": {
+			"main": [
+				[
+					{
+						"node": "Select rows from a table",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "Respond to Webhook",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": true,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "2a794fd5-63a6-4478-839a-9b5ffd234380",
+	"meta": {
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "VuLYqKoSILQRHJ1r",
+	"tags": []
 }

@@ -309,7 +309,10 @@
 
 {#if $user}
 	{#if $showSidebar}
-		<div class="main-layout with-sidebar" style="grid-template-columns: {$showSidebar ? '260px' : '0'} 1fr;">
+		<div
+			class="main-layout with-sidebar"
+			style="grid-template-columns: {$showSidebar ? '260px' : '0'} 1fr;"
+		>
 			<Sidebar />
 			<main class="main-content"><slot /></main>
 		</div>
@@ -377,7 +380,8 @@
 		width: 100vw;
 		background: #fafafa;
 	}
-	.main-content, .preview-panel {
+	.main-content,
+	.preview-panel {
 		min-width: 0;
 		overflow: auto;
 		height: 100vh;

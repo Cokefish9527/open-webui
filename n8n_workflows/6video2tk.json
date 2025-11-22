@@ -1,260 +1,233 @@
 {
-  "name": "6video2tk",
-  "nodes": [
-    {
-      "parameters": {
-        "workflowInputs": {
-          "values": [
-            {
-              "name": "url"
-            },
-            {
-              "name": "tags"
-            },
-            {
-              "name": "text"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
-      "position": [
-        -64,
-        -144
-      ],
-      "id": "cd3d0dec-ccc7-46aa-b6dc-2062819621fc",
-      "name": "When Executed by Another Workflow"
-    },
-    {
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "={\"tiktok\":11937\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        192,
-        -144
-      ],
-      "id": "653b28b0-4255-4495-80f6-3e8498e4030e",
-      "name": "account ids"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://backend.blotato.com/v2/posts",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"post\": {\n    \"accountId\": \"{{ $('account ids').item.json.tiktok }}\",\n    \"content\": {\n      \"text\": \"{{ $('When Executed by Another Workflow').item.json.text }}{{ $('When Executed by Another Workflow').item.json.tags }}\",\n      \"mediaUrls\": [\"{{ $json.url }}\"],\n      \"platform\": \"tiktok\"\n    },\n    \"target\": {\n      \"targetType\": \"tiktok\",\n\"privacyLevel\":\"PUBLIC_TO_EVERYONE\",\n\"disabledComments\":\"false\",\n\"disabledDuet\":\"false\",\n\"disabledStitch\":\"false\",\n\"isBrandedContent\":\"false\",\n\"isYourBrand\":\"false\",\n\"isAiGenerated\":\"false\"\n    }\n  }\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        624,
-        -144
-      ],
-      "id": "3ddceed4-6b49-45ab-83e0-6eb26ab495df",
-      "name": "publish post tiktok",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "EHUxe79XEW6HXraa",
-          "name": "Header Auth account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://backend.blotato.com/v2/media",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "url",
-              "value": "={{ $('When Executed by Another Workflow').item.json.url }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        400,
-        -144
-      ],
-      "id": "6f437672-ad11-4250-ad2d-1d0be37926f2",
-      "name": "Upload video",
-      "executeOnce": false,
-      "retryOnFail": true,
-      "waitBetweenTries": 200,
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "EHUxe79XEW6HXraa",
-          "name": "Header Auth account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "content": "## 设定tk账户在blotato的id,后面会用到",
-        "height": 280
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        112,
-        -256
-      ],
-      "id": "5e56f686-a3ed-4838-8509-747b7a9b025d",
-      "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "content": "## 上传视频到blotato他们的服务器",
-        "height": 280,
-        "width": 200
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        368,
-        -256
-      ],
-      "id": "d1b404a9-3655-4ffb-a9e9-c613e4b351ff",
-      "name": "Sticky Note1"
-    },
-    {
-      "parameters": {
-        "content": "## 发布",
-        "height": 280,
-        "width": 200
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        592,
-        -256
-      ],
-      "id": "6fddcc5d-9bf8-4a85-ab8e-a6e186ffea68",
-      "name": "Sticky Note2"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "7e294893-639c-49b2-9f30-8828ff613c5a",
-              "name": "发布状态",
-              "value": "发布成功",
-              "type": "string"
-            },
-            {
-              "id": "11d0ff0e-29f3-4273-a639-d075c2630f39",
-              "name": "视频链接",
-              "value": "={{ $('Upload video').item.json.url }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        848,
-        -144
-      ],
-      "id": "95447abb-33cf-47f1-a9c8-37f60b3d6ccb",
-      "name": "已完成发布并返回视频链接"
-    },
-    {
-      "parameters": {
-        "content": "## 设计思路\n- 通过视频oss链接，先上传到第三方服务器，通过第三方api进行上传，最终完成并返回已上传完毕的结果\n## 实现功能\n- 拿到上游合成好的视频oss链接，调用该工作流完成视频的上传\n## 实现原理\n- 基于blotato的api完成视频的上传到tk",
-        "height": 300,
-        "width": 760,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        80,
-        -608
-      ],
-      "id": "1cd44120-577f-4fec-afc6-2476cf308f1c",
-      "name": "Sticky Note7"
-    }
-  ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "url": "https://hsai-hz.oss-cn-hangzhou.aliyuncs.com/视频合成输出/final_video_2025-08-12_14-33-01.mp4"
-        }
-      }
-    ]
-  },
-  "connections": {
-    "When Executed by Another Workflow": {
-      "main": [
-        [
-          {
-            "node": "account ids",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "account ids": {
-      "main": [
-        [
-          {
-            "node": "Upload video",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "publish post tiktok": {
-      "main": [
-        [
-          {
-            "node": "已完成发布并返回视频链接",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Upload video": {
-      "main": [
-        [
-          {
-            "node": "publish post tiktok",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "50b1f728-7820-4048-b20d-b5df38c6fbba",
-  "meta": {
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "zFF8IhMVpLT1bU9I",
-  "tags": []
+	"name": "6video2tk",
+	"nodes": [
+		{
+			"parameters": {
+				"workflowInputs": {
+					"values": [
+						{
+							"name": "url"
+						},
+						{
+							"name": "tags"
+						},
+						{
+							"name": "text"
+						}
+					]
+				}
+			},
+			"type": "n8n-nodes-base.executeWorkflowTrigger",
+			"typeVersion": 1.1,
+			"position": [-64, -144],
+			"id": "cd3d0dec-ccc7-46aa-b6dc-2062819621fc",
+			"name": "When Executed by Another Workflow"
+		},
+		{
+			"parameters": {
+				"mode": "raw",
+				"jsonOutput": "={\"tiktok\":11937\n}",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [192, -144],
+			"id": "653b28b0-4255-4495-80f6-3e8498e4030e",
+			"name": "account ids"
+		},
+		{
+			"parameters": {
+				"method": "POST",
+				"url": "https://backend.blotato.com/v2/posts",
+				"authentication": "genericCredentialType",
+				"genericAuthType": "httpHeaderAuth",
+				"sendBody": true,
+				"specifyBody": "json",
+				"jsonBody": "={\n  \"post\": {\n    \"accountId\": \"{{ $('account ids').item.json.tiktok }}\",\n    \"content\": {\n      \"text\": \"{{ $('When Executed by Another Workflow').item.json.text }}{{ $('When Executed by Another Workflow').item.json.tags }}\",\n      \"mediaUrls\": [\"{{ $json.url }}\"],\n      \"platform\": \"tiktok\"\n    },\n    \"target\": {\n      \"targetType\": \"tiktok\",\n\"privacyLevel\":\"PUBLIC_TO_EVERYONE\",\n\"disabledComments\":\"false\",\n\"disabledDuet\":\"false\",\n\"disabledStitch\":\"false\",\n\"isBrandedContent\":\"false\",\n\"isYourBrand\":\"false\",\n\"isAiGenerated\":\"false\"\n    }\n  }\n}",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.httpRequest",
+			"typeVersion": 4.2,
+			"position": [624, -144],
+			"id": "3ddceed4-6b49-45ab-83e0-6eb26ab495df",
+			"name": "publish post tiktok",
+			"credentials": {
+				"httpHeaderAuth": {
+					"id": "EHUxe79XEW6HXraa",
+					"name": "Header Auth account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"method": "POST",
+				"url": "https://backend.blotato.com/v2/media",
+				"authentication": "genericCredentialType",
+				"genericAuthType": "httpHeaderAuth",
+				"sendBody": true,
+				"bodyParameters": {
+					"parameters": [
+						{
+							"name": "url",
+							"value": "={{ $('When Executed by Another Workflow').item.json.url }}"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.httpRequest",
+			"typeVersion": 4.2,
+			"position": [400, -144],
+			"id": "6f437672-ad11-4250-ad2d-1d0be37926f2",
+			"name": "Upload video",
+			"executeOnce": false,
+			"retryOnFail": true,
+			"waitBetweenTries": 200,
+			"credentials": {
+				"httpHeaderAuth": {
+					"id": "EHUxe79XEW6HXraa",
+					"name": "Header Auth account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"content": "## 设定tk账户在blotato的id,后面会用到",
+				"height": 280
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [112, -256],
+			"id": "5e56f686-a3ed-4838-8509-747b7a9b025d",
+			"name": "Sticky Note"
+		},
+		{
+			"parameters": {
+				"content": "## 上传视频到blotato他们的服务器",
+				"height": 280,
+				"width": 200
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [368, -256],
+			"id": "d1b404a9-3655-4ffb-a9e9-c613e4b351ff",
+			"name": "Sticky Note1"
+		},
+		{
+			"parameters": {
+				"content": "## 发布",
+				"height": 280,
+				"width": 200
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [592, -256],
+			"id": "6fddcc5d-9bf8-4a85-ab8e-a6e186ffea68",
+			"name": "Sticky Note2"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "7e294893-639c-49b2-9f30-8828ff613c5a",
+							"name": "发布状态",
+							"value": "发布成功",
+							"type": "string"
+						},
+						{
+							"id": "11d0ff0e-29f3-4273-a639-d075c2630f39",
+							"name": "视频链接",
+							"value": "={{ $('Upload video').item.json.url }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [848, -144],
+			"id": "95447abb-33cf-47f1-a9c8-37f60b3d6ccb",
+			"name": "已完成发布并返回视频链接"
+		},
+		{
+			"parameters": {
+				"content": "## 设计思路\n- 通过视频oss链接，先上传到第三方服务器，通过第三方api进行上传，最终完成并返回已上传完毕的结果\n## 实现功能\n- 拿到上游合成好的视频oss链接，调用该工作流完成视频的上传\n## 实现原理\n- 基于blotato的api完成视频的上传到tk",
+				"height": 300,
+				"width": 760,
+				"color": 5
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [80, -608],
+			"id": "1cd44120-577f-4fec-afc6-2476cf308f1c",
+			"name": "Sticky Note7"
+		}
+	],
+	"pinData": {
+		"When Executed by Another Workflow": [
+			{
+				"json": {
+					"url": "https://hsai-hz.oss-cn-hangzhou.aliyuncs.com/视频合成输出/final_video_2025-08-12_14-33-01.mp4"
+				}
+			}
+		]
+	},
+	"connections": {
+		"When Executed by Another Workflow": {
+			"main": [
+				[
+					{
+						"node": "account ids",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"account ids": {
+			"main": [
+				[
+					{
+						"node": "Upload video",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"publish post tiktok": {
+			"main": [
+				[
+					{
+						"node": "已完成发布并返回视频链接",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Upload video": {
+			"main": [
+				[
+					{
+						"node": "publish post tiktok",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": false,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "50b1f728-7820-4048-b20d-b5df38c6fbba",
+	"meta": {
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "zFF8IhMVpLT1bU9I",
+	"tags": []
 }

@@ -1,1647 +1,1758 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenWebUI Socket.IO 调试面板</title>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" defer></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
-    <style>
-        :root {
-            --bg: #f3f4f6;
-            --card: #ffffff;
-            --text: #0f172a;
-            --muted: #6b7280;
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --danger: #dc2626;
-            --success: #16a34a;
-            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
-            --radius: 14px;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: linear-gradient(135deg, #eff6ff, #fdf2f8);
-            padding: 18px 28px;
-            box-shadow: var(--shadow);
-            flex-shrink: 0;
-        }
-
-        header h1 {
-            margin: 0 0 6px;
-            font-size: 22px;
-        }
-
-        header p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 16px 24px 24px;
-            gap: 16px;
-            min-height: 0;
-        }
-
-        .tab-bar {
-            display: inline-flex;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.85);
-            padding: 6px;
-            border-radius: calc(var(--radius) + 4px);
-            box-shadow: var(--shadow);
-            align-self: flex-start;
-        }
-
-        .tab-button {
-            border-radius: 999px;
-            padding: 10px 18px;
-            font-size: 14px;
-            font-weight: 600;
-            background: transparent;
-            color: var(--muted);
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .tab-button:hover {
-            color: var(--text);
-            border-color: rgba(37, 99, 235, 0.2);
-        }
-
-        .tab-button.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
-        }
-
-        .tab-panels {
-            flex: 1;
-            min-height: 0;
-            position: relative;
-        }
-
-        .tab-panel {
-            position: absolute;
-            inset: 0;
-            display: none;
-            flex-direction: column;
-            gap: 16px;
-            padding-right: 4px;
-        }
-
-        .tab-panel.active {
-            display: flex;
-        }
-
-        .tab-panel[hidden] {
-            display: none;
-        }
-
-        .panel-grid {
-            flex: 1;
-            min-height: 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 16px;
-            overflow: auto;
-            padding-right: 4px;
-            scrollbar-gutter: stable both-edges;
-        }
-
-        .panel-grid.single {
-            grid-template-columns: minmax(0, 1fr);
-        }
-
-        .panel-grid .span-2 {
-            grid-column: span 2;
-        }
-
-.messaging-grid {
-            grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
-            align-items: flex-start;
-        }
-
-        .tasks-grid {
-            display: grid;
-            grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
-            gap: 18px;
-            align-items: start;
-            min-height: 0;
-        }
-
-        .task-column {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            min-width: 0;
-        }
-
-        .task-column--main .card {
-            min-height: 0;
-        }
-
-        @media (max-width: 1280px) {
-            .tasks-grid {
-                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            }
-        }
-
-        .task-context-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-        }
-
-        .task-context-grid strong {
-            display: block;
-            margin-top: 2px;
-            font-size: 15px;
-        }
-
-        .task-section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .task-section-header h2 {
-            margin: 0;
-            font-size: 18px;
-        }
-
-        .task-section-header p {
-            margin: 4px 0 0;
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 420px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .task-item {
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            border-radius: calc(var(--radius) - 6px);
-            padding: 12px 14px;
-            background: rgba(255, 255, 255, 0.6);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .task-item.is-active {
-            border-color: var(--primary);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
-        }
-
-        .task-item-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .task-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-size: 12px;
-            color: #1f2937;
-            background: rgba(99, 102, 241, 0.1);
-            margin-left: 6px;
-        }
-
-        .task-event-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .task-event-timeline {
-            max-height: 420px;
-            overflow-y: auto;
-            padding-right: 4px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .task-event {
-            border-left: 3px solid var(--primary);
-            background: rgba(37, 99, 235, 0.08);
-            padding: 10px 12px;
-            border-radius: calc(var(--radius) - 6px);
-        }
-
-        .task-status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-        }
-
-        .task-inline {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .task-inline select,
-        .task-inline input,
-        .task-inline textarea {
-            width: 100%;
-        }
-
-        .task-inline-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .task-ops-result {
-            margin-top: 12px;
-            padding: 12px;
-            border-radius: calc(var(--radius) - 6px);
-            font-size: 14px;
-            background: rgba(37, 99, 235, 0.08);
-            color: var(--text);
-        }
-
-        .task-ops-result[data-level="warn"] {
-            background: rgba(234, 179, 8, 0.18);
-        }
-
-        .task-ops-result[data-level="error"] {
-            background: rgba(220, 38, 38, 0.18);
-        }
-
-        .task-empty {
-            margin: 0;
-            padding: 24px 18px;
-            text-align: center;
-            color: var(--muted);
-            border: 1px dashed rgba(15, 23, 42, 0.2);
-            border-radius: calc(var(--radius) - 6px);
-        }
-
-        .task-event-counter {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary);
-            color: #fff;
-            font-weight: 600;
-            border-radius: 999px;
-            padding: 2px 10px;
-            font-size: 12px;
-        }
-
-        .task-action-group {
-            border-top: 1px solid rgba(15, 23, 42, 0.07);
-            padding-top: 12px;
-            margin-top: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .task-action-group:first-of-type {
-            border-top: none;
-            padding-top: 0;
-            margin-top: 0;
-        }
-
-        .task-action-title {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--muted);
-        }
-
-        .task-action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .task-action-buttons button {
-            flex: 1 1 160px;
-        }
-
-        .task-form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-        }
-
-        .task-form-grid textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .task-hint {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
-            padding: 10px 12px;
-            border-radius: calc(var(--radius) - 6px);
-            background: rgba(15, 23, 42, 0.04);
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .task-hint strong {
-            color: var(--text);
-        }
-
-        .task-hint .inline-actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        .task-supplement-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-        }
-
-        .task-subheading {
-            margin: 0 0 8px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--muted);
-        }
-
-        .task-aux-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .task-aux-item {
-            border: 1px solid rgba(15, 23, 42, 0.1);
-            border-radius: calc(var(--radius) - 6px);
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.7);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            font-size: 13px;
-        }
-
-        .task-chip {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-size: 12px;
-            background: rgba(37, 99, 235, 0.12);
-            color: var(--primary-dark);
-            margin-right: 6px;
-            margin-bottom: 4px;
-        }
-
-        .task-log-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 360px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .task-log-item {
-            border-left: 3px solid rgba(37, 99, 235, 0.6);
-            border-radius: calc(var(--radius) - 6px);
-            background: rgba(37, 99, 235, 0.08);
-            padding: 10px 12px;
-            font-size: 13px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .task-log-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .task-log-message {
-            margin: 0;
-            word-break: break-word;
-        }
-
-        .message-form-card {
-            align-self: flex-start;
-            max-height: calc(100vh - 220px);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .message-form-body {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .message-form-body::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .message-form-body::-webkit-scrollbar-thumb {
-            background: rgba(15, 23, 42, 0.2);
-            border-radius: 999px;
-        }
-
-        .message-form-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .message-form-group .form-field {
-            flex: 1 1 180px;
-            min-width: 0;
-        }
-
-        .message-form-group.compact .form-field {
-            flex: 1 1 140px;
-        }
-
-        .message-form-footer {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-
-        .message-form-footer .button-row {
-            margin: 0;
-        }
-
-        .message-form-card textarea {
-            min-height: 120px;
-            resize: vertical;
-            flex: 0 0 auto;
-        }
-
-        .message-form-card .scrollable {
-            max-height: 140px;
-        }
-
-        .message-lock {
-            border-radius: 999px;
-            border: 1px solid rgba(15, 23, 42, 0.12);
-            background: rgba(15, 23, 42, 0.06);
-            color: var(--text);
-            font-size: 12px;
-            padding: 6px 14px;
-            cursor: pointer;
-        }
-
-        .message-lock:hover:not([disabled]) {
-            background: rgba(37, 99, 235, 0.12);
-            color: var(--primary-dark);
-            border-color: rgba(37, 99, 235, 0.18);
-        }
-
-        .message-lock[disabled] {
-            opacity: 0.7;
-            cursor: default;
-        }
-
-        .message-form-card .toggle-line.form-field {
-            align-items: center;
-            flex: 0 1 180px;
-        }
-
-        .message-form-card .toggle-line.form-field label {
-            margin: 0;
-        }
-
-        @media (max-width: 1024px) {
-            body {
-                overflow: auto;
-            }
-            main {
-                padding: 12px 16px 16px;
-            }
-            .tab-bar {
-                align-self: stretch;
-                justify-content: space-between;
-                flex-wrap: wrap;
-            }
-            .tab-panels {
-                position: static;
-            }
-            .tab-panel {
-                position: static;
-                padding-right: 0;
-            }
-            .panel-grid {
-                grid-template-columns: minmax(0, 1fr);
-                overflow: visible;
-                padding-right: 0;
-            }
-            .panel-grid .span-2 {
-                grid-column: span 1;
-            }
-        }
-
-        .card {
-            background: var(--card);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 18px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            min-height: 0;
-        }
-
-        label {
-            font-weight: 600;
-            font-size: 13px;
-            margin-bottom: 6px;
-            display: block;
-        }
-
-        input[type="text"],
-        input[type="password"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
-            outline: none;
-        }
-
-        textarea {
-            min-height: 96px;
-            resize: vertical;
-        }
-
-        button {
-            border: none;
-            border-radius: 10px;
-            padding: 10px 16px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        button.primary {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        button.primary:hover {
-            background: var(--primary-dark);
-        }
-
-        button.secondary {
-            background: #e2e8f0;
-            color: var(--text);
-        }
-
-        button.secondary:hover {
-            background: #d1d9e6;
-        }
-
-        button:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        @keyframes spin {
-            from { transform: translateY(-50%) rotate(0deg); }
-            to { transform: translateY(-50%) rotate(360deg); }
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 14px;
-        }
-
-        .toggle-line {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .button-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .status-line {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #94a3b8;
-            box-shadow: 0 0 0 6px rgba(148, 163, 184, 0.25);
-        }
-
-        .status-dot.connected {
-            background: var(--success);
-            box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.3);
-        }
-
-        .token-box {
-            border: 1px dashed #cbd5f5;
-            border-radius: 10px;
-            padding: 12px;
-            font-size: 12px;
-            color: var(--muted);
-            background: #f8fafc;
-            min-height: 48px;
-        }
-
-        .scrollable {
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .conversation-toolbar {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .conversation-toolbar__heading {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            min-width: 240px;
-        }
-
-        .conversation-toolbar__controls {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: flex-end;
-            min-width: 260px;
-        }
-
-        .filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .focus-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
-        .primary-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: var(--primary-dark);
-            background: rgba(37, 99, 235, 0.12);
-            border-radius: 999px;
-            padding: 4px 10px;
-            width: fit-content;
-        }
-
-        .primary-indicator code {
-            font-family: 'Segoe UI Mono', 'Fira Code', monospace;
-            font-size: 12px;
-            color: var(--primary-dark);
-            background: rgba(255, 255, 255, 0.6);
-            padding: 2px 6px;
-            border-radius: 6px;
-        }
-
-        .conversation-body {
-            flex: 1;
-            min-height: 0;
-            max-height: 420px;
-            overflow-y: auto;
-            padding-right: 8px;
-        }
-
-        .message-group {
-            background: #ffffff;
-            border-radius: var(--radius);
-            padding: 14px;
-            margin-bottom: 12px;
-            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
-            transition: box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
-        }
-
-        .message-group.primary {
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.36);
-            background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(236, 72, 153, 0.06));
-        }
-
-        .message-group.muted {
-            opacity: 0.45;
-            filter: saturate(0.45);
-        }
-
-        .message-group__header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .message-group__header h3 {
-            margin: 0;
-            font-size: 16px;
-        }
-
-        .message-group__header span {
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .message-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .conversation-card {
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            border-radius: 10px;
-            padding: 12px;
-            background: #ffffff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .conversation-card:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-        }
-
-        .conversation-card:focus-visible {
-            outline: 2px solid rgba(37, 99, 235, 0.65);
-            outline-offset: 2px;
-        }
-
-        .conversation-card.is-clickable {
-            cursor: pointer;
-        }
-
-        .conversation-card__header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .conversation-card__preview {
-            margin: 8px 0;
-            font-size: 14px;
-            color: var(--text);
-            background: transparent;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-            text-align: left;
-            line-height: 1.55;
-        }
-
-        .conversation-card__preview:hover:not([disabled]) {
-            color: var(--primary-dark);
-        }
-
-        .conversation-card__preview[disabled] {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .conversation-card__footer {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .conversation-card--sent {
-            border-color: rgba(34, 197, 94, 0.45);
-        }
-
-        .conversation-card--error {
-            border-color: rgba(248, 113, 113, 0.55);
-        }
-
-        .message-group__actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .message-focus {
-            border-radius: 999px;
-            border: 1px solid rgba(37, 99, 235, 0.3);
-            background: rgba(37, 99, 235, 0.08);
-            color: var(--primary-dark);
-            font-size: 12px;
-            padding: 6px 14px;
-            cursor: pointer;
-        }
-
-        .message-focus:hover:not([disabled]) {
-            background: rgba(37, 99, 235, 0.16);
-        }
-
-        .message-focus[disabled] {
-            opacity: 0.8;
-            cursor: default;
-        }
-
-        .link-button {
-            border: none;
-            background: transparent;
-            color: var(--primary-dark);
-            cursor: pointer;
-            padding: 0;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .link-button:hover {
-            text-decoration: underline;
-        }
-
-        .link-button[disabled] {
-            opacity: 0.4;
-            pointer-events: none;
-            text-decoration: none;
-        }
-
-        button.is-loading {
-            position: relative;
-            opacity: 0.75;
-            cursor: progress;
-        }
-
-        @media (max-width: 1024px) {
-            .conversation-toolbar__controls {
-                align-items: flex-start;
-                width: 100%;
-            }
-
-            .focus-controls {
-                justify-content: flex-start;
-            }
-        }
-
-        .dialog-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.55);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 24px;
-            z-index: 100;
-        }
-
-        .dialog-backdrop[hidden] {
-            display: none;
-        }
-
-        .dialog-backdrop:not([hidden]) {
-            display: flex;
-        }
-
-        .dialog-panel {
-            width: min(720px, 90vw);
-            background: #ffffff;
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            max-height: 85vh;
-        }
-
-        .dialog-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 24px 24px 12px;
-        }
-
-        .dialog-header h3 {
-            margin: 0;
-        }
-
-        .dialog-meta {
-            font-size: 13px;
-            color: var(--muted);
-            margin-top: 6px;
-        }
-
-        .dialog-close {
-            border: none;
-            background: #f1f5f9;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .dialog-close:hover {
-            background: #e2e8f0;
-        }
-
-        .dialog-body {
-            padding: 0 24px 24px;
-        }
-
-        .dialog-body pre {
-            margin: 0;
-            background: #0f172a;
-            color: #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-            max-height: 50vh;
-            overflow: auto;
-        }
-
-        .markdown-body {
-            max-height: 50vh;
-            overflow: auto;
-            padding: 0 24px 24px;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .markdown-body h1,
-        .markdown-body h2,
-        .markdown-body h3 {
-            margin-top: 1.2em;
-        }
-
-        .markdown-body pre {
-            background: #0f172a;
-            color: #e2e8f0;
-            padding: 12px;
-            border-radius: 10px;
-            overflow: auto;
-        }
-
-        .markdown-body code {
-            background: rgba(15, 23, 42, 0.08);
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-family: 'Fira Code', 'Segoe UI Mono', monospace;
-        }
-
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
-        }
-
-        .metric-card {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 12px;
-        }
-
-        .metric-card h4 {
-            margin: 0 0 8px;
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .metric-card strong {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--text);
-        }
-    </style>
-</head>
-<body>
-<header>
-    <h1>OpenWebUI Socket.IO 调试面板</h1>
-    <p>通过顶部标签在连接配置、消息调试与监控面板间切换，所有核心功能均可在单屏完成。</p>
-</header>
-<main>
-    <div class="tab-bar" role="tablist">
-        <button type="button" class="tab-button active" data-tab="connection" aria-selected="true">连接与订阅</button>
-        <button type="button" class="tab-button" data-tab="messaging" aria-selected="false">消息调试</button>
-        <button type="button" class="tab-button" data-tab="tasks" aria-selected="false">任务系统</button>
-        <button type="button" class="tab-button" data-tab="monitor" aria-selected="false">监控面板</button>
-    </div>
-    <div class="tab-panels">
-        <section class="tab-panel active" data-tab-panel="connection" role="tabpanel" aria-label="连接与订阅">
-            <div class="panel-grid">
-                <section class="card">
-                    <h2>连接与登录</h2>
-                    <div class="grid-2">
-                        <div>
-                            <label for="serverUrl">服务器地址</label>
-                            <input id="serverUrl" type="text" placeholder="http://localhost:8080">
-                        </div>
-                        <div>
-                            <label for="loginEmail">账号邮箱</label>
-                            <input id="loginEmail" type="text" placeholder="saiter2306001@163.com">
-                        </div>
-                    </div>
-                    <div class="grid-2">
-                        <div>
-                            <label for="loginPassword">登录密码</label>
-                            <input id="loginPassword" type="password" placeholder="hsai1234">
-                        </div>
-                        <div>
-                            <label for="userId">用户 ID（登录成功自动同步）</label>
-                            <input id="userId" type="text" placeholder="登录后自动填充" readonly>
-                        </div>
-                    </div>
-                    <div class="toggle-line">
-                        <input id="autoLogin" type="checkbox">
-                        <label for="autoLogin">页面加载后自动登录</label>
-                    </div>
-                    <div class="toggle-line">
-                        <input id="autoConnect" type="checkbox">
-                        <label for="autoConnect">登录成功后自动连接 Socket</label>
-                    </div>
-                    <div class="button-row">
-                        <button id="loginBtn" class="primary">登录</button>
-                        <button id="refreshTokenBtn" class="secondary">刷新 Token</button>
-                        <button id="logoutBtn" class="secondary" disabled>退出登录</button>
-                    </div>
-                    <div class="button-row">
-                        <button id="connectBtn" class="primary">连接 Socket</button>
-                        <button id="disconnectBtn" class="secondary" disabled>断开连接</button>
-                        <button id="clearStorageBtn" class="secondary">清空本地缓存</button>
-                    </div>
-                    <div class="status-line" aria-live="polite">
-                        <span id="connectionDot" class="status-dot"></span>
-                        <span id="connectionStatus">未连接</span>
-                    </div>
-                    <div class="grid-2">
-                        <div>
-                            <label>Socket ID</label>
-                            <input id="socketId" type="text" placeholder="连接后自动显示" readonly>
-                        </div>
-                        <div>
-                            <label>当前 Token 信息</label>
-                            <div id="tokenInfo" class="token-box">尚未登录</div>
-                        </div>
-                    </div>
-                    <div class="button-row">
-                        <button id="importConfigBtn" class="secondary">导入配置</button>
-                        <button id="exportConfigBtn" class="secondary">导出配置</button>
-                        <input id="configFileInput" type="file" accept="application/json" style="display:none;">
-                    </div>
-                </section>
-                <section class="card">
-                    <h2>事件订阅</h2>
-                    <div id="subscriptionList" class="scrollable" style="max-height: 220px;"></div>
-                    <div class="button-row">
-                        <button id="selectAllSubscriptionsBtn" class="secondary">全选</button>
-                        <button id="clearSubscriptionsBtn" class="secondary">全不选</button>
-                    </div>
-                    <div>
-                        <strong>Engine.IO 心跳</strong>
-                        <p id="pingInfo" style="margin: 0; color: var(--muted); font-size: 12px;">等待连接...</p>
-                    </div>
-                </section>
-            </div>
-        </section>
-        <section class="tab-panel" data-tab-panel="messaging" role="tabpanel" aria-label="消息调试" hidden>
-            <div class="panel-grid messaging-grid">
-                <section class="card message-form-card">
-                    <h2>消息发送</h2>
-                    <div class="message-form-body">
-                        <div class="message-form-group compact">
-                            <div class="form-field">
-                                <label for="messageType">消息类型</label>
-                                <select id="messageType">
-                                    <option value="chat">chat</option>
-                                    <option value="welcome">welcome</option>
-                                    <option value="workflow_trigger">workflow_trigger</option>
-                                    <option value="hsai_status">hsai_status</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label for="entryType">入口类型</label>
-                                <input id="entryType" type="text" placeholder="chat / company_info">
-                            </div>
-                        </div>
-                        <div class="message-form-group compact">
-                            <div class="form-field">
-                                <label for="sessionId">Session ID</label>
-                                <input id="sessionId" type="text" placeholder="留空自动生成">
-                            </div>
-                            <div class="form-field">
-                                <label for="taskId">任务 ID（可选）</label>
-                                <input id="taskId" type="text" placeholder="task_xxx">
-                            </div>
-                        </div>
-                        <div>
-                            <label for="messageContent">消息正文</label>
-                            <textarea id="messageContent" placeholder="请输入发送内容"></textarea>
-                        </div>
-                        <div>
-                            <label for="metadataInput">附加元数据（JSON）</label>
-                            <textarea id="metadataInput" placeholder='{"test_mode": true}'></textarea>
-                        </div>
-                    </div>
-                    <div class="message-form-footer">
-                        <div class="button-row">
-                            <button id="sendMessageBtn" class="primary">发送消息</button>
-                            <button id="sendWelcomeBtn" class="secondary">发送欢迎语</button>
-                            <button id="sendStatusBtn" class="secondary">查询系统状态</button>
-                        </div>
-                        <div>
-                            <strong>模板快捷填充</strong>
-                            <div id="templateList" class="scrollable" style="font-size: 13px; color: var(--muted);"></div>
-                        </div>
-                    </div>
-                </section>
-                <section class="card message-log-card">
-                    <div class="conversation-toolbar">
-                        <div class="conversation-toolbar__heading">
-                            <div>
-                                <h2 style="margin: 0;">会话记录</h2>
-                                <small style="color: var(--muted);">按会话分组，通过弹窗查看原始 JSON。</small>
-                            </div>
-                            <div id="primarySessionIndicator" class="primary-indicator" hidden>
-                                当前主会话：<code id="primarySessionLabel"></code>
-                            </div>
-                        </div>
-                        <div class="conversation-toolbar__controls">
-                            <div class="filters">
-                                <select id="conversationFilter">
-                                    <option value="all">全部会话</option>
-                                </select>
-                                <select id="eventFilter">
-                                    <option value="all">全部事件</option>
-                                    <option value="sent">仅发送</option>
-                                    <option value="hsai_response">仅响应</option>
-                                    <option value="hsai_error">仅错误</option>
-                                </select>
-                                <button id="clearMessagesBtn" class="secondary">清空记录</button>
-                                <button id="exportLogsBtn" class="secondary">导出记录</button>
-                            </div>
-                            <div class="focus-controls">
-                                <button id="focusSessionBtn" class="secondary message-focus" type="button">聚焦输入 Session</button>
-                                <button id="focusLatestBtn" class="secondary message-focus" type="button">聚焦最新会话</button>
-                                <button id="clearFocusBtn" class="link-button" type="button">取消聚焦</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="conversationContainer" class="conversation-body"></div>
-                </section>
-            </div>
-        </section>
-        <section class="tab-panel" data-tab-panel="tasks" role="tabpanel" aria-label="任务系统" hidden>
-            <div class="tasks-grid">
-                <div class="task-column task-column--aside">
-                    <section class="card">
-                        <div class="task-section-header">
-                            <div>
-                                <h2>操作中心</h2>
-                                <p class="card-subtitle">支持初始化主线、控制循环状态并与消息调试联动。</p>
-                            </div>
-                        </div>
-                        <div class="task-hint" aria-live="polite">
-                            <span>当前选中任务：</span>
-                            <strong id="currentTaskIndicator">未选择</strong>
-                            <div class="inline-actions">
-                                <button id="fillTaskIntoMessageBtn" class="link-button" type="button">填充到消息调试</button>
-                                <button id="clearTaskSelectionBtn" class="link-button" type="button">清空选中</button>
-                            </div>
-                        </div>
-                        <div class="task-action-group">
-                            <p class="task-action-title">主线任务</p>
-                            <div class="task-action-buttons">
-                                <button id="seedMainTasksBtn" class="secondary" type="button">创建默认主线任务</button>
-                                <button id="completeMainTaskBtn" type="button">标记主线完成</button>
-                                <button id="resetMainTaskBtn" type="button">重置为未开始</button>
-                            </div>
-                        </div>
-                        <div class="task-action-group">
-                            <p class="task-action-title">循环任务状态</p>
-                            <div class="task-action-buttons">
-                                <button id="activateRecurringBtn" type="button">启动循环任务</button>
-                                <button id="pauseRecurringBtn" type="button">暂停循环任务</button>
-                                <button id="resumeRecurringBtn" type="button">恢复循环任务</button>
-                            </div>
-                            <div class="task-form-grid">
-                                <div class="task-inline">
-                                    <label for="recurringActivateNextRun">计划下次执行</label>
-                                    <input id="recurringActivateNextRun" type="datetime-local" placeholder="可选，ISO 时间">
-                                </div>
-                                <div class="task-inline">
-                                    <label for="recurringActivateMessage">启动备注</label>
-                                    <input id="recurringActivateMessage" type="text" placeholder="例如：重启每日投放">
-                                </div>
-                                <div class="task-inline">
-                                    <label for="recurringPauseReason">暂停原因</label>
-                                    <input id="recurringPauseReason" type="text" placeholder="例如：等待素材补充">
-                                </div>
-                                <div class="task-inline">
-                                    <label for="recurringResumeMessage">恢复备注</label>
-                                    <input id="recurringResumeMessage" type="text" placeholder="可选，写入状态日志">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="task-action-group">
-                            <p class="task-action-title">循环任务交接</p>
-                            <div class="task-action-buttons">
-                                <button id="handoverRecurringBtn" type="button">交接给外部</button>
-                            </div>
-                            <div class="task-form-grid">
-                                <div class="task-inline">
-                                    <label for="recurringHandoverController">外部控制方</label>
-                                    <input id="recurringHandoverController" type="text" placeholder="例如：agency_a">
-                                </div>
-                                <div class="task-inline">
-                                    <label for="recurringHandoverNote">交接备注</label>
-                                    <textarea id="recurringHandoverNote" placeholder="记录交接原因或补充说明"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="task-action-group">
-                            <p class="task-action-title">同步外部状态</p>
-                            <div class="task-action-buttons">
-                                <button id="syncRecurringBtn" type="button">同步状态</button>
-                            </div>
-                            <div class="task-form-grid">
-                                <div class="task-inline">
-                                    <label for="recurringSyncState">循环任务状态</label>
-                                    <select id="recurringSyncState">
-                                        <option value="">请选择状态</option>
-                                        <option value="idle">idle</option>
-                                        <option value="active">active</option>
-                                        <option value="paused">paused</option>
-                                        <option value="external_controlled">external_controlled</option>
-                                    </select>
-                                </div>
-                                <div class="task-inline">
-                                    <label for="recurringSyncNextRun">下一次执行</label>
-                                    <input id="recurringSyncNextRun" type="datetime-local" placeholder="可选">
-                                </div>
-                                <div class="task-inline">
-                                    <label for="recurringSyncLastRun">最近执行</label>
-                                    <input id="recurringSyncLastRun" type="datetime-local" placeholder="可选">
-                                </div>
-                                <div class="task-inline">
-                                    <label for="recurringSyncMessage">同步备注</label>
-                                    <textarea id="recurringSyncMessage" placeholder="记录外部状态说明"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="task-action-group">
-                            <p class="task-action-title">调度与子任务</p>
-                            <div class="task-inline">
-                                <label for="taskSchedulerDate">模拟调度日期</label>
-                                <div class="task-inline-row">
-                                    <input id="taskSchedulerDate" type="date">
-                                    <button id="simulateSchedulerBtn" class="secondary" type="button">生成当日子任务</button>
-                                </div>
-                            </div>
-                            <div class="task-inline">
-                                <label for="taskSubtaskList">子任务列表</label>
-                                <div id="taskSubtaskList" class="task-list" aria-live="polite">
-                                    <p class="task-empty">暂无子任务。</p>
-                                </div>
-                                <div class="task-action-buttons">
-                                    <button id="replaySubtaskBtn" class="secondary" type="button">回放选中子任务</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="taskOpsResult" class="task-ops-result" data-level="info">任务操作日志将显示在此。</div>
-                    </section>
-                </div>
-
-                <div class="task-column task-column--main">
-                    <section class="card">
-                        <div class="task-section-header">
-                            <div>
-                                <h2>项目概览</h2>
-                                <p class="card-subtitle">同步企业与项目基础信息，实时掌握任务进展。</p>
-                            </div>
-                            <button id="refreshTasksBtn" class="secondary" type="button">刷新概览</button>
-                        </div>
-                        <div class="task-context-grid" aria-live="polite">
-                            <div>
-                                <span>企业名称</span>
-                                <strong id="taskCompanyName">-</strong>
-                            </div>
-                            <div>
-                                <span>当前项目</span>
-                                <strong id="taskProjectName">-</strong>
-                            </div>
-                            <div>
-                                <span>蓝图版本</span>
-                                <strong id="taskBlueprintVersion">-</strong>
-                            </div>
-                            <div>
-                                <span>蓝图状态</span>
-                                <strong id="taskBlueprintState">-</strong>
-                            </div>
-                            <div>
-                                <span>蓝图更新时间</span>
-                                <strong id="taskBlueprintUpdatedAt">-</strong>
-                            </div>
-                            <div>
-                                <span>蓝图计划结束</span>
-                                <strong id="taskBlueprintPlannedEnd">-</strong>
-                            </div>
-                            <div>
-                                <span>主线完成度</span>
-                                <strong id="taskMainProgress">-</strong>
-                            </div>
-                            <div>
-                                <span>循环任务</span>
-                                <strong id="taskRecurringStatus">-</strong>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="card">
-                        <div class="task-section-header">
-                            <div>
-                                <h2>任务列表</h2>
-                                <p class="card-subtitle">列出主线、循环与子任务，支持手动筛选。</p>
-                            </div>
-                        </div>
-                        <div class="task-status-grid">
-                            <div class="task-inline">
-                                <label for="taskMainSelect">主线任务</label>
-                                <select id="taskMainSelect">
-                                    <option value="">尚未选择</option>
-                                </select>
-                            </div>
-                            <div class="task-inline">
-                                <label for="taskRecurringSelect">循环任务</label>
-                                <select id="taskRecurringSelect">
-                                    <option value="">尚未选择</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div id="taskMainList" class="task-list" aria-live="polite">
-                            <p class="task-empty">尚未加载任务，请先刷新概览。</p>
-                        </div>
-                    </section>
-                    <section class="card">
-                        <div class="task-section-header">
-                            <div>
-                                <h2>循环运行概览</h2>
-                                <p class="card-subtitle">查看循环任务条目与蓝图关联，辅助分析执行链路。</p>
-                            </div>
-                        </div>
-                        <div class="task-supplement-grid">
-                            <div>
-                                <p class="task-subheading">循环运行项</p>
-                                <div id="taskRecurringItems" class="task-aux-list" aria-live="polite">
-                                    <p class="task-empty">尚未加载循环运行项。</p>
-                                </div>
-                            </div>
-                            <div>
-                                <p class="task-subheading">蓝图关联</p>
-                                <div id="taskBlueprintLinks" class="task-aux-list" aria-live="polite">
-                                    <p class="task-empty">暂无蓝图关联。</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                    <section class="card">
-                        <div class="task-section-header">
-                            <div>
-                                <h2>循环状态日志</h2>
-                                <p class="card-subtitle">倒序展示最近 20 条状态/调度记录。</p>
-                            </div>
-                            <button id="refreshRecurringLogsBtn" class="secondary" type="button">刷新日志</button>
-                        </div>
-                        <div id="taskRecurringLogs" class="task-log-list" aria-live="polite">
-                            <p class="task-empty">尚未加载循环状态日志。</p>
-                        </div>
-                    </section>
-
-                    <section class="card">
-                        <div class="task-section-header">
-                            <div>
-                                <h2>任务事件</h2>
-                                <p class="card-subtitle">监听 WebSocket 推送的任务状态、进度及回放消息。</p>
-                            </div>
-                            <span id="taskEventCounter" class="task-event-counter" aria-live="polite">0</span>
-                        </div>
-                        <div class="task-event-toolbar">
-                            <label class="task-inline" for="taskEventFilter">
-                                <span>事件类型</span>
-                                <select id="taskEventFilter">
-                                    <option value="all">全部事件</option>
-                                    <option value="status">状态变更</option>
-                                    <option value="progress">进度更新</option>
-                                    <option value="replay">回放记录</option>
-                                </select>
-                            </label>
-                            <label class="task-inline" for="taskSessionOnlyToggle">
-                                <span>仅当前会话</span>
-                                <input id="taskSessionOnlyToggle" type="checkbox">
-                            </label>
-                            <button id="clearTaskEventsBtn" class="secondary" type="button">清空事件</button>
-                        </div>
-                        <div id="taskEventTimeline" class="task-event-timeline" aria-live="polite">
-                            <p class="task-empty">尚未收到任务事件。</p>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        </section>
-        <section class="tab-panel" data-tab-panel="monitor" role="tabpanel" aria-label="监控面板" hidden>
-            <div class="panel-grid">
-                <section class="card">
-                    <h2>指标统计</h2>
-                    <div class="metrics">
-                        <div class="metric-card">
-                            <h4>发送次数</h4>
-                            <strong id="statSent">0</strong>
-                        </div>
-                        <div class="metric-card">
-                            <h4>接收次数</h4>
-                            <strong id="statReceived">0</strong>
-                        </div>
-                        <div class="metric-card">
-                            <h4>错误次数</h4>
-                            <strong id="statErrors">0</strong>
-                        </div>
-                        <div class="metric-card">
-                            <h4>平均往返 (ms)</h4>
-                            <strong id="statAvgLatency">-</strong>
-                        </div>
-                        <div class="metric-card">
-                            <h4>最小 / 最大 (ms)</h4>
-                            <strong id="statLatencyRange">-</strong>
-                        </div>
-                        <div class="metric-card">
-                            <h4>最近往返 (ms)</h4>
-                            <strong id="statLatestLatency">-</strong>
-                        </div>
-                    </div>
-                    <div>
-                        <strong>最近事件</strong>
-                        <div id="recentEvents" class="scrollable" style="max-height: 140px; font-size: 12px; color: var(--muted);"></div>
-                    </div>
-                </section>
-                <section class="card">
-                    <h2>请求重放队列</h2>
-                    <div id="replayContainer" class="scrollable" style="max-height: 240px;"></div>
-                </section>
-            </div>
-        </section>
-    </div>
-    <div id="markdownModal" class="dialog-backdrop" hidden>
-        <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="markdownModalTitle">
-            <div class="dialog-header">
-                <div>
-                    <h3 id="markdownModalTitle">对话内容</h3>
-                    <p id="markdownModalMeta" class="dialog-meta"></p>
-                </div>
-                <button id="markdownModalClose" class="dialog-close" aria-label="关闭">×</button>
-            </div>
-            <div id="markdownModalBody" class="markdown-body"></div>
-        </div>
-    </div>
-    <div id="messageModal" class="dialog-backdrop" hidden>
-        <div class="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="messageModalTitle">
-            <div class="dialog-header">
-                <div>
-                    <h3 id="messageModalTitle">消息详情</h3>
-                    <p id="messageModalMeta" class="dialog-meta"></p>
-                </div>
-                <button id="messageModalClose" class="dialog-close" aria-label="关闭">×</button>
-            </div>
-            <div class="dialog-body">
-                <pre id="messageModalBody"></pre>
-            </div>
-        </div>
-    </div>
-</main>
-    <script defer src="static/ws-tester.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const TAB_STORAGE_KEY = "openwebui_ws_tester_active_tab";
-            const buttons = Array.from(document.querySelectorAll("[data-tab]"));
-            const panels = Array.from(document.querySelectorAll("[data-tab-panel]"));
-
-            if (!buttons.length || !panels.length) {
-                return;
-            }
-
-            const panelKeys = new Set(panels.map((panel) => panel.dataset.tabPanel));
-            const stored = localStorage.getItem(TAB_STORAGE_KEY);
-            const fallback = buttons[0].dataset.tab;
-            const initial = stored && panelKeys.has(stored) ? stored : fallback;
-
-            const activateTab = (tab) => {
-                buttons.forEach((btn) => {
-                    const active = btn.dataset.tab === tab;
-                    btn.classList.toggle("active", active);
-                    btn.setAttribute("aria-selected", active ? "true" : "false");
-                });
-
-                panels.forEach((panel) => {
-                    const active = panel.dataset.tabPanel === tab;
-                    panel.classList.toggle("active", active);
-                    if (active) {
-                        panel.removeAttribute("hidden");
-                    } else {
-                        panel.setAttribute("hidden", "");
-                    }
-                });
-            };
-
-            activateTab(initial);
-
-            buttons.forEach((btn) => {
-                btn.addEventListener("click", () => {
-                    const tab = btn.dataset.tab;
-                    if (!tab || btn.classList.contains("active")) {
-                        return;
-                    }
-                    activateTab(tab);
-                    localStorage.setItem(TAB_STORAGE_KEY, tab);
-                });
-            });
-        });
-    </script>
-</body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>OpenWebUI Socket.IO 调试面板</title>
+		<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" defer></script>
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+		/>
+		<style>
+			:root {
+				--bg: #f3f4f6;
+				--card: #ffffff;
+				--text: #0f172a;
+				--muted: #6b7280;
+				--primary: #2563eb;
+				--primary-dark: #1d4ed8;
+				--danger: #dc2626;
+				--success: #16a34a;
+				--shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+				--radius: 14px;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				font-family: 'Inter', 'Segoe UI', sans-serif;
+				background: var(--bg);
+				color: var(--text);
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+				overflow: hidden;
+			}
+
+			header {
+				position: sticky;
+				top: 0;
+				z-index: 10;
+				background: linear-gradient(135deg, #eff6ff, #fdf2f8);
+				padding: 18px 28px;
+				box-shadow: var(--shadow);
+				flex-shrink: 0;
+			}
+
+			header h1 {
+				margin: 0 0 6px;
+				font-size: 22px;
+			}
+
+			header p {
+				margin: 0;
+				color: var(--muted);
+				font-size: 14px;
+			}
+
+			main {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+				padding: 16px 24px 24px;
+				gap: 16px;
+				min-height: 0;
+			}
+
+			.tab-bar {
+				display: inline-flex;
+				gap: 8px;
+				background: rgba(255, 255, 255, 0.85);
+				padding: 6px;
+				border-radius: calc(var(--radius) + 4px);
+				box-shadow: var(--shadow);
+				align-self: flex-start;
+			}
+
+			.tab-button {
+				border-radius: 999px;
+				padding: 10px 18px;
+				font-size: 14px;
+				font-weight: 600;
+				background: transparent;
+				color: var(--muted);
+				border: 1px solid transparent;
+				transition: all 0.2s ease;
+				cursor: pointer;
+			}
+
+			.tab-button:hover {
+				color: var(--text);
+				border-color: rgba(37, 99, 235, 0.2);
+			}
+
+			.tab-button.active {
+				background: var(--primary);
+				color: #fff;
+				border-color: var(--primary);
+				box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+			}
+
+			.tab-panels {
+				flex: 1;
+				min-height: 0;
+				position: relative;
+			}
+
+			.tab-panel {
+				position: absolute;
+				inset: 0;
+				display: none;
+				flex-direction: column;
+				gap: 16px;
+				padding-right: 4px;
+			}
+
+			.tab-panel.active {
+				display: flex;
+			}
+
+			.tab-panel[hidden] {
+				display: none;
+			}
+
+			.panel-grid {
+				flex: 1;
+				min-height: 0;
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+				gap: 16px;
+				overflow: auto;
+				padding-right: 4px;
+				scrollbar-gutter: stable both-edges;
+			}
+
+			.panel-grid.single {
+				grid-template-columns: minmax(0, 1fr);
+			}
+
+			.panel-grid .span-2 {
+				grid-column: span 2;
+			}
+
+			.messaging-grid {
+				grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
+				align-items: flex-start;
+			}
+
+			.tasks-grid {
+				display: grid;
+				grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+				gap: 18px;
+				align-items: start;
+				min-height: 0;
+			}
+
+			.task-column {
+				display: flex;
+				flex-direction: column;
+				gap: 18px;
+				min-width: 0;
+			}
+
+			.task-column--main .card {
+				min-height: 0;
+			}
+
+			@media (max-width: 1280px) {
+				.tasks-grid {
+					grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+				}
+			}
+
+			.task-context-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+				gap: 12px;
+			}
+
+			.task-context-grid strong {
+				display: block;
+				margin-top: 2px;
+				font-size: 15px;
+			}
+
+			.task-section-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 12px;
+			}
+
+			.task-section-header h2 {
+				margin: 0;
+				font-size: 18px;
+			}
+
+			.task-section-header p {
+				margin: 4px 0 0;
+				color: var(--muted);
+				font-size: 13px;
+			}
+
+			.task-list {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				max-height: 420px;
+				overflow-y: auto;
+				padding-right: 4px;
+			}
+
+			.task-item {
+				border: 1px solid rgba(15, 23, 42, 0.08);
+				border-radius: calc(var(--radius) - 6px);
+				padding: 12px 14px;
+				background: rgba(255, 255, 255, 0.6);
+				transition:
+					border-color 0.2s ease,
+					box-shadow 0.2s ease;
+			}
+
+			.task-item.is-active {
+				border-color: var(--primary);
+				box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
+			}
+
+			.task-item-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 8px;
+			}
+
+			.task-badge {
+				display: inline-flex;
+				align-items: center;
+				padding: 2px 8px;
+				border-radius: 999px;
+				font-size: 12px;
+				color: #1f2937;
+				background: rgba(99, 102, 241, 0.1);
+				margin-left: 6px;
+			}
+
+			.task-event-toolbar {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 12px;
+				margin-bottom: 12px;
+			}
+
+			.task-event-timeline {
+				max-height: 420px;
+				overflow-y: auto;
+				padding-right: 4px;
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+
+			.task-event {
+				border-left: 3px solid var(--primary);
+				background: rgba(37, 99, 235, 0.08);
+				padding: 10px 12px;
+				border-radius: calc(var(--radius) - 6px);
+			}
+
+			.task-status-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+				gap: 12px;
+			}
+
+			.task-inline {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+			}
+
+			.task-inline select,
+			.task-inline input,
+			.task-inline textarea {
+				width: 100%;
+			}
+
+			.task-inline-row {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+			}
+
+			.task-ops-result {
+				margin-top: 12px;
+				padding: 12px;
+				border-radius: calc(var(--radius) - 6px);
+				font-size: 14px;
+				background: rgba(37, 99, 235, 0.08);
+				color: var(--text);
+			}
+
+			.task-ops-result[data-level='warn'] {
+				background: rgba(234, 179, 8, 0.18);
+			}
+
+			.task-ops-result[data-level='error'] {
+				background: rgba(220, 38, 38, 0.18);
+			}
+
+			.task-empty {
+				margin: 0;
+				padding: 24px 18px;
+				text-align: center;
+				color: var(--muted);
+				border: 1px dashed rgba(15, 23, 42, 0.2);
+				border-radius: calc(var(--radius) - 6px);
+			}
+
+			.task-event-counter {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				background: var(--primary);
+				color: #fff;
+				font-weight: 600;
+				border-radius: 999px;
+				padding: 2px 10px;
+				font-size: 12px;
+			}
+
+			.task-action-group {
+				border-top: 1px solid rgba(15, 23, 42, 0.07);
+				padding-top: 12px;
+				margin-top: 12px;
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+
+			.task-action-group:first-of-type {
+				border-top: none;
+				padding-top: 0;
+				margin-top: 0;
+			}
+
+			.task-action-title {
+				margin: 0;
+				font-size: 14px;
+				font-weight: 600;
+				color: var(--muted);
+			}
+
+			.task-action-buttons {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+			}
+
+			.task-action-buttons button {
+				flex: 1 1 160px;
+			}
+
+			.task-form-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+				gap: 12px;
+			}
+
+			.task-form-grid textarea {
+				min-height: 80px;
+				resize: vertical;
+			}
+
+			.task-hint {
+				display: flex;
+				align-items: center;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-bottom: 12px;
+				padding: 10px 12px;
+				border-radius: calc(var(--radius) - 6px);
+				background: rgba(15, 23, 42, 0.04);
+				font-size: 13px;
+				color: var(--muted);
+			}
+
+			.task-hint strong {
+				color: var(--text);
+			}
+
+			.task-hint .inline-actions {
+				display: flex;
+				gap: 6px;
+			}
+
+			.task-supplement-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+				gap: 16px;
+			}
+
+			.task-subheading {
+				margin: 0 0 8px;
+				font-size: 14px;
+				font-weight: 600;
+				color: var(--muted);
+			}
+
+			.task-aux-list {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				max-height: 300px;
+				overflow-y: auto;
+				padding-right: 4px;
+			}
+
+			.task-aux-item {
+				border: 1px solid rgba(15, 23, 42, 0.1);
+				border-radius: calc(var(--radius) - 6px);
+				padding: 10px 12px;
+				background: rgba(255, 255, 255, 0.7);
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+				font-size: 13px;
+			}
+
+			.task-chip {
+				display: inline-flex;
+				align-items: center;
+				padding: 2px 8px;
+				border-radius: 999px;
+				font-size: 12px;
+				background: rgba(37, 99, 235, 0.12);
+				color: var(--primary-dark);
+				margin-right: 6px;
+				margin-bottom: 4px;
+			}
+
+			.task-log-list {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				max-height: 360px;
+				overflow-y: auto;
+				padding-right: 4px;
+			}
+
+			.task-log-item {
+				border-left: 3px solid rgba(37, 99, 235, 0.6);
+				border-radius: calc(var(--radius) - 6px);
+				background: rgba(37, 99, 235, 0.08);
+				padding: 10px 12px;
+				font-size: 13px;
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+			}
+
+			.task-log-meta {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				font-size: 12px;
+				color: var(--muted);
+			}
+
+			.task-log-message {
+				margin: 0;
+				word-break: break-word;
+			}
+
+			.message-form-card {
+				align-self: flex-start;
+				max-height: calc(100vh - 220px);
+				overflow: hidden;
+				display: flex;
+				flex-direction: column;
+				gap: 16px;
+			}
+
+			.message-form-body {
+				display: flex;
+				flex-direction: column;
+				gap: 16px;
+				overflow-y: auto;
+				padding-right: 4px;
+			}
+
+			.message-form-body::-webkit-scrollbar {
+				width: 6px;
+			}
+
+			.message-form-body::-webkit-scrollbar-thumb {
+				background: rgba(15, 23, 42, 0.2);
+				border-radius: 999px;
+			}
+
+			.message-form-group {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 16px;
+			}
+
+			.message-form-group .form-field {
+				flex: 1 1 180px;
+				min-width: 0;
+			}
+
+			.message-form-group.compact .form-field {
+				flex: 1 1 140px;
+			}
+
+			.message-form-footer {
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+				flex-shrink: 0;
+			}
+
+			.message-form-footer .button-row {
+				margin: 0;
+			}
+
+			.message-form-card textarea {
+				min-height: 120px;
+				resize: vertical;
+				flex: 0 0 auto;
+			}
+
+			.message-form-card .scrollable {
+				max-height: 140px;
+			}
+
+			.message-lock {
+				border-radius: 999px;
+				border: 1px solid rgba(15, 23, 42, 0.12);
+				background: rgba(15, 23, 42, 0.06);
+				color: var(--text);
+				font-size: 12px;
+				padding: 6px 14px;
+				cursor: pointer;
+			}
+
+			.message-lock:hover:not([disabled]) {
+				background: rgba(37, 99, 235, 0.12);
+				color: var(--primary-dark);
+				border-color: rgba(37, 99, 235, 0.18);
+			}
+
+			.message-lock[disabled] {
+				opacity: 0.7;
+				cursor: default;
+			}
+
+			.message-form-card .toggle-line.form-field {
+				align-items: center;
+				flex: 0 1 180px;
+			}
+
+			.message-form-card .toggle-line.form-field label {
+				margin: 0;
+			}
+
+			@media (max-width: 1024px) {
+				body {
+					overflow: auto;
+				}
+				main {
+					padding: 12px 16px 16px;
+				}
+				.tab-bar {
+					align-self: stretch;
+					justify-content: space-between;
+					flex-wrap: wrap;
+				}
+				.tab-panels {
+					position: static;
+				}
+				.tab-panel {
+					position: static;
+					padding-right: 0;
+				}
+				.panel-grid {
+					grid-template-columns: minmax(0, 1fr);
+					overflow: visible;
+					padding-right: 0;
+				}
+				.panel-grid .span-2 {
+					grid-column: span 1;
+				}
+			}
+
+			.card {
+				background: var(--card);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+				padding: 18px 20px;
+				display: flex;
+				flex-direction: column;
+				gap: 16px;
+				min-height: 0;
+			}
+
+			label {
+				font-weight: 600;
+				font-size: 13px;
+				margin-bottom: 6px;
+				display: block;
+			}
+
+			input[type='text'],
+			input[type='password'],
+			textarea,
+			select {
+				width: 100%;
+				padding: 10px 12px;
+				border: 1px solid #d1d5db;
+				border-radius: 8px;
+				font-size: 14px;
+				transition: all 0.2s ease;
+			}
+
+			input:focus,
+			textarea:focus,
+			select:focus {
+				border-color: var(--primary);
+				box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+				outline: none;
+			}
+
+			textarea {
+				min-height: 96px;
+				resize: vertical;
+			}
+
+			button {
+				border: none;
+				border-radius: 10px;
+				padding: 10px 16px;
+				font-size: 14px;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.2s ease;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 6px;
+			}
+
+			button.primary {
+				background: var(--primary);
+				color: #fff;
+			}
+
+			button.primary:hover {
+				background: var(--primary-dark);
+			}
+
+			button.secondary {
+				background: #e2e8f0;
+				color: var(--text);
+			}
+
+			button.secondary:hover {
+				background: #d1d9e6;
+			}
+
+			button:disabled {
+				cursor: not-allowed;
+				opacity: 0.6;
+			}
+
+			@keyframes spin {
+				from {
+					transform: translateY(-50%) rotate(0deg);
+				}
+				to {
+					transform: translateY(-50%) rotate(360deg);
+				}
+			}
+
+			.grid-2 {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+				gap: 14px;
+			}
+
+			.toggle-line {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-size: 13px;
+				color: var(--muted);
+			}
+
+			.button-row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+			}
+
+			.status-line {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-size: 13px;
+				color: var(--muted);
+			}
+
+			.status-dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				background: #94a3b8;
+				box-shadow: 0 0 0 6px rgba(148, 163, 184, 0.25);
+			}
+
+			.status-dot.connected {
+				background: var(--success);
+				box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.3);
+			}
+
+			.token-box {
+				border: 1px dashed #cbd5f5;
+				border-radius: 10px;
+				padding: 12px;
+				font-size: 12px;
+				color: var(--muted);
+				background: #f8fafc;
+				min-height: 48px;
+			}
+
+			.scrollable {
+				overflow-y: auto;
+				padding-right: 4px;
+			}
+
+			.conversation-toolbar {
+				display: flex;
+				justify-content: space-between;
+				gap: 12px;
+				flex-wrap: wrap;
+			}
+
+			.conversation-toolbar__heading {
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+				min-width: 240px;
+			}
+
+			.conversation-toolbar__controls {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				align-items: flex-end;
+				min-width: 260px;
+			}
+
+			.filters {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+			}
+
+			.focus-controls {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				justify-content: flex-end;
+			}
+
+			.primary-indicator {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				font-size: 12px;
+				color: var(--primary-dark);
+				background: rgba(37, 99, 235, 0.12);
+				border-radius: 999px;
+				padding: 4px 10px;
+				width: fit-content;
+			}
+
+			.primary-indicator code {
+				font-family: 'Segoe UI Mono', 'Fira Code', monospace;
+				font-size: 12px;
+				color: var(--primary-dark);
+				background: rgba(255, 255, 255, 0.6);
+				padding: 2px 6px;
+				border-radius: 6px;
+			}
+
+			.conversation-body {
+				flex: 1;
+				min-height: 0;
+				max-height: 420px;
+				overflow-y: auto;
+				padding-right: 8px;
+			}
+
+			.message-group {
+				background: #ffffff;
+				border-radius: var(--radius);
+				padding: 14px;
+				margin-bottom: 12px;
+				box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+				transition:
+					box-shadow 0.2s ease,
+					filter 0.2s ease,
+					opacity 0.2s ease;
+			}
+
+			.message-group.primary {
+				box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.36);
+				background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(236, 72, 153, 0.06));
+			}
+
+			.message-group.muted {
+				opacity: 0.45;
+				filter: saturate(0.45);
+			}
+
+			.message-group__header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				gap: 12px;
+				margin-bottom: 10px;
+			}
+
+			.message-group__header h3 {
+				margin: 0;
+				font-size: 16px;
+			}
+
+			.message-group__header span {
+				font-size: 13px;
+				color: var(--muted);
+			}
+
+			.message-list {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+
+			.conversation-card {
+				border: 1px solid rgba(15, 23, 42, 0.08);
+				border-radius: 10px;
+				padding: 12px;
+				background: #ffffff;
+				transition:
+					transform 0.2s ease,
+					box-shadow 0.2s ease;
+			}
+
+			.conversation-card:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+			}
+
+			.conversation-card:focus-visible {
+				outline: 2px solid rgba(37, 99, 235, 0.65);
+				outline-offset: 2px;
+			}
+
+			.conversation-card.is-clickable {
+				cursor: pointer;
+			}
+
+			.conversation-card__header {
+				display: flex;
+				justify-content: space-between;
+				font-size: 12px;
+				color: var(--muted);
+			}
+
+			.conversation-card__preview {
+				margin: 8px 0;
+				font-size: 14px;
+				color: var(--text);
+				background: transparent;
+				border: none;
+				padding: 0;
+				cursor: pointer;
+				text-align: left;
+				line-height: 1.55;
+			}
+
+			.conversation-card__preview:hover:not([disabled]) {
+				color: var(--primary-dark);
+			}
+
+			.conversation-card__preview[disabled] {
+				cursor: not-allowed;
+				opacity: 0.6;
+			}
+
+			.conversation-card__footer {
+				display: flex;
+				justify-content: flex-end;
+			}
+
+			.conversation-card--sent {
+				border-color: rgba(34, 197, 94, 0.45);
+			}
+
+			.conversation-card--error {
+				border-color: rgba(248, 113, 113, 0.55);
+			}
+
+			.message-group__actions {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+			}
+
+			.message-focus {
+				border-radius: 999px;
+				border: 1px solid rgba(37, 99, 235, 0.3);
+				background: rgba(37, 99, 235, 0.08);
+				color: var(--primary-dark);
+				font-size: 12px;
+				padding: 6px 14px;
+				cursor: pointer;
+			}
+
+			.message-focus:hover:not([disabled]) {
+				background: rgba(37, 99, 235, 0.16);
+			}
+
+			.message-focus[disabled] {
+				opacity: 0.8;
+				cursor: default;
+			}
+
+			.link-button {
+				border: none;
+				background: transparent;
+				color: var(--primary-dark);
+				cursor: pointer;
+				padding: 0;
+				font-size: 13px;
+				font-weight: 600;
+			}
+
+			.link-button:hover {
+				text-decoration: underline;
+			}
+
+			.link-button[disabled] {
+				opacity: 0.4;
+				pointer-events: none;
+				text-decoration: none;
+			}
+
+			button.is-loading {
+				position: relative;
+				opacity: 0.75;
+				cursor: progress;
+			}
+
+			@media (max-width: 1024px) {
+				.conversation-toolbar__controls {
+					align-items: flex-start;
+					width: 100%;
+				}
+
+				.focus-controls {
+					justify-content: flex-start;
+				}
+			}
+
+			.dialog-backdrop {
+				position: fixed;
+				inset: 0;
+				background: rgba(15, 23, 42, 0.55);
+				display: none;
+				justify-content: center;
+				align-items: center;
+				padding: 24px;
+				z-index: 100;
+			}
+
+			.dialog-backdrop[hidden] {
+				display: none;
+			}
+
+			.dialog-backdrop:not([hidden]) {
+				display: flex;
+			}
+
+			.dialog-panel {
+				width: min(720px, 90vw);
+				background: #ffffff;
+				border-radius: 18px;
+				box-shadow: var(--shadow);
+				display: flex;
+				flex-direction: column;
+				max-height: 85vh;
+			}
+
+			.dialog-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: flex-start;
+				gap: 16px;
+				padding: 24px 24px 12px;
+			}
+
+			.dialog-header h3 {
+				margin: 0;
+			}
+
+			.dialog-meta {
+				font-size: 13px;
+				color: var(--muted);
+				margin-top: 6px;
+			}
+
+			.dialog-close {
+				border: none;
+				background: #f1f5f9;
+				border-radius: 50%;
+				width: 32px;
+				height: 32px;
+				font-size: 18px;
+				cursor: pointer;
+			}
+
+			.dialog-close:hover {
+				background: #e2e8f0;
+			}
+
+			.dialog-body {
+				padding: 0 24px 24px;
+			}
+
+			.dialog-body pre {
+				margin: 0;
+				background: #0f172a;
+				color: #e2e8f0;
+				border-radius: 12px;
+				padding: 16px;
+				max-height: 50vh;
+				overflow: auto;
+			}
+
+			.markdown-body {
+				max-height: 50vh;
+				overflow: auto;
+				padding: 0 24px 24px;
+				font-size: 14px;
+				line-height: 1.6;
+			}
+
+			.markdown-body h1,
+			.markdown-body h2,
+			.markdown-body h3 {
+				margin-top: 1.2em;
+			}
+
+			.markdown-body pre {
+				background: #0f172a;
+				color: #e2e8f0;
+				padding: 12px;
+				border-radius: 10px;
+				overflow: auto;
+			}
+
+			.markdown-body code {
+				background: rgba(15, 23, 42, 0.08);
+				padding: 2px 4px;
+				border-radius: 4px;
+				font-family: 'Fira Code', 'Segoe UI Mono', monospace;
+			}
+
+			.metrics {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+				gap: 12px;
+			}
+
+			.metric-card {
+				background: #f8fafc;
+				border-radius: 10px;
+				padding: 12px;
+			}
+
+			.metric-card h4 {
+				margin: 0 0 8px;
+				font-size: 13px;
+				color: var(--muted);
+			}
+
+			.metric-card strong {
+				font-size: 20px;
+				font-weight: 600;
+				color: var(--text);
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>OpenWebUI Socket.IO 调试面板</h1>
+			<p>通过顶部标签在连接配置、消息调试与监控面板间切换，所有核心功能均可在单屏完成。</p>
+		</header>
+		<main>
+			<div class="tab-bar" role="tablist">
+				<button type="button" class="tab-button active" data-tab="connection" aria-selected="true">
+					连接与订阅
+				</button>
+				<button type="button" class="tab-button" data-tab="messaging" aria-selected="false">
+					消息调试
+				</button>
+				<button type="button" class="tab-button" data-tab="tasks" aria-selected="false">
+					任务系统
+				</button>
+				<button type="button" class="tab-button" data-tab="monitor" aria-selected="false">
+					监控面板
+				</button>
+			</div>
+			<div class="tab-panels">
+				<section
+					class="tab-panel active"
+					data-tab-panel="connection"
+					role="tabpanel"
+					aria-label="连接与订阅"
+				>
+					<div class="panel-grid">
+						<section class="card">
+							<h2>连接与登录</h2>
+							<div class="grid-2">
+								<div>
+									<label for="serverUrl">服务器地址</label>
+									<input id="serverUrl" type="text" placeholder="http://localhost:8080" />
+								</div>
+								<div>
+									<label for="loginEmail">账号邮箱</label>
+									<input id="loginEmail" type="text" placeholder="saiter2306001@163.com" />
+								</div>
+							</div>
+							<div class="grid-2">
+								<div>
+									<label for="loginPassword">登录密码</label>
+									<input id="loginPassword" type="password" placeholder="hsai1234" />
+								</div>
+								<div>
+									<label for="userId">用户 ID（登录成功自动同步）</label>
+									<input id="userId" type="text" placeholder="登录后自动填充" readonly />
+								</div>
+							</div>
+							<div class="toggle-line">
+								<input id="autoLogin" type="checkbox" />
+								<label for="autoLogin">页面加载后自动登录</label>
+							</div>
+							<div class="toggle-line">
+								<input id="autoConnect" type="checkbox" />
+								<label for="autoConnect">登录成功后自动连接 Socket</label>
+							</div>
+							<div class="button-row">
+								<button id="loginBtn" class="primary">登录</button>
+								<button id="refreshTokenBtn" class="secondary">刷新 Token</button>
+								<button id="logoutBtn" class="secondary" disabled>退出登录</button>
+							</div>
+							<div class="button-row">
+								<button id="connectBtn" class="primary">连接 Socket</button>
+								<button id="disconnectBtn" class="secondary" disabled>断开连接</button>
+								<button id="clearStorageBtn" class="secondary">清空本地缓存</button>
+							</div>
+							<div class="status-line" aria-live="polite">
+								<span id="connectionDot" class="status-dot"></span>
+								<span id="connectionStatus">未连接</span>
+							</div>
+							<div class="grid-2">
+								<div>
+									<label>Socket ID</label>
+									<input id="socketId" type="text" placeholder="连接后自动显示" readonly />
+								</div>
+								<div>
+									<label>当前 Token 信息</label>
+									<div id="tokenInfo" class="token-box">尚未登录</div>
+								</div>
+							</div>
+							<div class="button-row">
+								<button id="importConfigBtn" class="secondary">导入配置</button>
+								<button id="exportConfigBtn" class="secondary">导出配置</button>
+								<input
+									id="configFileInput"
+									type="file"
+									accept="application/json"
+									style="display: none"
+								/>
+							</div>
+						</section>
+						<section class="card">
+							<h2>事件订阅</h2>
+							<div id="subscriptionList" class="scrollable" style="max-height: 220px"></div>
+							<div class="button-row">
+								<button id="selectAllSubscriptionsBtn" class="secondary">全选</button>
+								<button id="clearSubscriptionsBtn" class="secondary">全不选</button>
+							</div>
+							<div>
+								<strong>Engine.IO 心跳</strong>
+								<p id="pingInfo" style="margin: 0; color: var(--muted); font-size: 12px">
+									等待连接...
+								</p>
+							</div>
+						</section>
+					</div>
+				</section>
+				<section
+					class="tab-panel"
+					data-tab-panel="messaging"
+					role="tabpanel"
+					aria-label="消息调试"
+					hidden
+				>
+					<div class="panel-grid messaging-grid">
+						<section class="card message-form-card">
+							<h2>消息发送</h2>
+							<div class="message-form-body">
+								<div class="message-form-group compact">
+									<div class="form-field">
+										<label for="messageType">消息类型</label>
+										<select id="messageType">
+											<option value="chat">chat</option>
+											<option value="welcome">welcome</option>
+											<option value="workflow_trigger">workflow_trigger</option>
+											<option value="hsai_status">hsai_status</option>
+										</select>
+									</div>
+									<div class="form-field">
+										<label for="entryType">入口类型</label>
+										<input id="entryType" type="text" placeholder="chat / company_info" />
+									</div>
+								</div>
+								<div class="message-form-group compact">
+									<div class="form-field">
+										<label for="sessionId">Session ID</label>
+										<input id="sessionId" type="text" placeholder="留空自动生成" />
+									</div>
+									<div class="form-field">
+										<label for="taskId">任务 ID（可选）</label>
+										<input id="taskId" type="text" placeholder="task_xxx" />
+									</div>
+								</div>
+								<div>
+									<label for="messageContent">消息正文</label>
+									<textarea id="messageContent" placeholder="请输入发送内容"></textarea>
+								</div>
+								<div>
+									<label for="metadataInput">附加元数据（JSON）</label>
+									<textarea id="metadataInput" placeholder='{"test_mode": true}'></textarea>
+								</div>
+							</div>
+							<div class="message-form-footer">
+								<div class="button-row">
+									<button id="sendMessageBtn" class="primary">发送消息</button>
+									<button id="sendWelcomeBtn" class="secondary">发送欢迎语</button>
+									<button id="sendStatusBtn" class="secondary">查询系统状态</button>
+								</div>
+								<div>
+									<strong>模板快捷填充</strong>
+									<div
+										id="templateList"
+										class="scrollable"
+										style="font-size: 13px; color: var(--muted)"
+									></div>
+								</div>
+							</div>
+						</section>
+						<section class="card message-log-card">
+							<div class="conversation-toolbar">
+								<div class="conversation-toolbar__heading">
+									<div>
+										<h2 style="margin: 0">会话记录</h2>
+										<small style="color: var(--muted)">按会话分组，通过弹窗查看原始 JSON。</small>
+									</div>
+									<div id="primarySessionIndicator" class="primary-indicator" hidden>
+										当前主会话：<code id="primarySessionLabel"></code>
+									</div>
+								</div>
+								<div class="conversation-toolbar__controls">
+									<div class="filters">
+										<select id="conversationFilter">
+											<option value="all">全部会话</option>
+										</select>
+										<select id="eventFilter">
+											<option value="all">全部事件</option>
+											<option value="sent">仅发送</option>
+											<option value="hsai_response">仅响应</option>
+											<option value="hsai_error">仅错误</option>
+										</select>
+										<button id="clearMessagesBtn" class="secondary">清空记录</button>
+										<button id="exportLogsBtn" class="secondary">导出记录</button>
+									</div>
+									<div class="focus-controls">
+										<button id="focusSessionBtn" class="secondary message-focus" type="button">
+											聚焦输入 Session
+										</button>
+										<button id="focusLatestBtn" class="secondary message-focus" type="button">
+											聚焦最新会话
+										</button>
+										<button id="clearFocusBtn" class="link-button" type="button">取消聚焦</button>
+									</div>
+								</div>
+							</div>
+							<div id="conversationContainer" class="conversation-body"></div>
+						</section>
+					</div>
+				</section>
+				<section
+					class="tab-panel"
+					data-tab-panel="tasks"
+					role="tabpanel"
+					aria-label="任务系统"
+					hidden
+				>
+					<div class="tasks-grid">
+						<div class="task-column task-column--aside">
+							<section class="card">
+								<div class="task-section-header">
+									<div>
+										<h2>操作中心</h2>
+										<p class="card-subtitle">支持初始化主线、控制循环状态并与消息调试联动。</p>
+									</div>
+								</div>
+								<div class="task-hint" aria-live="polite">
+									<span>当前选中任务：</span>
+									<strong id="currentTaskIndicator">未选择</strong>
+									<div class="inline-actions">
+										<button id="fillTaskIntoMessageBtn" class="link-button" type="button">
+											填充到消息调试
+										</button>
+										<button id="clearTaskSelectionBtn" class="link-button" type="button">
+											清空选中
+										</button>
+									</div>
+								</div>
+								<div class="task-action-group">
+									<p class="task-action-title">主线任务</p>
+									<div class="task-action-buttons">
+										<button id="seedMainTasksBtn" class="secondary" type="button">
+											创建默认主线任务
+										</button>
+										<button id="completeMainTaskBtn" type="button">标记主线完成</button>
+										<button id="resetMainTaskBtn" type="button">重置为未开始</button>
+									</div>
+								</div>
+								<div class="task-action-group">
+									<p class="task-action-title">循环任务状态</p>
+									<div class="task-action-buttons">
+										<button id="activateRecurringBtn" type="button">启动循环任务</button>
+										<button id="pauseRecurringBtn" type="button">暂停循环任务</button>
+										<button id="resumeRecurringBtn" type="button">恢复循环任务</button>
+									</div>
+									<div class="task-form-grid">
+										<div class="task-inline">
+											<label for="recurringActivateNextRun">计划下次执行</label>
+											<input
+												id="recurringActivateNextRun"
+												type="datetime-local"
+												placeholder="可选，ISO 时间"
+											/>
+										</div>
+										<div class="task-inline">
+											<label for="recurringActivateMessage">启动备注</label>
+											<input
+												id="recurringActivateMessage"
+												type="text"
+												placeholder="例如：重启每日投放"
+											/>
+										</div>
+										<div class="task-inline">
+											<label for="recurringPauseReason">暂停原因</label>
+											<input
+												id="recurringPauseReason"
+												type="text"
+												placeholder="例如：等待素材补充"
+											/>
+										</div>
+										<div class="task-inline">
+											<label for="recurringResumeMessage">恢复备注</label>
+											<input
+												id="recurringResumeMessage"
+												type="text"
+												placeholder="可选，写入状态日志"
+											/>
+										</div>
+									</div>
+								</div>
+								<div class="task-action-group">
+									<p class="task-action-title">循环任务交接</p>
+									<div class="task-action-buttons">
+										<button id="handoverRecurringBtn" type="button">交接给外部</button>
+									</div>
+									<div class="task-form-grid">
+										<div class="task-inline">
+											<label for="recurringHandoverController">外部控制方</label>
+											<input
+												id="recurringHandoverController"
+												type="text"
+												placeholder="例如：agency_a"
+											/>
+										</div>
+										<div class="task-inline">
+											<label for="recurringHandoverNote">交接备注</label>
+											<textarea
+												id="recurringHandoverNote"
+												placeholder="记录交接原因或补充说明"
+											></textarea>
+										</div>
+									</div>
+								</div>
+								<div class="task-action-group">
+									<p class="task-action-title">同步外部状态</p>
+									<div class="task-action-buttons">
+										<button id="syncRecurringBtn" type="button">同步状态</button>
+									</div>
+									<div class="task-form-grid">
+										<div class="task-inline">
+											<label for="recurringSyncState">循环任务状态</label>
+											<select id="recurringSyncState">
+												<option value="">请选择状态</option>
+												<option value="idle">idle</option>
+												<option value="active">active</option>
+												<option value="paused">paused</option>
+												<option value="external_controlled">external_controlled</option>
+											</select>
+										</div>
+										<div class="task-inline">
+											<label for="recurringSyncNextRun">下一次执行</label>
+											<input id="recurringSyncNextRun" type="datetime-local" placeholder="可选" />
+										</div>
+										<div class="task-inline">
+											<label for="recurringSyncLastRun">最近执行</label>
+											<input id="recurringSyncLastRun" type="datetime-local" placeholder="可选" />
+										</div>
+										<div class="task-inline">
+											<label for="recurringSyncMessage">同步备注</label>
+											<textarea id="recurringSyncMessage" placeholder="记录外部状态说明"></textarea>
+										</div>
+									</div>
+								</div>
+								<div class="task-action-group">
+									<p class="task-action-title">调度与子任务</p>
+									<div class="task-inline">
+										<label for="taskSchedulerDate">模拟调度日期</label>
+										<div class="task-inline-row">
+											<input id="taskSchedulerDate" type="date" />
+											<button id="simulateSchedulerBtn" class="secondary" type="button">
+												生成当日子任务
+											</button>
+										</div>
+									</div>
+									<div class="task-inline">
+										<label for="taskSubtaskList">子任务列表</label>
+										<div id="taskSubtaskList" class="task-list" aria-live="polite">
+											<p class="task-empty">暂无子任务。</p>
+										</div>
+										<div class="task-action-buttons">
+											<button id="replaySubtaskBtn" class="secondary" type="button">
+												回放选中子任务
+											</button>
+										</div>
+									</div>
+								</div>
+								<div id="taskOpsResult" class="task-ops-result" data-level="info">
+									任务操作日志将显示在此。
+								</div>
+							</section>
+						</div>
+
+						<div class="task-column task-column--main">
+							<section class="card">
+								<div class="task-section-header">
+									<div>
+										<h2>项目概览</h2>
+										<p class="card-subtitle">同步企业与项目基础信息，实时掌握任务进展。</p>
+									</div>
+									<button id="refreshTasksBtn" class="secondary" type="button">刷新概览</button>
+								</div>
+								<div class="task-context-grid" aria-live="polite">
+									<div>
+										<span>企业名称</span>
+										<strong id="taskCompanyName">-</strong>
+									</div>
+									<div>
+										<span>当前项目</span>
+										<strong id="taskProjectName">-</strong>
+									</div>
+									<div>
+										<span>蓝图版本</span>
+										<strong id="taskBlueprintVersion">-</strong>
+									</div>
+									<div>
+										<span>蓝图状态</span>
+										<strong id="taskBlueprintState">-</strong>
+									</div>
+									<div>
+										<span>蓝图更新时间</span>
+										<strong id="taskBlueprintUpdatedAt">-</strong>
+									</div>
+									<div>
+										<span>蓝图计划结束</span>
+										<strong id="taskBlueprintPlannedEnd">-</strong>
+									</div>
+									<div>
+										<span>主线完成度</span>
+										<strong id="taskMainProgress">-</strong>
+									</div>
+									<div>
+										<span>循环任务</span>
+										<strong id="taskRecurringStatus">-</strong>
+									</div>
+								</div>
+							</section>
+
+							<section class="card">
+								<div class="task-section-header">
+									<div>
+										<h2>任务列表</h2>
+										<p class="card-subtitle">列出主线、循环与子任务，支持手动筛选。</p>
+									</div>
+								</div>
+								<div class="task-status-grid">
+									<div class="task-inline">
+										<label for="taskMainSelect">主线任务</label>
+										<select id="taskMainSelect">
+											<option value="">尚未选择</option>
+										</select>
+									</div>
+									<div class="task-inline">
+										<label for="taskRecurringSelect">循环任务</label>
+										<select id="taskRecurringSelect">
+											<option value="">尚未选择</option>
+										</select>
+									</div>
+								</div>
+								<div id="taskMainList" class="task-list" aria-live="polite">
+									<p class="task-empty">尚未加载任务，请先刷新概览。</p>
+								</div>
+							</section>
+							<section class="card">
+								<div class="task-section-header">
+									<div>
+										<h2>循环运行概览</h2>
+										<p class="card-subtitle">查看循环任务条目与蓝图关联，辅助分析执行链路。</p>
+									</div>
+								</div>
+								<div class="task-supplement-grid">
+									<div>
+										<p class="task-subheading">循环运行项</p>
+										<div id="taskRecurringItems" class="task-aux-list" aria-live="polite">
+											<p class="task-empty">尚未加载循环运行项。</p>
+										</div>
+									</div>
+									<div>
+										<p class="task-subheading">蓝图关联</p>
+										<div id="taskBlueprintLinks" class="task-aux-list" aria-live="polite">
+											<p class="task-empty">暂无蓝图关联。</p>
+										</div>
+									</div>
+								</div>
+							</section>
+							<section class="card">
+								<div class="task-section-header">
+									<div>
+										<h2>循环状态日志</h2>
+										<p class="card-subtitle">倒序展示最近 20 条状态/调度记录。</p>
+									</div>
+									<button id="refreshRecurringLogsBtn" class="secondary" type="button">
+										刷新日志
+									</button>
+								</div>
+								<div id="taskRecurringLogs" class="task-log-list" aria-live="polite">
+									<p class="task-empty">尚未加载循环状态日志。</p>
+								</div>
+							</section>
+
+							<section class="card">
+								<div class="task-section-header">
+									<div>
+										<h2>任务事件</h2>
+										<p class="card-subtitle">监听 WebSocket 推送的任务状态、进度及回放消息。</p>
+									</div>
+									<span id="taskEventCounter" class="task-event-counter" aria-live="polite">0</span>
+								</div>
+								<div class="task-event-toolbar">
+									<label class="task-inline" for="taskEventFilter">
+										<span>事件类型</span>
+										<select id="taskEventFilter">
+											<option value="all">全部事件</option>
+											<option value="status">状态变更</option>
+											<option value="progress">进度更新</option>
+											<option value="replay">回放记录</option>
+										</select>
+									</label>
+									<label class="task-inline" for="taskSessionOnlyToggle">
+										<span>仅当前会话</span>
+										<input id="taskSessionOnlyToggle" type="checkbox" />
+									</label>
+									<button id="clearTaskEventsBtn" class="secondary" type="button">清空事件</button>
+								</div>
+								<div id="taskEventTimeline" class="task-event-timeline" aria-live="polite">
+									<p class="task-empty">尚未收到任务事件。</p>
+								</div>
+							</section>
+						</div>
+					</div>
+				</section>
+				<section
+					class="tab-panel"
+					data-tab-panel="monitor"
+					role="tabpanel"
+					aria-label="监控面板"
+					hidden
+				>
+					<div class="panel-grid">
+						<section class="card">
+							<h2>指标统计</h2>
+							<div class="metrics">
+								<div class="metric-card">
+									<h4>发送次数</h4>
+									<strong id="statSent">0</strong>
+								</div>
+								<div class="metric-card">
+									<h4>接收次数</h4>
+									<strong id="statReceived">0</strong>
+								</div>
+								<div class="metric-card">
+									<h4>错误次数</h4>
+									<strong id="statErrors">0</strong>
+								</div>
+								<div class="metric-card">
+									<h4>平均往返 (ms)</h4>
+									<strong id="statAvgLatency">-</strong>
+								</div>
+								<div class="metric-card">
+									<h4>最小 / 最大 (ms)</h4>
+									<strong id="statLatencyRange">-</strong>
+								</div>
+								<div class="metric-card">
+									<h4>最近往返 (ms)</h4>
+									<strong id="statLatestLatency">-</strong>
+								</div>
+							</div>
+							<div>
+								<strong>最近事件</strong>
+								<div
+									id="recentEvents"
+									class="scrollable"
+									style="max-height: 140px; font-size: 12px; color: var(--muted)"
+								></div>
+							</div>
+						</section>
+						<section class="card">
+							<h2>请求重放队列</h2>
+							<div id="replayContainer" class="scrollable" style="max-height: 240px"></div>
+						</section>
+					</div>
+				</section>
+			</div>
+			<div id="markdownModal" class="dialog-backdrop" hidden>
+				<div
+					class="dialog-panel"
+					role="dialog"
+					aria-modal="true"
+					aria-labelledby="markdownModalTitle"
+				>
+					<div class="dialog-header">
+						<div>
+							<h3 id="markdownModalTitle">对话内容</h3>
+							<p id="markdownModalMeta" class="dialog-meta"></p>
+						</div>
+						<button id="markdownModalClose" class="dialog-close" aria-label="关闭">×</button>
+					</div>
+					<div id="markdownModalBody" class="markdown-body"></div>
+				</div>
+			</div>
+			<div id="messageModal" class="dialog-backdrop" hidden>
+				<div
+					class="dialog-panel"
+					role="dialog"
+					aria-modal="true"
+					aria-labelledby="messageModalTitle"
+				>
+					<div class="dialog-header">
+						<div>
+							<h3 id="messageModalTitle">消息详情</h3>
+							<p id="messageModalMeta" class="dialog-meta"></p>
+						</div>
+						<button id="messageModalClose" class="dialog-close" aria-label="关闭">×</button>
+					</div>
+					<div class="dialog-body">
+						<pre id="messageModalBody"></pre>
+					</div>
+				</div>
+			</div>
+		</main>
+		<script defer src="static/ws-tester.js"></script>
+		<script>
+			document.addEventListener('DOMContentLoaded', () => {
+				const TAB_STORAGE_KEY = 'openwebui_ws_tester_active_tab';
+				const buttons = Array.from(document.querySelectorAll('[data-tab]'));
+				const panels = Array.from(document.querySelectorAll('[data-tab-panel]'));
+
+				if (!buttons.length || !panels.length) {
+					return;
+				}
+
+				const panelKeys = new Set(panels.map((panel) => panel.dataset.tabPanel));
+				const stored = localStorage.getItem(TAB_STORAGE_KEY);
+				const fallback = buttons[0].dataset.tab;
+				const initial = stored && panelKeys.has(stored) ? stored : fallback;
+
+				const activateTab = (tab) => {
+					buttons.forEach((btn) => {
+						const active = btn.dataset.tab === tab;
+						btn.classList.toggle('active', active);
+						btn.setAttribute('aria-selected', active ? 'true' : 'false');
+					});
+
+					panels.forEach((panel) => {
+						const active = panel.dataset.tabPanel === tab;
+						panel.classList.toggle('active', active);
+						if (active) {
+							panel.removeAttribute('hidden');
+						} else {
+							panel.setAttribute('hidden', '');
+						}
+					});
+				};
+
+				activateTab(initial);
+
+				buttons.forEach((btn) => {
+					btn.addEventListener('click', () => {
+						const tab = btn.dataset.tab;
+						if (!tab || btn.classList.contains('active')) {
+							return;
+						}
+						activateTab(tab);
+						localStorage.setItem(TAB_STORAGE_KEY, tab);
+					});
+				});
+			});
+		</script>
+	</body>
 </html>

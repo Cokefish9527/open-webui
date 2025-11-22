@@ -1,600 +1,536 @@
 {
-  "name": "4videotext2videojson_agent",
-  "nodes": [
-    {
-      "parameters": {
-        "workflowInputs": {
-          "values": [
-            {
-              "name": "text"
-            },
-            {
-              "name": "product_name"
-            },
-            {
-              "name": "hashtags"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
-      "position": [
-        -1248,
-        64
-      ],
-      "id": "62095b32-c5d0-4c49-8af2-045f70294bdd",
-      "name": "When Executed by Another Workflow"
-    },
-    {
-      "parameters": {
-        "content": "## 视频内容和标签的生成，最终视频发布会用到",
-        "height": 80,
-        "width": 360
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -1296,
-        944
-      ],
-      "id": "557c1264-b87c-4479-b7bc-2864b6e5f277",
-      "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "content": "# 生成10个爆款脚本拍摄素材json",
-        "height": 1372,
-        "width": 1960,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -1376,
-        -400
-      ],
-      "id": "eaad5456-6507-483b-bced-f465e3e06775",
-      "name": "Sticky Note3"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# 爆款文案\n{{ $json.data[3]['召回的原始素材'] }}\n# 产品信息\n{{ $json.data[0].product.toJsonString() }}\n# 公司信息\n{{ $json.data[1].business_message.toJsonString() }}\n# 目标人群\n{{ $json.data[2].object.toJsonString() }}\n# 爆款文案结构\n{{ $json.data[4]['结构'] }}",
-        "options": {
-          "systemMessage": "=# 角色 \n你爆款文案生成专家，快速分析用户提供的信息。你充分理解tiktok、Instagram、Facebook、YouTube、Twitter (X)各大平台的流量密码，能迅速抓住人设/产品特色和优点/文案结构/引流方式，结合目标受众的需求和喜好，生成高质量的各大平台种草内容的标题和文案。最终生成一个版本的新文案。\n# 目标\n1. 结合企业资料里的{目标人群}，同时借鉴爆款文案，生成新文案要有非常吸引人的标题，标题的目的是让更多目标人群愿意点击打开这条视频内容\n2. 文案整体结构要与原文案结构相同，将{企业信息}、{企业理念}、{产品特点}，金句亮点与原有的文案结构结合在一起，为{目标人群}生成新的文案。\n\n**限制\n1.新的文案必须1:1的逐句替换原文案的内容。其中只需要替换{企业信息}、{企业理念}、{产品特点} ，中与本文案相关的部分内容\n2.原文案中与{企业信息}、{企业理念}、{产品特点}，{产品品类}无关的信息，在不影响整体文案内容的情况下尽量保留\n3.不能出现任何线上平台的名称 如 TIKTOK YouTube等。\n\n# 输出的形式\n1.必须先新文案标题、文案内容和话题\n2.不需要输出任何以上以上要求以外的内容，如：原文案拆解、思考过程、创作逻辑等。\n\n** 注意事项\n\n顺序执行: 必须严格按照执行步骤的顺序进行，不得跳过任何步骤。\n检查点: 系统将自动检查每个步骤的完成情况，并在继续前确保所有先决条件均已满足。\n\n**执行步骤：\n\n1. 调取文案后，请调{目标人群}和{企业信息}的内容进行下一步操作。\n2. 请使用第一人称进行1:1的逐句内容替换，根据我的目标对{企业信息} 、{企业理念}、{产品特点}， {产品品类}进行1:1的替换。不需要对其他不影响核心意思的内容进行替换，在不影响内容逻辑性的情况下，尽量小的改动原文中的结构和金句。如果原句中有使用成语或者文言文，替换后的文案应使用意思相近的成语或文言文进行替换。\n\n3. 你要为我制作新的标题，根据原文案的标题为我1:1的替换内容。\n\n# 规则\n- 爆款文案字数在140个字到240个字之间,使用中文\n- 爆款文案赋值给content\n- 标签赋值给tags\n- 标签使用英文小写,使用#分割\n# 格式\n{\n\"content\":\"\",\n\"tags\":\"\"\n}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2,
-      "position": [
-        192,
-        64
-      ],
-      "id": "760772fd-7432-4b72-8bc0-fe23f7487f22",
-      "name": "AI Agent4",
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsonSchemaExample": "{\n\"content\":\"\",\n\"tags\":\"\"\n\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        336,
-        288
-      ],
-      "id": "28d80b11-9e19-49ea-96a0-e26a985fd65d",
-      "name": "Structured Output Parser4",
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "content": "## 设计思路\n- 通过上游的爆款素材，进行变种，变出10个不同的素材，然后提供给下游使用\n## 实现功能\n- 拿到上游的爆款素材，生成10个拍摄脚本，然后返回上游让用户确认一个\n## 实现原理\n- 使用ai能力结合素材生成10个不同的文案，完成爆款拍摄脚本的制作",
-        "height": 300,
-        "width": 760,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -704,
-        1104
-      ],
-      "id": "100d4dec-22db-46ce-8671-15a5ceb4b10c",
-      "name": "Sticky Note7"
-    },
-    {
-      "parameters": {
-        "model": "google/gemini-2.5-flash-lite",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        208,
-        288
-      ],
-      "id": "690d2910-7f88-4271-8bb3-4f2ed04175d0",
-      "name": "OpenRouter Chat Model",
-      "credentials": {
-        "openRouterApi": {
-          "id": "oigW3KLm0OZq9rWp",
-          "name": "OpenRouter account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "select * from public.hsai_business_key_messages  where (message_type like '%企业%' or message_type like '%公司%')and business_name ='{{ $json.business_name }}'; ",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -1024,
-        -128
-      ],
-      "id": "ef9b6086-98d5-4227-aaac-b4b42fb2161d",
-      "name": "企业信息",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "select * from public.hsai_business_key_messages  where message_type like '%产品%' and business_name ='{{ $json.business_name }}'; ",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -1024,
-        -320
-      ],
-      "id": "e7fe106b-1116-4c51-bccb-676d03d77abb",
-      "name": "产品信息",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "select * from public.hsai_business_key_messages  where (message_type like '%客户%' or message_type like '%画像%')and business_name ='{{ $json.business_name }}'; ",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -1024,
-        64
-      ],
-      "id": "e95e776f-a093-495b-a478-2e71a254033b",
-      "name": "目标人群",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "object",
-        "include": "specifiedFields",
-        "fieldsToInclude": "data_info",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        -736,
-        64
-      ],
-      "id": "3475adb6-813a-4f4d-822c-df5da450e677",
-      "name": "Aggregate2"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "product",
-        "include": "specifiedFields",
-        "fieldsToInclude": "data_info",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        -736,
-        -320
-      ],
-      "id": "c1f26cb7-3835-4e13-85aa-199c6297d4b5",
-      "name": "Aggregate1"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "business_message",
-        "include": "specifiedFields",
-        "fieldsToInclude": "data_info",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        -736,
-        -128
-      ],
-      "id": "d8dc4df8-08db-472a-81f2-7c224c119bc1",
-      "name": "Aggregate"
-    },
-    {
-      "parameters": {
-        "numberInputs": 5
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        -240,
-        16
-      ],
-      "id": "7a55f925-61dc-4ebb-addd-ca28eec0c10d",
-      "name": "Merge"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c5c4c1ee-bc1c-4714-b2df-5b8a53008360",
-              "name": "召回的原始素材",
-              "value": "={{ $json.text }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -736,
-        256
-      ],
-      "id": "c9ed7e6d-6fca-4371-89b9-dff368a7e43a",
-      "name": "原始文案素材"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c5c4c1ee-bc1c-4714-b2df-5b8a53008360",
-              "name": "召回的原始素材",
-              "value": "={{ $json.text }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1024,
-        560
-      ],
-      "id": "3b72eecf-c975-47ce-b074-3ea4d9544920",
-      "name": "原始文案素材1"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# 需要拆解的文案\n {{ $json['召回的原始素材'] }}",
-        "messages": {
-          "messageValues": [
-            {
-              "message": "=# 目标\n对需要拆解的文案进行结构解析，识别出来该文案的结构特征\n\n# 风格\n使用简练的中文大白话回答，字数控制在30个字左右，只提炼核心点，不要过多的废话\n\n# 规则\n只输出结构，其他无关紧要的话，比如好的，马上这类词不要出现"
-            }
-          ]
-        },
-        "batching": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
-      "position": [
-        -800,
-        560
-      ],
-      "id": "9ea8e769-84c4-44ab-a2b5-b531148dff57",
-      "name": "Basic LLM Chain"
-    },
-    {
-      "parameters": {
-        "model": "google/gemini-2.5-flash",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        -736,
-        784
-      ],
-      "id": "e748e7fc-66b2-48e6-a845-73a6b0597d4a",
-      "name": "OpenRouter Chat Model1",
-      "credentials": {
-        "openRouterApi": {
-          "id": "rxUfyA7xdhW6JG8T",
-          "name": "OpenRouter account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "f4305794-876f-4727-8cb2-e71693280762",
-              "name": "结构",
-              "value": "={{ $json.text }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -448,
-        560
-      ],
-      "id": "238d26a4-9af8-4032-a7e8-73bd9bfbdcd2",
-      "name": "Edit Fields"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        -32,
-        16
-      ],
-      "id": "d119d032-7ae3-435a-8a56-10410c4db344",
-      "name": "Aggregate3"
-    }
-  ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "text": "Outfits in modern Chinese style ‒ 贰 肆 陆 捌。",
-          "product_name": "蓝牙耳机",
-          "hashtags": "#BluetoothEarbuds #WirelessAudio #Earphones"
-        }
-      }
-    ]
-  },
-  "connections": {
-    "When Executed by Another Workflow": {
-      "main": [
-        [
-          {
-            "node": "企业信息",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "产品信息",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "目标人群",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "原始文案素材",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "原始文案素材1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Structured Output Parser4": {
-      "ai_outputParser": [
-        []
-      ]
-    },
-    "AI Agent4": {
-      "main": [
-        []
-      ]
-    },
-    "OpenRouter Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent4",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "企业信息": {
-      "main": [
-        [
-          {
-            "node": "Aggregate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "产品信息": {
-      "main": [
-        [
-          {
-            "node": "Aggregate1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "目标人群": {
-      "main": [
-        [
-          {
-            "node": "Aggregate2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate2": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 2
-          }
-        ]
-      ]
-    },
-    "Aggregate1": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Aggregate3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "原始文案素材": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 3
-          }
-        ]
-      ]
-    },
-    "原始文案素材1": {
-      "main": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenRouter Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Basic LLM Chain": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 4
-          }
-        ]
-      ]
-    },
-    "Aggregate3": {
-      "main": [
-        [
-          {
-            "node": "AI Agent4",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "5be0e9b4-7cd0-4a4a-b5db-861288d5d409",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "4XcCjtYnOHUrWIo9",
-  "tags": []
+	"name": "4videotext2videojson_agent",
+	"nodes": [
+		{
+			"parameters": {
+				"workflowInputs": {
+					"values": [
+						{
+							"name": "text"
+						},
+						{
+							"name": "product_name"
+						},
+						{
+							"name": "hashtags"
+						}
+					]
+				}
+			},
+			"type": "n8n-nodes-base.executeWorkflowTrigger",
+			"typeVersion": 1.1,
+			"position": [-1248, 64],
+			"id": "62095b32-c5d0-4c49-8af2-045f70294bdd",
+			"name": "When Executed by Another Workflow"
+		},
+		{
+			"parameters": {
+				"content": "## 视频内容和标签的生成，最终视频发布会用到",
+				"height": 80,
+				"width": 360
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-1296, 944],
+			"id": "557c1264-b87c-4479-b7bc-2864b6e5f277",
+			"name": "Sticky Note"
+		},
+		{
+			"parameters": {
+				"content": "# 生成10个爆款脚本拍摄素材json",
+				"height": 1372,
+				"width": 1960,
+				"color": 5
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-1376, -400],
+			"id": "eaad5456-6507-483b-bced-f465e3e06775",
+			"name": "Sticky Note3"
+		},
+		{
+			"parameters": {
+				"promptType": "define",
+				"text": "=# 爆款文案\n{{ $json.data[3]['召回的原始素材'] }}\n# 产品信息\n{{ $json.data[0].product.toJsonString() }}\n# 公司信息\n{{ $json.data[1].business_message.toJsonString() }}\n# 目标人群\n{{ $json.data[2].object.toJsonString() }}\n# 爆款文案结构\n{{ $json.data[4]['结构'] }}",
+				"options": {
+					"systemMessage": "=# 角色 \n你爆款文案生成专家，快速分析用户提供的信息。你充分理解tiktok、Instagram、Facebook、YouTube、Twitter (X)各大平台的流量密码，能迅速抓住人设/产品特色和优点/文案结构/引流方式，结合目标受众的需求和喜好，生成高质量的各大平台种草内容的标题和文案。最终生成一个版本的新文案。\n# 目标\n1. 结合企业资料里的{目标人群}，同时借鉴爆款文案，生成新文案要有非常吸引人的标题，标题的目的是让更多目标人群愿意点击打开这条视频内容\n2. 文案整体结构要与原文案结构相同，将{企业信息}、{企业理念}、{产品特点}，金句亮点与原有的文案结构结合在一起，为{目标人群}生成新的文案。\n\n**限制\n1.新的文案必须1:1的逐句替换原文案的内容。其中只需要替换{企业信息}、{企业理念}、{产品特点} ，中与本文案相关的部分内容\n2.原文案中与{企业信息}、{企业理念}、{产品特点}，{产品品类}无关的信息，在不影响整体文案内容的情况下尽量保留\n3.不能出现任何线上平台的名称 如 TIKTOK YouTube等。\n\n# 输出的形式\n1.必须先新文案标题、文案内容和话题\n2.不需要输出任何以上以上要求以外的内容，如：原文案拆解、思考过程、创作逻辑等。\n\n** 注意事项\n\n顺序执行: 必须严格按照执行步骤的顺序进行，不得跳过任何步骤。\n检查点: 系统将自动检查每个步骤的完成情况，并在继续前确保所有先决条件均已满足。\n\n**执行步骤：\n\n1. 调取文案后，请调{目标人群}和{企业信息}的内容进行下一步操作。\n2. 请使用第一人称进行1:1的逐句内容替换，根据我的目标对{企业信息} 、{企业理念}、{产品特点}， {产品品类}进行1:1的替换。不需要对其他不影响核心意思的内容进行替换，在不影响内容逻辑性的情况下，尽量小的改动原文中的结构和金句。如果原句中有使用成语或者文言文，替换后的文案应使用意思相近的成语或文言文进行替换。\n\n3. 你要为我制作新的标题，根据原文案的标题为我1:1的替换内容。\n\n# 规则\n- 爆款文案字数在140个字到240个字之间,使用中文\n- 爆款文案赋值给content\n- 标签赋值给tags\n- 标签使用英文小写,使用#分割\n# 格式\n{\n\"content\":\"\",\n\"tags\":\"\"\n}"
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.agent",
+			"typeVersion": 2,
+			"position": [192, 64],
+			"id": "760772fd-7432-4b72-8bc0-fe23f7487f22",
+			"name": "AI Agent4",
+			"onError": "continueRegularOutput"
+		},
+		{
+			"parameters": {
+				"jsonSchemaExample": "{\n\"content\":\"\",\n\"tags\":\"\"\n\n}"
+			},
+			"type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+			"typeVersion": 1.3,
+			"position": [336, 288],
+			"id": "28d80b11-9e19-49ea-96a0-e26a985fd65d",
+			"name": "Structured Output Parser4",
+			"disabled": true
+		},
+		{
+			"parameters": {
+				"content": "## 设计思路\n- 通过上游的爆款素材，进行变种，变出10个不同的素材，然后提供给下游使用\n## 实现功能\n- 拿到上游的爆款素材，生成10个拍摄脚本，然后返回上游让用户确认一个\n## 实现原理\n- 使用ai能力结合素材生成10个不同的文案，完成爆款拍摄脚本的制作",
+				"height": 300,
+				"width": 760,
+				"color": 5
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-704, 1104],
+			"id": "100d4dec-22db-46ce-8671-15a5ceb4b10c",
+			"name": "Sticky Note7"
+		},
+		{
+			"parameters": {
+				"model": "google/gemini-2.5-flash-lite",
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+			"typeVersion": 1,
+			"position": [208, 288],
+			"id": "690d2910-7f88-4271-8bb3-4f2ed04175d0",
+			"name": "OpenRouter Chat Model",
+			"credentials": {
+				"openRouterApi": {
+					"id": "oigW3KLm0OZq9rWp",
+					"name": "OpenRouter account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "executeQuery",
+				"query": "select * from public.hsai_business_key_messages  where (message_type like '%企业%' or message_type like '%公司%')and business_name ='{{ $json.business_name }}'; ",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-1024, -128],
+			"id": "ef9b6086-98d5-4227-aaac-b4b42fb2161d",
+			"name": "企业信息",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "executeQuery",
+				"query": "select * from public.hsai_business_key_messages  where message_type like '%产品%' and business_name ='{{ $json.business_name }}'; ",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-1024, -320],
+			"id": "e7fe106b-1116-4c51-bccb-676d03d77abb",
+			"name": "产品信息",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "executeQuery",
+				"query": "select * from public.hsai_business_key_messages  where (message_type like '%客户%' or message_type like '%画像%')and business_name ='{{ $json.business_name }}'; ",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-1024, 64],
+			"id": "e95e776f-a093-495b-a478-2e71a254033b",
+			"name": "目标人群",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"destinationFieldName": "object",
+				"include": "specifiedFields",
+				"fieldsToInclude": "data_info",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [-736, 64],
+			"id": "3475adb6-813a-4f4d-822c-df5da450e677",
+			"name": "Aggregate2"
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"destinationFieldName": "product",
+				"include": "specifiedFields",
+				"fieldsToInclude": "data_info",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [-736, -320],
+			"id": "c1f26cb7-3835-4e13-85aa-199c6297d4b5",
+			"name": "Aggregate1"
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"destinationFieldName": "business_message",
+				"include": "specifiedFields",
+				"fieldsToInclude": "data_info",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [-736, -128],
+			"id": "d8dc4df8-08db-472a-81f2-7c224c119bc1",
+			"name": "Aggregate"
+		},
+		{
+			"parameters": {
+				"numberInputs": 5
+			},
+			"type": "n8n-nodes-base.merge",
+			"typeVersion": 3.2,
+			"position": [-240, 16],
+			"id": "7a55f925-61dc-4ebb-addd-ca28eec0c10d",
+			"name": "Merge"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "c5c4c1ee-bc1c-4714-b2df-5b8a53008360",
+							"name": "召回的原始素材",
+							"value": "={{ $json.text }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-736, 256],
+			"id": "c9ed7e6d-6fca-4371-89b9-dff368a7e43a",
+			"name": "原始文案素材"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "c5c4c1ee-bc1c-4714-b2df-5b8a53008360",
+							"name": "召回的原始素材",
+							"value": "={{ $json.text }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-1024, 560],
+			"id": "3b72eecf-c975-47ce-b074-3ea4d9544920",
+			"name": "原始文案素材1"
+		},
+		{
+			"parameters": {
+				"promptType": "define",
+				"text": "=# 需要拆解的文案\n {{ $json['召回的原始素材'] }}",
+				"messages": {
+					"messageValues": [
+						{
+							"message": "=# 目标\n对需要拆解的文案进行结构解析，识别出来该文案的结构特征\n\n# 风格\n使用简练的中文大白话回答，字数控制在30个字左右，只提炼核心点，不要过多的废话\n\n# 规则\n只输出结构，其他无关紧要的话，比如好的，马上这类词不要出现"
+						}
+					]
+				},
+				"batching": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.chainLlm",
+			"typeVersion": 1.7,
+			"position": [-800, 560],
+			"id": "9ea8e769-84c4-44ab-a2b5-b531148dff57",
+			"name": "Basic LLM Chain"
+		},
+		{
+			"parameters": {
+				"model": "google/gemini-2.5-flash",
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+			"typeVersion": 1,
+			"position": [-736, 784],
+			"id": "e748e7fc-66b2-48e6-a845-73a6b0597d4a",
+			"name": "OpenRouter Chat Model1",
+			"credentials": {
+				"openRouterApi": {
+					"id": "rxUfyA7xdhW6JG8T",
+					"name": "OpenRouter account 2"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "f4305794-876f-4727-8cb2-e71693280762",
+							"name": "结构",
+							"value": "={{ $json.text }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-448, 560],
+			"id": "238d26a4-9af8-4032-a7e8-73bd9bfbdcd2",
+			"name": "Edit Fields"
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [-32, 16],
+			"id": "d119d032-7ae3-435a-8a56-10410c4db344",
+			"name": "Aggregate3"
+		}
+	],
+	"pinData": {
+		"When Executed by Another Workflow": [
+			{
+				"json": {
+					"text": "Outfits in modern Chinese style ‒ 贰 肆 陆 捌。",
+					"product_name": "蓝牙耳机",
+					"hashtags": "#BluetoothEarbuds #WirelessAudio #Earphones"
+				}
+			}
+		]
+	},
+	"connections": {
+		"When Executed by Another Workflow": {
+			"main": [
+				[
+					{
+						"node": "企业信息",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "产品信息",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "目标人群",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "原始文案素材",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "原始文案素材1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Structured Output Parser4": {
+			"ai_outputParser": [[]]
+		},
+		"AI Agent4": {
+			"main": [[]]
+		},
+		"OpenRouter Chat Model": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "AI Agent4",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"企业信息": {
+			"main": [
+				[
+					{
+						"node": "Aggregate",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"产品信息": {
+			"main": [
+				[
+					{
+						"node": "Aggregate1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"目标人群": {
+			"main": [
+				[
+					{
+						"node": "Aggregate2",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Aggregate2": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 2
+					}
+				]
+			]
+		},
+		"Aggregate1": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Aggregate": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 1
+					}
+				]
+			]
+		},
+		"Merge": {
+			"main": [
+				[
+					{
+						"node": "Aggregate3",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"原始文案素材": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 3
+					}
+				]
+			]
+		},
+		"原始文案素材1": {
+			"main": [
+				[
+					{
+						"node": "Basic LLM Chain",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenRouter Chat Model1": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "Basic LLM Chain",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Basic LLM Chain": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Edit Fields": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 4
+					}
+				]
+			]
+		},
+		"Aggregate3": {
+			"main": [
+				[
+					{
+						"node": "AI Agent4",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": false,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "5be0e9b4-7cd0-4a4a-b5db-861288d5d409",
+	"meta": {
+		"templateCredsSetupCompleted": true,
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "4XcCjtYnOHUrWIo9",
+	"tags": []
 }

@@ -1,377 +1,344 @@
 {
-  "name": "2视频爬取agent",
-  "nodes": [
-    {
-      "parameters": {
-        "workflowInputs": {
-          "values": [
-            {
-              "name": "keywords"
-            },
-            {
-              "name": "business_name"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
-      "position": [
-        -256,
-        16
-      ],
-      "id": "464ba0d8-ce19-417f-a828-c5b437403106",
-      "name": "When Executed by Another Workflow"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://webhook-n8n.hsai.cc/webhook/video_sc",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "keywords",
-              "value": "={{ $json.keywords.toLowerCase() }}"
-            },
-            {
-              "name": "business_name",
-              "value": "={{ $('When Executed by Another Workflow').item.json.business_name }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        848,
-        64
-      ],
-      "id": "0c59423c-87a9-443e-968d-b74a4c6d6b45",
-      "name": "HTTP Request1"
-    },
-    {
-      "parameters": {
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_message",
-          "mode": "list",
-          "cachedResultName": "hsai_business_message"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "business_name": "={{ $json.business_name }}",
-            "keywords": "={{ $json.keywords }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "business_name",
-              "displayName": "business_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "keywords",
-              "displayName": "keywords",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -48,
-        16
-      ],
-      "id": "b8eb5e61-d3a6-49c1-8199-30ce0cd0375e",
-      "name": "Insert rows in a table",
-      "alwaysOutputData": true,
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "b48ed63b-5e0e-4f68-81c1-b1cbfbb50ec0",
-              "name": "插入结果",
-              "value": "已完成",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1072,
-        -144
-      ],
-      "id": "e82012f9-e923-40c2-a9af-b9d7f7f193e1",
-      "name": "Edit Fields"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        624,
-        16
-      ],
-      "id": "0925d047-4370-464d-a0ce-9068f2dbeb14",
-      "name": "Loop Over Items"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "a774b7f7-4682-4859-87dc-b4087cedb04f",
-              "name": "keywords",
-              "value": "={{ $('When Executed by Another Workflow').item.json.keywords.split(',') }}",
-              "type": "array"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        192,
-        16
-      ],
-      "id": "02fba960-d445-4740-b6d5-9fce4131960e",
-      "name": "Edit Fields1"
-    },
-    {
-      "parameters": {
-        "fieldToSplitOut": "keywords",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        400,
-        32
-      ],
-      "id": "3e3c5c08-e862-4bca-8617-b7b3b257a8b2",
-      "name": "Split Out"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        1280,
-        -144
-      ],
-      "id": "405ee25b-ba9f-465c-9f0c-7c4911025317",
-      "name": "Aggregate"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "0374c637-6b82-4dc3-b2d3-6ef2a22877ed",
-              "name": "插入结果",
-              "value": "=我使用keywords_agent_tool完成{{ $json.data.length }}个关键词的入库和素材的爬取 ",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1504,
-        -144
-      ],
-      "id": "56ea1d78-1820-4b4a-aa87-b3f117330ffb",
-      "name": "Edit Fields4"
-    },
-    {
-      "parameters": {
-        "content": "## 调用3子工作流爬取视频",
-        "height": 300,
-        "width": 260
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        784,
-        -16
-      ],
-      "id": "98aae032-c076-47a6-aeec-2e2567bedd88",
-      "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "content": "## 设计思路\n- 使用一个子工作流来完成关键词的入库和爬取，这个是异步的，发送完请求就ok，在后台进行数据获取\n## 实现功能\n- 这个工作流就是keywords_agent，主要是用来关键词信息入库和视频爬取\n## 实现原理\n- 过来的关键词先入库，然后切分，分别对每一个关键词进行视频爬取，这里调用的是【3异步-视频爬取关键词分析】",
-        "height": 220,
-        "width": 760,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -64,
-        -304
-      ],
-      "id": "31fda077-5c09-4ed6-ada5-8dd6fb6bced6",
-      "name": "Sticky Note4"
-    }
-  ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "keywords": null,
-          "business_name": null
-        }
-      }
-    ]
-  },
-  "connections": {
-    "When Executed by Another Workflow": {
-      "main": [
-        [
-          {
-            "node": "Insert rows in a table",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Insert rows in a table": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields": {
-      "main": [
-        [
-          {
-            "node": "Aggregate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request1": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Loop Over Items": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "HTTP Request1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields1": {
-      "main": [
-        [
-          {
-            "node": "Split Out",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Out": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields4",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "e07bd222-a681-4c8e-8856-dcd4dafd24f3",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "EEqXWmXwcJgzBE1B",
-  "tags": []
+	"name": "2视频爬取agent",
+	"nodes": [
+		{
+			"parameters": {
+				"workflowInputs": {
+					"values": [
+						{
+							"name": "keywords"
+						},
+						{
+							"name": "business_name"
+						}
+					]
+				}
+			},
+			"type": "n8n-nodes-base.executeWorkflowTrigger",
+			"typeVersion": 1.1,
+			"position": [-256, 16],
+			"id": "464ba0d8-ce19-417f-a828-c5b437403106",
+			"name": "When Executed by Another Workflow"
+		},
+		{
+			"parameters": {
+				"method": "POST",
+				"url": "https://webhook-n8n.hsai.cc/webhook/video_sc",
+				"sendBody": true,
+				"bodyParameters": {
+					"parameters": [
+						{
+							"name": "keywords",
+							"value": "={{ $json.keywords.toLowerCase() }}"
+						},
+						{
+							"name": "business_name",
+							"value": "={{ $('When Executed by Another Workflow').item.json.business_name }}"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.httpRequest",
+			"typeVersion": 4.2,
+			"position": [848, 64],
+			"id": "0c59423c-87a9-443e-968d-b74a4c6d6b45",
+			"name": "HTTP Request1"
+		},
+		{
+			"parameters": {
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_message",
+					"mode": "list",
+					"cachedResultName": "hsai_business_message"
+				},
+				"columns": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"business_name": "={{ $json.business_name }}",
+						"keywords": "={{ $json.keywords }}"
+					},
+					"matchingColumns": [],
+					"schema": [
+						{
+							"id": "business_name",
+							"displayName": "business_name",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "keywords",
+							"displayName": "keywords",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [-48, 16],
+			"id": "b8eb5e61-d3a6-49c1-8199-30ce0cd0375e",
+			"name": "Insert rows in a table",
+			"alwaysOutputData": true,
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "b48ed63b-5e0e-4f68-81c1-b1cbfbb50ec0",
+							"name": "插入结果",
+							"value": "已完成",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [1072, -144],
+			"id": "e82012f9-e923-40c2-a9af-b9d7f7f193e1",
+			"name": "Edit Fields"
+		},
+		{
+			"parameters": {
+				"options": {}
+			},
+			"type": "n8n-nodes-base.splitInBatches",
+			"typeVersion": 3,
+			"position": [624, 16],
+			"id": "0925d047-4370-464d-a0ce-9068f2dbeb14",
+			"name": "Loop Over Items"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "a774b7f7-4682-4859-87dc-b4087cedb04f",
+							"name": "keywords",
+							"value": "={{ $('When Executed by Another Workflow').item.json.keywords.split(',') }}",
+							"type": "array"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [192, 16],
+			"id": "02fba960-d445-4740-b6d5-9fce4131960e",
+			"name": "Edit Fields1"
+		},
+		{
+			"parameters": {
+				"fieldToSplitOut": "keywords",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.splitOut",
+			"typeVersion": 1,
+			"position": [400, 32],
+			"id": "3e3c5c08-e862-4bca-8617-b7b3b257a8b2",
+			"name": "Split Out"
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [1280, -144],
+			"id": "405ee25b-ba9f-465c-9f0c-7c4911025317",
+			"name": "Aggregate"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "0374c637-6b82-4dc3-b2d3-6ef2a22877ed",
+							"name": "插入结果",
+							"value": "=我使用keywords_agent_tool完成{{ $json.data.length }}个关键词的入库和素材的爬取 ",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [1504, -144],
+			"id": "56ea1d78-1820-4b4a-aa87-b3f117330ffb",
+			"name": "Edit Fields4"
+		},
+		{
+			"parameters": {
+				"content": "## 调用3子工作流爬取视频",
+				"height": 300,
+				"width": 260
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [784, -16],
+			"id": "98aae032-c076-47a6-aeec-2e2567bedd88",
+			"name": "Sticky Note"
+		},
+		{
+			"parameters": {
+				"content": "## 设计思路\n- 使用一个子工作流来完成关键词的入库和爬取，这个是异步的，发送完请求就ok，在后台进行数据获取\n## 实现功能\n- 这个工作流就是keywords_agent，主要是用来关键词信息入库和视频爬取\n## 实现原理\n- 过来的关键词先入库，然后切分，分别对每一个关键词进行视频爬取，这里调用的是【3异步-视频爬取关键词分析】",
+				"height": 220,
+				"width": 760,
+				"color": 5
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-64, -304],
+			"id": "31fda077-5c09-4ed6-ada5-8dd6fb6bced6",
+			"name": "Sticky Note4"
+		}
+	],
+	"pinData": {
+		"When Executed by Another Workflow": [
+			{
+				"json": {
+					"keywords": null,
+					"business_name": null
+				}
+			}
+		]
+	},
+	"connections": {
+		"When Executed by Another Workflow": {
+			"main": [
+				[
+					{
+						"node": "Insert rows in a table",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Insert rows in a table": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Edit Fields": {
+			"main": [
+				[
+					{
+						"node": "Aggregate",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"HTTP Request1": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Loop Over Items": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "HTTP Request1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Edit Fields1": {
+			"main": [
+				[
+					{
+						"node": "Split Out",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Split Out": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Aggregate": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields4",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": false,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "e07bd222-a681-4c8e-8856-dcd4dafd24f3",
+	"meta": {
+		"templateCredsSetupCompleted": true,
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "EEqXWmXwcJgzBE1B",
+	"tags": []
 }

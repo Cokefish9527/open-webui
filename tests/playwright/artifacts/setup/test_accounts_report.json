@@ -1,17 +1,17 @@
 {
-  "tenant": "福州华商时代自动化测试",
-  "accounts": {
-    "test001@hsai.cc": "existing",
-    "test002@hsai.cc": "existing",
-    "test003@hsai.cc": "existing",
-    "test004@hsai.cc": "existing",
-    "test005@hsai.cc": "existing",
-    "test006@hsai.cc": "existing",
-    "test007@hsai.cc": "existing",
-    "test008@hsai.cc": "existing",
-    "test009@hsai.cc": "existing",
-    "test010@hsai.cc": "existing"
-  },
-  "base_url": "http://localhost:8080/api/v1/external/admin",
-  "generated_at": "2025-11-15T09:58:47.714674+00:00"
+	"tenant": "福州华商时代自动化测试",
+	"accounts": {
+		"test001@hsai.cc": "existing",
+		"test002@hsai.cc": "existing",
+		"test003@hsai.cc": "existing",
+		"test004@hsai.cc": "existing",
+		"test005@hsai.cc": "existing",
+		"test006@hsai.cc": "existing",
+		"test007@hsai.cc": "existing",
+		"test008@hsai.cc": "existing",
+		"test009@hsai.cc": "existing",
+		"test010@hsai.cc": "existing"
+	},
+	"base_url": "http://localhost:8080/api/v1/external/admin",
+	"generated_at": "2025-11-15T09:58:47.714674+00:00"
 }

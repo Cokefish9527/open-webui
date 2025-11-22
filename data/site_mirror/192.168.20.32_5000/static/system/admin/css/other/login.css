@@ -1,5 +1,5 @@
 html,
-body{
+body {
 	height: 100%;
 }
 
@@ -16,7 +16,7 @@ body{
 .layui-row {
 	width: 1000px;
 	height: 600px;
-	box-shadow: 2px 0 6px rgba(0, 21, 41, .20);
+	box-shadow: 2px 0 6px rgba(0, 21, 41, 0.2);
 	border: 3px solid whitesmoke;
 	border-radius: 15px;
 }
@@ -87,7 +87,6 @@ body{
 .top-desc {
 	font-size: 14px;
 	color: #808695;
-
 }
 
 .tab-log-method {
@@ -109,7 +108,7 @@ body{
 	text-align: left;
 }
 
-.tab-log-method-item>span {
+.tab-log-method-item > span {
 	display: inline-block;
 	width: 40px;
 	text-align: center;
@@ -117,7 +116,7 @@ body{
 	border-bottom: 2px solid transparent;
 }
 
-.tab-log-method-item>span:hover {
+.tab-log-method-item > span:hover {
 	cursor: pointer;
 	color: #16baaa;
 	border-bottom: 2px solid #16baaa;
@@ -161,13 +160,12 @@ body{
 	cursor: pointer;
 }
 
-
 .login-btn {
 	width: 100%;
 	box-sizing: border-box;
 }
 
-.login-btn>.layui-btn {
+.login-btn > .layui-btn {
 	width: 100%;
 }
 
@@ -195,24 +193,28 @@ body{
 	background-color: var(--global-primary-color);
 }
 
-@media(min-width: 992px) and  (max-width:1200px){
-	.layui-row{
+@media (min-width: 992px) and (max-width: 1200px) {
+	.layui-row {
 		width: 900px;
 	}
 }
-@media(min-width: 768px) and (max-width:992px){
-	.layui-row{
+@media (min-width: 768px) and (max-width: 992px) {
+	.layui-row {
 		width: 90%;
 	}
-	.form-center{width: 90%;}
+	.form-center {
+		width: 90%;
+	}
 }
-@media (max-width:768px){
-	.layui-row{
+@media (max-width: 768px) {
+	.layui-row {
 		width: 90%;
 	}
 	.login-form {
 		border-bottom-left-radius: 15px;
 		border-top-left-radius: 15px;
 	}
-	.form-center-box{width: 95%;}
+	.form-center-box {
+		width: 95%;
+	}
 }

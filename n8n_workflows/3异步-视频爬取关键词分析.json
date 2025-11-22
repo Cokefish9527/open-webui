@@ -1,543 +1,523 @@
 {
-  "name": "3异步-视频爬取关键词分析",
-  "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "video_sc",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        -160,
-        -256
-      ],
-      "id": "8ff898e2-d4b1-4534-a039-3b776842c6ec",
-      "name": "Webhook",
-      "webhookId": "ce82a360-aca5-46d8-8c29-d93e75948596"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Accept",
-              "value": "application/json"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer apify_api_XjrCo0Md8D2YsBQbwIFca32Wi75aLb1INMhF"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n    \"excludePinnedPosts\": false,\n    \"oldestPostDateUnified\": \"{{ $now.minus('90','days').format('yyyy-MM-dd') }}\",\n    \"proxyCountryCode\": \"None\",\n    \"resultsPerPage\": 1,\n    \"scrapeRelatedVideos\": false,\n    \"searchQueries\": [\n        \"{{ $json.body.keywords.trim() }}\"\n    ],\n \"searchSection\": \"/video\",\n    \"shouldDownloadAvatars\": false,\n    \"shouldDownloadCovers\": false,\n    \"shouldDownloadMusicCovers\": false,\n    \"shouldDownloadSlideshowImages\": false,\n    \"shouldDownloadSubtitles\": true,\n    \"shouldDownloadVideos\": true,\n    \"videoKvStoreIdOrName\": \"tkvideo\"\n}",
-        "options": {
-          "redirect": {
-            "redirect": {}
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        64,
-        -256
-      ],
-      "id": "93654576-7267-4859-ba27-f02fd11077fb",
-      "name": "爬视频",
-      "retryOnFail": true
-    },
-    {
-      "parameters": {
-        "schema": {
-          "__rl": true,
-          "value": "public",
-          "mode": "list",
-          "cachedResultName": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_good_video_v1",
-          "mode": "list",
-          "cachedResultName": "hsai_business_good_video_v1"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "isad": "={{ $json.isad }}",
-            "diggcount": "={{ $json.diggCount }}",
-            "sharecount": "={{ $json.shareCount }}",
-            "playcount": "={{ $json.playCount }}",
-            "collectcount": "={{ $json.collectCount }}",
-            "commentcount": "={{ $json.commentCount }}",
-            "businessname": "={{ $json.businessName }}",
-            "videourl": "={{ $json.videoUrl }}",
-            "music": "={{ $json.music }}",
-            "musicurl": "={{ $json.musicUrl }}",
-            "text": "={{ $json.text }}",
-            "hashtags": "={{ $json.hashtags }}",
-            "video_type": "待测试脚本库",
-            "publishedtime": "={{ $json.publishedTime }}",
-            "authorurl": "={{ $json.authorId }}",
-            "authorname": "={{ $json.authorName }}",
-            "authorid": "={{ $json.authorUrl }}"
-          },
-          "matchingColumns": [
-            "id"
-          ],
-          "schema": [
-            {
-              "id": "id",
-              "displayName": "id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "businessname",
-              "displayName": "businessname",
-              "required": true,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "authorname",
-              "displayName": "authorname",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "authorid",
-              "displayName": "authorid",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "authorurl",
-              "displayName": "authorurl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "videourl",
-              "displayName": "videourl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "music",
-              "displayName": "music",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "musicurl",
-              "displayName": "musicurl",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "text",
-              "displayName": "text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "hashtags",
-              "displayName": "hashtags",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "video_type",
-              "displayName": "video_type",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "publishedtime",
-              "displayName": "publishedtime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "isad",
-              "displayName": "isad",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "boolean",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "diggcount",
-              "displayName": "diggcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "sharecount",
-              "displayName": "sharecount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "playcount",
-              "displayName": "playcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "collectcount",
-              "displayName": "collectcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "commentcount",
-              "displayName": "commentcount",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "createdat",
-              "displayName": "createdat",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "updatedat",
-              "displayName": "updatedat",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        512,
-        -256
-      ],
-      "id": "4a08bff9-308f-4598-a25f-283621514d51",
-      "name": "入库",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "content": "## 设计思路\n- 通过apify来爬取视频，通过gemini-2.5pro来识别视频\n## 实现功能\n- 这个工作流完成视频爬取和视频识别\n## 实现原理\n- 基于apify的爬取能力和google的识别能力完成爬取和视频内容获取",
-        "height": 236,
-        "width": 760,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -16,
-        -528
-      ],
-      "id": "b8fb967f-de86-4b03-b3a3-5d193dda23f5",
-      "name": "Sticky Note4"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "e8955a88-3714-4d19-a969-48f85971827e",
-              "name": "businessName",
-              "value": "={{ $('Webhook').first().json.body.business_name }}",
-              "type": "string"
-            },
-            {
-              "id": "3a1da75f-1bf8-442a-8849-2923c9898ff6",
-              "name": "videoUrl",
-              "value": "={{ $('爬视频').item.json.mediaUrls[0] }}",
-              "type": "string"
-            },
-            {
-              "id": "aa76bb0a-1cf7-40f9-b1e8-3b8e4d08f09a",
-              "name": "music",
-              "value": "={{ $('爬视频').item.json.musicMeta.musicName }}",
-              "type": "string"
-            },
-            {
-              "id": "f37c6f5b-9fac-4afb-a1a5-936d1bd560b0",
-              "name": "musicUrl",
-              "value": "={{ $json.musicMeta.playUrl }}",
-              "type": "string"
-            },
-            {
-              "id": "3af9b27f-69d4-45ef-9997-41e85c908d97",
-              "name": "text",
-              "value": "={{ $('爬视频').item.json.text.replaceAll('\\n','\\\\n') }}",
-              "type": "string"
-            },
-            {
-              "id": "85b55e64-f4ab-4318-bf8e-27968bb21e4f",
-              "name": "hashtags",
-              "value": "={{ $('爬视频').item.json.hashtags.map(tag => tag.name).join('#')  }}",
-              "type": "string"
-            },
-            {
-              "id": "47e2667f-d08b-40a3-b1f0-b2f5142efdbe",
-              "name": "publishedTime",
-              "value": "={{ $json.createTimeISO }}",
-              "type": "string"
-            },
-            {
-              "id": "94aaae78-f74d-4b63-a08a-608f03cb5d5d",
-              "name": "isad",
-              "value": "={{ $json.isAd }}",
-              "type": "boolean"
-            },
-            {
-              "id": "7bdce4bf-c565-4c25-a7fc-af37a18c11d7",
-              "name": "diggCount",
-              "value": "={{ $json.diggCount }}",
-              "type": "number"
-            },
-            {
-              "id": "03da7337-ddfd-49c6-b6ab-a114afbcf469",
-              "name": "shareCount",
-              "value": "={{ $json.shareCount }}",
-              "type": "number"
-            },
-            {
-              "id": "8d7fccab-95a8-4888-be80-478203dac301",
-              "name": "playCount",
-              "value": "={{ $json.playCount }}",
-              "type": "number"
-            },
-            {
-              "id": "1648c9ea-ae81-43fa-bb29-10118cef5b34",
-              "name": "collectCount",
-              "value": "={{ $json.collectCount }}",
-              "type": "number"
-            },
-            {
-              "id": "31cff9cc-1416-4f74-83e2-e19e86b01542",
-              "name": "commentCount",
-              "value": "={{ $json.commentCount }}",
-              "type": "number"
-            },
-            {
-              "id": "5af37826-b7d1-4b50-af37-cbe4daa34300",
-              "name": "authorId",
-              "value": "={{ $json.authorMeta.id }}",
-              "type": "string"
-            },
-            {
-              "id": "ec3d524c-8a8e-447f-be0c-83b2de74133f",
-              "name": "authorName",
-              "value": "={{ $json.authorMeta.name }}",
-              "type": "string"
-            },
-            {
-              "id": "7bc5221c-a345-4d69-a978-a3527624bd30",
-              "name": "authorUrl",
-              "value": "={{ $json.authorMeta.profileUrl }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        288,
-        -256
-      ],
-      "id": "18c10020-4a11-493e-9556-93b7a4821aca",
-      "name": "Edit Fields"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "ff0d0ec0-56f5-43ba-b67c-657604a9e6d0",
-              "name": "状态",
-              "value": "已完成爬取入库",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        736,
-        -256
-      ],
-      "id": "58282833-daa3-4240-b162-744cc8f3a804",
-      "name": "完成状态"
-    }
-  ],
-  "pinData": {
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "webhook-n8n.hsai.cc",
-            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
-            "content-type": "application/json",
-            "user-agent": "axios/1.8.3",
-            "content-length": "74",
-            "accept-encoding": "gzip, compress, deflate, br",
-            "x-forwarded-for": "114.215.178.68",
-            "x-forwarded-proto": "https",
-            "x-envoy-original-host": "webhook-n8n.hsai.cc",
-            "x-envoy-external-address": "114.215.178.68",
-            "x-request-id": "4fd798ac-eebf-4e31-b12d-0a2f1302917c",
-            "x-envoy-attempt-count": "1",
-            "req-start-time": "1756218424905",
-            "original-host": "webhook-n8n.hsai.cc",
-            "x-envoy-route-identifier": "true"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "keywords": " decorative yard light",
-            "business_name": "华商时代开发"
-          },
-          "webhookUrl": "http://localhost:5678/webhook/video_sc",
-          "executionMode": "production"
-        }
-      }
-    ]
-  },
-  "connections": {
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "爬视频",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "爬视频": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields": {
-      "main": [
-        [
-          {
-            "node": "入库",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "入库": {
-      "main": [
-        [
-          {
-            "node": "完成状态",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "711e1782-4ac1-4755-a14a-5b134e357632",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "p8IAfFdOW4xfKICE",
-  "tags": []
+	"name": "3异步-视频爬取关键词分析",
+	"nodes": [
+		{
+			"parameters": {
+				"httpMethod": "POST",
+				"path": "video_sc",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.webhook",
+			"typeVersion": 2,
+			"position": [-160, -256],
+			"id": "8ff898e2-d4b1-4534-a039-3b776842c6ec",
+			"name": "Webhook",
+			"webhookId": "ce82a360-aca5-46d8-8c29-d93e75948596"
+		},
+		{
+			"parameters": {
+				"method": "POST",
+				"url": "https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items",
+				"sendHeaders": true,
+				"headerParameters": {
+					"parameters": [
+						{
+							"name": "Accept",
+							"value": "application/json"
+						},
+						{
+							"name": "Authorization",
+							"value": "Bearer apify_api_XjrCo0Md8D2YsBQbwIFca32Wi75aLb1INMhF"
+						}
+					]
+				},
+				"sendBody": true,
+				"specifyBody": "json",
+				"jsonBody": "={\n    \"excludePinnedPosts\": false,\n    \"oldestPostDateUnified\": \"{{ $now.minus('90','days').format('yyyy-MM-dd') }}\",\n    \"proxyCountryCode\": \"None\",\n    \"resultsPerPage\": 1,\n    \"scrapeRelatedVideos\": false,\n    \"searchQueries\": [\n        \"{{ $json.body.keywords.trim() }}\"\n    ],\n \"searchSection\": \"/video\",\n    \"shouldDownloadAvatars\": false,\n    \"shouldDownloadCovers\": false,\n    \"shouldDownloadMusicCovers\": false,\n    \"shouldDownloadSlideshowImages\": false,\n    \"shouldDownloadSubtitles\": true,\n    \"shouldDownloadVideos\": true,\n    \"videoKvStoreIdOrName\": \"tkvideo\"\n}",
+				"options": {
+					"redirect": {
+						"redirect": {}
+					}
+				}
+			},
+			"type": "n8n-nodes-base.httpRequest",
+			"typeVersion": 4.2,
+			"position": [64, -256],
+			"id": "93654576-7267-4859-ba27-f02fd11077fb",
+			"name": "爬视频",
+			"retryOnFail": true
+		},
+		{
+			"parameters": {
+				"schema": {
+					"__rl": true,
+					"value": "public",
+					"mode": "list",
+					"cachedResultName": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_good_video_v1",
+					"mode": "list",
+					"cachedResultName": "hsai_business_good_video_v1"
+				},
+				"columns": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"isad": "={{ $json.isad }}",
+						"diggcount": "={{ $json.diggCount }}",
+						"sharecount": "={{ $json.shareCount }}",
+						"playcount": "={{ $json.playCount }}",
+						"collectcount": "={{ $json.collectCount }}",
+						"commentcount": "={{ $json.commentCount }}",
+						"businessname": "={{ $json.businessName }}",
+						"videourl": "={{ $json.videoUrl }}",
+						"music": "={{ $json.music }}",
+						"musicurl": "={{ $json.musicUrl }}",
+						"text": "={{ $json.text }}",
+						"hashtags": "={{ $json.hashtags }}",
+						"video_type": "待测试脚本库",
+						"publishedtime": "={{ $json.publishedTime }}",
+						"authorurl": "={{ $json.authorId }}",
+						"authorname": "={{ $json.authorName }}",
+						"authorid": "={{ $json.authorUrl }}"
+					},
+					"matchingColumns": ["id"],
+					"schema": [
+						{
+							"id": "id",
+							"displayName": "id",
+							"required": false,
+							"defaultMatch": true,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true,
+							"removed": true
+						},
+						{
+							"id": "businessname",
+							"displayName": "businessname",
+							"required": true,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "authorname",
+							"displayName": "authorname",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "authorid",
+							"displayName": "authorid",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "authorurl",
+							"displayName": "authorurl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true,
+							"removed": false
+						},
+						{
+							"id": "videourl",
+							"displayName": "videourl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "music",
+							"displayName": "music",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "musicurl",
+							"displayName": "musicurl",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "text",
+							"displayName": "text",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "hashtags",
+							"displayName": "hashtags",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "video_type",
+							"displayName": "video_type",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "publishedtime",
+							"displayName": "publishedtime",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "isad",
+							"displayName": "isad",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "boolean",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "diggcount",
+							"displayName": "diggcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "sharecount",
+							"displayName": "sharecount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "playcount",
+							"displayName": "playcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "collectcount",
+							"displayName": "collectcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "commentcount",
+							"displayName": "commentcount",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "number",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "createdat",
+							"displayName": "createdat",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "updatedat",
+							"displayName": "updatedat",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "dateTime",
+							"canBeUsedToMatch": true
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [512, -256],
+			"id": "4a08bff9-308f-4598-a25f-283621514d51",
+			"name": "入库",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"content": "## 设计思路\n- 通过apify来爬取视频，通过gemini-2.5pro来识别视频\n## 实现功能\n- 这个工作流完成视频爬取和视频识别\n## 实现原理\n- 基于apify的爬取能力和google的识别能力完成爬取和视频内容获取",
+				"height": 236,
+				"width": 760,
+				"color": 5
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-16, -528],
+			"id": "b8fb967f-de86-4b03-b3a3-5d193dda23f5",
+			"name": "Sticky Note4"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "e8955a88-3714-4d19-a969-48f85971827e",
+							"name": "businessName",
+							"value": "={{ $('Webhook').first().json.body.business_name }}",
+							"type": "string"
+						},
+						{
+							"id": "3a1da75f-1bf8-442a-8849-2923c9898ff6",
+							"name": "videoUrl",
+							"value": "={{ $('爬视频').item.json.mediaUrls[0] }}",
+							"type": "string"
+						},
+						{
+							"id": "aa76bb0a-1cf7-40f9-b1e8-3b8e4d08f09a",
+							"name": "music",
+							"value": "={{ $('爬视频').item.json.musicMeta.musicName }}",
+							"type": "string"
+						},
+						{
+							"id": "f37c6f5b-9fac-4afb-a1a5-936d1bd560b0",
+							"name": "musicUrl",
+							"value": "={{ $json.musicMeta.playUrl }}",
+							"type": "string"
+						},
+						{
+							"id": "3af9b27f-69d4-45ef-9997-41e85c908d97",
+							"name": "text",
+							"value": "={{ $('爬视频').item.json.text.replaceAll('\\n','\\\\n') }}",
+							"type": "string"
+						},
+						{
+							"id": "85b55e64-f4ab-4318-bf8e-27968bb21e4f",
+							"name": "hashtags",
+							"value": "={{ $('爬视频').item.json.hashtags.map(tag => tag.name).join('#')  }}",
+							"type": "string"
+						},
+						{
+							"id": "47e2667f-d08b-40a3-b1f0-b2f5142efdbe",
+							"name": "publishedTime",
+							"value": "={{ $json.createTimeISO }}",
+							"type": "string"
+						},
+						{
+							"id": "94aaae78-f74d-4b63-a08a-608f03cb5d5d",
+							"name": "isad",
+							"value": "={{ $json.isAd }}",
+							"type": "boolean"
+						},
+						{
+							"id": "7bdce4bf-c565-4c25-a7fc-af37a18c11d7",
+							"name": "diggCount",
+							"value": "={{ $json.diggCount }}",
+							"type": "number"
+						},
+						{
+							"id": "03da7337-ddfd-49c6-b6ab-a114afbcf469",
+							"name": "shareCount",
+							"value": "={{ $json.shareCount }}",
+							"type": "number"
+						},
+						{
+							"id": "8d7fccab-95a8-4888-be80-478203dac301",
+							"name": "playCount",
+							"value": "={{ $json.playCount }}",
+							"type": "number"
+						},
+						{
+							"id": "1648c9ea-ae81-43fa-bb29-10118cef5b34",
+							"name": "collectCount",
+							"value": "={{ $json.collectCount }}",
+							"type": "number"
+						},
+						{
+							"id": "31cff9cc-1416-4f74-83e2-e19e86b01542",
+							"name": "commentCount",
+							"value": "={{ $json.commentCount }}",
+							"type": "number"
+						},
+						{
+							"id": "5af37826-b7d1-4b50-af37-cbe4daa34300",
+							"name": "authorId",
+							"value": "={{ $json.authorMeta.id }}",
+							"type": "string"
+						},
+						{
+							"id": "ec3d524c-8a8e-447f-be0c-83b2de74133f",
+							"name": "authorName",
+							"value": "={{ $json.authorMeta.name }}",
+							"type": "string"
+						},
+						{
+							"id": "7bc5221c-a345-4d69-a978-a3527624bd30",
+							"name": "authorUrl",
+							"value": "={{ $json.authorMeta.profileUrl }}",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [288, -256],
+			"id": "18c10020-4a11-493e-9556-93b7a4821aca",
+			"name": "Edit Fields"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "ff0d0ec0-56f5-43ba-b67c-657604a9e6d0",
+							"name": "状态",
+							"value": "已完成爬取入库",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [736, -256],
+			"id": "58282833-daa3-4240-b162-744cc8f3a804",
+			"name": "完成状态"
+		}
+	],
+	"pinData": {
+		"Webhook": [
+			{
+				"json": {
+					"headers": {
+						"host": "webhook-n8n.hsai.cc",
+						"accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+						"content-type": "application/json",
+						"user-agent": "axios/1.8.3",
+						"content-length": "74",
+						"accept-encoding": "gzip, compress, deflate, br",
+						"x-forwarded-for": "114.215.178.68",
+						"x-forwarded-proto": "https",
+						"x-envoy-original-host": "webhook-n8n.hsai.cc",
+						"x-envoy-external-address": "114.215.178.68",
+						"x-request-id": "4fd798ac-eebf-4e31-b12d-0a2f1302917c",
+						"x-envoy-attempt-count": "1",
+						"req-start-time": "1756218424905",
+						"original-host": "webhook-n8n.hsai.cc",
+						"x-envoy-route-identifier": "true"
+					},
+					"params": {},
+					"query": {},
+					"body": {
+						"keywords": " decorative yard light",
+						"business_name": "华商时代开发"
+					},
+					"webhookUrl": "http://localhost:5678/webhook/video_sc",
+					"executionMode": "production"
+				}
+			}
+		]
+	},
+	"connections": {
+		"Webhook": {
+			"main": [
+				[
+					{
+						"node": "爬视频",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"爬视频": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Edit Fields": {
+			"main": [
+				[
+					{
+						"node": "入库",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"入库": {
+			"main": [
+				[
+					{
+						"node": "完成状态",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": true,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "711e1782-4ac1-4755-a14a-5b134e357632",
+	"meta": {
+		"templateCredsSetupCompleted": true,
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "p8IAfFdOW4xfKICE",
+	"tags": []
 }

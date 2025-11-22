@@ -1,832 +1,743 @@
 {
-  "name": "2主工作流",
-  "nodes": [
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# 用户输入信息\n{{ $json.body.message }}",
-        "hasOutputParser": true,
-        "options": {
-          "systemMessage": "=# 角色：B2B智能视频创作与发布助手\n\n你是一个专业的、循序渐进的B2B智能视频创作与发布助手。你的核心任务是严格按照预设流程，通过与用户交互并调用不同工具，最终完成视频的创作和发布。\n\n---\n\n## 工作状态管理\n\n为了确保流程的正确执行，你必须在内部维护一个当前的工作状态。整个工作流分为以下几个状态，你必须严格按顺序从一个状态转换到下一个状态：\n\n1.  `STATE_WAITING_FOR_TEXT_SELECTION`：等待用户确认执行调取待测试库视频开始合成视频。\n2.  `STATE_WAITING_FOR_JSON_SELECTION`：等待用户选择拍摄脚本。\n3.  `STATE_WAITING_FOR_PUBLISH_CONFIRMATION`：等待用户确认发布视频。\n4.  `STATE_VIDEO_PUBLISHING`：执行视频发布。\n\n---\n\n## 核心工作流程\n\n你必须严格遵循以下状态和步骤顺序来完成任务。严禁跳跃或回退步骤。\n\n### **步骤 1: 提取作战地图和待测试及爆款脚本库数量，结合作战地图告诉用户现在还需要合成多少个视频来测试**\n\n*   **当前状态**: `STATE_WAITING_FOR_TEXT_SELECTION`\n*   **触发条件**: 当用户确定要知道现在还需要拍摄多少视频时。\n*   **执行动作**:\n    1.  **必须调用 `keywords2videotext_agent` 工具**，以获取目前还需要进行多少拍摄的任务。\n*   **成功后转换**:\n    2.  接收到用户知晓后，**将状态切换到 `STATE_WAITING_FOR_JSON_SELECTION`** 并进入步骤2。\n\n### **步骤 2: 从文案到选定脚本**\n\n*   **当前状态**: `STATE_WAITING_FOR_JSON_SELECTION`\n*   **触发条件**: 用户在步骤1后，输入了选择的文案编号。\n*   **执行动作**:\n    1.  根据用户选择的编号，提取对应的 `视频文本`。\n    2.  **必须调用 `videotext2videojson_agent` 工具**，将被选中的视频文本传入 `text` 字段，以生成10个JSON格式的拍摄脚本。\n*   **成功后转换**:\n    1.  将生成的10个拍摄脚本（或其核心内容摘要）展示给用户，并附上编号。\n    2.  询问用户选择使用哪个脚本进行视频合成。**示例话术**: “好的，基于您选择的文案，我已生成了10个不同的拍摄脚本。请选择一个您最满意的，回复编号，我将为您合成视频：\\n1. [脚本1摘要]...\\n2. [脚本2摘要]...\\n...”\n    3.  接收到用户选择的编号后，**将状态切换到 `STATE_WAITING_FOR_PUBLISH_CONFIRMATION`** 并进入步骤3。\n\n### **步骤 3: 从脚本到视频合成**\n\n*   **当前状态**: `STATE_WAITING_FOR_PUBLISH_CONFIRMATION`\n*   **触发条件**: 用户在步骤2后，输入了选择的脚本编号。\n*   **执行动作**:\n    1.  根据用户选择的编号，提取对应的JSON脚本。\n    2.  **必须调用 `videojson2video_agent` 工具**，传入选定的JSON脚本，合成视频。\n*   **成功后转换**:\n    1.  Agent会返回一个合成后的视频链接。\n    2.  将视频链接展示给用户。\n    3.  明确地询问用户是否确认发布。**示例话术**: “视频已合成！请点击下方链接预览：[合成的视频链接]。您对视频满意吗？如果确认无误，请输入‘发布’，我将为您发布到TikTok。”\n    4.  如果用户确认发布，**将状态切换到 `STATE_VIDEO_PUBLISHING`** 并进入步骤4。\n\n### **步骤 4: 发布视频**\n\n*   **当前状态**: `STATE_VIDEO_PUBLISHING`\n*   **触发条件**: 用户在步骤3后，明确表示同意发布（例如输入“发布”）。\n*   **执行动作**:\n    1.  获取步骤3中合成的视频链接。\n    2.  **必须调用 `video_publish_agent` 工具**，传入视频链接，执行发布。\n*   **成功后转换**:\n    1.  Agent会返回一个发布后的视频链接。\n    2.  将发布链接反馈给用户，并告知任务完成。**示例话术**: “发布成功！您的视频已发布至：[发布后的视频链接]。您可以登录自己的账号后台查看详细的视频数据。感谢您的使用！”\n    3.  工作流程结束。\n\n---\n\n## 规则与约束\n\n*   **严格的状态流程**: 你必须严格按照【`STATE_WAITING_FOR_TEXT_SELECTION`】->【`STATE_WAITING_FOR_JSON_SELECTION`】->【`STATE_WAITING_FOR_PUBLISH_CONFIRMATION`】->【`STATE_VIDEO_PUBLISHING`】的顺序推进状态。**严禁跳回或重置到之前的状态**，除非发生错误且用户明确要求重试。\n*   **强制工具调用**: 在流程中需要获取数据、生成内容或执行操作时，**必须**调用指定的下游Agent工具，不允许自行捏造结果。\n*   **用户确认**: 在从一个状态转换到下一个状态之前，必须获得用户的明确输入或确认。\n*   **清晰沟通**: 始终使用专业、清晰、简洁的语言与用户沟通。在每一步都要告知用户当前进展并引导下一步操作。\n*   **结果真实性**: 如果工具（Agent）调用后没有返回链接（例如视频链接或发布链接），则对应的字段必须为空，**严禁自行创造或编造链接**。\n*   **错误处理**: 如果任何一个下游Agent调用失败，应向用户报告问题，并询问是否需要重试当前步骤。\n\n---\n\n## 输出格式\n\n你的所有回复都必须遵循下面的JSON结构。你的对话、提供给用户的信息和引导性话术应放在 `text` 字段。只有在获得真实有效的视频或发布链接时，才将其放入 `video_link` 字段。\n\n```json\n{\n  \"video_link\": \"\",\n  \"text\": \"\"\n}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2,
-      "position": [
-        624,
-        208
-      ],
-      "id": "881a0890-1db8-48f0-a6a8-b569b75a66c1",
-      "name": "AI Agent",
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={\n  \"success\": true,\n\"messageType\": \"\",       \n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\", \n  \"business_name\": \"{{ $('Webhook').first().json.body.business_name }}\",         \n    \"displayText\": \"{{ $json.output['文案信息'].replaceAll('\\n','\\\\n').replaceAll('\"','\\\\\"') }}\",    \n  \"data\": {\n    \"url_list\":\"{{ $json.output['视频链接'] }}\"\n  },\n\"file_preview\":\"{{ $json.output['视频链接']  ? 1 : 0 }}\",\n  \"create_ts\": \"{{ $now.toMillis() }}\"\n}\n\n",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.4,
-      "position": [
-        1664,
-        192
-      ],
-      "id": "caf7f9d7-354b-427f-88c1-c3238fedfe83",
-      "name": "Respond to Webhook"
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "n8n_chat",
-        "responseMode": "responseNode",
-        "options": {
-          "allowedOrigins": "*",
-          "binaryPropertyName": "data"
-        }
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        0,
-        32
-      ],
-      "id": "a70cec32-d6b3-45a2-bd0a-565eaa667195",
-      "name": "Webhook",
-      "webhookId": "600d9861-4a74-4c9d-832f-83556b7793c9"
-    },
-    {
-      "parameters": {
-        "description": "调用工具进行视频合成",
-        "workflowId": {
-          "__rl": true,
-          "value": "zFF8IhMVpLT1bU9I",
-          "mode": "list",
-          "cachedResultName": "6video2tk"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('url', `合成的视频url`, 'string') }}",
-            "tags": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tags', `传入视频标签`, 'string') }}",
-            "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('text', `传入视频文案`, 'string') }}"
-          },
-          "matchingColumns": [
-            "json"
-          ],
-          "schema": [
-            {
-              "id": "url",
-              "displayName": "url",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "tags",
-              "displayName": "tags",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "text",
-              "displayName": "text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2.2,
-      "position": [
-        1104,
-        752
-      ],
-      "id": "089ddbce-fa03-4f89-bdd9-95ed364d31c5",
-      "name": "videototk"
-    },
-    {
-      "parameters": {
-        "description": "从数据库中找出战略地图和需要测试的素材数量",
-        "workflowId": {
-          "__rl": true,
-          "value": "p1VlKe4UzgjEhLeS",
-          "mode": "list",
-          "cachedResultName": "3keywords2videotext_agent"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "business_name": "={{ $('Webhook').item.json.body.business_name }}"
-          },
-          "matchingColumns": [
-            "business_name"
-          ],
-          "schema": [
-            {
-              "id": "business_name",
-              "displayName": "business_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2.2,
-      "position": [
-        320,
-        768
-      ],
-      "id": "cc41db74-de62-4f0b-8991-7d29ebd01037",
-      "name": "keywords2videotext_agent"
-    },
-    {
-      "parameters": {
-        "description": "传入用户选择的视频文案和商品名称和视频标签",
-        "workflowId": {
-          "__rl": true,
-          "value": "4XcCjtYnOHUrWIo9",
-          "mode": "list",
-          "cachedResultName": "4videotext2videojson_agent"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('text', `传入视频文案`, 'string') }}",
-            "product_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('product_name', `传输用户的商品名称`, 'string') }}",
-            "hashtags": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('hashtags', `传入视频标签`, 'string') }}"
-          },
-          "matchingColumns": [
-            "text"
-          ],
-          "schema": [
-            {
-              "id": "text",
-              "displayName": "text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "product_name",
-              "displayName": "product_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "hashtags",
-              "displayName": "hashtags",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2.2,
-      "position": [
-        496,
-        912
-      ],
-      "id": "0454184d-2f18-4165-8f0b-5e3bb6aea6ad",
-      "name": "videotext2videojson_agent"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# 内容\n {{ $json.output.toJsonString() }}",
-        "hasOutputParser": true,
-        "messages": {
-          "messageValues": [
-            {
-              "message": "=# 目标\n- 将内容进行分类，关于视频的链接赋值到\"视频链接\"这个key的value中\n，关于文字信息赋值到\"文案信息\"这个key的value中\n- 如果有多个使用#拼接\n\n# 规则\n- 交互式引导式的话语例如“你好”这类欢迎语属于文字信息，需要赋值到文案信息字段\n- 以http开头的一般是视频链接，需要赋值到视频链接字段\n# 返回格式 \n\n{\"视频链接\":\"\",\"文案信息\":\"\"}"
-            }
-          ]
-        },
-        "batching": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
-      "position": [
-        1280,
-        192
-      ],
-      "id": "512f4f2d-7d9c-4ad7-9c88-23b2fd2d48ff",
-      "name": "Basic LLM Chain",
-      "alwaysOutputData": true,
-      "retryOnFail": true,
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-4.1",
-          "mode": "list",
-          "cachedResultName": "gpt-4.1"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        1408,
-        608
-      ],
-      "id": "0c7f8d81-33ed-4400-83e0-4a82fdcf8a81",
-      "name": "OpenAI Chat Model",
-      "credentials": {
-        "openAiApi": {
-          "id": "78STzGl1KfiwBkVM",
-          "name": "OpenAi account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsonSchemaExample": "{\"视频链接\":\"http://\",\"文案信息\":\"你好.....\"}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        1488,
-        400
-      ],
-      "id": "1d8f2060-a82b-4451-b08c-690032a4a1c6",
-      "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "o3",
-          "mode": "list",
-          "cachedResultName": "o3"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        -224,
-        704
-      ],
-      "id": "0f933b9a-6751-466f-ab30-04132d25780f",
-      "name": "OpenAI Chat Model1",
-      "credentials": {
-        "openAiApi": {
-          "id": "nlFmjkNQkWVpRAF0",
-          "name": "huanxin"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $('Webhook').item.json.body.session_id }}",
-        "contextWindowLength": 50
-      },
-      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
-      "typeVersion": 1.3,
-      "position": [
-        80,
-        752
-      ],
-      "id": "2e2b848b-572a-461e-a016-2f315ab17b7f",
-      "name": "Postgres Chat Memory",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "dataToSave": {
-          "values": [
-            {
-              "key": "=bussiness_name",
-              "value": "={{ $json.body.business_name }}"
-            },
-            {
-              "key": "session_id",
-              "value": "={{ $json.body.session_id }}"
-            },
-            {
-              "key": "user_id",
-              "value": "={{ $json.body.user_id }}"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.executionData",
-      "typeVersion": 1,
-      "position": [
-        464,
-        -128
-      ],
-      "id": "7644f345-5694-4414-8b6f-c2a7bf98be3d",
-      "name": "Execution Data"
-    },
-    {
-      "parameters": {
-        "content": "## 记录日志方便查问题",
-        "height": 220
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        400,
-        -176
-      ],
-      "id": "9798282e-c96e-43c8-b0f7-60b3b53fac2f",
-      "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "content": "## 主agent，管理关键词确定、视频json生成、视频合成、视频发布4个功能",
-        "height": 220,
-        "width": 1040
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        144,
-        112
-      ],
-      "id": "e0627460-8de2-4e70-a50e-f7653cf31a2a",
-      "name": "Sticky Note1"
-    },
-    {
-      "parameters": {
-        "content": "## 查数据库的作战地图，待测试脚本库有多少未测试的",
-        "height": 240,
-        "color": 4
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        240,
-        640
-      ],
-      "id": "cc5737e9-9408-49d2-a982-e207fbb47f72",
-      "name": "Sticky Note2"
-    },
-    {
-      "parameters": {
-        "content": "## 拿到用户确认的爆款文案素材，给出1个拍摄方案",
-        "height": 240,
-        "color": 4
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        512,
-        640
-      ],
-      "id": "770ab3cb-2d97-4ef6-b685-2ee23ca7859d",
-      "name": "Sticky Note3"
-    },
-    {
-      "parameters": {
-        "content": "## 拿到用户确认的拍摄方案，合成视频",
-        "height": 240,
-        "color": 4
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        768,
-        640
-      ],
-      "id": "b8def49f-e239-40e2-b34f-37dc1aa6e652",
-      "name": "Sticky Note4"
-    },
-    {
-      "parameters": {
-        "content": "## 拿到视频url发布到tk",
-        "height": 240,
-        "color": 4
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1024,
-        640
-      ],
-      "id": "b1e2ef67-6c70-4429-9249-e697e068280b",
-      "name": "Sticky Note5"
-    },
-    {
-      "parameters": {
-        "content": "## 按照前端需要的格式返回",
-        "height": 460,
-        "width": 620
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1248,
-        112
-      ],
-      "id": "d34eedb2-a376-481b-8976-188b6e709562",
-      "name": "Sticky Note6"
-    },
-    {
-      "parameters": {
-        "description": "传入用户选择的视频文案和商品名称和视频标签",
-        "workflowId": {
-          "__rl": true,
-          "value": "zBzSaWt2Bjkuhat6",
-          "mode": "list",
-          "cachedResultName": "5videojson2video_agent"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "json": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('json', `传入用户确认的视频拍摄json脚本`, 'string') }}"
-          },
-          "matchingColumns": [
-            "text"
-          ],
-          "schema": [
-            {
-              "id": "json",
-              "displayName": "json",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2.2,
-      "position": [
-        848,
-        752
-      ],
-      "id": "91cee8f9-3b35-41eb-8355-4740df24c22d",
-      "name": "videojson2video_agent"
-    },
-    {
-      "parameters": {
-        "content": "## 设计思路\n- 通过aiagent能力完成不同阶段不同工具的调用，总共设置4个tool，在不同的时机进行调用\n## 实现功能\n- 这个工作流完成关键词提取库里爆款素材，给出5个让用户确认一个\n- 拿到确认的爆款素材生成10个json拍摄脚本，然后让用户再确认1一个进行合成\n- 拿到确认的json脚本，进行视频合成，得到合成链接给用户确认是否发布\n- 用户确认发布，然后就会调用发布tool进行视频发布\n## 实现原理\n- 基于n8n 的aiagent能力完成工具的调用，在工具子流程中完成具体的逻辑执行",
-        "height": 300,
-        "width": 760,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        768,
-        -256
-      ],
-      "id": "3badbe8e-59ae-426e-b217-28704019d2eb",
-      "name": "Sticky Note7"
-    },
-    {
-      "parameters": {
-        "model": "openai/gpt-oss-120b",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        -48,
-        704
-      ],
-      "id": "1fba9a99-fc94-4465-a041-c5ac68401a8b",
-      "name": "OpenRouter Chat Model",
-      "credentials": {
-        "openRouterApi": {
-          "id": "oigW3KLm0OZq9rWp",
-          "name": "OpenRouter account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "push",
-        "list": "ai-conversation-agent-message-queue",
-        "messageData": "={\n  \"env\": \"gray\",\n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\",\n  \"user_id\": \"{{ $('Webhook').item.json.body.user_id }}\",\n  \"operate_id\": \"主agent回复\",\n  \"request_id\": \"{{ $('Webhook').item.json.body.request_id }}\",\n  \"socket_id\": \"{{ $('Webhook').item.json.body.socket_id }}\",\n  \"status\": \"FINISHED\",\n  \"content_type\": 1,\n  \"content\": {\n    \"text\": \"{{ $json.output['文案信息'] }}\",\n    \"data\": {\n      \"video_link\": \"{{ $json.output['视频链接'] }}\"\n    }\n  },\n  \"create_ts\": {{ $now.toMillis() }}\n}"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [
-        1664,
-        352
-      ],
-      "id": "eeb2c454-6530-4278-a273-f86923e4db85",
-      "name": "与后端交互",
-      "credentials": {
-        "redis": {
-          "id": "UkcckENclXgOKcal",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": "google/gemini-2.5-flash",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        1312,
-        416
-      ],
-      "id": "8571e355-cefb-486f-9b5d-733eb6f984a3",
-      "name": "OpenRouter Chat Model1",
-      "credentials": {
-        "openRouterApi": {
-          "id": "oigW3KLm0OZq9rWp",
-          "name": "OpenRouter account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_video_content_to_learn",
-          "mode": "list",
-          "cachedResultName": "hsai_business_video_content_to_learn"
-        },
-        "limit": "=1",
-        "where": {
-          "values": [
-            {
-              "column": "business_name",
-              "value": "={{ $('Webhook').item.json.body.business_name }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgresTool",
-      "typeVersion": 2.6,
-      "position": [
-        592,
-        768
-      ],
-      "id": "af84a9ee-c89f-445c-b8c1-54c01241e7e3",
-      "name": "videotext2videojson_agent1",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    }
-  ],
-  "pinData": {
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "webhook-n8n.hsai.cc",
-            "content-type": "application/json",
-            "user-agent": "OpenWebUI-N8N-Client/1.0",
-            "accept": "*/*",
-            "accept-encoding": "gzip, deflate, br",
-            "content-length": "355",
-            "x-forwarded-for": "27.151.105.162",
-            "x-forwarded-proto": "https",
-            "x-envoy-original-host": "webhook-n8n.hsai.cc",
-            "x-envoy-external-address": "27.151.105.162",
-            "x-request-id": "5ddaf914-f186-47bf-bb84-ee2359d19a0e",
-            "x-envoy-attempt-count": "1",
-            "req-start-time": "1759163185072",
-            "original-host": "webhook-n8n.hsai.cc",
-            "x-envoy-route-identifier": "true"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "session_id": "0a5c2a3d-c38e-46c2-a8bc-ee7ad6d3af7c",
-            "user_id": "99646252-83fb-4e9a-bb8a-d6bc647c1da7",
-            "message": "1",
-            "timestamp": 1759163184451,
-            "request_id": "fb9c2e91-cc67-4ddd-8c17-a34ca1e974d7",
-            "socket_id": "KwWNCOKWqerb6x5SAAdz",
-            "entry_type": "chat",
-            "business_name": "HSAI",
-            "additional_data": {
-              "timestamp": 1759163183,
-              "client_version": ""
-            }
-          },
-          "webhookUrl": "http://localhost:5678/webhook/n8n_chat",
-          "executionMode": "production"
-        }
-      }
-    ]
-  },
-  "connections": {
-    "AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Execution Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "videototk": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "keywords2videotext_agent": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "videotext2videojson_agent": {
-      "ai_tool": [
-        []
-      ]
-    },
-    "Basic LLM Chain": {
-      "main": [
-        [
-          {
-            "node": "Respond to Webhook",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "与后端交互",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model": {
-      "ai_languageModel": [
-        []
-      ]
-    },
-    "Structured Output Parser": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Postgres Chat Memory": {
-      "ai_memory": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "videojson2video_agent": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenRouter Chat Model": {
-      "ai_languageModel": [
-        []
-      ]
-    },
-    "OpenRouter Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "videotext2videojson_agent1": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "55c23bea-2f6f-4285-be8e-1e92dbf2209a",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "hROwwd7UTCzQeFxj",
-  "tags": []
+	"name": "2主工作流",
+	"nodes": [
+		{
+			"parameters": {
+				"promptType": "define",
+				"text": "=# 用户输入信息\n{{ $json.body.message }}",
+				"hasOutputParser": true,
+				"options": {
+					"systemMessage": "=# 角色：B2B智能视频创作与发布助手\n\n你是一个专业的、循序渐进的B2B智能视频创作与发布助手。你的核心任务是严格按照预设流程，通过与用户交互并调用不同工具，最终完成视频的创作和发布。\n\n---\n\n## 工作状态管理\n\n为了确保流程的正确执行，你必须在内部维护一个当前的工作状态。整个工作流分为以下几个状态，你必须严格按顺序从一个状态转换到下一个状态：\n\n1.  `STATE_WAITING_FOR_TEXT_SELECTION`：等待用户确认执行调取待测试库视频开始合成视频。\n2.  `STATE_WAITING_FOR_JSON_SELECTION`：等待用户选择拍摄脚本。\n3.  `STATE_WAITING_FOR_PUBLISH_CONFIRMATION`：等待用户确认发布视频。\n4.  `STATE_VIDEO_PUBLISHING`：执行视频发布。\n\n---\n\n## 核心工作流程\n\n你必须严格遵循以下状态和步骤顺序来完成任务。严禁跳跃或回退步骤。\n\n### **步骤 1: 提取作战地图和待测试及爆款脚本库数量，结合作战地图告诉用户现在还需要合成多少个视频来测试**\n\n*   **当前状态**: `STATE_WAITING_FOR_TEXT_SELECTION`\n*   **触发条件**: 当用户确定要知道现在还需要拍摄多少视频时。\n*   **执行动作**:\n    1.  **必须调用 `keywords2videotext_agent` 工具**，以获取目前还需要进行多少拍摄的任务。\n*   **成功后转换**:\n    2.  接收到用户知晓后，**将状态切换到 `STATE_WAITING_FOR_JSON_SELECTION`** 并进入步骤2。\n\n### **步骤 2: 从文案到选定脚本**\n\n*   **当前状态**: `STATE_WAITING_FOR_JSON_SELECTION`\n*   **触发条件**: 用户在步骤1后，输入了选择的文案编号。\n*   **执行动作**:\n    1.  根据用户选择的编号，提取对应的 `视频文本`。\n    2.  **必须调用 `videotext2videojson_agent` 工具**，将被选中的视频文本传入 `text` 字段，以生成10个JSON格式的拍摄脚本。\n*   **成功后转换**:\n    1.  将生成的10个拍摄脚本（或其核心内容摘要）展示给用户，并附上编号。\n    2.  询问用户选择使用哪个脚本进行视频合成。**示例话术**: “好的，基于您选择的文案，我已生成了10个不同的拍摄脚本。请选择一个您最满意的，回复编号，我将为您合成视频：\\n1. [脚本1摘要]...\\n2. [脚本2摘要]...\\n...”\n    3.  接收到用户选择的编号后，**将状态切换到 `STATE_WAITING_FOR_PUBLISH_CONFIRMATION`** 并进入步骤3。\n\n### **步骤 3: 从脚本到视频合成**\n\n*   **当前状态**: `STATE_WAITING_FOR_PUBLISH_CONFIRMATION`\n*   **触发条件**: 用户在步骤2后，输入了选择的脚本编号。\n*   **执行动作**:\n    1.  根据用户选择的编号，提取对应的JSON脚本。\n    2.  **必须调用 `videojson2video_agent` 工具**，传入选定的JSON脚本，合成视频。\n*   **成功后转换**:\n    1.  Agent会返回一个合成后的视频链接。\n    2.  将视频链接展示给用户。\n    3.  明确地询问用户是否确认发布。**示例话术**: “视频已合成！请点击下方链接预览：[合成的视频链接]。您对视频满意吗？如果确认无误，请输入‘发布’，我将为您发布到TikTok。”\n    4.  如果用户确认发布，**将状态切换到 `STATE_VIDEO_PUBLISHING`** 并进入步骤4。\n\n### **步骤 4: 发布视频**\n\n*   **当前状态**: `STATE_VIDEO_PUBLISHING`\n*   **触发条件**: 用户在步骤3后，明确表示同意发布（例如输入“发布”）。\n*   **执行动作**:\n    1.  获取步骤3中合成的视频链接。\n    2.  **必须调用 `video_publish_agent` 工具**，传入视频链接，执行发布。\n*   **成功后转换**:\n    1.  Agent会返回一个发布后的视频链接。\n    2.  将发布链接反馈给用户，并告知任务完成。**示例话术**: “发布成功！您的视频已发布至：[发布后的视频链接]。您可以登录自己的账号后台查看详细的视频数据。感谢您的使用！”\n    3.  工作流程结束。\n\n---\n\n## 规则与约束\n\n*   **严格的状态流程**: 你必须严格按照【`STATE_WAITING_FOR_TEXT_SELECTION`】->【`STATE_WAITING_FOR_JSON_SELECTION`】->【`STATE_WAITING_FOR_PUBLISH_CONFIRMATION`】->【`STATE_VIDEO_PUBLISHING`】的顺序推进状态。**严禁跳回或重置到之前的状态**，除非发生错误且用户明确要求重试。\n*   **强制工具调用**: 在流程中需要获取数据、生成内容或执行操作时，**必须**调用指定的下游Agent工具，不允许自行捏造结果。\n*   **用户确认**: 在从一个状态转换到下一个状态之前，必须获得用户的明确输入或确认。\n*   **清晰沟通**: 始终使用专业、清晰、简洁的语言与用户沟通。在每一步都要告知用户当前进展并引导下一步操作。\n*   **结果真实性**: 如果工具（Agent）调用后没有返回链接（例如视频链接或发布链接），则对应的字段必须为空，**严禁自行创造或编造链接**。\n*   **错误处理**: 如果任何一个下游Agent调用失败，应向用户报告问题，并询问是否需要重试当前步骤。\n\n---\n\n## 输出格式\n\n你的所有回复都必须遵循下面的JSON结构。你的对话、提供给用户的信息和引导性话术应放在 `text` 字段。只有在获得真实有效的视频或发布链接时，才将其放入 `video_link` 字段。\n\n```json\n{\n  \"video_link\": \"\",\n  \"text\": \"\"\n}"
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.agent",
+			"typeVersion": 2,
+			"position": [624, 208],
+			"id": "881a0890-1db8-48f0-a6a8-b569b75a66c1",
+			"name": "AI Agent",
+			"onError": "continueRegularOutput"
+		},
+		{
+			"parameters": {
+				"respondWith": "json",
+				"responseBody": "={\n  \"success\": true,\n\"messageType\": \"\",       \n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\", \n  \"business_name\": \"{{ $('Webhook').first().json.body.business_name }}\",         \n    \"displayText\": \"{{ $json.output['文案信息'].replaceAll('\\n','\\\\n').replaceAll('\"','\\\\\"') }}\",    \n  \"data\": {\n    \"url_list\":\"{{ $json.output['视频链接'] }}\"\n  },\n\"file_preview\":\"{{ $json.output['视频链接']  ? 1 : 0 }}\",\n  \"create_ts\": \"{{ $now.toMillis() }}\"\n}\n\n",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.respondToWebhook",
+			"typeVersion": 1.4,
+			"position": [1664, 192],
+			"id": "caf7f9d7-354b-427f-88c1-c3238fedfe83",
+			"name": "Respond to Webhook"
+		},
+		{
+			"parameters": {
+				"httpMethod": "POST",
+				"path": "n8n_chat",
+				"responseMode": "responseNode",
+				"options": {
+					"allowedOrigins": "*",
+					"binaryPropertyName": "data"
+				}
+			},
+			"type": "n8n-nodes-base.webhook",
+			"typeVersion": 2,
+			"position": [0, 32],
+			"id": "a70cec32-d6b3-45a2-bd0a-565eaa667195",
+			"name": "Webhook",
+			"webhookId": "600d9861-4a74-4c9d-832f-83556b7793c9"
+		},
+		{
+			"parameters": {
+				"description": "调用工具进行视频合成",
+				"workflowId": {
+					"__rl": true,
+					"value": "zFF8IhMVpLT1bU9I",
+					"mode": "list",
+					"cachedResultName": "6video2tk"
+				},
+				"workflowInputs": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('url', `合成的视频url`, 'string') }}",
+						"tags": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('tags', `传入视频标签`, 'string') }}",
+						"text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('text', `传入视频文案`, 'string') }}"
+					},
+					"matchingColumns": ["json"],
+					"schema": [
+						{
+							"id": "url",
+							"displayName": "url",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						},
+						{
+							"id": "tags",
+							"displayName": "tags",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						},
+						{
+							"id": "text",
+							"displayName": "text",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+			"typeVersion": 2.2,
+			"position": [1104, 752],
+			"id": "089ddbce-fa03-4f89-bdd9-95ed364d31c5",
+			"name": "videototk"
+		},
+		{
+			"parameters": {
+				"description": "从数据库中找出战略地图和需要测试的素材数量",
+				"workflowId": {
+					"__rl": true,
+					"value": "p1VlKe4UzgjEhLeS",
+					"mode": "list",
+					"cachedResultName": "3keywords2videotext_agent"
+				},
+				"workflowInputs": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"business_name": "={{ $('Webhook').item.json.body.business_name }}"
+					},
+					"matchingColumns": ["business_name"],
+					"schema": [
+						{
+							"id": "business_name",
+							"displayName": "business_name",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+			"typeVersion": 2.2,
+			"position": [320, 768],
+			"id": "cc41db74-de62-4f0b-8991-7d29ebd01037",
+			"name": "keywords2videotext_agent"
+		},
+		{
+			"parameters": {
+				"description": "传入用户选择的视频文案和商品名称和视频标签",
+				"workflowId": {
+					"__rl": true,
+					"value": "4XcCjtYnOHUrWIo9",
+					"mode": "list",
+					"cachedResultName": "4videotext2videojson_agent"
+				},
+				"workflowInputs": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('text', `传入视频文案`, 'string') }}",
+						"product_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('product_name', `传输用户的商品名称`, 'string') }}",
+						"hashtags": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('hashtags', `传入视频标签`, 'string') }}"
+					},
+					"matchingColumns": ["text"],
+					"schema": [
+						{
+							"id": "text",
+							"displayName": "text",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						},
+						{
+							"id": "product_name",
+							"displayName": "product_name",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						},
+						{
+							"id": "hashtags",
+							"displayName": "hashtags",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+			"typeVersion": 2.2,
+			"position": [496, 912],
+			"id": "0454184d-2f18-4165-8f0b-5e3bb6aea6ad",
+			"name": "videotext2videojson_agent"
+		},
+		{
+			"parameters": {
+				"promptType": "define",
+				"text": "=# 内容\n {{ $json.output.toJsonString() }}",
+				"hasOutputParser": true,
+				"messages": {
+					"messageValues": [
+						{
+							"message": "=# 目标\n- 将内容进行分类，关于视频的链接赋值到\"视频链接\"这个key的value中\n，关于文字信息赋值到\"文案信息\"这个key的value中\n- 如果有多个使用#拼接\n\n# 规则\n- 交互式引导式的话语例如“你好”这类欢迎语属于文字信息，需要赋值到文案信息字段\n- 以http开头的一般是视频链接，需要赋值到视频链接字段\n# 返回格式 \n\n{\"视频链接\":\"\",\"文案信息\":\"\"}"
+						}
+					]
+				},
+				"batching": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.chainLlm",
+			"typeVersion": 1.7,
+			"position": [1280, 192],
+			"id": "512f4f2d-7d9c-4ad7-9c88-23b2fd2d48ff",
+			"name": "Basic LLM Chain",
+			"alwaysOutputData": true,
+			"retryOnFail": true,
+			"onError": "continueRegularOutput"
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "gpt-4.1",
+					"mode": "list",
+					"cachedResultName": "gpt-4.1"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [1408, 608],
+			"id": "0c7f8d81-33ed-4400-83e0-4a82fdcf8a81",
+			"name": "OpenAI Chat Model",
+			"credentials": {
+				"openAiApi": {
+					"id": "78STzGl1KfiwBkVM",
+					"name": "OpenAi account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"jsonSchemaExample": "{\"视频链接\":\"http://\",\"文案信息\":\"你好.....\"}"
+			},
+			"type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+			"typeVersion": 1.3,
+			"position": [1488, 400],
+			"id": "1d8f2060-a82b-4451-b08c-690032a4a1c6",
+			"name": "Structured Output Parser"
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "o3",
+					"mode": "list",
+					"cachedResultName": "o3"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [-224, 704],
+			"id": "0f933b9a-6751-466f-ab30-04132d25780f",
+			"name": "OpenAI Chat Model1",
+			"credentials": {
+				"openAiApi": {
+					"id": "nlFmjkNQkWVpRAF0",
+					"name": "huanxin"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"sessionIdType": "customKey",
+				"sessionKey": "={{ $('Webhook').item.json.body.session_id }}",
+				"contextWindowLength": 50
+			},
+			"type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+			"typeVersion": 1.3,
+			"position": [80, 752],
+			"id": "2e2b848b-572a-461e-a016-2f315ab17b7f",
+			"name": "Postgres Chat Memory",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"dataToSave": {
+					"values": [
+						{
+							"key": "=bussiness_name",
+							"value": "={{ $json.body.business_name }}"
+						},
+						{
+							"key": "session_id",
+							"value": "={{ $json.body.session_id }}"
+						},
+						{
+							"key": "user_id",
+							"value": "={{ $json.body.user_id }}"
+						}
+					]
+				}
+			},
+			"type": "n8n-nodes-base.executionData",
+			"typeVersion": 1,
+			"position": [464, -128],
+			"id": "7644f345-5694-4414-8b6f-c2a7bf98be3d",
+			"name": "Execution Data"
+		},
+		{
+			"parameters": {
+				"content": "## 记录日志方便查问题",
+				"height": 220
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [400, -176],
+			"id": "9798282e-c96e-43c8-b0f7-60b3b53fac2f",
+			"name": "Sticky Note"
+		},
+		{
+			"parameters": {
+				"content": "## 主agent，管理关键词确定、视频json生成、视频合成、视频发布4个功能",
+				"height": 220,
+				"width": 1040
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [144, 112],
+			"id": "e0627460-8de2-4e70-a50e-f7653cf31a2a",
+			"name": "Sticky Note1"
+		},
+		{
+			"parameters": {
+				"content": "## 查数据库的作战地图，待测试脚本库有多少未测试的",
+				"height": 240,
+				"color": 4
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [240, 640],
+			"id": "cc5737e9-9408-49d2-a982-e207fbb47f72",
+			"name": "Sticky Note2"
+		},
+		{
+			"parameters": {
+				"content": "## 拿到用户确认的爆款文案素材，给出1个拍摄方案",
+				"height": 240,
+				"color": 4
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [512, 640],
+			"id": "770ab3cb-2d97-4ef6-b685-2ee23ca7859d",
+			"name": "Sticky Note3"
+		},
+		{
+			"parameters": {
+				"content": "## 拿到用户确认的拍摄方案，合成视频",
+				"height": 240,
+				"color": 4
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [768, 640],
+			"id": "b8def49f-e239-40e2-b34f-37dc1aa6e652",
+			"name": "Sticky Note4"
+		},
+		{
+			"parameters": {
+				"content": "## 拿到视频url发布到tk",
+				"height": 240,
+				"color": 4
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [1024, 640],
+			"id": "b1e2ef67-6c70-4429-9249-e697e068280b",
+			"name": "Sticky Note5"
+		},
+		{
+			"parameters": {
+				"content": "## 按照前端需要的格式返回",
+				"height": 460,
+				"width": 620
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [1248, 112],
+			"id": "d34eedb2-a376-481b-8976-188b6e709562",
+			"name": "Sticky Note6"
+		},
+		{
+			"parameters": {
+				"description": "传入用户选择的视频文案和商品名称和视频标签",
+				"workflowId": {
+					"__rl": true,
+					"value": "zBzSaWt2Bjkuhat6",
+					"mode": "list",
+					"cachedResultName": "5videojson2video_agent"
+				},
+				"workflowInputs": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"json": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('json', `传入用户确认的视频拍摄json脚本`, 'string') }}"
+					},
+					"matchingColumns": ["text"],
+					"schema": [
+						{
+							"id": "json",
+							"displayName": "json",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+			"typeVersion": 2.2,
+			"position": [848, 752],
+			"id": "91cee8f9-3b35-41eb-8355-4740df24c22d",
+			"name": "videojson2video_agent"
+		},
+		{
+			"parameters": {
+				"content": "## 设计思路\n- 通过aiagent能力完成不同阶段不同工具的调用，总共设置4个tool，在不同的时机进行调用\n## 实现功能\n- 这个工作流完成关键词提取库里爆款素材，给出5个让用户确认一个\n- 拿到确认的爆款素材生成10个json拍摄脚本，然后让用户再确认1一个进行合成\n- 拿到确认的json脚本，进行视频合成，得到合成链接给用户确认是否发布\n- 用户确认发布，然后就会调用发布tool进行视频发布\n## 实现原理\n- 基于n8n 的aiagent能力完成工具的调用，在工具子流程中完成具体的逻辑执行",
+				"height": 300,
+				"width": 760,
+				"color": 5
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [768, -256],
+			"id": "3badbe8e-59ae-426e-b217-28704019d2eb",
+			"name": "Sticky Note7"
+		},
+		{
+			"parameters": {
+				"model": "openai/gpt-oss-120b",
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+			"typeVersion": 1,
+			"position": [-48, 704],
+			"id": "1fba9a99-fc94-4465-a041-c5ac68401a8b",
+			"name": "OpenRouter Chat Model",
+			"credentials": {
+				"openRouterApi": {
+					"id": "oigW3KLm0OZq9rWp",
+					"name": "OpenRouter account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "push",
+				"list": "ai-conversation-agent-message-queue",
+				"messageData": "={\n  \"env\": \"gray\",\n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\",\n  \"user_id\": \"{{ $('Webhook').item.json.body.user_id }}\",\n  \"operate_id\": \"主agent回复\",\n  \"request_id\": \"{{ $('Webhook').item.json.body.request_id }}\",\n  \"socket_id\": \"{{ $('Webhook').item.json.body.socket_id }}\",\n  \"status\": \"FINISHED\",\n  \"content_type\": 1,\n  \"content\": {\n    \"text\": \"{{ $json.output['文案信息'] }}\",\n    \"data\": {\n      \"video_link\": \"{{ $json.output['视频链接'] }}\"\n    }\n  },\n  \"create_ts\": {{ $now.toMillis() }}\n}"
+			},
+			"type": "n8n-nodes-base.redis",
+			"typeVersion": 1,
+			"position": [1664, 352],
+			"id": "eeb2c454-6530-4278-a273-f86923e4db85",
+			"name": "与后端交互",
+			"credentials": {
+				"redis": {
+					"id": "UkcckENclXgOKcal",
+					"name": "Redis account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"model": "google/gemini-2.5-flash",
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+			"typeVersion": 1,
+			"position": [1312, 416],
+			"id": "8571e355-cefb-486f-9b5d-733eb6f984a3",
+			"name": "OpenRouter Chat Model1",
+			"credentials": {
+				"openRouterApi": {
+					"id": "oigW3KLm0OZq9rWp",
+					"name": "OpenRouter account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_video_content_to_learn",
+					"mode": "list",
+					"cachedResultName": "hsai_business_video_content_to_learn"
+				},
+				"limit": "=1",
+				"where": {
+					"values": [
+						{
+							"column": "business_name",
+							"value": "={{ $('Webhook').item.json.body.business_name }}"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgresTool",
+			"typeVersion": 2.6,
+			"position": [592, 768],
+			"id": "af84a9ee-c89f-445c-b8c1-54c01241e7e3",
+			"name": "videotext2videojson_agent1",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		}
+	],
+	"pinData": {
+		"Webhook": [
+			{
+				"json": {
+					"headers": {
+						"host": "webhook-n8n.hsai.cc",
+						"content-type": "application/json",
+						"user-agent": "OpenWebUI-N8N-Client/1.0",
+						"accept": "*/*",
+						"accept-encoding": "gzip, deflate, br",
+						"content-length": "355",
+						"x-forwarded-for": "27.151.105.162",
+						"x-forwarded-proto": "https",
+						"x-envoy-original-host": "webhook-n8n.hsai.cc",
+						"x-envoy-external-address": "27.151.105.162",
+						"x-request-id": "5ddaf914-f186-47bf-bb84-ee2359d19a0e",
+						"x-envoy-attempt-count": "1",
+						"req-start-time": "1759163185072",
+						"original-host": "webhook-n8n.hsai.cc",
+						"x-envoy-route-identifier": "true"
+					},
+					"params": {},
+					"query": {},
+					"body": {
+						"session_id": "0a5c2a3d-c38e-46c2-a8bc-ee7ad6d3af7c",
+						"user_id": "99646252-83fb-4e9a-bb8a-d6bc647c1da7",
+						"message": "1",
+						"timestamp": 1759163184451,
+						"request_id": "fb9c2e91-cc67-4ddd-8c17-a34ca1e974d7",
+						"socket_id": "KwWNCOKWqerb6x5SAAdz",
+						"entry_type": "chat",
+						"business_name": "HSAI",
+						"additional_data": {
+							"timestamp": 1759163183,
+							"client_version": ""
+						}
+					},
+					"webhookUrl": "http://localhost:5678/webhook/n8n_chat",
+					"executionMode": "production"
+				}
+			}
+		]
+	},
+	"connections": {
+		"AI Agent": {
+			"main": [
+				[
+					{
+						"node": "Basic LLM Chain",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Webhook": {
+			"main": [
+				[
+					{
+						"node": "AI Agent",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "Execution Data",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"videototk": {
+			"ai_tool": [
+				[
+					{
+						"node": "AI Agent",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"keywords2videotext_agent": {
+			"ai_tool": [
+				[
+					{
+						"node": "AI Agent",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"videotext2videojson_agent": {
+			"ai_tool": [[]]
+		},
+		"Basic LLM Chain": {
+			"main": [
+				[
+					{
+						"node": "Respond to Webhook",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "与后端交互",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenAI Chat Model": {
+			"ai_languageModel": [[]]
+		},
+		"Structured Output Parser": {
+			"ai_outputParser": [
+				[
+					{
+						"node": "Basic LLM Chain",
+						"type": "ai_outputParser",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenAI Chat Model1": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "AI Agent",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Postgres Chat Memory": {
+			"ai_memory": [
+				[
+					{
+						"node": "AI Agent",
+						"type": "ai_memory",
+						"index": 0
+					}
+				]
+			]
+		},
+		"videojson2video_agent": {
+			"ai_tool": [
+				[
+					{
+						"node": "AI Agent",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenRouter Chat Model": {
+			"ai_languageModel": [[]]
+		},
+		"OpenRouter Chat Model1": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "Basic LLM Chain",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"videotext2videojson_agent1": {
+			"ai_tool": [
+				[
+					{
+						"node": "AI Agent",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": true,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "55c23bea-2f6f-4285-be8e-1e92dbf2209a",
+	"meta": {
+		"templateCredsSetupCompleted": true,
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "hROwwd7UTCzQeFxj",
+	"tags": []
 }

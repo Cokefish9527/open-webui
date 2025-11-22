@@ -47,12 +47,19 @@ export interface SystemMessage extends BaseMessage {
 // 注意：这里我们使用项目中已有的HSAI任务系统类型定义
 export interface HSAITaskMessage extends AssistantMessage {
 	taskId?: string;
-	task?: HSAITask;  // 使用HSAI任务系统中的任务类型
-	taskStep?: HSAITaskStep;  // 如果需要，可以定义任务步骤类型
+	task?: HSAITask; // 使用HSAI任务系统中的任务类型
+	taskStep?: HSAITaskStep; // 如果需要，可以定义任务步骤类型
 	messageType: 'task_info' | 'task_progress' | 'task_result' | 'task_error';
 	// 用于在右侧展示系统信息卡片
 	displaySide: 'left' | 'right';
-	cardType?: 'task_progress' | 'task_result' | 'material_check' | 'account_check' | 'preview' | 'confirmation' | 'feedback';
+	cardType?:
+		| 'task_progress'
+		| 'task_result'
+		| 'material_check'
+		| 'account_check'
+		| 'preview'
+		| 'confirmation'
+		| 'feedback';
 	cardData?: any; // 卡片特定数据
 }
 

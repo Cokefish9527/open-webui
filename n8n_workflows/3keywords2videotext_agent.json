@@ -1,367 +1,337 @@
 {
-  "name": "3keywords2videotext_agent",
-  "nodes": [
-    {
-      "parameters": {
-        "workflowInputs": {
-          "values": [
-            {
-              "name": "business_name"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "typeVersion": 1.1,
-      "position": [
-        0,
-        96
-      ],
-      "id": "e38c1827-ebcb-4084-bfcc-3c6c36e74840",
-      "name": "When Executed by Another Workflow"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "4cde00ac-45e5-4efe-a360-207c1bf237db",
-              "name": "待制作视频脚本库",
-              "value": "=待制作视频脚本有{{ $json.data[0].count_video_url }}个",
-              "type": "string"
-            },
-            {
-              "id": "c89a76dc-81a3-4636-99a7-13ad6f8375aa",
-              "name": "作战地图",
-              "value": "=今日任务准备发布{{ $json.data[2].output }}条视频",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1536,
-        96
-      ],
-      "id": "7f0cf45c-cfba-44ba-8ddd-ee3152a72987",
-      "name": "Edit Fields"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        1088,
-        96
-      ],
-      "id": "cb353b55-d4cc-45f0-adf0-a32397b43ca1",
-      "name": "Merge"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        1312,
-        96
-      ],
-      "id": "e743720d-1e2e-4f77-972a-b6782beb710e",
-      "name": "Aggregate"
-    },
-    {
-      "parameters": {
-        "fieldsToSummarize": {
-          "values": [
-            {
-              "field": "video_url"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.summarize",
-      "typeVersion": 1.1,
-      "position": [
-        448,
-        0
-      ],
-      "id": "a1952943-2129-4a9e-b038-dd29482971a6",
-      "name": "Summarize",
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_key_messages",
-          "mode": "list",
-          "cachedResultName": "hsai_business_key_messages"
-        },
-        "where": {
-          "values": [
-            {
-              "column": "business_name",
-              "value": "={{ $json.business_name }}"
-            },
-            {
-              "column": "message_type",
-              "condition": "LIKE",
-              "value": "%作战地图%"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        224,
-        384
-      ],
-      "id": "3cdd8f13-10ab-4738-8dd4-2084778d8ebd",
-      "name": "查询作战地图",
-      "alwaysOutputData": true,
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "fieldsToAggregate": {
-          "fieldToAggregate": [
-            {
-              "fieldToAggregate": "data_info"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        432,
-        384
-      ],
-      "id": "70ef7c81-eddd-4bac-bf1c-e1ca4b7ae98d",
-      "name": "Aggregate1"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# 作战地图\n{{ $json.data_info.toJsonString() }}",
-        "options": {
-          "systemMessage": "=# 目标\n判断作战地图里需要生成多少个视频\n# 输出\n只输出视频数量"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2.2,
-      "position": [
-        640,
-        384
-      ],
-      "id": "982bd21e-2e65-4c61-8813-e9ee6f9af859",
-      "name": "AI Agent"
-    },
-    {
-      "parameters": {
-        "model": "google/gemini-2.5-flash",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        512,
-        592
-      ],
-      "id": "1a6248fc-fb07-49fa-98d1-6f799f3aab1e",
-      "name": "OpenRouter Chat Model",
-      "credentials": {
-        "openRouterApi": {
-          "id": "rxUfyA7xdhW6JG8T",
-          "name": "OpenRouter account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_video_content_to_learn",
-          "mode": "list",
-          "cachedResultName": "hsai_business_video_content_to_learn"
-        },
-        "where": {
-          "values": [
-            {
-              "column": "business_name",
-              "value": "={{ $json.business_name }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        224,
-        0
-      ],
-      "id": "e5773e4f-9be1-467d-9e8a-6d4e166734ee",
-      "name": "待制作视频脚本库",
-      "alwaysOutputData": true,
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    }
-  ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "business_name": "HSAI"
-        }
-      }
-    ]
-  },
-  "connections": {
-    "When Executed by Another Workflow": {
-      "main": [
-        [
-          {
-            "node": "待制作视频脚本库",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "查询作战地图",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Aggregate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Summarize": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "查询作战地图": {
-      "main": [
-        [
-          {
-            "node": "Aggregate1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate1": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "OpenRouter Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "待制作视频脚本库": {
-      "main": [
-        [
-          {
-            "node": "Summarize",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "4420f98d-cc9c-4ab7-9fa6-f684b89bc09e",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "p1VlKe4UzgjEhLeS",
-  "tags": []
+	"name": "3keywords2videotext_agent",
+	"nodes": [
+		{
+			"parameters": {
+				"workflowInputs": {
+					"values": [
+						{
+							"name": "business_name"
+						}
+					]
+				}
+			},
+			"type": "n8n-nodes-base.executeWorkflowTrigger",
+			"typeVersion": 1.1,
+			"position": [0, 96],
+			"id": "e38c1827-ebcb-4084-bfcc-3c6c36e74840",
+			"name": "When Executed by Another Workflow"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "4cde00ac-45e5-4efe-a360-207c1bf237db",
+							"name": "待制作视频脚本库",
+							"value": "=待制作视频脚本有{{ $json.data[0].count_video_url }}个",
+							"type": "string"
+						},
+						{
+							"id": "c89a76dc-81a3-4636-99a7-13ad6f8375aa",
+							"name": "作战地图",
+							"value": "=今日任务准备发布{{ $json.data[2].output }}条视频",
+							"type": "string"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [1536, 96],
+			"id": "7f0cf45c-cfba-44ba-8ddd-ee3152a72987",
+			"name": "Edit Fields"
+		},
+		{
+			"parameters": {},
+			"type": "n8n-nodes-base.merge",
+			"typeVersion": 3.2,
+			"position": [1088, 96],
+			"id": "cb353b55-d4cc-45f0-adf0-a32397b43ca1",
+			"name": "Merge"
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [1312, 96],
+			"id": "e743720d-1e2e-4f77-972a-b6782beb710e",
+			"name": "Aggregate"
+		},
+		{
+			"parameters": {
+				"fieldsToSummarize": {
+					"values": [
+						{
+							"field": "video_url"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.summarize",
+			"typeVersion": 1.1,
+			"position": [448, 0],
+			"id": "a1952943-2129-4a9e-b038-dd29482971a6",
+			"name": "Summarize",
+			"alwaysOutputData": true
+		},
+		{
+			"parameters": {
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_key_messages",
+					"mode": "list",
+					"cachedResultName": "hsai_business_key_messages"
+				},
+				"where": {
+					"values": [
+						{
+							"column": "business_name",
+							"value": "={{ $json.business_name }}"
+						},
+						{
+							"column": "message_type",
+							"condition": "LIKE",
+							"value": "%作战地图%"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [224, 384],
+			"id": "3cdd8f13-10ab-4738-8dd4-2084778d8ebd",
+			"name": "查询作战地图",
+			"alwaysOutputData": true,
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"fieldsToAggregate": {
+					"fieldToAggregate": [
+						{
+							"fieldToAggregate": "data_info"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [432, 384],
+			"id": "70ef7c81-eddd-4bac-bf1c-e1ca4b7ae98d",
+			"name": "Aggregate1"
+		},
+		{
+			"parameters": {
+				"promptType": "define",
+				"text": "=# 作战地图\n{{ $json.data_info.toJsonString() }}",
+				"options": {
+					"systemMessage": "=# 目标\n判断作战地图里需要生成多少个视频\n# 输出\n只输出视频数量"
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.agent",
+			"typeVersion": 2.2,
+			"position": [640, 384],
+			"id": "982bd21e-2e65-4c61-8813-e9ee6f9af859",
+			"name": "AI Agent"
+		},
+		{
+			"parameters": {
+				"model": "google/gemini-2.5-flash",
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+			"typeVersion": 1,
+			"position": [512, 592],
+			"id": "1a6248fc-fb07-49fa-98d1-6f799f3aab1e",
+			"name": "OpenRouter Chat Model",
+			"credentials": {
+				"openRouterApi": {
+					"id": "rxUfyA7xdhW6JG8T",
+					"name": "OpenRouter account 2"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_video_content_to_learn",
+					"mode": "list",
+					"cachedResultName": "hsai_business_video_content_to_learn"
+				},
+				"where": {
+					"values": [
+						{
+							"column": "business_name",
+							"value": "={{ $json.business_name }}"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgres",
+			"typeVersion": 2.6,
+			"position": [224, 0],
+			"id": "e5773e4f-9be1-467d-9e8a-6d4e166734ee",
+			"name": "待制作视频脚本库",
+			"alwaysOutputData": true,
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		}
+	],
+	"pinData": {
+		"When Executed by Another Workflow": [
+			{
+				"json": {
+					"business_name": "HSAI"
+				}
+			}
+		]
+	},
+	"connections": {
+		"When Executed by Another Workflow": {
+			"main": [
+				[
+					{
+						"node": "待制作视频脚本库",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "查询作战地图",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Merge": {
+			"main": [
+				[
+					{
+						"node": "Aggregate",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Aggregate": {
+			"main": [
+				[
+					{
+						"node": "Edit Fields",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Summarize": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"查询作战地图": {
+			"main": [
+				[
+					{
+						"node": "Aggregate1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Aggregate1": {
+			"main": [
+				[
+					{
+						"node": "AI Agent",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"AI Agent": {
+			"main": [
+				[
+					{
+						"node": "Merge",
+						"type": "main",
+						"index": 1
+					}
+				]
+			]
+		},
+		"OpenRouter Chat Model": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "AI Agent",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"待制作视频脚本库": {
+			"main": [
+				[
+					{
+						"node": "Summarize",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": false,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "4420f98d-cc9c-4ab7-9fa6-f684b89bc09e",
+	"meta": {
+		"templateCredsSetupCompleted": true,
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "p1VlKe4UzgjEhLeS",
+	"tags": []
 }

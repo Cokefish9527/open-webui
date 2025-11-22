@@ -1,1866 +1,1738 @@
 {
-  "name": "1公司信息收集及作战地图梳理-雨晨后端对接",
-  "nodes": [
-    {
-      "parameters": {
-        "operation": "toBinary",
-        "sourceProperty": "data",
-        "options": {
-          "fileName": "={{ $json.fileName }}",
-          "mimeType": "={{ $json.mimeType }}"
-        }
-      },
-      "type": "n8n-nodes-base.convertToFile",
-      "typeVersion": 1.1,
-      "position": [
-        368,
-        -112
-      ],
-      "id": "ae7d495e-ce58-4362-8289-42bd782f0b22",
-      "name": "Convert to File"
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": false,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "b3784277-1746-477a-b78e-2ca303df8423",
-                    "leftValue": "={{ $json.mimeType }}",
-                    "rightValue": "image/",
-                    "operator": {
-                      "type": "string",
-                      "operation": "startsWith"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Image"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": false,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "58cd09cb-2657-41b0-86c1-7c9b8f499e90",
-                    "leftValue": "={{ $json.mimeType }}",
-                    "rightValue": "text/plain",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Plain Text"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": false,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "1e0475d6-3c04-42d1-a758-b1a79ade7962",
-                    "leftValue": "={{ $json.mimeType }}",
-                    "rightValue": "application/pdf",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "PDF"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": false,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "e5d9cde7-d9ff-4a2d-ba99-69b4e3b73521",
-                    "leftValue": "={{ $json.mimeType }}",
-                    "rightValue": "text/csv",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "CSV"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": false,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "7ab50ace-fa94-4b7d-a255-2804994c454a",
-                    "leftValue": "={{ $json.mimeType }}",
-                    "rightValue": "application/json",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "JSON"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": false,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "b62c9ad6-b076-4e6c-83d1-092770fef004",
-                    "leftValue": "={{ $json.mimeType }}",
-                    "rightValue": "^(application|text)/xml$",
-                    "operator": {
-                      "type": "string",
-                      "operation": "regex"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "XML"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": false,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "ce3cce8a-f092-449f-8d56-931fb2bccced",
-                    "leftValue": "={{ $json.mimeType }}",
-                    "rightValue": "/^(application\\/vnd\\.ms-excel|application\\/vnd\\.openxmlformats-officedocument\\.spreadsheetml\\.sheet)$/",
-                    "operator": {
-                      "type": "string",
-                      "operation": "regex"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "XLS, XLSX"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": false,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "78650dec-861f-4fcb-83a1-a9d80b61628f",
-                    "leftValue": "={{ $json.mimeType }}",
-                    "rightValue": "application/rtf",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "RTF"
-            }
-          ]
-        },
-        "options": {
-          "fallbackOutput": "extra",
-          "ignoreCase": true
-        }
-      },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        -576,
-        256
-      ],
-      "id": "e1a5ba0c-3a07-4fe0-bfde-c6ee2284c954",
-      "name": "Switch"
-    },
-    {
-      "parameters": {
-        "operation": "toBinary",
-        "sourceProperty": "data",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {
-          "fileName": "={{ $json.fileName }}",
-          "mimeType": "={{ $json.mimeType }}"
-        }
-      },
-      "type": "n8n-nodes-base.convertToFile",
-      "typeVersion": 1.1,
-      "position": [
-        368,
-        80
-      ],
-      "id": "2663f207-bac5-4e81-8837-0919d52c1248",
-      "name": "Convert to File1"
-    },
-    {
-      "parameters": {
-        "operation": "text",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {
-          "encoding": "utf8"
-        }
-      },
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [
-        1296,
-        176
-      ],
-      "id": "38a76a37-e804-4953-aa73-011d579d6a18",
-      "name": "Extract from File",
-      "alwaysOutputData": false
-    },
-    {
-      "parameters": {
-        "operation": "toBinary",
-        "sourceProperty": "data",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {
-          "fileName": "={{ $json.fileName }}",
-          "mimeType": "={{ $json.mimeType }}"
-        }
-      },
-      "type": "n8n-nodes-base.convertToFile",
-      "typeVersion": 1.1,
-      "position": [
-        368,
-        272
-      ],
-      "id": "37aaf33b-df05-43f7-8753-589bb44e42da",
-      "name": "Convert to File2"
-    },
-    {
-      "parameters": {
-        "operation": "toBinary",
-        "sourceProperty": "data",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {
-          "fileName": "={{ $json.fileName }}",
-          "mimeType": "={{ $json.mimeType }}"
-        }
-      },
-      "type": "n8n-nodes-base.convertToFile",
-      "typeVersion": 1.1,
-      "position": [
-        368,
-        464
-      ],
-      "id": "95103518-d430-4be1-8214-0dec71f23346",
-      "name": "Convert to File3"
-    },
-    {
-      "parameters": {
-        "operation": "toBinary",
-        "sourceProperty": "data",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {
-          "fileName": "={{ $json.fileName }}",
-          "mimeType": "={{ $json.mimeType }}"
-        }
-      },
-      "type": "n8n-nodes-base.convertToFile",
-      "typeVersion": 1.1,
-      "position": [
-        368,
-        656
-      ],
-      "id": "247a841c-d3f1-4ce0-aac5-35d089ff4448",
-      "name": "Convert to File4"
-    },
-    {
-      "parameters": {
-        "operation": "toBinary",
-        "sourceProperty": "data",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {
-          "fileName": "={{ $json.fileName }}",
-          "mimeType": "={{ $json.mimeType }}"
-        }
-      },
-      "type": "n8n-nodes-base.convertToFile",
-      "typeVersion": 1.1,
-      "position": [
-        368,
-        848
-      ],
-      "id": "d59f962e-2a66-4533-9223-620eee0b2525",
-      "name": "Convert to File5"
-    },
-    {
-      "parameters": {
-        "operation": "toBinary",
-        "sourceProperty": "data",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {
-          "fileName": "={{ $json.fileName }}",
-          "mimeType": "={{ $json.mimeType }}"
-        }
-      },
-      "type": "n8n-nodes-base.convertToFile",
-      "typeVersion": 1.1,
-      "position": [
-        368,
-        1040
-      ],
-      "id": "e4edf573-49fc-4734-866b-d82e45b71e38",
-      "name": "Convert to File7"
-    },
-    {
-      "parameters": {
-        "operation": "toBinary",
-        "sourceProperty": "data",
-        "binaryPropertyName": "base64DataUrlBinary",
-        "options": {
-          "fileName": "={{ $json.fileName }}",
-          "mimeType": "={{ $json.mimeType }}"
-        }
-      },
-      "type": "n8n-nodes-base.convertToFile",
-      "typeVersion": 1.1,
-      "position": [
-        368,
-        1232
-      ],
-      "id": "9a9845d8-0d94-42aa-a9bb-8121d21a7828",
-      "name": "Convert to File8"
-    },
-    {
-      "parameters": {
-        "binaryPropertyName": "base64DataBinary",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [
-        1296,
-        560
-      ],
-      "id": "81bb5ac6-0b4f-490e-b752-fd3a1347e012",
-      "name": "Extract from File2"
-    },
-    {
-      "parameters": {
-        "operation": "fromJson",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [
-        1296,
-        752
-      ],
-      "id": "e71caef0-be7e-4199-a273-1d80b060a05b",
-      "name": "Extract from File3"
-    },
-    {
-      "parameters": {
-        "operation": "xml",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [
-        1296,
-        944
-      ],
-      "id": "91c8646f-5dc2-43dd-a131-7342083cc54a",
-      "name": "Extract from File4"
-    },
-    {
-      "parameters": {
-        "operation": "xlsx",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [
-        1296,
-        1136
-      ],
-      "id": "09f3d4e9-570c-4884-8360-24f1e0f3fb67",
-      "name": "Extract from File6"
-    },
-    {
-      "parameters": {
-        "operation": "rtf",
-        "binaryPropertyName": "base64DataUrlBinary",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [
-        1296,
-        1328
-      ],
-      "id": "4aff16ee-03d3-4272-b58a-239e92e8d75c",
-      "name": "Extract from File7"
-    },
-    {
-      "parameters": {
-        "operation": "pdf",
-        "binaryPropertyName": "base64DataBinary",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [
-        1296,
-        368
-      ],
-      "id": "0bd691a7-5e59-4dd1-8ca5-6025a56edc5c",
-      "name": "Extract from File1"
-    },
-    {
-      "parameters": {
-        "options": {
-          "reset": false
-        }
-      },
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        -800,
-        1936
-      ],
-      "id": "161f3adf-d8e4-4d1a-8879-9885b1a700f1",
-      "name": "Loop Over Items"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "extractedFile",
-        "options": {
-          "includeBinaries": true
-        }
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        -576,
-        1696
-      ],
-      "id": "6ce5a784-695d-48c2-9cad-0aafca73f50e",
-      "name": "Aggregate"
-    },
-    {
-      "parameters": {
-        "fieldToSplitOut": "files",
-        "options": {
-          "includeBinary": true
-        }
-      },
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        -1024,
-        1936
-      ],
-      "id": "9de8050a-dc15-41c6-8f00-2d4a1f089d16",
-      "name": "Split Out",
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "jsCode": "const files = $input.all().at(0)?.binary\nconst isfilesSent = typeof files === 'object' && Object.keys(files)?.length\n\nif(isfilesSent){\n  return { files }\n}\n\nreturn $input.all()"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -1248,
-        1936
-      ],
-      "id": "615a271a-9efd-4714-ba28-0b759f4b2944",
-      "name": "Code"
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "business_information_get",
-        "options": {
-          "allowedOrigins": "*",
-          "binaryPropertyName": "data"
-        }
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        -1472,
-        2032
-      ],
-      "id": "00507fd1-39e1-41b4-b787-1e2b2bf3866f",
-      "name": "Webhook",
-      "webhookId": "600d9861-4a74-4c9d-832f-83556b7793c9"
-    },
-    {
-      "parameters": {
-        "dataToSave": {
-          "values": [
-            {
-              "key": "bussiness_name",
-              "value": "={{ $json.body.business_name ||''}}"
-            },
-            {
-              "key": "session_id",
-              "value": "={{ $json.body.session_id }}"
-            },
-            {
-              "key": "user_id",
-              "value": "={{ $json.body.user_id }}"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.executionData",
-      "typeVersion": 1,
-      "position": [
-        -1248,
-        2128
-      ],
-      "id": "b1b3b8fe-6dc0-4f6b-b2d3-161568407f36",
-      "name": "Execution Data"
-    },
-    {
-      "parameters": {
-        "operation": "push",
-        "list": "ai-conversation-agent-message-queue",
-        "messageData": "={\n  \"env\": \"gray\",\n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\",\n  \"user_id\": \"{{ $('Webhook').item.json.body.user_id }}\",\n  \"operate_id\": \"主agent回复\",\n  \"request_id\": \"{{ $('Webhook').item.json.body.request_id }}\",\n  \"socket_id\": \"{{ $('Webhook').item.json.body.socket_id }}\",\n  \"status\": \"FINISHED\",\n  \"content_type\": \"blue_image\",\n  \"content\": {\n    \"text\": \"{{ $json.output.replaceAll('\\n','\\\\n') }}\",\n    \"data\": {\n      \"video_link\": \"{{ $json.output['视频链接'] || ''}}\"\n    }\n  },\n  \"create_ts\": {{ $now.toMillis() }}\n}"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [
-        1520,
-        1728
-      ],
-      "id": "eee13bb6-e4b5-4377-8ac3-fb2a703fd6b8",
-      "name": "与后端交互",
-      "credentials": {
-        "redis": {
-          "id": "UkcckENclXgOKcal",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# 用户信息\n{{ $json.extractedFile?.length && $json.extractedFile.filter((f) => Object.keys(f)?.length > 0).length > 0 ? \"List of File content(s): \\n \" + JSON.stringify($json.extractedFile.filter((f) => Object.keys(f)?.length > 0)) : '' }}\n{{ $('Webhook').item.json.body.message }}\n",
-        "options": {
-          "systemMessage": "=# 角色\n- 你是“意图识别对话引导员”。\n# 要求：\n1. 你的任务是识别用户的意图以及当前的情况，直接调取子工作流进行工作。\n2. 调用对应的工作流顺序，必须严格按照以下顺序执行，完成后才进行下个子工作流的调取，顺序如下：\n   1.`collect_message1`\n   2.`message_analy1`\n   3.`blue_image1` \n3. 触发前先到对话数据库`Postgres Chat Memory`里查看目前进行到哪一步，就对应调取对应的子工作流。\n4. 语言跟随用户；默认中文。\n\n输出结构（严格）：\n- 正文：\n\n# 全局规则\n1.在调用运行`message_analy1`前，一定到'select_message'里面查询下，企业信息，产品特点，目标人群，三个数据是否录入完整，录入完成，才能调用，除非用户主动说要修改的信息是关键词修改或者新增的命令\n2.在调用运行`blue_image1` 子工作流前，一定到‘select_message1’里查询，关键词是否录入完整，录入完成，才能调用，除非用户主动说要修改的信息是战略任务修改或者新增。\n3.在用'chat1'你自身回答前，一定要到'select_message'‘select_message1，查询，所有任务，企业信息，产品特点，目标人群，关键词，视频战略蓝图 都完整录入了，你才可以不用做调用，直接回复用户问题，在这之前，你就是一个工具调用的工具人，只做调用。\n4.拿到tool 返回的完整消息进行完整输出，不要做更改\n5.必须使用中文输出,并且要有序号\n\n"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2.2,
-      "position": [
-        -112,
-        1632
-      ],
-      "id": "e8132d96-009e-4bfc-8cdc-a9fe089cb16b",
-      "name": "chat1",
-      "retryOnFail": true
-    },
-    {
-      "parameters": {
-        "toolDescription": "当需要进行信息收集时使用",
-        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', `传入用户的信息`, 'string') }}",
-        "options": {
-          "systemMessage": "=# 角色定位\n你是一名专为出海、制造业及其他行业（软件、法律、项目招商等）企业服务的「视频获客战略顾问」。\n你的任务是通过一次高效、自然的访谈，自动分析企业网站或资料，提炼企业核心信息，并分阶段确认后存入数据库。\n目标信息包括：“企业资料 × 目标人群 × 产品特点”。\n\n如果企业所属行业与制造业不同（如软件、法律、项目招商等），请自动识别并调整提问与字段结构以匹配该行业。\n\n# 核心原则\n1. 不重复提问：\n   - 首先引导用户上传官网链接或企业资料（PDF、图片、文档均可）。\n   - 你会自动分析内容，提炼可识别的信息，仅针对缺失部分提问。\n2. 分步确认：\n   - 分为三个阶段：目标人群 → 企业资料 → 产品特点。\n   - 每阶段输出结果后，需得到用户明确确认后再进入下一步。\n3. 智能补全：\n   - 对缺失信息，你可参考行业惯例或公开数据进行推测，但必须显式标注【建议值】。\n4. 数据存储：\n   - 当用户确认模块内容无误时，调用 pgtool 将已确认内容写入数据库。\n   - 存储结构必须包含：模块名、内容、行业标签、数据来源、更新时间。\n   - 存储只存储最后跟用户确认的那条信息，不夹带前面的信息进行存储\n\n# 工作流程\n## 第一步：欢迎 & 了解目标\n- 以自然语气开场：\n  “老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。”\n- 等待用户输入或上传资料。\n\n## 第二步：资料分析 & 补充提问\n- 自动分析网站或资料，提炼三大板块：\n  1. 企业资料（概况 / 品牌 / 主营 / 成就 / 理念 等）\n  2. 目标人群（客户类型 / 市场 / 痛点）\n  3. 产品特点（名称 / 功能 / 场景 / 交付 / 价值）\n- 对缺失信息进行补充提问：\n  “我已了解大部分情况，还需确认几个小点让方案更精准。”\n  示例问题：\n  - “请问您主要服务的客户类型是谁？”\n  - “一句话能总结您公司的核心优势吗？”\n  - “您的主要产品或服务有哪些特色？”\n\n## 第三步：分模块确认信息\n- 每个模块单独展示结果，格式如下：\n  ---\n  ✅ 模块：目标人群  \n  1. 客户类型：政府采购 / 工程承包 / 经销商 / 中小企业 / 个人客户  \n  2. 目标市场：中东 、北美 、东南亚 【建议值】  \n  3. 常见痛点：获客难、转化低、合规复杂 【建议值】  \n  ---\n  “您看这部分信息对吗？有没有要补充或修改的地方？”\n- 当检测到用户回复包含【确认 / OK / 没问题 / 对的 / 可以存】等关键词时，执行：\n\n## 第四步：智能补全 与 记录\n- 若存在推测项，需显式标注【建议值】。  \n- 写入数据库后，提示用户：\n“这部分我已为您存入企业资料库，方便后续生成营销方案或企业知识卡片。”\n\n# 限制\n1. 严格按顺序执行：目标人群 → 企业资料 → 产品特点。\n2. 未经用户确认，不得调用 pgtool。\n3. 禁止生成任何营销文案、提示词或广告内容，仅采集信息。\n4. 若资料充足，可跳过提问环节，直接输出总结并请用户确认。\n\n# 输出格式（供存储）\n每次确认后输出 JSON：\n{\n\"模块名称\": \"目标人群 / 企业资料 / 产品特点\",\n\"确认内容\": {...},\n\"行业标签\": \"制造业 / 软件 / 法律 / 招商 等\",\n\"数据来源\": \"官网 / 用户 / AI补全\",\n\"更新时间\": \"YYYY-MM-DD\"\n}\n"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agentTool",
-      "typeVersion": 2.2,
-      "position": [
-        -176,
-        1856
-      ],
-      "id": "3b7f63ae-7903-472a-b6b7-86e6f72f0f54",
-      "name": "collect_message1"
-    },
-    {
-      "parameters": {
-        "toolDescription": "当需要进行关键词分析时使用",
-        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', `传输用户的需求`, 'string') }}",
-        "options": {
-          "systemMessage": "=  # 角色定位\n  你的任务是通过查询数据库获取公司相关的资料，并拆解成关键词。\n\n\n  # 工作流程\n  \n  第1步：从数据库找到相关企业的资料,可以调用select_message tool\n  \n  第2步：生成关键词库 & 调用工具\n  - 提炼关键词：基于前面确认的信息，你会自动生成一个专业的“关键词矩阵”，包含核心产品词、行业通用词、客户可能会搜索的各种问题等。\n  - 展示并确认：你会把这个关键词库展示给用户，并解释：“这是我根据您的业务生成的关键词库，将用于视频内容的创作和推广。您看这些词准确吗？”\n  - 调用视频抓取工具：一旦用户说“没问题”或“就这样吧”，你 必须 立即调用名为 `keywords_agent` 的子流程（或工具），用于后续的视频素材搜集。同时，也调用 `pgtool` 将关键词库存入数据库。\n  \n  \n  # 重要：工具调用规则\n  1.  存储工具 `pgtool`:\n      - 触发时机: 当用户确认了“企业资料”、“目标人群”、“产品特点”、“关键词库”、“增长战略”等任何一个模块后。\n      - 执行动作: 调用 `pgtool`，并将该模块的 最终确认内容 存入数据库。\n  2.  关键词视频抓取工具 `keywords_agent`:\n      - 触发时机: 当且仅当用户对你生成的“关键词库”表示“确认”或“没问题”后。\n      - 执行动作: 必须以 字符串 形式调用 `keywords_agent` 工具。格式如下：\n        - 工具名: `keywords_agent`\n"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agentTool",
-      "typeVersion": 2.2,
-      "position": [
-        240,
-        1856
-      ],
-      "id": "39681715-1619-46e0-906d-ad4b54d348c0",
-      "name": "message_analy1"
-    },
-    {
-      "parameters": {
-        "toolDescription": "当需要进行视频制作蓝图输出时使用",
-        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', `传入用户的需求`, 'string') }}",
-        "options": {
-          "systemMessage": "=  # 角色定位\n  调用公司信息和目标，帮助企业制定一个视频制作蓝图吧。\n  # 工作流程\n\n第1步：先调用start_tool发送开始执行的message\n第2步：从数据库找到相关企业的资料,可以调用select_message tool\n  第3步：制定增长战略 (作战地图)\n  - 设定目标：结合最开始用户给的目标，你会计算出要达到这个目标，大概需要做多少视频、运营多少个账号，以及预计能获得多少曝光。\n  - 计算素材需求：你会告诉用户最关键的一点：“要完成这个目标， AI 虽然能帮我们剪辑无数个视频，但源头的高质量素材还得靠咱们自己拍。根据计算，您每周只需要拍摄大概XX个场景的镜头，AI就能裂变成上百个不同的短视频。”\n  - 确认与存储：将这个包含账号数量、发布计划、素材拍摄要求的“作战地图”展示给用户确认。确认后，调用 `pgtool` 存储。\n  \n  ## 参考如下：\n    1、准备10个美区账号\n    2、拍摄1000个视频分镜，按照场景分类\n    3、准备海外静态ip的地址，方便上传视频\n\n  第2步：生成视频制作蓝图 (分镜脚本)\n  - 生成脚本创意：基于前面的所有信息，你会自动生成一份详细的“视频制作蓝图”。\n  - 蓝图内容：这份蓝图会包含多种视频内容方向（如工厂探秘、产品测评、客户案例等），以及每个方向的具体拍摄脚本，细致到每个镜头怎么拍、说什么话、配什么标题和音乐。\n  \n  第七步：最终方案确认与交付\n  - 汇总展示：最后，你会把以上所有确认过的内容，汇总成一份完整的《出海视频获客战略规划书》。\n  - 交付成果：将这份最终的、格式清晰的规划书完整地呈现给用户，并告知：“您的专属视频获客战略已经生成！接下来就可以按照这份计划开干了！”\n  "
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agentTool",
-      "typeVersion": 2.2,
-      "position": [
-        752,
-        1856
-      ],
-      "id": "68bc6e1c-7da3-4fbb-a34e-7faaad0ec26a",
-      "name": "blue_image1"
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "pgtool:数据入库的工具",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_key_messages",
-          "mode": "list",
-          "cachedResultName": "hsai_business_key_messages"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "business_name": "={{ $('Webhook').first().json.body.business_name }}",
-            "message_type": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message_type', `填入问用户的问题`, 'string') }}",
-            "data_info": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_info', `填入用户问题的答案`, 'string') }}",
-            "session_id": "={{ $('Webhook').item.json.body.session_id }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "business_name",
-              "displayName": "business_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "message_type",
-              "displayName": "message_type",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "data_info",
-              "displayName": "data_info",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "session_id",
-              "displayName": "session_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgresTool",
-      "typeVersion": 2.6,
-      "position": [
-        64,
-        2064
-      ],
-      "id": "a2247e9e-c8f4-4f3e-b1ab-1fc6b0d69cbd",
-      "name": "pgtool3",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "o3",
-          "mode": "list",
-          "cachedResultName": "o3"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        -352,
-        1856
-      ],
-      "id": "c360588b-603a-4f91-99fe-eb32e215b3b7",
-      "name": "OpenAI Chat Model3",
-      "credentials": {
-        "openAiApi": {
-          "id": "nlFmjkNQkWVpRAF0",
-          "name": "huanxin"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "description": "调用这个工具把英文关键词入库",
-        "workflowId": {
-          "__rl": true,
-          "value": "EEqXWmXwcJgzBE1B",
-          "mode": "list",
-          "cachedResultName": "2视频爬取agent"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "keywords": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('keywords', `用户确定的关键词`, 'string') }}",
-            "business_name": "={{ $('Webhook').first().json.body.business_name }}"
-          },
-          "matchingColumns": [
-            "keywords"
-          ],
-          "schema": [
-            {
-              "id": "keywords",
-              "displayName": "keywords",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            },
-            {
-              "id": "business_name",
-              "displayName": "business_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string",
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2.2,
-      "position": [
-        320,
-        2064
-      ],
-      "id": "0243430c-e481-49ae-bddf-dbed1d0324d2",
-      "name": "keywords_agent1"
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "select_message:Select rows from a table in Postgres",
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_key_messages",
-          "mode": "list",
-          "cachedResultName": "hsai_business_key_messages"
-        },
-        "where": {
-          "values": [
-            {
-              "column": "business_name",
-              "value": "={{ $('Webhook').first().json.body.business_name }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgresTool",
-      "typeVersion": 2.6,
-      "position": [
-        448,
-        2064
-      ],
-      "id": "236cfc63-a91b-4f3e-8b6a-1b4db586078d",
-      "name": "select_message2",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "pgtool:数据入库的工具",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_key_messages",
-          "mode": "list",
-          "cachedResultName": "hsai_business_key_messages"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "business_name": "={{ $('Webhook').first().json.body.business_name }}",
-            "message_type": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message_type', `填入问用户的问题`, 'string') }}",
-            "data_info": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_info', `填入用户问题的答案`, 'string') }}",
-            "session_id": "={{ $('Webhook').item.json.body.session_id }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "business_name",
-              "displayName": "business_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "message_type",
-              "displayName": "message_type",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "data_info",
-              "displayName": "data_info",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "session_id",
-              "displayName": "session_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgresTool",
-      "typeVersion": 2.6,
-      "position": [
-        576,
-        2064
-      ],
-      "id": "95866007-86ee-43dd-a657-d4bb0f033194",
-      "name": "pgtool4",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "pgtool:数据入库的工具",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_key_messages",
-          "mode": "list",
-          "cachedResultName": "hsai_business_key_messages"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "business_name": "={{ $('Webhook').first().json.body.business_name }}",
-            "message_type": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message_type', `填入问用户的问题`, 'string') }}",
-            "data_info": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_info', `填入用户问题的答案`, 'string') }}",
-            "session_id": "={{ $('Webhook').item.json.body.session_id }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "business_name",
-              "displayName": "business_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "message_type",
-              "displayName": "message_type",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "data_info",
-              "displayName": "data_info",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "session_id",
-              "displayName": "session_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgresTool",
-      "typeVersion": 2.6,
-      "position": [
-        832,
-        2064
-      ],
-      "id": "2e80ca46-edf6-46e6-b37c-e21153e20844",
-      "name": "pgtool5",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "select_message:Select rows from a table in Postgres",
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "hsai_business_key_messages",
-          "mode": "list",
-          "cachedResultName": "hsai_business_key_messages"
-        },
-        "where": {
-          "values": [
-            {
-              "column": "business_name",
-              "value": "={{ $('Webhook').first().json.body.business_name }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgresTool",
-      "typeVersion": 2.6,
-      "position": [
-        960,
-        2064
-      ],
-      "id": "a99c4778-ce10-49f1-99fc-987219d514f2",
-      "name": "select_message3",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $('Webhook').item.json.body.session_id }}",
-        "contextWindowLength": 50
-      },
-      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
-      "typeVersion": 1.3,
-      "position": [
-        -304,
-        2096
-      ],
-      "id": "3e92002e-cb16-4d30-9c06-b16c1baf70a2",
-      "name": "Postgres Chat Memory1",
-      "credentials": {
-        "postgres": {
-          "id": "KJscbDCc0CfgKGjb",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "f66536d0-a5ea-411f-8aa6-3dc3ccdd7bf7",
-              "leftValue": "={{ $json.output }}",
-              "rightValue": "蓝图",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "9edcae7b-405c-4938-934a-aba5148d9cbb",
-              "leftValue": "={{ $json.output }}",
-              "rightValue": "成",
-              "operator": {
-                "type": "string",
-                "operation": "equals",
-                "name": "filter.operator.equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1296,
-        1728
-      ],
-      "id": "a11c6e78-35c1-479a-9cb6-0b7a0479dbc4",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "operation": "push",
-        "list": "ai-conversation-agent-message-queue",
-        "messageData": "={\n  \"env\": \"gray\",\n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\",\n  \"user_id\": \"{{ $('Webhook').item.json.body.user_id }}\",\n  \"operate_id\": \"主agent回复\",\n  \"request_id\": \"{{ $('Webhook').item.json.body.request_id }}\",\n  \"socket_id\": \"{{ $('Webhook').item.json.body.socket_id }}\",\n  \"status\": \"FINISHED\",\n  \"content_type\": \"collect_message\",\n  \"content\": {\n    \"text\": \"{{ $json.output.replaceAll('\\n','\\\\n') }}\",\n    \"data\": {\n      \"video_link\": \"{{ $json.output['视频链接'] || ''}}\"\n    }\n  },\n  \"create_ts\": {{ $now.toMillis() }}\n}"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [
-        1520,
-        1920
-      ],
-      "id": "4f1be177-1890-4b18-b803-1703d29cfc87",
-      "name": "与后端交互1",
-      "credentials": {
-        "redis": {
-          "id": "UkcckENclXgOKcal",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "需要调用工具来告诉用户开始处理了",
-        "operation": "push",
-        "list": "ai-conversation-agent-message-queue",
-        "messageData": "={\n  \"env\": \"gray\",\n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\",\n  \"user_id\": \"{{ $('Webhook').item.json.body.user_id }}\",\n  \"operate_id\": \"开始处理\",\n  \"request_id\": \"{{ $('Webhook').item.json.body.request_id }}\",\n  \"socket_id\": \"{{ $('Webhook').item.json.body.socket_id }}\",\n  \"status\": \"RUNNING\",\n  \"content_type\": \"blue_image_sub_start\"\n  },\n  \"create_ts\": {{ $now.toMillis() }}\n}"
-      },
-      "type": "n8n-nodes-base.redisTool",
-      "typeVersion": 1,
-      "position": [
-        1088,
-        2064
-      ],
-      "id": "0a65a5e5-a24e-4f0e-9ded-948330d94602",
-      "name": "start_msg",
-      "credentials": {
-        "redis": {
-          "id": "UkcckENclXgOKcal",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "o3",
-          "mode": "list",
-          "cachedResultName": "o3"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        -1472,
-        2352
-      ],
-      "id": "995da307-23ea-41d9-b17a-4d84c28af1bc",
-      "name": "OpenAI Chat Model",
-      "credentials": {
-        "openAiApi": {
-          "id": "nlFmjkNQkWVpRAF0",
-          "name": "huanxin"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "o3",
-          "mode": "list",
-          "cachedResultName": "o3"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        -64,
-        2064
-      ],
-      "id": "1f9a3deb-667c-4f84-b3cb-d2244ef9766c",
-      "name": "OpenAI Chat Model1",
-      "credentials": {
-        "openAiApi": {
-          "id": "nlFmjkNQkWVpRAF0",
-          "name": "huanxin"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "o3",
-          "mode": "list",
-          "cachedResultName": "o3"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        192,
-        2064
-      ],
-      "id": "668394dc-23c3-4cb2-9ded-fa15d54f6ee9",
-      "name": "OpenAI Chat Model2",
-      "credentials": {
-        "openAiApi": {
-          "id": "nlFmjkNQkWVpRAF0",
-          "name": "huanxin"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "o3",
-          "mode": "list",
-          "cachedResultName": "o3"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.2,
-      "position": [
-        704,
-        2064
-      ],
-      "id": "bab356bd-4751-425f-8cac-610c071a1361",
-      "name": "OpenAI Chat Model4",
-      "credentials": {
-        "openAiApi": {
-          "id": "nlFmjkNQkWVpRAF0",
-          "name": "huanxin"
-        }
-      }
-    }
-  ],
-  "pinData": {
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "webhook-n8n.hsai.cc",
-            "content-type": "application/json",
-            "user-agent": "OpenWebUI-N8N-Client/1.0",
-            "accept": "*/*",
-            "accept-encoding": "gzip, deflate, br",
-            "content-length": "374",
-            "x-forwarded-for": "27.151.105.162",
-            "x-forwarded-proto": "https",
-            "x-envoy-original-host": "webhook-n8n.hsai.cc",
-            "x-envoy-external-address": "27.151.105.162",
-            "x-request-id": "02c5ddb2-b818-4256-bfd3-3815834287e0",
-            "x-envoy-attempt-count": "1",
-            "req-start-time": "1759072946790",
-            "original-host": "webhook-n8n.hsai.cc",
-            "x-envoy-route-identifier": "true"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "session_id": "76e166f3-2581-4623-9de1-d7a73332c44c",
-            "user_id": "0086d2b1-1514-4450-8660-29629e27f984",
-            "message": "确认",
-            "timestamp": 1759072946745,
-            "request_id": "415a12bb-2ee3-4b4b-8754-5cb1e89c27f6",
-            "socket_id": "XwP0F2AtIziDe6gmAA89",
-            "entry_type": "company_info",
-            "business_name": "HSAI",
-            "additional_data": {
-              "timestamp": 1759072945,
-              "client_version": ""
-            }
-          },
-          "webhookUrl": "http://localhost:5678/webhook/business_information_get",
-          "executionMode": "production"
-        }
-      }
-    ]
-  },
-  "connections": {
-    "Convert to File": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Switch": {
-      "main": [
-        [
-          {
-            "node": "Convert to File",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Convert to File1",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Convert to File2",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Convert to File3",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Convert to File4",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Convert to File5",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Convert to File7",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Convert to File8",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "chat1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File1": {
-      "main": [
-        [
-          {
-            "node": "Extract from File",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract from File": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File2": {
-      "main": [
-        [
-          {
-            "node": "Extract from File1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File3": {
-      "main": [
-        [
-          {
-            "node": "Extract from File2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File4": {
-      "main": [
-        [
-          {
-            "node": "Extract from File3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File5": {
-      "main": [
-        [
-          {
-            "node": "Extract from File4",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File7": {
-      "main": [
-        [
-          {
-            "node": "Extract from File6",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File8": {
-      "main": [
-        [
-          {
-            "node": "Extract from File7",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract from File2": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract from File3": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract from File4": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract from File6": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract from File7": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract from File1": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Loop Over Items": {
-      "main": [
-        [
-          {
-            "node": "Aggregate",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Switch",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "chat1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Out": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code": {
-      "main": [
-        [
-          {
-            "node": "Split Out",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Code",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Execution Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "collect_message1": {
-      "ai_tool": [
-        [
-          {
-            "node": "chat1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "message_analy1": {
-      "ai_tool": [
-        [
-          {
-            "node": "chat1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "blue_image1": {
-      "ai_tool": [
-        [
-          {
-            "node": "chat1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "pgtool3": {
-      "ai_tool": [
-        [
-          {
-            "node": "collect_message1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model3": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "chat1",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "keywords_agent1": {
-      "ai_tool": [
-        [
-          {
-            "node": "message_analy1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "select_message2": {
-      "ai_tool": [
-        [
-          {
-            "node": "message_analy1",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "chat1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "pgtool4": {
-      "ai_tool": [
-        [
-          {
-            "node": "message_analy1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "pgtool5": {
-      "ai_tool": [
-        [
-          {
-            "node": "blue_image1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "select_message3": {
-      "ai_tool": [
-        [
-          {
-            "node": "blue_image1",
-            "type": "ai_tool",
-            "index": 0
-          },
-          {
-            "node": "chat1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Postgres Chat Memory1": {
-      "ai_memory": [
-        [
-          {
-            "node": "message_analy1",
-            "type": "ai_memory",
-            "index": 0
-          },
-          {
-            "node": "collect_message1",
-            "type": "ai_memory",
-            "index": 0
-          },
-          {
-            "node": "chat1",
-            "type": "ai_memory",
-            "index": 0
-          },
-          {
-            "node": "blue_image1",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "chat1": {
-      "main": [
-        [
-          {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "与后端交互",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "与后端交互1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "start_msg": {
-      "ai_tool": [
-        [
-          {
-            "node": "blue_image1",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model4": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "blue_image1",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model2": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "message_analy1",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "collect_message1",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "6d89a360-252b-47c0-92b4-62721b3eb2e9",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
-  },
-  "id": "qWZsumvyTnGmT93I",
-  "tags": []
+	"name": "1公司信息收集及作战地图梳理-雨晨后端对接",
+	"nodes": [
+		{
+			"parameters": {
+				"operation": "toBinary",
+				"sourceProperty": "data",
+				"options": {
+					"fileName": "={{ $json.fileName }}",
+					"mimeType": "={{ $json.mimeType }}"
+				}
+			},
+			"type": "n8n-nodes-base.convertToFile",
+			"typeVersion": 1.1,
+			"position": [368, -112],
+			"id": "ae7d495e-ce58-4362-8289-42bd782f0b22",
+			"name": "Convert to File"
+		},
+		{
+			"parameters": {
+				"rules": {
+					"values": [
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": false,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 2
+								},
+								"conditions": [
+									{
+										"id": "b3784277-1746-477a-b78e-2ca303df8423",
+										"leftValue": "={{ $json.mimeType }}",
+										"rightValue": "image/",
+										"operator": {
+											"type": "string",
+											"operation": "startsWith"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "Image"
+						},
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": false,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 2
+								},
+								"conditions": [
+									{
+										"id": "58cd09cb-2657-41b0-86c1-7c9b8f499e90",
+										"leftValue": "={{ $json.mimeType }}",
+										"rightValue": "text/plain",
+										"operator": {
+											"type": "string",
+											"operation": "equals",
+											"name": "filter.operator.equals"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "Plain Text"
+						},
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": false,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 2
+								},
+								"conditions": [
+									{
+										"id": "1e0475d6-3c04-42d1-a758-b1a79ade7962",
+										"leftValue": "={{ $json.mimeType }}",
+										"rightValue": "application/pdf",
+										"operator": {
+											"type": "string",
+											"operation": "equals",
+											"name": "filter.operator.equals"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "PDF"
+						},
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": false,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 2
+								},
+								"conditions": [
+									{
+										"id": "e5d9cde7-d9ff-4a2d-ba99-69b4e3b73521",
+										"leftValue": "={{ $json.mimeType }}",
+										"rightValue": "text/csv",
+										"operator": {
+											"type": "string",
+											"operation": "equals",
+											"name": "filter.operator.equals"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "CSV"
+						},
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": false,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 2
+								},
+								"conditions": [
+									{
+										"id": "7ab50ace-fa94-4b7d-a255-2804994c454a",
+										"leftValue": "={{ $json.mimeType }}",
+										"rightValue": "application/json",
+										"operator": {
+											"type": "string",
+											"operation": "equals",
+											"name": "filter.operator.equals"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "JSON"
+						},
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": false,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 2
+								},
+								"conditions": [
+									{
+										"id": "b62c9ad6-b076-4e6c-83d1-092770fef004",
+										"leftValue": "={{ $json.mimeType }}",
+										"rightValue": "^(application|text)/xml$",
+										"operator": {
+											"type": "string",
+											"operation": "regex"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "XML"
+						},
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": false,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 2
+								},
+								"conditions": [
+									{
+										"id": "ce3cce8a-f092-449f-8d56-931fb2bccced",
+										"leftValue": "={{ $json.mimeType }}",
+										"rightValue": "/^(application\\/vnd\\.ms-excel|application\\/vnd\\.openxmlformats-officedocument\\.spreadsheetml\\.sheet)$/",
+										"operator": {
+											"type": "string",
+											"operation": "regex"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "XLS, XLSX"
+						},
+						{
+							"conditions": {
+								"options": {
+									"caseSensitive": false,
+									"leftValue": "",
+									"typeValidation": "strict",
+									"version": 2
+								},
+								"conditions": [
+									{
+										"id": "78650dec-861f-4fcb-83a1-a9d80b61628f",
+										"leftValue": "={{ $json.mimeType }}",
+										"rightValue": "application/rtf",
+										"operator": {
+											"type": "string",
+											"operation": "equals"
+										}
+									}
+								],
+								"combinator": "and"
+							},
+							"renameOutput": true,
+							"outputKey": "RTF"
+						}
+					]
+				},
+				"options": {
+					"fallbackOutput": "extra",
+					"ignoreCase": true
+				}
+			},
+			"type": "n8n-nodes-base.switch",
+			"typeVersion": 3.2,
+			"position": [-576, 256],
+			"id": "e1a5ba0c-3a07-4fe0-bfde-c6ee2284c954",
+			"name": "Switch"
+		},
+		{
+			"parameters": {
+				"operation": "toBinary",
+				"sourceProperty": "data",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {
+					"fileName": "={{ $json.fileName }}",
+					"mimeType": "={{ $json.mimeType }}"
+				}
+			},
+			"type": "n8n-nodes-base.convertToFile",
+			"typeVersion": 1.1,
+			"position": [368, 80],
+			"id": "2663f207-bac5-4e81-8837-0919d52c1248",
+			"name": "Convert to File1"
+		},
+		{
+			"parameters": {
+				"operation": "text",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {
+					"encoding": "utf8"
+				}
+			},
+			"type": "n8n-nodes-base.extractFromFile",
+			"typeVersion": 1,
+			"position": [1296, 176],
+			"id": "38a76a37-e804-4953-aa73-011d579d6a18",
+			"name": "Extract from File",
+			"alwaysOutputData": false
+		},
+		{
+			"parameters": {
+				"operation": "toBinary",
+				"sourceProperty": "data",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {
+					"fileName": "={{ $json.fileName }}",
+					"mimeType": "={{ $json.mimeType }}"
+				}
+			},
+			"type": "n8n-nodes-base.convertToFile",
+			"typeVersion": 1.1,
+			"position": [368, 272],
+			"id": "37aaf33b-df05-43f7-8753-589bb44e42da",
+			"name": "Convert to File2"
+		},
+		{
+			"parameters": {
+				"operation": "toBinary",
+				"sourceProperty": "data",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {
+					"fileName": "={{ $json.fileName }}",
+					"mimeType": "={{ $json.mimeType }}"
+				}
+			},
+			"type": "n8n-nodes-base.convertToFile",
+			"typeVersion": 1.1,
+			"position": [368, 464],
+			"id": "95103518-d430-4be1-8214-0dec71f23346",
+			"name": "Convert to File3"
+		},
+		{
+			"parameters": {
+				"operation": "toBinary",
+				"sourceProperty": "data",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {
+					"fileName": "={{ $json.fileName }}",
+					"mimeType": "={{ $json.mimeType }}"
+				}
+			},
+			"type": "n8n-nodes-base.convertToFile",
+			"typeVersion": 1.1,
+			"position": [368, 656],
+			"id": "247a841c-d3f1-4ce0-aac5-35d089ff4448",
+			"name": "Convert to File4"
+		},
+		{
+			"parameters": {
+				"operation": "toBinary",
+				"sourceProperty": "data",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {
+					"fileName": "={{ $json.fileName }}",
+					"mimeType": "={{ $json.mimeType }}"
+				}
+			},
+			"type": "n8n-nodes-base.convertToFile",
+			"typeVersion": 1.1,
+			"position": [368, 848],
+			"id": "d59f962e-2a66-4533-9223-620eee0b2525",
+			"name": "Convert to File5"
+		},
+		{
+			"parameters": {
+				"operation": "toBinary",
+				"sourceProperty": "data",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {
+					"fileName": "={{ $json.fileName }}",
+					"mimeType": "={{ $json.mimeType }}"
+				}
+			},
+			"type": "n8n-nodes-base.convertToFile",
+			"typeVersion": 1.1,
+			"position": [368, 1040],
+			"id": "e4edf573-49fc-4734-866b-d82e45b71e38",
+			"name": "Convert to File7"
+		},
+		{
+			"parameters": {
+				"operation": "toBinary",
+				"sourceProperty": "data",
+				"binaryPropertyName": "base64DataUrlBinary",
+				"options": {
+					"fileName": "={{ $json.fileName }}",
+					"mimeType": "={{ $json.mimeType }}"
+				}
+			},
+			"type": "n8n-nodes-base.convertToFile",
+			"typeVersion": 1.1,
+			"position": [368, 1232],
+			"id": "9a9845d8-0d94-42aa-a9bb-8121d21a7828",
+			"name": "Convert to File8"
+		},
+		{
+			"parameters": {
+				"binaryPropertyName": "base64DataBinary",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.extractFromFile",
+			"typeVersion": 1,
+			"position": [1296, 560],
+			"id": "81bb5ac6-0b4f-490e-b752-fd3a1347e012",
+			"name": "Extract from File2"
+		},
+		{
+			"parameters": {
+				"operation": "fromJson",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.extractFromFile",
+			"typeVersion": 1,
+			"position": [1296, 752],
+			"id": "e71caef0-be7e-4199-a273-1d80b060a05b",
+			"name": "Extract from File3"
+		},
+		{
+			"parameters": {
+				"operation": "xml",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.extractFromFile",
+			"typeVersion": 1,
+			"position": [1296, 944],
+			"id": "91c8646f-5dc2-43dd-a131-7342083cc54a",
+			"name": "Extract from File4"
+		},
+		{
+			"parameters": {
+				"operation": "xlsx",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.extractFromFile",
+			"typeVersion": 1,
+			"position": [1296, 1136],
+			"id": "09f3d4e9-570c-4884-8360-24f1e0f3fb67",
+			"name": "Extract from File6"
+		},
+		{
+			"parameters": {
+				"operation": "rtf",
+				"binaryPropertyName": "base64DataUrlBinary",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.extractFromFile",
+			"typeVersion": 1,
+			"position": [1296, 1328],
+			"id": "4aff16ee-03d3-4272-b58a-239e92e8d75c",
+			"name": "Extract from File7"
+		},
+		{
+			"parameters": {
+				"operation": "pdf",
+				"binaryPropertyName": "base64DataBinary",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.extractFromFile",
+			"typeVersion": 1,
+			"position": [1296, 368],
+			"id": "0bd691a7-5e59-4dd1-8ca5-6025a56edc5c",
+			"name": "Extract from File1"
+		},
+		{
+			"parameters": {
+				"options": {
+					"reset": false
+				}
+			},
+			"type": "n8n-nodes-base.splitInBatches",
+			"typeVersion": 3,
+			"position": [-800, 1936],
+			"id": "161f3adf-d8e4-4d1a-8879-9885b1a700f1",
+			"name": "Loop Over Items"
+		},
+		{
+			"parameters": {
+				"aggregate": "aggregateAllItemData",
+				"destinationFieldName": "extractedFile",
+				"options": {
+					"includeBinaries": true
+				}
+			},
+			"type": "n8n-nodes-base.aggregate",
+			"typeVersion": 1,
+			"position": [-576, 1696],
+			"id": "6ce5a784-695d-48c2-9cad-0aafca73f50e",
+			"name": "Aggregate"
+		},
+		{
+			"parameters": {
+				"fieldToSplitOut": "files",
+				"options": {
+					"includeBinary": true
+				}
+			},
+			"type": "n8n-nodes-base.splitOut",
+			"typeVersion": 1,
+			"position": [-1024, 1936],
+			"id": "9de8050a-dc15-41c6-8f00-2d4a1f089d16",
+			"name": "Split Out",
+			"alwaysOutputData": true
+		},
+		{
+			"parameters": {
+				"jsCode": "const files = $input.all().at(0)?.binary\nconst isfilesSent = typeof files === 'object' && Object.keys(files)?.length\n\nif(isfilesSent){\n  return { files }\n}\n\nreturn $input.all()"
+			},
+			"type": "n8n-nodes-base.code",
+			"typeVersion": 2,
+			"position": [-1248, 1936],
+			"id": "615a271a-9efd-4714-ba28-0b759f4b2944",
+			"name": "Code"
+		},
+		{
+			"parameters": {
+				"httpMethod": "POST",
+				"path": "business_information_get",
+				"options": {
+					"allowedOrigins": "*",
+					"binaryPropertyName": "data"
+				}
+			},
+			"type": "n8n-nodes-base.webhook",
+			"typeVersion": 2,
+			"position": [-1472, 2032],
+			"id": "00507fd1-39e1-41b4-b787-1e2b2bf3866f",
+			"name": "Webhook",
+			"webhookId": "600d9861-4a74-4c9d-832f-83556b7793c9"
+		},
+		{
+			"parameters": {
+				"dataToSave": {
+					"values": [
+						{
+							"key": "bussiness_name",
+							"value": "={{ $json.body.business_name ||''}}"
+						},
+						{
+							"key": "session_id",
+							"value": "={{ $json.body.session_id }}"
+						},
+						{
+							"key": "user_id",
+							"value": "={{ $json.body.user_id }}"
+						}
+					]
+				}
+			},
+			"type": "n8n-nodes-base.executionData",
+			"typeVersion": 1,
+			"position": [-1248, 2128],
+			"id": "b1b3b8fe-6dc0-4f6b-b2d3-161568407f36",
+			"name": "Execution Data"
+		},
+		{
+			"parameters": {
+				"operation": "push",
+				"list": "ai-conversation-agent-message-queue",
+				"messageData": "={\n  \"env\": \"gray\",\n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\",\n  \"user_id\": \"{{ $('Webhook').item.json.body.user_id }}\",\n  \"operate_id\": \"主agent回复\",\n  \"request_id\": \"{{ $('Webhook').item.json.body.request_id }}\",\n  \"socket_id\": \"{{ $('Webhook').item.json.body.socket_id }}\",\n  \"status\": \"FINISHED\",\n  \"content_type\": \"blue_image\",\n  \"content\": {\n    \"text\": \"{{ $json.output.replaceAll('\\n','\\\\n') }}\",\n    \"data\": {\n      \"video_link\": \"{{ $json.output['视频链接'] || ''}}\"\n    }\n  },\n  \"create_ts\": {{ $now.toMillis() }}\n}"
+			},
+			"type": "n8n-nodes-base.redis",
+			"typeVersion": 1,
+			"position": [1520, 1728],
+			"id": "eee13bb6-e4b5-4377-8ac3-fb2a703fd6b8",
+			"name": "与后端交互",
+			"credentials": {
+				"redis": {
+					"id": "UkcckENclXgOKcal",
+					"name": "Redis account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"promptType": "define",
+				"text": "=# 用户信息\n{{ $json.extractedFile?.length && $json.extractedFile.filter((f) => Object.keys(f)?.length > 0).length > 0 ? \"List of File content(s): \\n \" + JSON.stringify($json.extractedFile.filter((f) => Object.keys(f)?.length > 0)) : '' }}\n{{ $('Webhook').item.json.body.message }}\n",
+				"options": {
+					"systemMessage": "=# 角色\n- 你是“意图识别对话引导员”。\n# 要求：\n1. 你的任务是识别用户的意图以及当前的情况，直接调取子工作流进行工作。\n2. 调用对应的工作流顺序，必须严格按照以下顺序执行，完成后才进行下个子工作流的调取，顺序如下：\n   1.`collect_message1`\n   2.`message_analy1`\n   3.`blue_image1` \n3. 触发前先到对话数据库`Postgres Chat Memory`里查看目前进行到哪一步，就对应调取对应的子工作流。\n4. 语言跟随用户；默认中文。\n\n输出结构（严格）：\n- 正文：\n\n# 全局规则\n1.在调用运行`message_analy1`前，一定到'select_message'里面查询下，企业信息，产品特点，目标人群，三个数据是否录入完整，录入完成，才能调用，除非用户主动说要修改的信息是关键词修改或者新增的命令\n2.在调用运行`blue_image1` 子工作流前，一定到‘select_message1’里查询，关键词是否录入完整，录入完成，才能调用，除非用户主动说要修改的信息是战略任务修改或者新增。\n3.在用'chat1'你自身回答前，一定要到'select_message'‘select_message1，查询，所有任务，企业信息，产品特点，目标人群，关键词，视频战略蓝图 都完整录入了，你才可以不用做调用，直接回复用户问题，在这之前，你就是一个工具调用的工具人，只做调用。\n4.拿到tool 返回的完整消息进行完整输出，不要做更改\n5.必须使用中文输出,并且要有序号\n\n"
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.agent",
+			"typeVersion": 2.2,
+			"position": [-112, 1632],
+			"id": "e8132d96-009e-4bfc-8cdc-a9fe089cb16b",
+			"name": "chat1",
+			"retryOnFail": true
+		},
+		{
+			"parameters": {
+				"toolDescription": "当需要进行信息收集时使用",
+				"text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', `传入用户的信息`, 'string') }}",
+				"options": {
+					"systemMessage": "=# 角色定位\n你是一名专为出海、制造业及其他行业（软件、法律、项目招商等）企业服务的「视频获客战略顾问」。\n你的任务是通过一次高效、自然的访谈，自动分析企业网站或资料，提炼企业核心信息，并分阶段确认后存入数据库。\n目标信息包括：“企业资料 × 目标人群 × 产品特点”。\n\n如果企业所属行业与制造业不同（如软件、法律、项目招商等），请自动识别并调整提问与字段结构以匹配该行业。\n\n# 核心原则\n1. 不重复提问：\n   - 首先引导用户上传官网链接或企业资料（PDF、图片、文档均可）。\n   - 你会自动分析内容，提炼可识别的信息，仅针对缺失部分提问。\n2. 分步确认：\n   - 分为三个阶段：目标人群 → 企业资料 → 产品特点。\n   - 每阶段输出结果后，需得到用户明确确认后再进入下一步。\n3. 智能补全：\n   - 对缺失信息，你可参考行业惯例或公开数据进行推测，但必须显式标注【建议值】。\n4. 数据存储：\n   - 当用户确认模块内容无误时，调用 pgtool 将已确认内容写入数据库。\n   - 存储结构必须包含：模块名、内容、行业标签、数据来源、更新时间。\n   - 存储只存储最后跟用户确认的那条信息，不夹带前面的信息进行存储\n\n# 工作流程\n## 第一步：欢迎 & 了解目标\n- 以自然语气开场：\n  “老板您好，我是您的专属增长顾问小欧。为了帮您打造让客户主动找上门的视频，您可以先给我一些公司资料，比如官网链接、产品介绍、公司简介图片都行，我会先看一遍，减少您输入的时间。”\n- 等待用户输入或上传资料。\n\n## 第二步：资料分析 & 补充提问\n- 自动分析网站或资料，提炼三大板块：\n  1. 企业资料（概况 / 品牌 / 主营 / 成就 / 理念 等）\n  2. 目标人群（客户类型 / 市场 / 痛点）\n  3. 产品特点（名称 / 功能 / 场景 / 交付 / 价值）\n- 对缺失信息进行补充提问：\n  “我已了解大部分情况，还需确认几个小点让方案更精准。”\n  示例问题：\n  - “请问您主要服务的客户类型是谁？”\n  - “一句话能总结您公司的核心优势吗？”\n  - “您的主要产品或服务有哪些特色？”\n\n## 第三步：分模块确认信息\n- 每个模块单独展示结果，格式如下：\n  ---\n  ✅ 模块：目标人群  \n  1. 客户类型：政府采购 / 工程承包 / 经销商 / 中小企业 / 个人客户  \n  2. 目标市场：中东 、北美 、东南亚 【建议值】  \n  3. 常见痛点：获客难、转化低、合规复杂 【建议值】  \n  ---\n  “您看这部分信息对吗？有没有要补充或修改的地方？”\n- 当检测到用户回复包含【确认 / OK / 没问题 / 对的 / 可以存】等关键词时，执行：\n\n## 第四步：智能补全 与 记录\n- 若存在推测项，需显式标注【建议值】。  \n- 写入数据库后，提示用户：\n“这部分我已为您存入企业资料库，方便后续生成营销方案或企业知识卡片。”\n\n# 限制\n1. 严格按顺序执行：目标人群 → 企业资料 → 产品特点。\n2. 未经用户确认，不得调用 pgtool。\n3. 禁止生成任何营销文案、提示词或广告内容，仅采集信息。\n4. 若资料充足，可跳过提问环节，直接输出总结并请用户确认。\n\n# 输出格式（供存储）\n每次确认后输出 JSON：\n{\n\"模块名称\": \"目标人群 / 企业资料 / 产品特点\",\n\"确认内容\": {...},\n\"行业标签\": \"制造业 / 软件 / 法律 / 招商 等\",\n\"数据来源\": \"官网 / 用户 / AI补全\",\n\"更新时间\": \"YYYY-MM-DD\"\n}\n"
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.agentTool",
+			"typeVersion": 2.2,
+			"position": [-176, 1856],
+			"id": "3b7f63ae-7903-472a-b6b7-86e6f72f0f54",
+			"name": "collect_message1"
+		},
+		{
+			"parameters": {
+				"toolDescription": "当需要进行关键词分析时使用",
+				"text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', `传输用户的需求`, 'string') }}",
+				"options": {
+					"systemMessage": "=  # 角色定位\n  你的任务是通过查询数据库获取公司相关的资料，并拆解成关键词。\n\n\n  # 工作流程\n  \n  第1步：从数据库找到相关企业的资料,可以调用select_message tool\n  \n  第2步：生成关键词库 & 调用工具\n  - 提炼关键词：基于前面确认的信息，你会自动生成一个专业的“关键词矩阵”，包含核心产品词、行业通用词、客户可能会搜索的各种问题等。\n  - 展示并确认：你会把这个关键词库展示给用户，并解释：“这是我根据您的业务生成的关键词库，将用于视频内容的创作和推广。您看这些词准确吗？”\n  - 调用视频抓取工具：一旦用户说“没问题”或“就这样吧”，你 必须 立即调用名为 `keywords_agent` 的子流程（或工具），用于后续的视频素材搜集。同时，也调用 `pgtool` 将关键词库存入数据库。\n  \n  \n  # 重要：工具调用规则\n  1.  存储工具 `pgtool`:\n      - 触发时机: 当用户确认了“企业资料”、“目标人群”、“产品特点”、“关键词库”、“增长战略”等任何一个模块后。\n      - 执行动作: 调用 `pgtool`，并将该模块的 最终确认内容 存入数据库。\n  2.  关键词视频抓取工具 `keywords_agent`:\n      - 触发时机: 当且仅当用户对你生成的“关键词库”表示“确认”或“没问题”后。\n      - 执行动作: 必须以 字符串 形式调用 `keywords_agent` 工具。格式如下：\n        - 工具名: `keywords_agent`\n"
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.agentTool",
+			"typeVersion": 2.2,
+			"position": [240, 1856],
+			"id": "39681715-1619-46e0-906d-ad4b54d348c0",
+			"name": "message_analy1"
+		},
+		{
+			"parameters": {
+				"toolDescription": "当需要进行视频制作蓝图输出时使用",
+				"text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', `传入用户的需求`, 'string') }}",
+				"options": {
+					"systemMessage": "=  # 角色定位\n  调用公司信息和目标，帮助企业制定一个视频制作蓝图吧。\n  # 工作流程\n\n第1步：先调用start_tool发送开始执行的message\n第2步：从数据库找到相关企业的资料,可以调用select_message tool\n  第3步：制定增长战略 (作战地图)\n  - 设定目标：结合最开始用户给的目标，你会计算出要达到这个目标，大概需要做多少视频、运营多少个账号，以及预计能获得多少曝光。\n  - 计算素材需求：你会告诉用户最关键的一点：“要完成这个目标， AI 虽然能帮我们剪辑无数个视频，但源头的高质量素材还得靠咱们自己拍。根据计算，您每周只需要拍摄大概XX个场景的镜头，AI就能裂变成上百个不同的短视频。”\n  - 确认与存储：将这个包含账号数量、发布计划、素材拍摄要求的“作战地图”展示给用户确认。确认后，调用 `pgtool` 存储。\n  \n  ## 参考如下：\n    1、准备10个美区账号\n    2、拍摄1000个视频分镜，按照场景分类\n    3、准备海外静态ip的地址，方便上传视频\n\n  第2步：生成视频制作蓝图 (分镜脚本)\n  - 生成脚本创意：基于前面的所有信息，你会自动生成一份详细的“视频制作蓝图”。\n  - 蓝图内容：这份蓝图会包含多种视频内容方向（如工厂探秘、产品测评、客户案例等），以及每个方向的具体拍摄脚本，细致到每个镜头怎么拍、说什么话、配什么标题和音乐。\n  \n  第七步：最终方案确认与交付\n  - 汇总展示：最后，你会把以上所有确认过的内容，汇总成一份完整的《出海视频获客战略规划书》。\n  - 交付成果：将这份最终的、格式清晰的规划书完整地呈现给用户，并告知：“您的专属视频获客战略已经生成！接下来就可以按照这份计划开干了！”\n  "
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.agentTool",
+			"typeVersion": 2.2,
+			"position": [752, 1856],
+			"id": "68bc6e1c-7da3-4fbb-a34e-7faaad0ec26a",
+			"name": "blue_image1"
+		},
+		{
+			"parameters": {
+				"descriptionType": "manual",
+				"toolDescription": "pgtool:数据入库的工具",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_key_messages",
+					"mode": "list",
+					"cachedResultName": "hsai_business_key_messages"
+				},
+				"columns": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"business_name": "={{ $('Webhook').first().json.body.business_name }}",
+						"message_type": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message_type', `填入问用户的问题`, 'string') }}",
+						"data_info": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_info', `填入用户问题的答案`, 'string') }}",
+						"session_id": "={{ $('Webhook').item.json.body.session_id }}"
+					},
+					"matchingColumns": [],
+					"schema": [
+						{
+							"id": "business_name",
+							"displayName": "business_name",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "message_type",
+							"displayName": "message_type",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "data_info",
+							"displayName": "data_info",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "session_id",
+							"displayName": "session_id",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgresTool",
+			"typeVersion": 2.6,
+			"position": [64, 2064],
+			"id": "a2247e9e-c8f4-4f3e-b1ab-1fc6b0d69cbd",
+			"name": "pgtool3",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "o3",
+					"mode": "list",
+					"cachedResultName": "o3"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [-352, 1856],
+			"id": "c360588b-603a-4f91-99fe-eb32e215b3b7",
+			"name": "OpenAI Chat Model3",
+			"credentials": {
+				"openAiApi": {
+					"id": "nlFmjkNQkWVpRAF0",
+					"name": "huanxin"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"description": "调用这个工具把英文关键词入库",
+				"workflowId": {
+					"__rl": true,
+					"value": "EEqXWmXwcJgzBE1B",
+					"mode": "list",
+					"cachedResultName": "2视频爬取agent"
+				},
+				"workflowInputs": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"keywords": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('keywords', `用户确定的关键词`, 'string') }}",
+						"business_name": "={{ $('Webhook').first().json.body.business_name }}"
+					},
+					"matchingColumns": ["keywords"],
+					"schema": [
+						{
+							"id": "keywords",
+							"displayName": "keywords",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						},
+						{
+							"id": "business_name",
+							"displayName": "business_name",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"canBeUsedToMatch": true,
+							"type": "string",
+							"removed": false
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				}
+			},
+			"type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+			"typeVersion": 2.2,
+			"position": [320, 2064],
+			"id": "0243430c-e481-49ae-bddf-dbed1d0324d2",
+			"name": "keywords_agent1"
+		},
+		{
+			"parameters": {
+				"descriptionType": "manual",
+				"toolDescription": "select_message:Select rows from a table in Postgres",
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_key_messages",
+					"mode": "list",
+					"cachedResultName": "hsai_business_key_messages"
+				},
+				"where": {
+					"values": [
+						{
+							"column": "business_name",
+							"value": "={{ $('Webhook').first().json.body.business_name }}"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgresTool",
+			"typeVersion": 2.6,
+			"position": [448, 2064],
+			"id": "236cfc63-a91b-4f3e-8b6a-1b4db586078d",
+			"name": "select_message2",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"descriptionType": "manual",
+				"toolDescription": "pgtool:数据入库的工具",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_key_messages",
+					"mode": "list",
+					"cachedResultName": "hsai_business_key_messages"
+				},
+				"columns": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"business_name": "={{ $('Webhook').first().json.body.business_name }}",
+						"message_type": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message_type', `填入问用户的问题`, 'string') }}",
+						"data_info": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_info', `填入用户问题的答案`, 'string') }}",
+						"session_id": "={{ $('Webhook').item.json.body.session_id }}"
+					},
+					"matchingColumns": [],
+					"schema": [
+						{
+							"id": "business_name",
+							"displayName": "business_name",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "message_type",
+							"displayName": "message_type",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "data_info",
+							"displayName": "data_info",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "session_id",
+							"displayName": "session_id",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgresTool",
+			"typeVersion": 2.6,
+			"position": [576, 2064],
+			"id": "95866007-86ee-43dd-a657-d4bb0f033194",
+			"name": "pgtool4",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"descriptionType": "manual",
+				"toolDescription": "pgtool:数据入库的工具",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_key_messages",
+					"mode": "list",
+					"cachedResultName": "hsai_business_key_messages"
+				},
+				"columns": {
+					"mappingMode": "defineBelow",
+					"value": {
+						"business_name": "={{ $('Webhook').first().json.body.business_name }}",
+						"message_type": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message_type', `填入问用户的问题`, 'string') }}",
+						"data_info": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('data_info', `填入用户问题的答案`, 'string') }}",
+						"session_id": "={{ $('Webhook').item.json.body.session_id }}"
+					},
+					"matchingColumns": [],
+					"schema": [
+						{
+							"id": "business_name",
+							"displayName": "business_name",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "message_type",
+							"displayName": "message_type",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "data_info",
+							"displayName": "data_info",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						},
+						{
+							"id": "session_id",
+							"displayName": "session_id",
+							"required": false,
+							"defaultMatch": false,
+							"display": true,
+							"type": "string",
+							"canBeUsedToMatch": true
+						}
+					],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": false
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgresTool",
+			"typeVersion": 2.6,
+			"position": [832, 2064],
+			"id": "2e80ca46-edf6-46e6-b37c-e21153e20844",
+			"name": "pgtool5",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"descriptionType": "manual",
+				"toolDescription": "select_message:Select rows from a table in Postgres",
+				"operation": "select",
+				"schema": {
+					"__rl": true,
+					"mode": "list",
+					"value": "public"
+				},
+				"table": {
+					"__rl": true,
+					"value": "hsai_business_key_messages",
+					"mode": "list",
+					"cachedResultName": "hsai_business_key_messages"
+				},
+				"where": {
+					"values": [
+						{
+							"column": "business_name",
+							"value": "={{ $('Webhook').first().json.body.business_name }}"
+						}
+					]
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.postgresTool",
+			"typeVersion": 2.6,
+			"position": [960, 2064],
+			"id": "a99c4778-ce10-49f1-99fc-987219d514f2",
+			"name": "select_message3",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"sessionIdType": "customKey",
+				"sessionKey": "={{ $('Webhook').item.json.body.session_id }}",
+				"contextWindowLength": 50
+			},
+			"type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+			"typeVersion": 1.3,
+			"position": [-304, 2096],
+			"id": "3e92002e-cb16-4d30-9c06-b16c1baf70a2",
+			"name": "Postgres Chat Memory1",
+			"credentials": {
+				"postgres": {
+					"id": "KJscbDCc0CfgKGjb",
+					"name": "Postgres account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"conditions": {
+					"options": {
+						"caseSensitive": true,
+						"leftValue": "",
+						"typeValidation": "strict",
+						"version": 2
+					},
+					"conditions": [
+						{
+							"id": "f66536d0-a5ea-411f-8aa6-3dc3ccdd7bf7",
+							"leftValue": "={{ $json.output }}",
+							"rightValue": "蓝图",
+							"operator": {
+								"type": "string",
+								"operation": "contains"
+							}
+						},
+						{
+							"id": "9edcae7b-405c-4938-934a-aba5148d9cbb",
+							"leftValue": "={{ $json.output }}",
+							"rightValue": "成",
+							"operator": {
+								"type": "string",
+								"operation": "equals",
+								"name": "filter.operator.equals"
+							}
+						}
+					],
+					"combinator": "and"
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.if",
+			"typeVersion": 2.2,
+			"position": [1296, 1728],
+			"id": "a11c6e78-35c1-479a-9cb6-0b7a0479dbc4",
+			"name": "If"
+		},
+		{
+			"parameters": {
+				"operation": "push",
+				"list": "ai-conversation-agent-message-queue",
+				"messageData": "={\n  \"env\": \"gray\",\n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\",\n  \"user_id\": \"{{ $('Webhook').item.json.body.user_id }}\",\n  \"operate_id\": \"主agent回复\",\n  \"request_id\": \"{{ $('Webhook').item.json.body.request_id }}\",\n  \"socket_id\": \"{{ $('Webhook').item.json.body.socket_id }}\",\n  \"status\": \"FINISHED\",\n  \"content_type\": \"collect_message\",\n  \"content\": {\n    \"text\": \"{{ $json.output.replaceAll('\\n','\\\\n') }}\",\n    \"data\": {\n      \"video_link\": \"{{ $json.output['视频链接'] || ''}}\"\n    }\n  },\n  \"create_ts\": {{ $now.toMillis() }}\n}"
+			},
+			"type": "n8n-nodes-base.redis",
+			"typeVersion": 1,
+			"position": [1520, 1920],
+			"id": "4f1be177-1890-4b18-b803-1703d29cfc87",
+			"name": "与后端交互1",
+			"credentials": {
+				"redis": {
+					"id": "UkcckENclXgOKcal",
+					"name": "Redis account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"descriptionType": "manual",
+				"toolDescription": "需要调用工具来告诉用户开始处理了",
+				"operation": "push",
+				"list": "ai-conversation-agent-message-queue",
+				"messageData": "={\n  \"env\": \"gray\",\n  \"session_id\": \"{{ $('Webhook').item.json.body.session_id }}\",\n  \"user_id\": \"{{ $('Webhook').item.json.body.user_id }}\",\n  \"operate_id\": \"开始处理\",\n  \"request_id\": \"{{ $('Webhook').item.json.body.request_id }}\",\n  \"socket_id\": \"{{ $('Webhook').item.json.body.socket_id }}\",\n  \"status\": \"RUNNING\",\n  \"content_type\": \"blue_image_sub_start\"\n  },\n  \"create_ts\": {{ $now.toMillis() }}\n}"
+			},
+			"type": "n8n-nodes-base.redisTool",
+			"typeVersion": 1,
+			"position": [1088, 2064],
+			"id": "0a65a5e5-a24e-4f0e-9ded-948330d94602",
+			"name": "start_msg",
+			"credentials": {
+				"redis": {
+					"id": "UkcckENclXgOKcal",
+					"name": "Redis account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "o3",
+					"mode": "list",
+					"cachedResultName": "o3"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [-1472, 2352],
+			"id": "995da307-23ea-41d9-b17a-4d84c28af1bc",
+			"name": "OpenAI Chat Model",
+			"credentials": {
+				"openAiApi": {
+					"id": "nlFmjkNQkWVpRAF0",
+					"name": "huanxin"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "o3",
+					"mode": "list",
+					"cachedResultName": "o3"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [-64, 2064],
+			"id": "1f9a3deb-667c-4f84-b3cb-d2244ef9766c",
+			"name": "OpenAI Chat Model1",
+			"credentials": {
+				"openAiApi": {
+					"id": "nlFmjkNQkWVpRAF0",
+					"name": "huanxin"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "o3",
+					"mode": "list",
+					"cachedResultName": "o3"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [192, 2064],
+			"id": "668394dc-23c3-4cb2-9ded-fa15d54f6ee9",
+			"name": "OpenAI Chat Model2",
+			"credentials": {
+				"openAiApi": {
+					"id": "nlFmjkNQkWVpRAF0",
+					"name": "huanxin"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"model": {
+					"__rl": true,
+					"value": "o3",
+					"mode": "list",
+					"cachedResultName": "o3"
+				},
+				"options": {}
+			},
+			"type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+			"typeVersion": 1.2,
+			"position": [704, 2064],
+			"id": "bab356bd-4751-425f-8cac-610c071a1361",
+			"name": "OpenAI Chat Model4",
+			"credentials": {
+				"openAiApi": {
+					"id": "nlFmjkNQkWVpRAF0",
+					"name": "huanxin"
+				}
+			}
+		}
+	],
+	"pinData": {
+		"Webhook": [
+			{
+				"json": {
+					"headers": {
+						"host": "webhook-n8n.hsai.cc",
+						"content-type": "application/json",
+						"user-agent": "OpenWebUI-N8N-Client/1.0",
+						"accept": "*/*",
+						"accept-encoding": "gzip, deflate, br",
+						"content-length": "374",
+						"x-forwarded-for": "27.151.105.162",
+						"x-forwarded-proto": "https",
+						"x-envoy-original-host": "webhook-n8n.hsai.cc",
+						"x-envoy-external-address": "27.151.105.162",
+						"x-request-id": "02c5ddb2-b818-4256-bfd3-3815834287e0",
+						"x-envoy-attempt-count": "1",
+						"req-start-time": "1759072946790",
+						"original-host": "webhook-n8n.hsai.cc",
+						"x-envoy-route-identifier": "true"
+					},
+					"params": {},
+					"query": {},
+					"body": {
+						"session_id": "76e166f3-2581-4623-9de1-d7a73332c44c",
+						"user_id": "0086d2b1-1514-4450-8660-29629e27f984",
+						"message": "确认",
+						"timestamp": 1759072946745,
+						"request_id": "415a12bb-2ee3-4b4b-8754-5cb1e89c27f6",
+						"socket_id": "XwP0F2AtIziDe6gmAA89",
+						"entry_type": "company_info",
+						"business_name": "HSAI",
+						"additional_data": {
+							"timestamp": 1759072945,
+							"client_version": ""
+						}
+					},
+					"webhookUrl": "http://localhost:5678/webhook/business_information_get",
+					"executionMode": "production"
+				}
+			}
+		]
+	},
+	"connections": {
+		"Convert to File": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Switch": {
+			"main": [
+				[
+					{
+						"node": "Convert to File",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Convert to File1",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Convert to File2",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Convert to File3",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Convert to File4",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Convert to File5",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Convert to File7",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Convert to File8",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "chat1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Convert to File1": {
+			"main": [
+				[
+					{
+						"node": "Extract from File",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Extract from File": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Convert to File2": {
+			"main": [
+				[
+					{
+						"node": "Extract from File1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Convert to File3": {
+			"main": [
+				[
+					{
+						"node": "Extract from File2",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Convert to File4": {
+			"main": [
+				[
+					{
+						"node": "Extract from File3",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Convert to File5": {
+			"main": [
+				[
+					{
+						"node": "Extract from File4",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Convert to File7": {
+			"main": [
+				[
+					{
+						"node": "Extract from File6",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Convert to File8": {
+			"main": [
+				[
+					{
+						"node": "Extract from File7",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Extract from File2": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Extract from File3": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Extract from File4": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Extract from File6": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Extract from File7": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Extract from File1": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Loop Over Items": {
+			"main": [
+				[
+					{
+						"node": "Aggregate",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Switch",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Aggregate": {
+			"main": [
+				[
+					{
+						"node": "chat1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Split Out": {
+			"main": [
+				[
+					{
+						"node": "Loop Over Items",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Code": {
+			"main": [
+				[
+					{
+						"node": "Split Out",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Webhook": {
+			"main": [
+				[
+					{
+						"node": "Code",
+						"type": "main",
+						"index": 0
+					},
+					{
+						"node": "Execution Data",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"collect_message1": {
+			"ai_tool": [
+				[
+					{
+						"node": "chat1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"message_analy1": {
+			"ai_tool": [
+				[
+					{
+						"node": "chat1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"blue_image1": {
+			"ai_tool": [
+				[
+					{
+						"node": "chat1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"pgtool3": {
+			"ai_tool": [
+				[
+					{
+						"node": "collect_message1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenAI Chat Model3": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "chat1",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"keywords_agent1": {
+			"ai_tool": [
+				[
+					{
+						"node": "message_analy1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"select_message2": {
+			"ai_tool": [
+				[
+					{
+						"node": "message_analy1",
+						"type": "ai_tool",
+						"index": 0
+					},
+					{
+						"node": "chat1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"pgtool4": {
+			"ai_tool": [
+				[
+					{
+						"node": "message_analy1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"pgtool5": {
+			"ai_tool": [
+				[
+					{
+						"node": "blue_image1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"select_message3": {
+			"ai_tool": [
+				[
+					{
+						"node": "blue_image1",
+						"type": "ai_tool",
+						"index": 0
+					},
+					{
+						"node": "chat1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Postgres Chat Memory1": {
+			"ai_memory": [
+				[
+					{
+						"node": "message_analy1",
+						"type": "ai_memory",
+						"index": 0
+					},
+					{
+						"node": "collect_message1",
+						"type": "ai_memory",
+						"index": 0
+					},
+					{
+						"node": "chat1",
+						"type": "ai_memory",
+						"index": 0
+					},
+					{
+						"node": "blue_image1",
+						"type": "ai_memory",
+						"index": 0
+					}
+				]
+			]
+		},
+		"chat1": {
+			"main": [
+				[
+					{
+						"node": "If",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"If": {
+			"main": [
+				[
+					{
+						"node": "与后端交互",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "与后端交互1",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"start_msg": {
+			"ai_tool": [
+				[
+					{
+						"node": "blue_image1",
+						"type": "ai_tool",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenAI Chat Model4": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "blue_image1",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenAI Chat Model2": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "message_analy1",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		},
+		"OpenAI Chat Model1": {
+			"ai_languageModel": [
+				[
+					{
+						"node": "collect_message1",
+						"type": "ai_languageModel",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": true,
+	"settings": {
+		"executionOrder": "v1"
+	},
+	"versionId": "6d89a360-252b-47c0-92b4-62721b3eb2e9",
+	"meta": {
+		"templateCredsSetupCompleted": true,
+		"instanceId": "15477a2d6b3b11fe770cbc16cb287fe889cbb8cef691cc9e35d958d33e771d0b"
+	},
+	"id": "qWZsumvyTnGmT93I",
+	"tags": []
 }
