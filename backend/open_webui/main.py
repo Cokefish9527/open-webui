@@ -621,6 +621,16 @@ async def lifespan(app: FastAPI):
     from open_webui.utils.task_completion_handler import register_task_completion_queue_handler
     register_task_completion_queue_handler(redis_signal_handler)
 
+    # 初始化告警服务
+    from open_webui.env import ALERT_SERVICE_ADMIN_BASE_URL, ALERT_SERVICE_API_KEY
+    from open_webui.services.alert_service import init_alert_service
+    if ALERT_SERVICE_ADMIN_BASE_URL:
+        try:
+            await init_alert_service(ALERT_SERVICE_ADMIN_BASE_URL, ALERT_SERVICE_API_KEY)
+            log.info("告警服务初始化成功")
+        except Exception as e:
+            log.error(f"告警服务初始化失败: {e}")
+
     if THREAD_POOL_SIZE and THREAD_POOL_SIZE > 0:
         limiter = anyio.to_thread.current_default_thread_limiter()
         limiter.total_tokens = THREAD_POOL_SIZE

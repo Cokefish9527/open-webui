@@ -2,6 +2,8 @@ import socketio
 from urllib.parse import urlparse
 from typing import Optional
 
+from .redis_manager import init_redis_manager, get_redis_manager
+
 
 def parse_redis_service_url(redis_url):
     parsed_url = urlparse(redis_url)
@@ -20,6 +22,9 @@ def parse_redis_service_url(redis_url):
 def get_redis_connection(
     redis_url, redis_sentinels, async_mode=False, decode_responses=True
 ):
+    # 初始化Redis连接管理器
+    init_redis_manager(redis_url, redis_sentinels)
+    
     if async_mode:
         import redis.asyncio as redis
 
@@ -56,8 +61,13 @@ def get_redis_connection(
             )
             return sentinel.master_for(redis_config["service"])
         elif redis_url:
-            # 为Redis连接添加超时设置
-            return redis.Redis.from_url(redis_url, decode_responses=decode_responses, socket_timeout=5)
+            # 使用Redis连接管理器获取连接
+            manager = get_redis_manager()
+            if manager:
+                return manager.get_connection()
+            else:
+                # 为Redis连接添加超时设置
+                return redis.Redis.from_url(redis_url, decode_responses=decode_responses, socket_timeout=5)
         else:
             return None
 

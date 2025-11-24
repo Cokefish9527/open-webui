@@ -12,6 +12,13 @@ from open_webui.models.hsai_outbox import (
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS.get("MAIN", "INFO"))
 
+# 告警服务
+try:
+    from open_webui.services.alert_service import send_alert_to_admin
+    ALERT_SERVICE_AVAILABLE = True
+except ImportError:
+    ALERT_SERVICE_AVAILABLE = False
+
 OutboxHandler = Callable[[HSAIOutboxEventModel], Awaitable[None]]
 _HANDLERS: Dict[str, OutboxHandler] = {}
 
@@ -55,6 +62,18 @@ class OutboxDispatcher:
                 await self._process_batch()
             except Exception as exc:  # pylint: disable=broad-except
                 log.error("Outbox dispatcher loop error: %s", exc, exc_info=True)
+                # 发送告警到后台
+                if ALERT_SERVICE_AVAILABLE:
+                    try:
+                        await send_alert_to_admin(
+                            title="Outbox分发器错误",
+                            content=f"Outbox分发器循环处理时发生错误: {str(exc)}",
+                            level="ERROR",
+                            source="outbox_dispatcher",
+                            category="system_error"
+                        )
+                    except Exception as alert_exc:
+                        log.error("发送告警失败: %s", alert_exc)
             await asyncio.sleep(self.interval_seconds)
 
     async def _process_batch(self) -> None:
@@ -82,6 +101,18 @@ class OutboxDispatcher:
                 exc_info=True,
             )
             HSAIOutboxEvents.reschedule(event.id, delay_seconds=30, error_message=str(exc))
+            # 发送告警到后台
+            if ALERT_SERVICE_AVAILABLE:
+                try:
+                    await send_alert_to_admin(
+                        title=f"Outbox事件处理失败: {event.event_type}",
+                        content=f"处理Outbox事件 {event.id} 时发生错误: {str(exc)}\n事件载荷: {event.payload}",
+                        level="ERROR",
+                        source="outbox_dispatcher",
+                        category="event_handling_error"
+                    )
+                except Exception as alert_exc:
+                    log.error("发送告警失败: %s", alert_exc)
             return
 
         HSAIOutboxEvents.mark_dispatched(event.id)

@@ -1,0 +1,187 @@
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\uvicorn\main.py", line 580, in run
+    server.run()
+    │      └ <function Server.run at 0x000002AEE57A0AE0>
+    └ <uvicorn.server.Server object at 0x000002AEE573B850>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\uvicorn\server.py", line 66, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           │       │   │    │             └ None
+           │       │   │    └ <function Server.serve at 0x000002AEE57A0B80>
+           │       │   └ <uvicorn.server.Server object at 0x000002AEE573B850>
+           │       └ <function run at 0x000002AEE4F83E20>
+           └ <module 'asyncio' from 'C:\\Users\\GuoYC\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\asyncio\\__init__.py'>
+  File "C:\Users\GuoYC\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           │      │   └ <coroutine object Server.serve at 0x000002AEE591C400>
+           │      └ <function Runner.run at 0x000002AEE5004040>
+           └ <asyncio.runners.Runner object at 0x000002AEE5962B10>
+  File "C:\Users\GuoYC\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           │    │     │                  └ <Task pending name='Task-1' coro=<Server.serve() running at C:\work\open-webui\backend\venv\Lib\site-packages\uvicorn\server....
+           │    │     └ <function BaseEventLoop.run_until_complete at 0x000002AEE5001B20>
+           │    └ <ProactorEventLoop running=True closed=False debug=False>
+           └ <asyncio.runners.Runner object at 0x000002AEE5962B10>
+  File "C:\Users\GuoYC\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 641, in run_until_complete
+    self.run_forever()
+    │    └ <function ProactorEventLoop.run_forever at 0x000002AEE50C1BC0>
+    └ <ProactorEventLoop running=True closed=False debug=False>
+  File "C:\Users\GuoYC\AppData\Local\Programs\Python\Python311\Lib\asyncio\windows_events.py", line 321, in run_forever
+    super().run_forever()
+  File "C:\Users\GuoYC\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 608, in run_forever
+    self._run_once()
+    │    └ <function BaseEventLoop._run_once at 0x000002AEE5003880>
+    └ <ProactorEventLoop running=True closed=False debug=False>
+  File "C:\Users\GuoYC\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 1936, in _run_once
+    handle._run()
+    │      └ <function Handle._run at 0x000002AEE4F34E00>
+    └ <Handle Task.task_wakeup(<Future finished result=None>)>
+  File "C:\Users\GuoYC\AppData\Local\Programs\Python\Python311\Lib\asyncio\events.py", line 84, in _run
+    self._context.run(self._callback, *self._args)
+    │    │            │    │           │    └ <member '_args' of 'Handle' objects>
+    │    │            │    │           └ <Handle Task.task_wakeup(<Future finished result=None>)>
+    │    │            │    └ <member '_callback' of 'Handle' objects>
+    │    │            └ <Handle Task.task_wakeup(<Future finished result=None>)>
+    │    └ <member '_context' of 'Handle' objects>
+    └ <Handle Task.task_wakeup(<Future finished result=None>)>
+
+> File "C:\work\open-webui\backend\open_webui\services\outbox_dispatcher.py", line 55, in _run_loop
+    await self._process_batch()
+          │    └ <function OutboxDispatcher._process_batch at 0x000002AE99A8E0C0>
+          └ <open_webui.services.outbox_dispatcher.OutboxDispatcher object at 0x000002AE99D77790>
+
+  File "C:\work\open-webui\backend\open_webui\services\outbox_dispatcher.py", line 61, in _process_batch
+    events = HSAIOutboxEvents.acquire_pending(batch_size=self.batch_size)
+             │                │                          │    └ 50
+             │                │                          └ <open_webui.services.outbox_dispatcher.OutboxDispatcher object at 0x000002AE99D77790>
+             │                └ <function HSAIOutboxTable.acquire_pending at 0x000002AE97F9F920>
+             └ <open_webui.models.hsai_outbox.HSAIOutboxTable object at 0x000002AE97DA33D0>
+
+  File "C:\work\open-webui\backend\open_webui\models\hsai_outbox.py", line 117, in acquire_pending
+    .all()
+
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\orm\query.py", line 2699, in all
+    return self._iter().all()  # type: ignore
+           │    └ <function Query._iter at 0x000002AE9087BBA0>
+           └ <sqlalchemy.orm.query.Query object at 0x000002AE9B35B310>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\orm\query.py", line 2853, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+            │                  │    │      │      │    │       └ <function Session.execute at 0x000002AE90913D80>
+            │                  │    │      │      │    └ <sqlalchemy.orm.session.Session object at 0x000002AE9A33FB50>
+            │                  │    │      │      └ <sqlalchemy.orm.query.Query object at 0x000002AE9B35B310>
+            │                  │    │      └ ~_T
+            │                  │    └ <class 'sqlalchemy.engine.result.Result'>
+            │                  └ ~_T
+            └ typing.Union
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+           │    └ <function Session._execute_internal at 0x000002AE90913A60>
+           └ <sqlalchemy.orm.session.Session object at 0x000002AE9A33FB50>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2241, in _execute_internal
+    conn = self._connection_for_bind(bind)
+           │    │                    └ Engine(postgresql://hsai:***@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/Owen_ai)
+           │    └ <function Session._connection_for_bind at 0x000002AE909137E0>
+           └ <sqlalchemy.orm.session.Session object at 0x000002AE9A33FB50>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2110, in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           │     │                    │       └ None
+           │     │                    └ Engine(postgresql://hsai:***@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/Owen_ai)
+           │     └ <function SessionTransaction._connection_for_bind at 0x000002AE909122A0>
+           └ <sqlalchemy.orm.session.SessionTransaction object at 0x000002AE9C5B29E0>
+  File "<string>", line 2, in _connection_for_bind
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                │  │      │      └ {}
+                │  │      └ (Engine(postgresql://hsai:***@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/Owen_ai), None)
+                │  └ <sqlalchemy.orm.session.SessionTransaction object at 0x000002AE9C5B29E0>
+                └ <function SessionTransaction._connection_for_bind at 0x000002AE909120C0>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 1189, in _connection_for_bind
+    conn = bind.connect()
+           │    └ <function Engine.connect at 0x000002AEE707B600>
+           └ Engine(postgresql://hsai:***@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/Owen_ai)
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3274, in connect
+    return self._connection_cls(self)
+           │    │               └ Engine(postgresql://hsai:***@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/Owen_ai)
+           │    └ <class 'sqlalchemy.engine.base.Connection'>
+           └ Engine(postgresql://hsai:***@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/Owen_ai)
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 148, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+    │          └ <classmethod(<function Connection._handle_dbapi_exception_noconnection at 0x000002AEE7078EA0>)>
+    └ <class 'sqlalchemy.engine.base.Connection'>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2439, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+          │                    │              │                 └ OperationalError('connection to server at "pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com" (8.139.177.14), port 5432 failed: Conn...
+          │                    │              └ (<class 'psycopg2.OperationalError'>, OperationalError('connection to server at "pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com" ...
+          │                    └ <method 'with_traceback' of 'BaseException' objects>
+          └ OperationalError('(psycopg2.OperationalError) connection to server at "pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com" (8.139.177...
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 146, in __init__
+    self._dbapi_connection = engine.raw_connection()
+    │                        │      └ <function Engine.raw_connection at 0x000002AEE707B6A0>
+    │                        └ Engine(postgresql://hsai:***@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/Owen_ai)
+    └ <sqlalchemy.engine.base.Connection object at 0x000002AE9FA98550>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\engine\base.py", line 3298, in raw_connection
+    return self.pool.connect()
+           │    │    └ <function Pool.connect at 0x000002AEE6BE3880>
+           │    └ <sqlalchemy.pool.impl.NullPool object at 0x000002AE8DE0C790>
+           └ Engine(postgresql://hsai:***@pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com:5432/Owen_ai)
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\pool\base.py", line 449, in connect
+    return _ConnectionFairy._checkout(self)
+           │                │         └ <sqlalchemy.pool.impl.NullPool object at 0x000002AE8DE0C790>
+           │                └ <classmethod(<function _ConnectionFairy._checkout at 0x000002AEE6C21940>)>
+           └ <class 'sqlalchemy.pool.base._ConnectionFairy'>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\pool\base.py", line 1263, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            │                 │        └ <sqlalchemy.pool.impl.NullPool object at 0x000002AE8DE0C790>
+            │                 └ <classmethod(<function _ConnectionRecord.checkout at 0x000002AEE6C204A0>)>
+            └ <class 'sqlalchemy.pool.base._ConnectionRecord'>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+          │    └ <function NullPool._do_get at 0x000002AEE6C35D00>
+          └ <sqlalchemy.pool.impl.NullPool object at 0x000002AE8DE0C790>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\pool\impl.py", line 308, in _do_get
+    return self._create_connection()
+           │    └ <function Pool._create_connection at 0x000002AEE6BE3600>
+           └ <sqlalchemy.pool.impl.NullPool object at 0x000002AE8DE0C790>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\pool\base.py", line 390, in _create_connection
+    return _ConnectionRecord(self)
+           │                 └ <sqlalchemy.pool.impl.NullPool object at 0x000002AE8DE0C790>
+           └ <class 'sqlalchemy.pool.base._ConnectionRecord'>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    └ <sqlalchemy.pool.base._ConnectionRecord object at 0x000002AE9C4057F0>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         │    └ <class 'sqlalchemy.util.langhelpers.safe_reraise'>
+         └ <module 'sqlalchemy.util' from 'C:\\work\\open-webui\\backend\\venv\\Lib\\site-packages\\sqlalchemy\\util\\__init__.py'>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+          │         │              └ <traceback object at 0x000002AE9C62BA40>
+          │         └ <method 'with_traceback' of 'BaseException' objects>
+          └ OperationalError('connection to server at "pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com" (8.139.177.14), port 5432 failed: Conn...
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+    │    │                               │    │               └ <sqlalchemy.pool.base._ConnectionRecord object at 0x000002AE9C4057F0>
+    │    │                               │    └ <function create_engine.<locals>.connect at 0x000002AE909E8400>
+    │    │                               └ <sqlalchemy.pool.impl.NullPool object at 0x000002AE8DE0C790>
+    │    └ <member 'dbapi_connection' of '_ConnectionRecord' objects>
+    └ <sqlalchemy.pool.base._ConnectionRecord object at 0x000002AE9C4057F0>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\engine\create.py", line 646, in connect
+    return dialect.connect(*cargs, **cparams)
+           │       │        │        └ {'host': 'pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com', 'dbname': 'Owen_ai', 'user': 'hsai', 'password': 'c5agLR)ah28vnA3+%Yyn...
+           │       │        └ []
+           │       └ <function DefaultDialect.connect at 0x000002AEE711BA60>
+           └ <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x000002AE9027C690>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\sqlalchemy\engine\default.py", line 622, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+           │    │            │        │        └ {'host': 'pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com', 'dbname': 'Owen_ai', 'user': 'hsai', 'password': 'c5agLR)ah28vnA3+%Yyn...
+           │    │            │        └ ()
+           │    │            └ <function connect at 0x000002AE90B42CA0>
+           │    └ <module 'psycopg2' from 'C:\\work\\open-webui\\backend\\venv\\Lib\\site-packages\\psycopg2\\__init__.py'>
+           └ <sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x000002AE9027C690>
+  File "C:\work\open-webui\backend\venv\Lib\site-packages\psycopg2\__init__.py", line 122, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           │        │                       │                     └ {}
+           │        │                       └ None
+           │        └ 'host=pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com dbname=Owen_ai user=hsai password=c5agLR)ah28vnA3+%Yyn port=5432'
+           └ <built-in function _connect>
+
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection to server at "pgm-bp1x8d937cl58d1afo.pg.rds.aliyuncs.com" (8.139.177.14), port 5432 failed: Connection timed out (0x0000274C/10060)
+        Is the server running on that host and accepting TCP/IP connections?

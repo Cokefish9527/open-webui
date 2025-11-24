@@ -379,6 +379,13 @@ ADMIN_DATABASE_POOL_RECYCLE = _get_admin_int(
     "ADMIN_DATABASE_POOL_RECYCLE", DATABASE_POOL_RECYCLE
 )
 
+####################################
+# ALERT SERVICE
+####################################
+
+ALERT_SERVICE_ADMIN_BASE_URL = os.environ.get("ALERT_SERVICE_ADMIN_BASE_URL", "")
+ALERT_SERVICE_API_KEY = os.environ.get("ALERT_SERVICE_API_KEY", "")
+
 
 def _get_n8n_int(name: str, fallback: int) -> int:
     value = os.environ.get(name, "")
