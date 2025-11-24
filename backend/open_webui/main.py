@@ -596,30 +596,21 @@ async def lifespan(app: FastAPI):
         log.error(f"Recurring task scheduler start failed: {e}")
 
     # 启动Redis信号处理器
-    from open_webui.utils.redis_signal_handler import redis_signal_handler
+    from open_webui.utils.redis_signal_handler import redis_signal_handler, initialize_redis_handlers
     await redis_signal_handler.initialize()
     app.state.redis_signal_handler = redis_signal_handler
     app.state.redis_signal_monitoring_task = asyncio.create_task(
         redis_signal_handler.start_monitoring()
     )
 
-    # 注册对话消息队列处理器
-    from open_webui.utils.conversation_queue_handler import register_conversation_queue_handler
-    register_conversation_queue_handler(redis_signal_handler)
+    # 注册所有Redis队列处理器
+    initialize_redis_handlers()
 
     try:
         await start_conversation_ingestion()
         app.state.conversation_ingestion_ready = True
     except Exception as exc:
         log.error("Conversation ingestion dispatcher start failed: %s", exc)
-
-    # 注册视频学习通知队列处理器
-    from open_webui.utils.video_learning_notifier import register_video_learning_queue_handler
-    register_video_learning_queue_handler(redis_signal_handler)
-
-    # 注册任务完成信号队列处理器
-    from open_webui.utils.task_completion_handler import register_task_completion_queue_handler
-    register_task_completion_queue_handler(redis_signal_handler)
 
     # 初始化告警服务
     from open_webui.env import ALERT_SERVICE_ADMIN_BASE_URL, ALERT_SERVICE_API_KEY

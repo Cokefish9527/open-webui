@@ -486,6 +486,10 @@ def initialize_redis_handlers():
         from open_webui.utils.task_completion_handler import register_task_completion_queue_handler
         register_task_completion_queue_handler(redis_signal_handler)
         
+        # 注册思维链阶段消息队列处理器
+        from open_webui.utils.chain_stage_handler import register_chain_stage_queue_handler
+        register_chain_stage_queue_handler(redis_signal_handler)
+        
         log.info("所有Redis队列处理器注册完成")
     except Exception as e:
         log.error(f"注册Redis队列处理器时发生错误: {e}", exc_info=True)
