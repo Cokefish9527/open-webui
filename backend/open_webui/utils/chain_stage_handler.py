@@ -103,13 +103,16 @@ async def handle_chain_stage_message(message: Dict[str, Any], config: Optional[D
             "displayText": CHAIN_STAGE_DISPLAY_TEXT.get(chain_stage, chain_stage)
         }
         
+        log.info(f"准备发送消息到前端: target_sid={target_sid}, message={frontend_message}")
+        
         # Send packaged message back to frontend
         if sio is not None:
             await sio.emit("chain-stage-update", frontend_message, to=target_sid)
             log.info(
-                "Dispatched chain stage update message to frontend: session_id=%s, chain_stage=%s",
+                "Dispatched chain stage update message to frontend: session_id=%s, chain_stage=%s, target_sid=%s",
                 session_id,
                 chain_stage,
+                target_sid,
             )
         else:
             log.error("Socket.IO is not initialized")

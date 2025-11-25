@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import json
+import random
 from typing import Dict, Any
 
 # 导入用户模型
@@ -267,6 +268,51 @@ def register_hsai_events(sio, emitter):
                 "displayText": f"状态查询失败: {str(e)}"
             }
             await sio.emit("hsai_error", error_data, to=sid)
+    
+    # 注册ping_msg事件处理器
+    @sio.on("ping_msg")
+    async def handle_ping_msg(sid, data):
+        """处理ping_msg事件并返回pong_rsp响应"""
+        log.info(f"[HSAI ping_msg事件] 接收到客户端sid {sid} 发送的ping_msg消息")
+        
+        # 定义随机回复消息列表
+        random_responses = [
+            "pong! 系统运行正常。",
+            "pong! 连接稳定。",
+            "pong! 服务在线。",
+            "pong! 响应迅速。",
+            "pong! 一切就绪。",
+            "pong! 系统健康。",
+            "pong! 连接成功。",
+            "pong! 服务可用。",
+            "pong! 状态良好。",
+            "pong! 系统响应中。"
+        ]
+        
+        # 获取用户ID
+        user_id = None
+        from open_webui.socket.main import SESSION_POOL
+        if sid in SESSION_POOL:
+            user = SESSION_POOL[sid]
+            user_id = user.get("id")
+        
+        # 选择随机回复
+        response_text = random.choice(random_responses)
+        
+        # 构建pong_rsp响应消息
+        pong_response = {
+            "type": "pong_rsp",
+            "success": True,
+            "content": response_text,
+            "displayText": response_text,
+            "timestamp": int(__import__('time').time() * 1000),
+            "messageType": "assistant",
+            "user_id": user_id
+        }
+        
+        # 发送pong_rsp响应
+        await sio.emit("pong_rsp", pong_response, to=sid)
+        log.info(f"[HSAI ping_msg事件] 已发送pong_rsp响应: {response_text}")
     
     log.info("HSAI统一WebSocket事件处理器注册成功")
 
