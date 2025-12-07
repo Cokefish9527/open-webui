@@ -127,6 +127,7 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
 
         # 查找对应的Socket.IO连接，按照socket_id->session_id->user_id的顺序
         target_sid = None
+        extra_targets = []
         
         # 1. 优先尝试通过socket_id查找
         if socket_id:
@@ -147,6 +148,24 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
             log.warning(f"未找到session_id {session_id} 对应的Socket.IO连接，尝试通过user_id {user_id} 查找")
             target_sid = _find_socket_by_user_id(user_id, USER_POOL, SESSION_POOL)
             
+        # 当 socket_id/session_id 未命中时，尝试基于 user_id 将消息同步到该用户所有活跃连接，避免 SID 漂移导致的回复丢失
+        if not target_sid and user_id:
+            try:
+                if hasattr(SESSION_POOL, "items"):
+                    for sid, session_data in SESSION_POOL.items():
+                        if isinstance(session_data, dict) and session_data.get("user_id") == user_id:
+                            extra_targets.append(sid)
+                    if extra_targets:
+                        target_sid = extra_targets.pop(0)
+                        log.info(
+                            "通过user_id=%s 找到备用Socket.IO连接，目标sid=%s，额外sid=%s",
+                            user_id,
+                            target_sid,
+                            extra_targets,
+                        )
+            except Exception as e:
+                log.error("按user_id查找Socket.IO连接时异常: %s", e, exc_info=True)
+
         if not target_sid:
             # 添加更多调试信息
             log.warning(f"未找到socket_id {socket_id}、session_id {session_id} 或 user_id {user_id} 对应的Socket.IO连接")
@@ -201,6 +220,13 @@ async def handle_conversation_agent_message(message: Dict[str, Any], config: Opt
         # Send packaged message back to frontend
         if sio is not None:
             await sio.emit("hsai_response", frontend_message, to=target_sid)
+            # 如果同一用户有多个活跃连接，向剩余连接同步，避免因SID漂移造成遗漏
+            for sid in extra_targets:
+                try:
+                    await sio.emit("hsai_response", frontend_message, to=sid)
+                except Exception as emit_exc:
+                    log.error("同步到额外SID %s 失败: %s", sid, emit_exc, exc_info=True)
+
             log.info(
                 "Dispatched packaged message to frontend: session_id=%s, status=%s",
                 session_id,
