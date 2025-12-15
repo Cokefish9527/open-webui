@@ -1,4 +1,5 @@
-ï»¿import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { spawn } from 'child_process';
+import type { ChildProcessWithoutNullStreams } from 'child_process';
 import fs from 'fs';
 
 export class BackendLogTailer {
@@ -8,13 +9,13 @@ export class BackendLogTailer {
 	constructor(private readonly logPath: string) {}
 
 	start(): void {
-		// å°è¯•å¤šç§åç«¯æ—¥å¿—æ•è·å‘½ä»¤
+		// ³¢ÊÔ¶àÖÖºó¶ËÈÕÖ¾²¶»ñÃüÁî
 		const commands = [
 			process.env.E2E_BACKEND_LOG_CMD,
 			'docker compose logs open-webui-backend -f',
 			'tail -f logs/backend.log',
 			'journalctl -f -u open-webui'
-			// é»˜è®¤å‘½ä»¤ï¼Œå¦‚æœéƒ½æ²¡æœ‰è®¾ç½®åˆ™åˆ›å»ºä¸€ä¸ªæç¤ºæ–‡ä»¶
+			// Ä¬ÈÏÃüÁî£¬Èç¹û¶¼Ã»ÓĞÉèÖÃÔò´´½¨Ò»¸öÌáÊ¾ÎÄ¼ş
 		];
 
 		let command = commands.find((cmd) => cmd && cmd.trim() !== '');
@@ -30,7 +31,7 @@ export class BackendLogTailer {
 
 		this.logStream = fs.createWriteStream(this.logPath, { flags: 'a' });
 
-		// æ·»åŠ æ—¶é—´æˆ³å‰ç¼€
+		// Ìí¼ÓÊ±¼ä´ÁÇ°×º
 		const timestamp = new Date().toISOString();
 		this.logStream.write(
 			`\n[${timestamp}] Starting backend log capture with command: ${command}\n`

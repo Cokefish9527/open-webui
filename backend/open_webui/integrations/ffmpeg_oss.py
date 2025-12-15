@@ -31,7 +31,11 @@ class FfmpegOssClient:
     def _get_headers(self) -> Dict[str, str]:
         headers = {"Accept": "application/json"}
         if self.api_key:
-            headers["Authorization"] = self.api_key
+            token = self.api_key.strip()
+            if token:
+                headers["Authorization"] = (
+                    token if token.lower().startswith("bearer ") else f"Bearer {token}"
+                )
         return headers
 
     def _ensure_client(self) -> httpx.Client:
@@ -52,6 +56,7 @@ class FfmpegOssClient:
         self,
         object_name: str,
         expires: int = 900,
+        bucket: Optional[str] = None,
     ) -> str:
         """
         调用 `/oss/download-url` 生成签名链接。
@@ -59,9 +64,12 @@ class FfmpegOssClient:
         if not object_name:
             raise ValueError("object_name is required")
         client = self._ensure_client()
+        params: Dict[str, Any] = {"objectName": object_name, "expires": expires}
+        if bucket:
+            params["bucket"] = bucket
         response = client.get(
             "/oss/download-url",
-            params={"objectName": object_name, "expires": expires},
+            params=params,
         )
         response.raise_for_status()
         payload = response.json()
@@ -89,14 +97,53 @@ class FfmpegOssClient:
         response.raise_for_status()
         return response.json()
 
-    def list_tree(self, directories: Optional[str] = None) -> Dict[str, Any]:
+    def list_objects(
+        self,
+        prefix: str = "",
+        *,
+        bucket: Optional[str] = None,
+        max_keys: int = 1000,
+    ) -> Any:
         client = self._ensure_client()
-        response = client.get(
-            "/oss/tree",
-            params={"directories": directories} if directories else None,
-        )
+        params: Dict[str, Any] = {"prefix": prefix, "maxKeys": max_keys}
+        if bucket:
+            params["bucket"] = bucket
+        response = client.get("/oss/objects", params=params)
         response.raise_for_status()
         return response.json()
+
+    def list_tree(
+        self,
+        prefix: str = "",
+        *,
+        bucket: Optional[str] = None,
+        depth: int = 2,
+    ) -> Any:
+        client = self._ensure_client()
+        params: Dict[str, Any] = {"prefix": prefix, "depth": depth}
+        if bucket:
+            params["bucket"] = bucket
+        response = client.get("/oss/tree", params=params)
+        response.raise_for_status()
+        return response.json()
+
+    def delete_object(
+        self,
+        object_name: str,
+        *,
+        bucket: Optional[str] = None,
+    ) -> None:
+        """
+        调用 `/oss/object` 删除对象。
+        """
+        if not object_name:
+            raise ValueError("object_name is required")
+        client = self._ensure_client()
+        params: Dict[str, Any] = {"objectName": object_name}
+        if bucket:
+            params["bucket"] = bucket
+        response = client.delete("/oss/object", params=params)
+        response.raise_for_status()
 
 
 _FFMPEG_API_BASE_URL = os.environ.get("FFMPEG_API_BASE_URL", "").strip()
@@ -137,6 +184,7 @@ def ensure_download_url(
     object_name: str,
     expires: int = 900,
     fallback_url: Optional[str] = None,
+    bucket: Optional[str] = None,
 ) -> Optional[str]:
     """
     若启用 FFmpeg OSS 且可用，则生成签名链接；否则返回 fallback。
@@ -144,7 +192,7 @@ def ensure_download_url(
     client = get_client()
     if client:
         try:
-            return client.generate_download_url(object_name, expires=expires)
+            return client.generate_download_url(object_name, expires=expires, bucket=bucket)
         except Exception as exc:  # noqa: BLE001
             log.warning("generate_download_url via FFmpeg API failed: %s", exc)
     return fallback_url

@@ -2,7 +2,7 @@ import logging
 import time
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from pydantic import BaseModel, Field
 
 from open_webui.models.hsai_materials import (
@@ -12,11 +12,14 @@ from open_webui.models.hsai_materials import (
     PaginationData,
     PaginatedHSAIMaterialResponse
 )
+from open_webui.models.users import Users
+from open_webui.services.materials_cache_service import MaterialsCacheService
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
 from open_webui.storage.provider import Storage
+from open_webui.integrations.ffmpeg_oss import get_client as get_ffmpeg_oss_client
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -46,6 +49,28 @@ class BatchOperationRequest(BaseModel):
     operation: str = Field(description="操作类型 (restore 或 delete)")
     material_ids: List[str] = Field(description="素材ID列表")
     # 移除target_directory参数，还原操作将自动还原到原始目录
+
+
+def _resolve_company_scope_id(user) -> str:
+    company_id = getattr(user, "company_id", None)
+    if isinstance(company_id, str) and company_id.strip():
+        return company_id.strip()
+    return str(getattr(user, "id", "")).strip()
+
+
+def _has_company_material_access(user, material_owner_user_id: str) -> bool:
+    if not material_owner_user_id:
+        return False
+
+    company_id = getattr(user, "company_id", None)
+    if not isinstance(company_id, str) or not company_id.strip():
+        return str(material_owner_user_id) == str(getattr(user, "id", ""))
+
+    if str(material_owner_user_id) == str(getattr(user, "id", "")):
+        return True
+
+    owner = Users.get_user_by_id(str(material_owner_user_id))
+    return bool(owner and owner.company_id and str(owner.company_id) == str(company_id))
 
 
 # 辅助函数
@@ -81,7 +106,8 @@ async def _log_file_operation(
 @router.post("/{material_id}/move-to-recovery", response_model=HSAIMaterialResponse, summary="移入回收站（软删除）")
 async def move_material_to_recovery(
     material_id: str,
-    request: MoveToRecoveryRequest,
+    request: Request,
+    payload: MoveToRecoveryRequest,
     user=Depends(get_verified_user)
 ):
     """
@@ -98,7 +124,7 @@ async def move_material_to_recovery(
     try:
         # 获取素材信息
         material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
+        if not material or not _has_company_material_access(user, material.user_id):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Material not found"
@@ -125,6 +151,11 @@ async def move_material_to_recovery(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to move material to recovery"
             )
+
+        company_id = _resolve_company_scope_id(user)
+        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+        await cache.invalidate_company(company_id)
+        await cache.mark_company_active(company_id)
         
         # 记录操作日志
         await _log_file_operation(
@@ -133,7 +164,7 @@ async def move_material_to_recovery(
             source_path=material.file_path,
             target_path=f"recovery/{material_id}",
             operator_id=user.id,  # 使用当前登录用户ID
-            details={"reason": request.reason} if request.reason else None
+            details={"reason": payload.reason} if payload and payload.reason else None
         )
         
         # 返回更新后的素材信息
@@ -156,7 +187,8 @@ async def move_material_to_recovery(
 @router.post("/recovery/{material_id}/restore", response_model=HSAIMaterialResponse, summary="还原文件")
 async def restore_material(
     material_id: str,
-    request: RestoreRequest = None,  # 保持兼容性，但不使用参数
+    request: Request,
+    payload: RestoreRequest = None,  # 保持兼容性，但不使用参数
     user=Depends(get_verified_user)
 ):
     """
@@ -175,7 +207,7 @@ async def restore_material(
     try:
         # 获取素材信息
         material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
+        if not material or not _has_company_material_access(user, material.user_id):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Material not found"
@@ -214,6 +246,11 @@ async def restore_material(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to restore material"
             )
+
+        company_id = _resolve_company_scope_id(user)
+        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+        await cache.invalidate_company(company_id)
+        await cache.mark_company_active(company_id)
         
         # 记录操作日志
         await _log_file_operation(
@@ -244,7 +281,8 @@ async def restore_material(
 @router.delete("/{material_id}/permanent-delete", response_model=bool, summary="永久删除文件")
 async def permanent_delete_material(
     material_id: str,
-    request: PermanentDeleteRequest,
+    request: Request,
+    payload: PermanentDeleteRequest = None,
     user=Depends(get_verified_user)
 ):
     """
@@ -263,17 +301,32 @@ async def permanent_delete_material(
     try:
         # 获取素材信息
         material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
+        if not material or not _has_company_material_access(user, material.user_id):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Material not found"
-            )
+        )
         
-        # 删除OSS文件
-        try:
-            Storage.delete_file(material.file_path)
-        except Exception as e:
-            log.warning(f"Failed to delete OSS file {material.file_path}: {e}")
+        # 删除 OSS 对象：优先走 ffmpeg-go（可用时），否则回退到 Storage.delete_file
+        object_name = getattr(material, "oss_object_path", None) or getattr(material, "oss_key", None)
+        deleted_from_oss = False
+        if isinstance(object_name, str) and object_name.strip():
+            client = get_ffmpeg_oss_client()
+            if client:
+                try:
+                    client.delete_object(
+                        object_name.strip(),
+                        bucket=getattr(material, "oss_bucket", None),
+                    )
+                    deleted_from_oss = True
+                except Exception as e:
+                    log.warning(f"Failed to delete OSS object via ffmpeg-go {object_name}: {e}")
+
+        if not deleted_from_oss:
+            try:
+                Storage.delete_file(material.file_path)
+            except Exception as e:
+                log.warning(f"Failed to delete OSS file {material.file_path}: {e}")
         
         # 删除数据库记录
         result = HSAIMaterials.delete_material_by_id(material_id)
@@ -282,6 +335,11 @@ async def permanent_delete_material(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete material record"
             )
+
+        company_id = _resolve_company_scope_id(user)
+        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+        await cache.invalidate_company(company_id)
+        await cache.mark_company_active(company_id)
         
         # 记录操作日志
         await _log_file_operation(
@@ -289,7 +347,7 @@ async def permanent_delete_material(
             operation_type="permanent_delete",
             source_path=material.file_path,
             operator_id=user.id,  # 使用当前登录用户ID
-            details={"reason": request.reason} if request.reason else None
+            details={"reason": payload.reason} if payload and payload.reason else None
         )
         
         return True

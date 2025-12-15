@@ -568,6 +568,15 @@ async def lifespan(app: FastAPI):
             redis_task_command_listener(app)
         )
 
+    # HSAI 素材管理：Redis 缓存定时刷新（仅在启用缓存 + Redis 可用时生效）
+    try:
+        from open_webui.services.materials_cache_scheduler import MaterialsCacheScheduler
+
+        app.state.materials_cache_scheduler = MaterialsCacheScheduler(app.state.redis)
+        await app.state.materials_cache_scheduler.start()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Materials cache scheduler start failed: %s", exc, exc_info=True)
+
     # 初始化工作流编排中心
     from open_webui.services.workflow_orchestration_center import workflow_orchestration_center
     await workflow_orchestration_center.initialize()
@@ -642,6 +651,13 @@ async def lifespan(app: FastAPI):
 
     if hasattr(app.state, "redis_task_command_listener"):
         app.state.redis_task_command_listener.cancel()
+
+    # 停止素材管理缓存定时刷新
+    try:
+        if hasattr(app.state, "materials_cache_scheduler") and app.state.materials_cache_scheduler:
+            await app.state.materials_cache_scheduler.stop()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Materials cache scheduler stop failed: %s", exc, exc_info=True)
     # 停止每日调度器
     try:
         if hasattr(app.state, "recurring_task_scheduler") and app.state.recurring_task_scheduler:

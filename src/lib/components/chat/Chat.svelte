@@ -1672,88 +1672,6 @@
 		}
 	};
 
-	// 监听任务更新（在实际应用中，这可能通过WebSocket或轮询实现）
-	// 这里我们简化处理，直接在服务中调用相应的函数来创建消息
-</script>
-
-					parentId: parentId,
-					id: responseMessageId,
-					childrenIds: [],
-					role: 'assistant',
-					content: '',
-					model: model.id,
-					modelName: model.name ?? model.id,
-					modelIdx: modelIdx ? modelIdx : _modelIdx,
-					timestamp: Math.floor(Date.now() / 1000) // Unix epoch
-				};
-
-				// Add message to history and Set currentId to messageId
-				history.messages[responseMessageId] = responseMessage;
-				history.currentId = responseMessageId;
-
-				// Append messageId to childrenIds of parent message
-				if (parentId !== null && history.messages[parentId]) {
-					// Add null check before accessing childrenIds
-					history.messages[parentId].childrenIds = [
-						...history.messages[parentId].childrenIds,
-						responseMessageId
-					];
-				}
-
-				responseMessageIds[`${modelId}-${modelIdx ? modelIdx : _modelIdx}`] = responseMessageId;
-			}
-		}
-		history = history;
-
-		// Create new chat if newChat is true and first user message
-		if (newChat && _history.messages[_history.currentId].parentId === null) {
-			_chatId = await initChatHandler(_history);
-		}
-
-		await tick();
-
-		_history = JSON.parse(JSON.stringify(history));
-		// Save chat after all messages have been created
-		await saveChatHandler(_chatId, _history);
-
-		await Promise.all(
-			selectedModelIds.map(async (modelId, _modelIdx) => {
-				console.log('modelId', modelId);
-				const model = $models.filter((m) => m.id === modelId).at(0);
-
-				if (model) {
-					const messages = createMessagesList(_history, parentId);
-					// If there are image files, check if model is vision capable
-					const hasImages = messages.some((message) =>
-						message.files?.some((file) => file.type === 'image')
-					);
-
-					if (hasImages && !(model.info?.meta?.capabilities?.vision ?? true)) {
-						toast.error(
-							$i18n.t('Model {{modelName}} is not vision capable', {
-								modelName: model.name ?? model.id
-							})
-						);
-					}
-
-					let responseMessageId =
-						responseMessageIds[`${modelId}-${modelIdx ? modelIdx : _modelIdx}`];
-					const chatEventEmitter = await getChatEventEmitter(model.id, _chatId);
-
-					scrollToBottom();
-					await sendPromptSocket(_history, model, responseMessageId, _chatId);
-
-					if (chatEventEmitter) clearInterval(chatEventEmitter);
-				} else {
-					toast.error($i18n.t(`Model {{modelId}} not found`, { modelId }));
-				}
-			})
-		);
-
-		currentChatPage.set(1);
-		chats.set(await getChatList(localStorage.token, $currentChatPage));
-	};
-
 	const sendPromptSocket = async (_history, model, responseMessageId, _chatId) => {
 		const chatMessages = createMessagesList(history, history.currentId);
 		const responseMessage = _history.messages[responseMessageId];
@@ -2484,15 +2402,3 @@
   height: 100%;
 }
 </style>
-
-{#if true} <!-- 强制SVG层始终渲染，便于调试 -->
-  <svg style="position:absolute;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;background:rgba(255,0,0,0.05);" id="debug-svg">
-    {#if lineInfo}
-      <path d="M{lineInfo.start.x},{lineInfo.start.y} C{lineInfo.start.x+100},{lineInfo.start.y} {lineInfo.end.x-100},{lineInfo.end.y} {lineInfo.end.x},{lineInfo.end.y}" stroke="blue" stroke-width="3" fill="none" />
-      <text x="{lineInfo.start.x}" y="{lineInfo.start.y-10}" font-size="16" fill="red">start</text>
-      <text x="{lineInfo.end.x}" y="{lineInfo.end.y-10}" font-size="16" fill="green">end</text>
-    {:else}
-      <text x="50" y="50" font-size="20" fill="gray">lineInfo is null</text>
-    {/if}
-  </svg>
-{/if}

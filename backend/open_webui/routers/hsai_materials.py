@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import time
 import uuid
 import re
@@ -11,7 +12,7 @@ from pathlib import Path
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -31,17 +32,34 @@ from open_webui.models.hsai_materials import (
     PaginatedHSAIMaterialResponse
 )
 from open_webui.internal.db import get_db
+from open_webui.internal.migrations import ensure_materials_storage_schema
 from open_webui.services.material_checklist_service import (
     ChecklistTreeNode,
     material_checklist_service,
+)
+from open_webui.services.materials_cache_service import (
+    MaterialsCacheService,
+    company_folders_cache_key,
+    company_index_cache_key,
+)
+from open_webui.services.materials_oss_sync_service import MaterialsOssSyncService
+from open_webui.services.materials_snapshot_service import (
+    build_company_folders_snapshot,
+    build_company_material_index_snapshot,
+    company_has_any_folders,
+    company_has_any_materials,
+    paginate_items,
+    pick_any_user_id_for_company,
 )
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.utils.access_control import has_permission
 from open_webui.constants import ERROR_MESSAGES
-from open_webui.env import SRC_LOG_LEVELS
+from open_webui.env import SRC_LOG_LEVELS, DATABASE_SCHEMA
 from open_webui.config import UPLOAD_DIR
 from open_webui.config.oss import STORAGE_PROVIDER, S3_BUCKET_NAME
+from open_webui.models.users import Users, User
+from open_webui.integrations.ffmpeg_oss import ensure_download_url
 
 import aiofiles
 import hashlib
@@ -68,6 +86,65 @@ os.makedirs(LOCAL_STORAGE_PATH, exist_ok=True)
 
 DEFAULT_COMPANY_SEGMENT = "default-company"
 DEFAULT_USER_SEGMENT = "unknown-user"
+OSS_VIRTUAL_FOLDER_TYPE = "oss_virtual"
+
+
+def _enterprise_materials_prefix(company_id: str) -> str:
+    return f"enterprises/{company_id}/materials".strip("/")
+
+
+def _join_oss_path(*parts: str) -> str:
+    cleaned = [str(p).strip("/") for p in parts if isinstance(p, str) and str(p).strip("/")]
+    return "/".join(cleaned)
+
+
+def _normalize_folder_id_input(folder_id: Optional[str]) -> Optional[str]:
+    if not isinstance(folder_id, str):
+        return None
+    value = folder_id.strip()
+    if not value or value in {"root", "/", ".", ""}:
+        return None
+    return value
+
+
+def _virtual_folder_id(company_id: str, relative_prefix: str) -> str:
+    normalized = (relative_prefix or "").strip("/")
+    seed = f"oss-folder:{company_id}:{normalized}"
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, seed))
+
+
+def _resolve_folder_oss_prefix(folder_id: str, company_id: str) -> str:
+    folder = HSAIMaterialFolders.get_folder_by_id(folder_id)
+    if not folder or folder.user_id != company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Folder not found or insufficient permissions",
+        )
+
+    settings = folder.settings or {}
+    if isinstance(settings, dict):
+        prefix = settings.get("oss_prefix")
+        folder_type = settings.get("folder_type")
+        if folder_type == OSS_VIRTUAL_FOLDER_TYPE and isinstance(prefix, str) and prefix.strip():
+            return prefix.strip("/")
+
+    # 兼容旧数据：未写入 oss_prefix 时，按父子层级拼接 name 生成相对路径
+    parts: List[str] = []
+    current = folder
+    seen: set[str] = set()
+    while current and current.id not in seen:
+        seen.add(current.id)
+        parts.append(_normalize_segment_for_oss(getattr(current, "name", None), "folder"))
+        parent_id = getattr(current, "parent_id", None)
+        if not parent_id:
+            break
+        parent = HSAIMaterialFolders.get_folder_by_id(str(parent_id))
+        if not parent or parent.user_id != company_id:
+            break
+        current = parent
+
+    parts.reverse()
+    return "/".join([p for p in parts if p]).strip("/")
 
 
 def _normalize_segment_for_oss(value: Optional[str], fallback: str) -> str:
@@ -148,6 +225,20 @@ def _filter_folder_responses(
     return filtered
 
 
+def _filter_folder_snapshot(nodes: List[dict], query_lower: str) -> List[dict]:
+    filtered: List[dict] = []
+    for node in nodes:
+        children = _filter_folder_snapshot(node.get("children") or [], query_lower)
+        name = str(node.get("name") or "").lower()
+        desc = str(node.get("description") or "").lower()
+        match = query_lower in name or (desc and query_lower in desc)
+        if match or children:
+            copied = dict(node)
+            copied["children"] = children
+            filtered.append(copied)
+    return filtered
+
+
 def _collect_scene_codes(node: ChecklistTreeNode) -> List[str]:
     codes: List[str] = []
     if node.scene_code:
@@ -167,6 +258,28 @@ def _resolve_folder_context(
     if not node:
         return folder_id, None
     return None, node
+
+
+def _resolve_company_scope_id(user) -> str:
+    company_id = getattr(user, "company_id", None)
+    if isinstance(company_id, str) and company_id.strip():
+        return company_id.strip()
+    return str(getattr(user, "id", "")).strip()
+
+
+def _has_company_material_access(user, material_owner_user_id: str) -> bool:
+    if not material_owner_user_id:
+        return False
+
+    company_id = getattr(user, "company_id", None)
+    if not isinstance(company_id, str) or not company_id.strip():
+        return str(material_owner_user_id) == str(getattr(user, "id", ""))
+
+    if str(material_owner_user_id) == str(getattr(user, "id", "")):
+        return True
+
+    owner = Users.get_user_by_id(str(material_owner_user_id))
+    return bool(owner and owner.company_id and str(owner.company_id) == str(company_id))
 
 
 def _extract_codes_from_node(
@@ -289,11 +402,17 @@ def _store_material_file(
     original_filename: str,
     *,
     oss_object_path: Optional[str] = None,
+    business_segment_override: Optional[str] = None,
+    user_segment_override: Optional[str] = None,
 ) -> dict:
     """
     将素材文件保存到本地或 OSS，返回存储元数据。
     """
-    business_segment, user_segment = _get_storage_segments(user)
+    if business_segment_override is not None and user_segment_override is not None:
+        business_segment = business_segment_override
+        user_segment = user_segment_override
+    else:
+        business_segment, user_segment = _get_storage_segments(user)
     storage_key = oss_object_path or _build_storage_key(
         storage_filename, business_segment, user_segment
     )
@@ -634,24 +753,74 @@ def _save_file_local(
 
 @router.get("/folders", response_model=List[HSAIMaterialFolderResponse], summary="获取素材文件夹")
 async def get_material_folders(
+    request: Request,
     query: Optional[str] = Query(None, description="搜索关键词，用于按文件夹名称进行模糊搜索"),
     user=Depends(get_verified_user)
 ):
     """
-    获取用户的素材清单树（模板 → 场景 → 拍摄项目）。
-    可通过 query 关键词对名称/描述进行过滤。
+    获取企业素材目录树（OSS 子目录 → 虚拟 folder）。
+    - 优先读取 Redis 缓存
+    - 缓存未命中时触发 OSS→DB 同步并重建快照
     """
     try:
-        checklist_tree = material_checklist_service.get_tree_for_user(user)
-        responses = [
-            _convert_checklist_node_to_response(node)
-            for node in checklist_tree
-        ]
+        company_id = _resolve_company_scope_id(user)
+        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+        await cache.mark_company_active(company_id)
+
+        cache_enabled = cache.enabled()
+        folders_snapshot = (
+            await cache.get_json(company_folders_cache_key(company_id))
+            if cache_enabled
+            else None
+        )
+        if folders_snapshot is None:
+            should_sync = True
+            if not cache_enabled:
+                # Redis 不可用/禁用缓存时：仅在 DB 完全为空时触发一次 OSS→DB 回填，避免每次请求都全量同步
+                has_any_folder = await asyncio.to_thread(company_has_any_folders, company_id=company_id)
+                has_any_material = await asyncio.to_thread(company_has_any_materials, company_id=company_id)
+                should_sync = not (has_any_folder or has_any_material)
+
+            if should_sync:
+                actor_user_id = pick_any_user_id_for_company(company_id) or str(getattr(user, "id", "")).strip()
+                if actor_user_id:
+                    syncer = MaterialsOssSyncService()
+                    await asyncio.to_thread(
+                        syncer.sync_company,
+                        company_id=company_id,
+                        actor_user_id=actor_user_id,
+                    )
+
+            folders_snapshot = await asyncio.to_thread(build_company_folders_snapshot, company_id=company_id)
+            if cache_enabled:
+                index_snapshot = await asyncio.to_thread(build_company_material_index_snapshot, company_id=company_id)
+                await cache.set_json(company_folders_cache_key(company_id), folders_snapshot)
+                await cache.set_json(company_index_cache_key(company_id), index_snapshot)
+
+        if not isinstance(folders_snapshot, list):
+            folders_snapshot = []
 
         if query:
-            responses = _filter_folder_responses(responses, query.lower())
+            folders_snapshot = _filter_folder_snapshot(folders_snapshot, query.lower())
 
-        return responses
+        now_ts = int(time.time())
+        root_label = "素材库"
+        return [
+            {
+                "id": "root",
+                "name": root_label,
+                "label": root_label,
+                "description": None,
+                "parent_id": None,
+                "parent_name": None,
+                "settings": {"folder_type": "root", "company_id": company_id},
+                "sort_order": 0,
+                "children": folders_snapshot,
+                "material_count": None,
+                "created_at": now_ts,
+                "updated_at": now_ts,
+            }
+        ]
 
     except HTTPException:
         raise
@@ -664,6 +833,7 @@ async def get_material_folders(
 
 @router.post("/folders", response_model=HSAIMaterialFolderResponse, summary="创建素材文件夹")
 async def create_material_folder(
+    request: Request,
     form_data: HSAIMaterialFolderForm,
     user=Depends(get_verified_user)
 ):
@@ -671,49 +841,107 @@ async def create_material_folder(
     创建新的素材文件夹。
     """
     try:
+        company_id = _resolve_company_scope_id(user)
         # 验证输入数据
-        if not form_data.name or not form_data.name.strip():
+        folder_name = (form_data.name or "").strip()
+        if not folder_name:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Folder name cannot be empty"
             )
-        
+
+        parent_id = form_data.parent_id
+        parent_prefix = ""
+
         # 验证父目录是否存在（如果提供了的话）
-        if form_data.parent_id:
-            parent_folder = HSAIMaterialFolders.get_folder_by_id(form_data.parent_id)
-            if not parent_folder or parent_folder.user_id != user.id:
+        if parent_id:
+            parent_folder = HSAIMaterialFolders.get_folder_by_id(parent_id)
+            if not parent_folder or parent_folder.user_id != company_id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid parent folder ID or insufficient permissions"
                 )
-        
-        folder = HSAIMaterialFolders.insert_new_folder(user.id, form_data)
-        if not folder:
-            # 检查具体原因
-            existing_folder_check = None
-            with get_db() as db:
-                existing_folder_check = db.query(HSAIMaterialFolder).filter_by(
-                    name=form_data.name,
-                    parent_id=form_data.parent_id,
-                    user_id=user.id
-                ).first()
-            
-            if existing_folder_check:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="A folder with the same name already exists in this location"
+            parent_prefix = _resolve_folder_oss_prefix(parent_id, company_id)
+
+        segment = _normalize_segment_for_oss(folder_name, "folder")
+        relative_prefix = _join_oss_path(parent_prefix, segment)
+        settings = {"folder_type": OSS_VIRTUAL_FOLDER_TYPE, "oss_prefix": relative_prefix}
+        now_ts = int(time.time())
+
+        with get_db() as db:
+            ensure_materials_storage_schema(
+                db.get_bind(),
+                schema=DATABASE_SCHEMA,
+                logger=log.debug,
+            )
+
+            existing_folders = db.query(HSAIMaterialFolder).filter_by(user_id=company_id).all()
+            matched = None
+            legacy_same_name = None
+            for existing in existing_folders:
+                existing_settings = existing.settings or {}
+                if isinstance(existing_settings, dict):
+                    existing_prefix = str(existing_settings.get("oss_prefix") or "").strip("/")
+                    if (
+                        existing_settings.get("folder_type") == OSS_VIRTUAL_FOLDER_TYPE
+                        and existing_prefix == relative_prefix
+                    ):
+                        matched = existing
+                        break
+                if (
+                    existing.parent_id == parent_id
+                    and str(existing.name or "").strip() == folder_name
+                ):
+                    legacy_same_name = existing
+
+            if matched is None and legacy_same_name is not None:
+                # 兼容旧目录：补写映射信息，避免与 OSS 同步时产生重复目录
+                merged_settings = dict(legacy_same_name.settings or {}) if isinstance(legacy_same_name.settings, dict) else {}
+                merged_settings.update(settings)
+                legacy_same_name.settings = merged_settings
+                legacy_same_name.updated_at = now_ts
+                db.commit()
+                db.refresh(legacy_same_name)
+                matched = legacy_same_name
+
+            if matched is None:
+                folder_id = _virtual_folder_id(company_id, relative_prefix)
+                matched = db.query(HSAIMaterialFolder).filter_by(id=folder_id).first()
+
+            if matched is None:
+                folder_row = HSAIMaterialFolder(
+                    id=_virtual_folder_id(company_id, relative_prefix),
+                    name=folder_name,
+                    description=form_data.description,
+                    parent_id=parent_id,
+                    user_id=company_id,
+                    settings=settings,
+                    sort_order=int(form_data.sort_order or 0),
+                    created_at=now_ts,
+                    updated_at=now_ts,
                 )
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Failed to create folder"
-                )
-        
+                db.add(folder_row)
+                db.commit()
+                db.refresh(folder_row)
+                matched = folder_row
+
+        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+        await cache.invalidate_company(company_id)
+        await cache.mark_company_active(company_id)
+
         return HSAIMaterialFolderResponse(
-            **folder.model_dump(),
-            label=folder.name,  # 为 label 字段赋与 name 字段相同的值
+            id=str(matched.id),
+            name=str(matched.name),
+            label=str(matched.name),
+            description=getattr(matched, "description", None),
+            parent_id=getattr(matched, "parent_id", None),
+            parent_name=None,
+            settings=getattr(matched, "settings", None),
+            sort_order=int(getattr(matched, "sort_order", 0) or 0),
             children=[],
-            material_count=0
+            material_count=0,
+            created_at=int(getattr(matched, "created_at", None) or now_ts),
+            updated_at=int(getattr(matched, "updated_at", None) or now_ts),
         )
         
     except HTTPException:
@@ -730,6 +958,7 @@ async def create_material_folder(
 @router.post("/folders/{folder_id}/rename", response_model=HSAIMaterialFolderResponse, summary="重命名素材文件夹")
 async def rename_material_folder(
     folder_id: str,
+    request: Request,
     form_data: HSAIMaterialFolderForm,
     user=Depends(get_verified_user)
 ):
@@ -750,9 +979,10 @@ async def rename_material_folder(
         HTTPException: 500 - 更新失败
     """
     try:
+        company_id = _resolve_company_scope_id(user)
         # 首先验证文件夹所有权
         folder = HSAIMaterialFolders.get_folder_by_id(folder_id)
-        if not folder or folder.user_id != user.id:
+        if not folder or folder.user_id != company_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Folder not found or insufficient permissions"
@@ -766,7 +996,7 @@ async def rename_material_folder(
             with get_db() as db:
                 existing_folder_check = db.query(HSAIMaterialFolder).filter_by(
                     id=folder_id,
-                    user_id=user.id
+                    user_id=company_id
                 ).first()
             
             if not existing_folder_check:
@@ -780,6 +1010,10 @@ async def rename_material_folder(
                     detail="A folder with the same name already exists in this location"
                 )
         
+        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+        await cache.invalidate_company(company_id)
+        await cache.mark_company_active(company_id)
+
         return HSAIMaterialFolderResponse(
             **updated_folder.model_dump(),
             label=updated_folder.name,  # 为 label 字段赋与 name 字段相同的值
@@ -800,6 +1034,7 @@ async def rename_material_folder(
 @router.delete("/folders/{folder_id}", response_model=bool, summary="删除素材文件夹")
 async def delete_material_folder(
     folder_id: str,
+    request: Request,
     user=Depends(get_verified_user)
 ):
     """
@@ -818,9 +1053,10 @@ async def delete_material_folder(
         HTTPException: 500 - 删除失败
     """
     try:
+        company_id = _resolve_company_scope_id(user)
         # 验证文件夹所有权
         folder = HSAIMaterialFolders.get_folder_by_id(folder_id)
-        if not folder or folder.user_id != user.id:
+        if not folder or folder.user_id != company_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Folder not found or insufficient permissions"
@@ -831,7 +1067,7 @@ async def delete_material_folder(
             # 检查子文件夹
             child_folders = db.query(HSAIMaterialFolder).filter_by(
                 parent_id=folder_id,
-                user_id=user.id
+                user_id=company_id
             ).all()
             
             if child_folders:
@@ -841,11 +1077,14 @@ async def delete_material_folder(
                 )
             
             # 检查文件夹中的素材
-            materials = db.query(HSAIMaterial).filter_by(
-                folder_id=folder_id,
-                user_id=user.id,
-                is_deleted=False  # 只检查未被软删除的素材
-            ).all()
+            materials = (
+                db.query(HSAIMaterial)
+                .join(User, HSAIMaterial.user_id == User.id)
+                .filter(User.company_id == company_id)
+                .filter(HSAIMaterial.folder_id == folder_id)
+                .filter(HSAIMaterial.is_deleted.is_(False))
+                .all()
+            )
             
             if materials:
                 raise HTTPException(
@@ -860,6 +1099,10 @@ async def delete_material_folder(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete folder"
             )
+
+        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+        await cache.invalidate_company(company_id)
+        await cache.mark_company_active(company_id)
         
         log.info(f"Folder deleted successfully: {folder.name} (ID: {folder_id}) by user {user.id}")
         return True
@@ -880,6 +1123,7 @@ async def delete_material_folder(
 
 @router.post("/upload", response_model=List[HSAIMaterialResponse], summary="上传素材")
 async def upload_material(
+    request: Request,
     file: UploadFile = File(...),
     name: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
@@ -942,6 +1186,13 @@ async def upload_material(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="请选择具体的场景或拍摄项目后再上传素材",
         )
+
+    company_id = _resolve_company_scope_id(user)
+    folder_id = _normalize_folder_id_input(folder_id)
+    relative_prefix = _resolve_folder_oss_prefix(folder_id, company_id) if folder_id else ""
+    oss_root_prefix = _enterprise_materials_prefix(company_id)
+    business_segment_override = _normalize_segment_for_oss(company_id, DEFAULT_COMPANY_SEGMENT)
+    user_segment_override = relative_prefix or "root"
     
     try:
         # 验证文件
@@ -968,6 +1219,7 @@ async def upload_material(
                 mime_type = mimetypes.guess_type(file_info["new_filename"])[0] or "application/octet-stream"
                 material_type = _determine_material_type(mime_type)
                 storage_filename = _build_storage_filename(file_info["new_filename"], file_hash)
+                oss_object_path = _join_oss_path(oss_root_prefix, relative_prefix, storage_filename)
 
                 storage_result = _store_material_file(
                     content=file_info["content"],
@@ -975,6 +1227,9 @@ async def upload_material(
                     user=user,
                     material_type=material_type,
                     original_filename=file_info["original_filename"],
+                    oss_object_path=oss_object_path,
+                    business_segment_override=business_segment_override,
+                    user_segment_override=user_segment_override,
                 )
 
                 file_path = storage_result["file_path"]
@@ -989,6 +1244,9 @@ async def upload_material(
                     "file_url": file_url,
                     "storage_provider": storage_provider,
                     "storage_key": storage_result["storage_key"],
+                    "enterprise_id": company_id,
+                    "oss_root_prefix": oss_root_prefix,
+                    "oss_relative_prefix": relative_prefix,
                     "business_directory": storage_result["business_segment"],
                     "user_directory": storage_result["user_segment"],
                 }
@@ -1048,6 +1306,7 @@ async def upload_material(
                     description=description,
                     material_type=material_type,
                     folder_id=folder_id,
+                    enterprise_id=company_id,
                     file_path=file_path,  # 存储文件路径
                     file_size=len(file_info["content"]),
                     file_hash=file_hash,
@@ -1062,6 +1321,7 @@ async def upload_material(
                     material_metadata=material_metadata,
                     oss_bucket=oss_bucket,
                     oss_key=oss_key,
+                    oss_object_path=storage_result.get("oss_object_path"),
                 )
                 
                 log.info(f"Creating material record with data: {material_data}")
@@ -1106,12 +1366,16 @@ async def upload_material(
                 response = HSAIMaterialResponse(
                     **{k: v for k, v in material.model_dump().items() if k != 'properties_code'},
                     thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material_type in ["image", "video"] else None,
-                    download_url=safe_file_url,  # 直接使用文件URL进行下载
+                    download_url=f"/api/v1/hsai/materials/{material.id}/download",
                     properties_code=material.properties_code.split("_") if material.properties_code else None  # 将字符串转换为列表
                 )
                 
                 responses.append(response)
             
+            cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+            await cache.invalidate_company(company_id)
+            await cache.mark_company_active(company_id)
+
             return responses
         else:
             log.info("Processing single file")
@@ -1158,6 +1422,7 @@ async def upload_material(
             storage_filename = _build_storage_filename(
                 f"{filename_base}{file_extension}", file_hash
             )
+            oss_object_path = _join_oss_path(oss_root_prefix, relative_prefix, storage_filename)
 
             storage_result = _store_material_file(
                 content=content,
@@ -1165,6 +1430,9 @@ async def upload_material(
                 user=user,
                 material_type=material_type,
                 original_filename=file.filename,
+                oss_object_path=oss_object_path,
+                business_segment_override=business_segment_override,
+                user_segment_override=user_segment_override,
             )
 
             file_url = storage_result["file_url"]
@@ -1180,6 +1448,9 @@ async def upload_material(
                 "file_url": file_url,
                 "storage_provider": storage_provider,
                 "storage_key": storage_result["storage_key"],
+                "enterprise_id": company_id,
+                "oss_root_prefix": oss_root_prefix,
+                "oss_relative_prefix": relative_prefix,
                 "business_directory": storage_result["business_segment"],
                 "user_directory": storage_result["user_segment"],
             }
@@ -1238,6 +1509,7 @@ async def upload_material(
                 description=description,
                 material_type=material_type,
                 folder_id=folder_id,
+                enterprise_id=company_id,
                 file_path=file_path,  # 存储文件路径
                 file_size=file_size,
                 file_hash=file_hash,
@@ -1249,10 +1521,11 @@ async def upload_material(
                 properties_code="_".join(properties_list) if properties_list else None,
                 duration=duration,
                 resolution=resolution,
-                    material_metadata=material_metadata,
-                    oss_bucket=storage_result["oss_bucket"],
-                    oss_key=storage_result["oss_key"],
-                )
+                material_metadata=material_metadata,
+                oss_bucket=oss_bucket,
+                oss_key=oss_key,
+                oss_object_path=storage_result.get("oss_object_path"),
+            )
             
             log.info(f"Creating material record with data: {material_data}")
             log.info(f"Material data dict: {material_data.model_dump()}")
@@ -1312,11 +1585,15 @@ async def upload_material(
                 except UnicodeDecodeError:
                     import base64
                     safe_file_url = base64.b64encode(safe_file_url).decode('utf-8')
-            
+
+            cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+            await cache.invalidate_company(company_id)
+            await cache.mark_company_active(company_id)
+
             return [HSAIMaterialResponse(
                 **{k: v for k, v in material.model_dump().items() if k != 'properties_code'},
                 thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material_type in ["image", "video"] else None,
-                download_url=safe_file_url,  # 直接使用文件URL进行下载
+                download_url=f"/api/v1/hsai/materials/{material.id}/download",
                 properties_code=material.properties_code.split("_") if material.properties_code else None  # 将字符串转换为列表
             )]
         
@@ -1338,6 +1615,7 @@ async def upload_material(
 @router.get("/{material_id}/download", summary="获取素材下载链接")
 async def get_material_download_url(
     material_id: str,
+    request: Request,
     user=Depends(get_verified_user)
 ):
     """
@@ -1367,39 +1645,52 @@ async def get_material_download_url(
     """
     try:
         material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Material not found"
-            )
-        
+        if not material or not _has_company_material_access(user, getattr(material, "user_id", "")):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material not found")
+
         # 增加使用次数
         HSAIMaterials.increment_usage_count(material_id)
-        
-        # 如果存储的是OSS路径，直接返回
-        if material.file_path and material.file_path.startswith(('http://', 'https://', 's3://', 'gs://')):
-            return {
-                "download_url": material.file_path,
-                "filename": material.name,
-                "file_size": material.file_size,
-                "mime_type": material.mime_type
-            }
-        
-        # 如果是本地路径，需要通过Storage获取
-        try:
-            download_url = Storage.get_file(material.file_path)
-            return {
-                "download_url": download_url,
-                "filename": material.name,
-                "file_size": material.file_size,
-                "mime_type": material.mime_type
-            }
-        except Exception as e:
-            log.error(f"Failed to get download URL: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to generate download URL"
+
+        # 优先生成 OSS 签名直链（通过 ffmpeg-go /oss/download-url）
+        target_url: Optional[str] = None
+        object_name = getattr(material, "oss_object_path", None) or getattr(material, "oss_key", None)
+        if isinstance(object_name, str) and object_name.strip():
+            target_url = ensure_download_url(
+                object_name.strip(),
+                expires=900,
+                fallback_url=getattr(material, "file_path", None),
+                bucket=getattr(material, "oss_bucket", None),
             )
+
+        # 其次使用已存储的 http(s) 直链
+        if not target_url:
+            file_path = getattr(material, "file_path", None)
+            if isinstance(file_path, str) and file_path.startswith(("http://", "https://")):
+                target_url = file_path
+
+        # 最后走 Storage.get_file（可能是本地路径或 s3:// 下载到本地）
+        if not target_url:
+            try:
+                file_path = getattr(material, "file_path", None)
+                if file_path:
+                    target_url = Storage.get_file(file_path)
+            except Exception as e:  # noqa: BLE001
+                log.error(f"Failed to get download URL via Storage: {e}")
+
+        if not target_url:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate download URL")
+
+        # 默认 302 重定向，便于 <video>/<img> 直接播放/展示；如显式需要 JSON 则返回结构化信息
+        accept = (request.headers.get("accept") or "").lower()
+        if request.query_params.get("format") == "json" or "application/json" in accept:
+            return {
+                "download_url": target_url,
+                "filename": getattr(material, "name", ""),
+                "file_size": getattr(material, "file_size", None),
+                "mime_type": getattr(material, "mime_type", None),
+            }
+
+        return RedirectResponse(url=target_url, status_code=status.HTTP_302_FOUND)
         
     except HTTPException:
         raise
@@ -1416,135 +1707,118 @@ async def get_material_download_url(
 
 @router.get("/", response_model=PaginatedHSAIMaterialResponse, summary="获取素材列表")
 async def get_materials(
+    request: Request,
     folder_id: Optional[str] = Query(None, description="文件夹ID，为空则获取根目录素材"),
     material_type: Optional[str] = Query(None, description="素材类型过滤"),
     query: Optional[str] = Query(None, description="搜索关键词，用于按名称、描述、标签进行模糊搜索"),
+    name: Optional[str] = Query(None, description="兼容：前端旧字段 name 作为搜索词"),
     ps: int = Query(20, description="分页大小", ge=1, le=100),
     pi: int = Query(1, description="分页索引，从1开始", ge=1),
     user=Depends(get_verified_user)
 ):
     """
-    获取用户的素材列表（分页）。
-    
-    支持按文件夹、类型过滤和关键词搜索，支持分页查询。
-    
-    Args:
-        folder_id (str, optional): 文件夹ID，为空则获取根目录素材
-        material_type (str, optional): 素材类型过滤：image(图片)、video(视频)、audio(音频)、text(文本)、document(文档)
-        query (str, optional): 搜索关键词，用于按名称、描述、标签进行模糊搜索
-        ps (int): 分页大小，范围1-100
-        pi (int): 分页索引，从1开始
-        user: 已认证的用户对象
-        
-    Returns:
-        PaginatedHSAIMaterialResponse: 分页的素材列表
-        - data: 素材列表
-        - pagination: 分页信息
+    获取企业级素材列表（分页）。
+    - 优先读取 Redis 快照（目录树 + 索引）
+    - 缓存未命中时触发 OSS→DB 同步并重建快照
+    - 兼容：folder_id=recovery 返回回收站列表；name 作为 query 别名
     """
     try:
-        # 解析清单节点上下文
-        folder_filter, checklist_node = _resolve_folder_context(user, folder_id)
-        scene_code_filter, item_code_filter, scene_codes_filter, _ = _extract_codes_from_node(
-            checklist_node,
-            None,
-            None,
+        company_id = _resolve_company_scope_id(user)
+        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
+        await cache.mark_company_active(company_id)
+
+        folder_value = folder_id.strip() if isinstance(folder_id, str) else None
+        if folder_value in {"", "/", ".", "root"}:
+            folder_value = None
+
+        keyword = (query or name or "").strip()
+        keyword_lower = keyword.lower() if keyword else ""
+
+        # 回收站：兼容前端使用 folder_id=recovery
+        if folder_value == "recovery":
+            items = await asyncio.to_thread(
+                build_company_material_index_snapshot,
+                company_id=company_id,
+                include_deleted=True,
+            )
+            if not isinstance(items, list):
+                items = []
+
+            if material_type:
+                items = [it for it in items if str(it.get("material_type") or "") == str(material_type)]
+            if keyword_lower:
+                items = [
+                    it
+                    for it in items
+                    if keyword_lower in str(it.get("name") or "").lower()
+                    or keyword_lower in str(it.get("description") or "").lower()
+                ]
+
+            page_items, pagination = paginate_items(items, page=pi, size=ps)
+            for it in page_items:
+                du = it.get("download_url")
+                if isinstance(du, str) and du.startswith("/hsai/materials/"):
+                    it["download_url"] = "/api/v1" + du
+            return {"data": page_items, "pagination": pagination}
+
+        # 普通列表：优先使用缓存快照
+        cache_enabled = cache.enabled()
+        index_snapshot = (
+            await cache.get_json(company_index_cache_key(company_id))
+            if cache_enabled
+            else None
+        )
+        folders_snapshot = (
+            await cache.get_json(company_folders_cache_key(company_id))
+            if cache_enabled
+            else None
         )
 
-        # 计算offset
-        offset = (pi - 1) * ps
-        
-        # 根据是否有搜索关键词决定使用哪种查询方式
-        if query:
-            # 使用搜索接口
-            materials = HSAIMaterials.search_materials(
-                user.id,
-                query=query,
-                material_type=material_type,
-                scene_code=scene_code_filter,
-                item_code=item_code_filter,
-                scene_codes=scene_codes_filter,
-                limit=ps,
-                offset=offset,
-            )
-            
-            # 获取搜索结果总数
-            total = HSAIMaterials.count_search_materials(
-                user.id,
-                query=query,
-                material_type=material_type,
-                scene_code=scene_code_filter,
-                item_code=item_code_filter,
-                scene_codes=scene_codes_filter,
-            )
-        else:
-            # 使用常规列表查询
-            materials = HSAIMaterials.get_materials_by_user_id(
-                user.id,
-                folder_id=folder_filter,
-                material_type=material_type,
-                scene_code=scene_code_filter,
-                item_code=item_code_filter,
-                scene_codes=scene_codes_filter,
-                limit=ps,
-                offset=offset
-            )
-            
-            # 获取常规列表总数
-            total = HSAIMaterials.get_materials_count(
-                user.id,
-                folder_id=folder_filter,
-                material_type=material_type,
-                scene_code=scene_code_filter,
-                item_code=item_code_filter,
-                scene_codes=scene_codes_filter,
-            )
-        
-        responses = []
-        for material in materials:
-            # 确保返回OSS URL
-            download_url = material.file_path or ""
-            if not download_url.startswith(('http://', 'https://')):
-                download_url = f"/hsai/materials/{material.id}/download"
-            
-            # 处理可能的字节类型数据
-            safe_download_url = download_url
-            if isinstance(safe_download_url, bytes):
-                try:
-                    safe_download_url = safe_download_url.decode('utf-8')
-                except UnicodeDecodeError:
-                    import base64
-                    safe_download_url = base64.b64encode(safe_download_url).decode('utf-8')
-            
-            # 处理属性代码，将其转换为列表格式
-            properties_list = None
-            if material.properties_code:
-                if isinstance(material.properties_code, str):
-                    properties_list = material.properties_code.split("_")
-                elif isinstance(material.properties_code, list):
-                    properties_list = material.properties_code
-            
-            response = HSAIMaterialResponse(
-                **{k: v for k, v in material.model_dump().items() if k not in ['properties_code']},
-                thumbnail_url=f"/hsai/materials/{material.id}/thumbnail" if material.material_type in ["image", "video"] else None,
-                download_url=safe_download_url,
-                properties_code=properties_list  # 返回列表格式
-            )
-            responses.append(response)
+        if index_snapshot is None or folders_snapshot is None:
+            should_sync = True
+            if not cache_enabled:
+                has_any_folder = await asyncio.to_thread(company_has_any_folders, company_id=company_id)
+                has_any_material = await asyncio.to_thread(company_has_any_materials, company_id=company_id)
+                should_sync = not (has_any_folder or has_any_material)
 
-        # 计算分页数据
-        total_pages = (total + ps - 1) // ps  # 向上取整
-        
-        pagination = PaginationData(
-            total=total,
-            page=pi,
-            size=ps,
-            total_pages=total_pages
-        )
-        
-        return PaginatedHSAIMaterialResponse(
-            data=responses,
-            pagination=pagination
-        )
+            if should_sync:
+                actor_user_id = pick_any_user_id_for_company(company_id) or str(getattr(user, "id", "")).strip()
+                if actor_user_id:
+                    syncer = MaterialsOssSyncService()
+                    await asyncio.to_thread(
+                        syncer.sync_company,
+                        company_id=company_id,
+                        actor_user_id=actor_user_id,
+                    )
+
+            folders_snapshot = await asyncio.to_thread(build_company_folders_snapshot, company_id=company_id)
+            index_snapshot = await asyncio.to_thread(build_company_material_index_snapshot, company_id=company_id)
+            if cache_enabled:
+                await cache.set_json(company_folders_cache_key(company_id), folders_snapshot)
+                await cache.set_json(company_index_cache_key(company_id), index_snapshot)
+
+        if not isinstance(index_snapshot, list):
+            index_snapshot = []
+
+        items = index_snapshot
+        if folder_value:
+            items = [it for it in items if str(it.get("folder_id") or "") == folder_value]
+        if material_type:
+            items = [it for it in items if str(it.get("material_type") or "") == str(material_type)]
+        if keyword_lower:
+            items = [
+                it
+                for it in items
+                if keyword_lower in str(it.get("name") or "").lower()
+                or keyword_lower in str(it.get("description") or "").lower()
+            ]
+
+        page_items, pagination = paginate_items(items, page=pi, size=ps)
+        for it in page_items:
+            du = it.get("download_url")
+            if isinstance(du, str) and du.startswith("/hsai/materials/"):
+                it["download_url"] = "/api/v1" + du
+        return {"data": page_items, "pagination": pagination}
         
     except Exception as e:
         log.exception(f"Error getting materials: {e}")
@@ -1563,16 +1837,14 @@ async def get_material(
     """
     try:
         material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
+        if not material or not _has_company_material_access(user, getattr(material, "user_id", "")):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Material not found"
             )
         
-        # 确保返回OSS URL
-        download_url = material.file_path or ""
-        if not download_url.startswith(('http://', 'https://')):
-            download_url = f"/hsai/materials/{material.id}/download"
+        # 统一返回服务端下载入口（302 到真实 URL）
+        download_url = f"/api/v1/hsai/materials/{material.id}/download"
         
         # 处理属性代码，将其转换为列表格式
         properties_list = None
@@ -1657,7 +1929,7 @@ async def get_material_properties(
     """
     try:
         material = HSAIMaterials.get_material_by_id(material_id)
-        if not material or material.user_id != user.id:
+        if not material or not _has_company_material_access(user, getattr(material, "user_id", "")):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Material not found"

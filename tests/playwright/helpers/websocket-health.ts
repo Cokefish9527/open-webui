@@ -1,4 +1,4 @@
-ï»¿import { Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 export async function captureWebsocketHealth(page: Page) {
 	return page.evaluate(async () => {
@@ -11,11 +11,11 @@ export async function captureWebsocketHealth(page: Page) {
 			result.webSocketAvailable = wsType !== 'undefined';
 
 			if (socketIoType === 'function') {
-				// èŽ·å–æ­£ç¡®çš„WebSocketæœåŠ¡å™¨URL
+				// »ñÈ¡ÕýÈ·µÄWebSocket·þÎñÆ÷URL
 				const baseUrl = window.location.origin;
 				const wsUrl = baseUrl.replace(':5173', ':8080').replace(':5174', ':8080');
 
-				// ä½¿ç”¨æ­£ç¡®çš„Socket.IOè°ƒç”¨æ–¹å¼
+				// Ê¹ÓÃÕýÈ·µÄSocket.IOµ÷ÓÃ·½Ê½
 				const io = (window as unknown as { io: any }).io;
 				const socket = io(wsUrl, {
 					path: '/ws/socket.io',
@@ -29,15 +29,15 @@ export async function captureWebsocketHealth(page: Page) {
 						outcome.success = true;
 						outcome.socketId = socket.id;
 
-						// å‘é€æµ‹è¯•æ¶ˆæ¯
+						// ·¢ËÍ²âÊÔÏûÏ¢
 						socket.emit('message', { type: 'playwright-probe', timestamp: Date.now() });
 
-						// ç›‘å¬å“åº”
+						// ¼àÌýÏìÓ¦
 						socket.on('response', (data: any) => {
 							outcome.response = data;
 						});
 
-						// 2ç§’åŽæ–­å¼€è¿žæŽ¥
+						// 2Ãëºó¶Ï¿ªÁ¬½Ó
 						setTimeout(() => {
 							socket.disconnect();
 							resolve(outcome);
@@ -70,23 +70,23 @@ export async function captureWebsocketHealth(page: Page) {
 	});
 }
 
-// æ·»åŠ ä¸€ä¸ªæ›´è¯¦ç»†çš„WebSocketè¿žæŽ¥æµ‹è¯•å‡½æ•°
+// Ìí¼ÓÒ»¸ö¸üÏêÏ¸µÄWebSocketÁ¬½Ó²âÊÔº¯Êý
 export async function detailedWebsocketTest(page: Page) {
 	return page.evaluate(async () => {
 		const result: Record<string, unknown> = {};
 
 		try {
-			// æ£€æŸ¥Socket.IOæ˜¯å¦å­˜åœ¨
+			// ¼ì²éSocket.IOÊÇ·ñ´æÔÚ
 			const hasSocketIO = typeof (window as unknown as { io?: unknown }).io === 'function';
 			result.hasSocketIO = hasSocketIO;
 
 			if (hasSocketIO) {
-				// èŽ·å–WebSocket URL
+				// »ñÈ¡WebSocket URL
 				const baseUrl = window.location.origin;
 				const wsUrl = baseUrl.replace(':5173', ':8080').replace(':5174', ':8080');
 				result.wsUrl = wsUrl;
 
-				// ä½¿ç”¨æ­£ç¡®çš„Socket.IOè°ƒç”¨æ–¹å¼
+				// Ê¹ÓÃÕýÈ·µÄSocket.IOµ÷ÓÃ·½Ê½
 				const io = (window as unknown as { io: any }).io;
 				const socket = io(wsUrl, {
 					path: '/ws/socket.io',
@@ -97,7 +97,7 @@ export async function detailedWebsocketTest(page: Page) {
 
 				result.socketState = 'created';
 
-				// ç›‘å¬è¿žæŽ¥äº‹ä»¶
+				// ¼àÌýÁ¬½ÓÊÂ¼þ
 				socket.on('connect', () => {
 					result.connectEvent = true;
 					result.socketId = socket.id;
@@ -111,13 +111,13 @@ export async function detailedWebsocketTest(page: Page) {
 					result.errorEvent = error.message;
 				});
 
-				// ç­‰å¾…ä¸€æ®µæ—¶é—´è§‚å¯Ÿè¿žæŽ¥çŠ¶æ€
+				// µÈ´ýÒ»¶ÎÊ±¼ä¹Û²ìÁ¬½Ó×´Ì¬
 				await new Promise((resolve) => setTimeout(resolve, 3000));
 
 				result.finalState = socket.connected ? 'connected' : 'disconnected';
 				result.finalSocketId = socket.id;
 
-				// æ–­å¼€è¿žæŽ¥
+				// ¶Ï¿ªÁ¬½Ó
 				socket.disconnect();
 			}
 		} catch (error) {

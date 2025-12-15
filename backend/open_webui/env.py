@@ -477,6 +477,42 @@ REDIS_SENTINEL_HOSTS = os.environ.get("REDIS_SENTINEL_HOSTS", "")
 REDIS_SENTINEL_PORT = os.environ.get("REDIS_SENTINEL_PORT", "26379")
 
 ####################################
+# HSAI MATERIALS CACHE / OSS SYNC
+####################################
+
+HSAI_MATERIALS_CACHE_ENABLED = (
+    os.environ.get("HSAI_MATERIALS_CACHE_ENABLED", "true").lower() == "true"
+)
+
+try:
+    HSAI_MATERIALS_CACHE_TTL_SEC = int(os.environ.get("HSAI_MATERIALS_CACHE_TTL_SEC", "900"))
+except ValueError:
+    HSAI_MATERIALS_CACHE_TTL_SEC = 900
+HSAI_MATERIALS_CACHE_TTL_SEC = max(HSAI_MATERIALS_CACHE_TTL_SEC, 30)
+
+try:
+    HSAI_MATERIALS_CACHE_REFRESH_INTERVAL_SEC = int(
+        os.environ.get("HSAI_MATERIALS_CACHE_REFRESH_INTERVAL_SEC", "300")
+    )
+except ValueError:
+    HSAI_MATERIALS_CACHE_REFRESH_INTERVAL_SEC = 300
+HSAI_MATERIALS_CACHE_REFRESH_INTERVAL_SEC = max(
+    HSAI_MATERIALS_CACHE_REFRESH_INTERVAL_SEC, 30
+)
+
+HSAI_MATERIALS_OSS_SYNC_ENABLED = (
+    os.environ.get("HSAI_MATERIALS_OSS_SYNC_ENABLED", "true").lower() == "true"
+)
+
+try:
+    HSAI_MATERIALS_OSS_MAX_KEYS = int(os.environ.get("HSAI_MATERIALS_OSS_MAX_KEYS", "1000"))
+except ValueError:
+    HSAI_MATERIALS_OSS_MAX_KEYS = 1000
+HSAI_MATERIALS_OSS_MAX_KEYS = min(max(HSAI_MATERIALS_OSS_MAX_KEYS, 1), 1000)
+
+HSAI_MATERIALS_OSS_BUCKET = os.environ.get("HSAI_MATERIALS_OSS_BUCKET", "").strip() or None
+
+####################################
 # UVICORN WORKERS
 ####################################
 

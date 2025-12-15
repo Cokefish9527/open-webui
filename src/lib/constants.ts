@@ -3,8 +3,22 @@ import { browser, dev } from '$app/environment';
 
 export const APP_NAME = 'Open WebUI';
 
-export const WEBUI_HOSTNAME = browser ? (dev ? `${location.hostname}:8080` : ``) : '';
-export const WEBUI_BASE_URL = browser ? (dev ? `http://${WEBUI_HOSTNAME}` : ``) : ``;
+// 允许通过 Vite 环境变量覆盖后端地址，便于前后端分端口/跨主机开发
+const CUSTOM_WEBUI_BASE = browser ? (import.meta as any)?.env?.VITE_WEBUI_BASE_URL ?? '' : '';
+
+const fallbackHost = browser ? `${location.hostname}:8080` : '';
+export const WEBUI_BASE_URL = browser
+	? CUSTOM_WEBUI_BASE || (dev ? `http://${fallbackHost}` : ``)
+	: '';
+export const WEBUI_HOSTNAME = WEBUI_BASE_URL
+	? (() => {
+			try {
+				return new URL(WEBUI_BASE_URL).host;
+			} catch (_e) {
+				return fallbackHost;
+			}
+		})()
+	: fallbackHost;
 export const WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1`;
 
 export const OLLAMA_API_BASE_URL = `${WEBUI_BASE_URL}/ollama`;

@@ -69,10 +69,8 @@
 	import Bolt from '$lib/components/icons/Bolt.svelte';
 	import ArrowRightCircle from '$lib/components/icons/ArrowRightCircle.svelte';
 	import MarkdownTokens from './MarkdownTokens.svelte';
-	import type { ComponentType } from 'svelte';
-
-	export let token: Token;
-	export let alert: AlertData;
+import type { ComponentType } from 'svelte';
+export let alert: AlertData;
 	export let id = '';
 	export let tokenIdx = 0;
 	export let onTaskClick: ((event: MouseEvent) => void) | undefined = undefined;

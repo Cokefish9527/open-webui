@@ -1,8 +1,9 @@
-ï»¿import { test as base, expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import { ArtifactManager } from '../helpers/artifact-manager';
 import { registerPageInstrumentation } from '../helpers/logger';
 import { BackendLogTailer } from '../helpers/backend-log-tailer';
-import { ScenarioContext, createEmptyContext } from '../helpers/context-state';
+import type { ScenarioContext } from '../helpers/context-state';
+import { createEmptyContext } from '../helpers/context-state';
 import { captureWebsocketHealth, detailedWebsocketTest } from '../helpers/websocket-health';
 
 const DEFAULT_ACCOUNT_POOL = Array.from(
@@ -52,11 +53,11 @@ export type { ScenarioContext };
 test.afterEach(async ({ page, artifacts, contextState }) => {
 	try {
 		if (!page.isClosed()) {
-			// æ•è·WebSocketå¥åº·çŠ¶æ€
+			// ²¶»ñWebSocket½¡¿µ×´Ì¬
 			const wsReport = await captureWebsocketHealth(page);
 			artifacts.writeJSON('ws-health', wsReport);
 
-			// å¦‚æœWebSocketè¿æ¥å¤±è´¥ï¼Œè¿›è¡Œè¯¦ç»†è¯Šæ–­
+			// Èç¹ûWebSocketÁ¬½ÓÊ§°Ü£¬½øĞĞÏêÏ¸Õï¶Ï
 			if (!wsReport.connection || !(wsReport.connection as Record<string, unknown>).success) {
 				const detailedReport = await detailedWebsocketTest(page);
 				artifacts.writeJSON('ws-detailed', detailedReport);
@@ -68,12 +69,12 @@ test.afterEach(async ({ page, artifacts, contextState }) => {
 	artifacts.writeJSON('context-state', contextState);
 });
 
-// å¯¼å‡ºä¸€ä¸ªè¾…åŠ©å‡½æ•°ç”¨äºç™»å½•
+// µ¼³öÒ»¸ö¸¨Öúº¯ÊıÓÃÓÚµÇÂ¼
 export async function loginWithTestAccount(page: any, accountPool: string[]) {
-	// å¯¼èˆªåˆ°ç™»å½•é¡µé¢
+	// µ¼º½µ½µÇÂ¼Ò³Ãæ
 	await page.goto('/login');
 
-	// ä½¿ç”¨æµ‹è¯•è´¦å·ç™»å½•
+	// Ê¹ÓÃ²âÊÔÕËºÅµÇÂ¼
 	const testAccount = accountPool[0];
 	const testPassword = process.env.E2E_TEST_ACCOUNT_PASSWORD || 'H@SaiAutoTest2025!';
 
@@ -81,9 +82,9 @@ export async function loginWithTestAccount(page: any, accountPool: string[]) {
 	await page.fill('[id="password"]', testPassword);
 	await page.click('button[type="submit"]');
 
-	// ç­‰å¾…ç™»å½•å®Œæˆ
+	// µÈ´ıµÇÂ¼Íê³É
 	await page.waitForTimeout(3000);
 
-	// éªŒè¯ç™»å½•æˆåŠŸ
+	// ÑéÖ¤µÇÂ¼³É¹¦
 	await expect(page).not.toHaveURL(/login/);
 }

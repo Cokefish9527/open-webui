@@ -386,6 +386,7 @@ class HSAIMaterialForm(BaseModel):
     description: Optional[str] = None
     material_type: str
     folder_id: Optional[str] = None
+    enterprise_id: Optional[str] = None
     file_path: Optional[str] = None
     file_size: Optional[int] = None
     file_hash: Optional[str] = None
