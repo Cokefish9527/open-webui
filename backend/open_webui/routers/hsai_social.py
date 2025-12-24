@@ -35,7 +35,7 @@ class TikTokUnlinkForm(BaseModel):
 @router.get("/tiktok/login")
 async def tiktok_login(
     request: Request,
-    company_id: str,
+    company_id: Optional[str] = None,
     user=Depends(get_verified_user),
 ):
     """
