@@ -25,6 +25,9 @@ from open_webui.models.hsai_projects import (
     PaginatedHSAIProjectResponse,
     PaginationData as ProjectPaginationData,
 )
+from open_webui.models.hsai_blueprint_progress import HSAIBlueprintProgressTable
+from open_webui.models.social_accounts import SocialAccounts
+from open_webui.models.hsai_tiktok_publish_log import HSAITikTokPublishLogs
 from open_webui.models.auths import (
     Auths,
     AddUserForm,
@@ -61,6 +64,60 @@ _rate_limit_state: Dict[str, Deque[float]] = defaultdict(deque)
 _auth_bypass_raw = os.environ.get("EXTERNAL_ADMIN_AUTH_BYPASS", "false").strip().lower()
 EXTERNAL_ADMIN_AUTH_BYPASS = _auth_bypass_raw in {"1", "true", "yes", "on"}
 _AUTH_BYPASS_WARNING_EMITTED = False
+
+
+def _parse_required_tiktok_accounts(raw: Optional[str]) -> Optional[int]:
+    """从蓝图配置的 required_tiktok_accounts 字段中抽取整数数量."""
+    if not raw:
+        return None
+    digits = "".join(ch for ch in str(raw) if ch.isdigit())
+    if not digits:
+        return None
+    try:
+        value = int(digits)
+        return value if value >= 0 else None
+    except ValueError:
+        return None
+
+
+def _build_project_response_with_tiktok(project) -> HSAIProjectResponse:
+    """在基础项目信息上补充 TikTok 账号矩阵指标."""
+    required_accounts: Optional[int] = None
+    active_accounts: Optional[int] = None
+
+    try:
+        progress = HSAIBlueprintProgressTable.get_by_project(project.id)
+        if progress and progress.required_tiktok_accounts:
+            required_accounts = _parse_required_tiktok_accounts(
+                progress.required_tiktok_accounts
+            )
+    except Exception:  # pragma: no cover - 监控即可
+        required_accounts = None
+
+    try:
+        if getattr(project, "company_id", None):
+            active_accounts = SocialAccounts.count_active_accounts(
+                project.company_id,
+                platform="tiktok",
+            )
+    except Exception:  # pragma: no cover - 监控即可
+        active_accounts = None
+
+    payload = project.model_dump()
+    payload["tiktok_required_accounts"] = required_accounts
+    payload["tiktok_active_accounts"] = active_accounts
+    return HSAIProjectResponse(**payload)
+
+
+class TikTokProjectStatsResponse(BaseModel):
+    project_id: str = Field(description="项目 ID")
+    company_id: str = Field(description="公司 ID")
+    required_accounts: int = Field(description="该项目蓝图要求的 TikTok 账号数量")
+    active_accounts: int = Field(description="该项目所属公司已绑定的 TikTok active 账号数量")
+    last_publish_at: Optional[int] = Field(default=None, description="该项目最近一次成功发布的时间戳（秒）")
+    publish_last_7d_total: int = Field(description="近 7 天成功发布总数")
+    publish_last_7d_inbox: int = Field(description="近 7 天成功发布（INBOX）数量")
+    publish_last_7d_direct: int = Field(description="近 7 天成功发布（DIRECT）数量")
 
 
 
@@ -814,7 +871,7 @@ async def list_company_projects_admin(
         company_id,
         status=status_filter,
     )
-    responses = [HSAIProjectResponse(**project.model_dump()) for project in projects]
+    responses = [_build_project_response_with_tiktok(project) for project in projects]
     pagination = _build_project_pagination(total, pi, ps)
     return PaginatedHSAIProjectResponse(data=responses, pagination=pagination)
 
@@ -945,7 +1002,7 @@ async def list_projects_admin(
         )
         total = HSAIProjects.get_projects_count_all(status=status_filter)
 
-    responses = [HSAIProjectResponse(**project.model_dump()) for project in projects]
+    responses = [_build_project_response_with_tiktok(project) for project in projects]
     pagination = _build_project_pagination(total, pi, ps)
     return PaginatedHSAIProjectResponse(data=responses, pagination=pagination)
 
@@ -960,7 +1017,7 @@ async def get_project_admin(project_id: str, request: Request):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="项目不存在",
         )
-    return HSAIProjectResponse(**project.model_dump())
+    return _build_project_response_with_tiktok(project)
 
 
 @router.post("/projects", response_model=HSAIProjectResponse)
@@ -998,7 +1055,7 @@ async def create_project_admin(payload: ProjectCreateRequest, request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="创建项目失败",
         )
-    return HSAIProjectResponse(**project.model_dump())
+    return _build_project_response_with_tiktok(project)
 
 
 @router.put("/projects/{project_id}", response_model=HSAIProjectResponse)
@@ -1038,7 +1095,74 @@ async def update_project_admin(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="更新项目失败",
         )
-    return HSAIProjectResponse(**updated_project.model_dump())
+    return _build_project_response_with_tiktok(updated_project)
+
+
+@router.get("/projects/{project_id}/tiktok-stats", response_model=TikTokProjectStatsResponse)
+async def get_project_tiktok_stats_admin(project_id: str, request: Request):
+    """获取项目维度的 TikTok 运营指标（仅外部管理系统可访问）"""
+    verify_external_request(request)
+    project = HSAIProjects.get_project_by_id(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目不存在",
+        )
+
+    company_id = str(getattr(project, "company_id", "") or "")
+    if not company_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="项目未绑定公司，无法计算 TikTok 指标",
+        )
+
+    required_accounts = 0
+    progress = HSAIBlueprintProgressTable.get_by_project(project_id)
+    if progress and progress.required_tiktok_accounts:
+        required_accounts = _parse_required_tiktok_accounts(progress.required_tiktok_accounts) or 0
+
+    active_accounts = SocialAccounts.count_active_accounts(company_id, platform="tiktok")
+
+    now_ts = int(time.time())
+    since_7d = now_ts - 7 * 24 * 60 * 60
+
+    last_publish_at = HSAITikTokPublishLogs.get_last_publish_at(
+        company_id=company_id,
+        project_id=project_id,
+        status="success",
+    )
+    publish_last_7d_total = HSAITikTokPublishLogs.count_publishes_since(
+        company_id=company_id,
+        project_id=project_id,
+        since_ts=since_7d,
+        status="success",
+        mode=None,
+    )
+    publish_last_7d_inbox = HSAITikTokPublishLogs.count_publishes_since(
+        company_id=company_id,
+        project_id=project_id,
+        since_ts=since_7d,
+        status="success",
+        mode="INBOX",
+    )
+    publish_last_7d_direct = HSAITikTokPublishLogs.count_publishes_since(
+        company_id=company_id,
+        project_id=project_id,
+        since_ts=since_7d,
+        status="success",
+        mode="DIRECT",
+    )
+
+    return TikTokProjectStatsResponse(
+        project_id=project_id,
+        company_id=company_id,
+        required_accounts=required_accounts,
+        active_accounts=active_accounts,
+        last_publish_at=last_publish_at,
+        publish_last_7d_total=publish_last_7d_total,
+        publish_last_7d_inbox=publish_last_7d_inbox,
+        publish_last_7d_direct=publish_last_7d_direct,
+    )
 
 
 @router.delete("/projects/{project_id}")

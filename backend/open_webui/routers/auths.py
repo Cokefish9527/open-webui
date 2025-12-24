@@ -943,7 +943,7 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
                 default_project_form = HSAIProjectForm(
                     name=f"{user.name}的默认项目",
                     description=f"为用户{user.name}创建的默认项目",
-                    business_name=user.business_name or "HSAI",
+                    business_name=user.business_name or "hsai",
                     company_info={"user_id": user.id}
                 )
                 default_project = HSAIProjects.insert_new_project(user.id, default_project_form)

@@ -17,7 +17,7 @@ def get_redis_client():
     return redis.from_url(REDIS_URL)
 
 
-def send_video_learning_notification(video_id: int, status: str, business_name: str = "HSAI"):
+def send_video_learning_notification(video_id: int, status: str, business_name: str = "hsai"):
     """发送视频学习通知到Redis队列"""
     try:
         # 获取Redis客户端
@@ -78,7 +78,7 @@ if __name__ == "__main__":
             # 发送测试消息
             video_id = int(sys.argv[2]) if len(sys.argv) > 2 else 1
             status = sys.argv[3] if len(sys.argv) > 3 else "success"
-            business_name = sys.argv[4] if len(sys.argv) > 4 else "HSAI"
+            business_name = sys.argv[4] if len(sys.argv) > 4 else "hsai"
             send_video_learning_notification(video_id, status, business_name)
         elif sys.argv[1] == "listen":
             # 监听队列

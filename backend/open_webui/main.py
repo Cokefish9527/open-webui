@@ -98,6 +98,7 @@ from open_webui.routers import (
     # 根据新流程说明，不再需要爆款视频路由
     # hsai_viral_videos,  # 移除爆款视频路由导入
 )
+from open_webui.routers import hsai_social, hsai_tiktok
 
 from open_webui.routers.retrieval import (
     get_embedding_function,
@@ -1353,6 +1354,8 @@ app.include_router(hsai_projects.router, prefix="/api/v1")  # 添加项目管理
 
 # 添加组织管理路由
 # 添加外部管理路由
+app.include_router(hsai_social.router, prefix="/api/v1")  # TikTok ç­‰ç¤¾äº¤é›†æˆè·¯ç”±
+app.include_router(hsai_tiktok.router, prefix="/api/v1")  # TikTok å‘å¸ƒè·¯ç”±
 app.include_router(
     external_admin.router,
     prefix="/api/v1",

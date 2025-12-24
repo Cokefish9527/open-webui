@@ -1,348 +1,311 @@
-import logging
-import time
-import secrets
+import base64
 import hashlib
+import logging
+import os
+import secrets
+import time
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
-from urllib.parse import urlencode, parse_qs, urlparse
+
+from urllib.parse import urlencode
 
 import requests
-# 注释掉矩阵管理相关的导入，因为该模块已被移除
-# from open_webui.models.hsai_matrix import HSAIPlatformAccounts, HSAIPlatformAccountForm, HSAIAccountStatus
+
+from open_webui.models.social_accounts import SocialAccounts
 
 log = logging.getLogger(__name__)
 
 
 class HSAIOAuthHandler:
-    """HSAI OAuth处理器，负责各大平台的OAuth认证流程"""
-    
-    def __init__(self):
-        # 各平台OAuth配置
-        self.platform_configs = {
+    """
+    HSAI OAuth 处理器：目前聚焦 TikTok Login Kit，用于绑定业务公司与 TikTok 账号。
+
+    设计约束：
+    - 仅在后端生成 OAuth URL 与处理回调；
+    - 使用内存 state_storage 保存 state/code_verifier（生产可替换为 Redis）；
+    - Tokens 持久化存入 social_accounts 表。
+    """
+
+    def __init__(self) -> None:
+        self.platform_configs: Dict[str, Dict[str, str]] = {
             "tiktok": {
-                "client_id": "YOUR_TIKTOK_CLIENT_ID",
-                "client_secret": "YOUR_TIKTOK_CLIENT_SECRET",
-                "scope": "user.info.basic,video.upload",
-                "authorize_url": "https://open.tiktokapis.com/platform/oauth/connect/",
-                "token_url": "https://open.tiktokapis.com/platform/oauth/token/",
-                "api_base": "https://open.tiktokapis.com"
+                # TikTok v2 Login Kit / Content Posting
+                "client_key": os.getenv("TIKTOK_CLIENT_KEY", "").strip(),
+                "client_secret": os.getenv("TIKTOK_CLIENT_SECRET", "").strip(),
+                "scope": os.getenv(
+                    "TIKTOK_SCOPES",
+                    "user.info.basic,video.upload,video.publish",
+                ),
+                "authorize_url": "https://www.tiktok.com/v2/auth/authorize/",
+                "token_url": "https://open.tiktokapis.com/v2/oauth/token/",
+                "api_base": "https://open.tiktokapis.com",
             },
-            "instagram": {
-                "client_id": "YOUR_INSTAGRAM_CLIENT_ID", 
-                "client_secret": "YOUR_INSTAGRAM_CLIENT_SECRET",
-                "scope": "user_profile,user_media",
-                "authorize_url": "https://api.instagram.com/oauth/authorize",
-                "token_url": "https://api.instagram.com/oauth/access_token",
-                "api_base": "https://graph.instagram.com"
-            },
-            "youtube": {
-                "client_id": "YOUR_YOUTUBE_CLIENT_ID",
-                "client_secret": "YOUR_YOUTUBE_CLIENT_SECRET", 
-                "scope": "https://www.googleapis.com/auth/youtube.upload",
-                "authorize_url": "https://accounts.google.com/oauth2/auth",
-                "token_url": "https://oauth2.googleapis.com/token",
-                "api_base": "https://www.googleapis.com/youtube/v3"
-            },
-            "weibo": {
-                "client_id": "YOUR_WEIBO_CLIENT_ID",
-                "client_secret": "YOUR_WEIBO_CLIENT_SECRET",
-                "scope": "friendships_groups_read,statuses_to_me_read,write",
-                "authorize_url": "https://api.weibo.com/oauth2/authorize",
-                "token_url": "https://api.weibo.com/oauth2/access_token",
-                "api_base": "https://api.weibo.com/2"
-            }
         }
-        
-        # 存储state参数的临时字典（实际应用中应使用Redis）
-        self.state_storage = {}
-    
+
+        # 存储 state 参数的临时字典（生产建议替换为 Redis）
+        self.state_storage: Dict[str, Dict[str, Any]] = {}
+
+    # ------------------------------------------------------------------
+    # OAuth URL 生成（带 PKCE）
+    # ------------------------------------------------------------------
     def generate_oauth_url(
-        self, 
-        platform_type: str, 
+        self,
+        platform_type: str,
         redirect_uri: str,
-        user_id: str
+        user_id: Optional[str] = None,
+        company_id: Optional[str] = None,
     ) -> Dict[str, str]:
-        """生成OAuth授权URL"""
-        try:
-            config = self.platform_configs.get(platform_type)
-            if not config:
-                raise ValueError(f"Unsupported platform: {platform_type}")
-            
-            # 生成state参数用于防CSRF
-            state = secrets.token_urlsafe(32)
-            
-            # 存储state和用户信息
-            self.state_storage[state] = {
-                "user_id": user_id,
-                "platform_type": platform_type,
-                "redirect_uri": redirect_uri,
-                "created_at": time.time()
-            }
-            
-            # 构建授权URL参数
+        """
+        生成 OAuth 授权 URL（TikTok Login Kit）。
+        """
+        config = self.platform_configs.get(platform_type)
+        if not config:
+            raise ValueError(f"Unsupported platform: {platform_type}")
+
+        if platform_type == "tiktok" and (not config.get("client_key") or not config.get("client_secret")):
+            raise ValueError("TikTok client_key/client_secret not configured")
+
+        # state 防 CSRF
+        state = self._generate_state()
+        code_verifier, code_challenge = self._generate_pkce_pair()
+
+        # 临时保存 state 对应的上下文
+        self.state_storage[state] = {
+            "user_id": user_id,
+            "company_id": company_id,
+            "platform_type": platform_type,
+            "redirect_uri": redirect_uri,
+            "code_verifier": code_verifier,
+            "created_at": time.time(),
+        }
+
+        if platform_type == "tiktok":
             auth_params = {
-                "client_id": config["client_id"],
+                "client_key": config["client_key"],
                 "redirect_uri": redirect_uri,
                 "scope": config["scope"],
                 "response_type": "code",
-                "state": state
+                "state": state,
+                "code_challenge": code_challenge,
+                "code_challenge_method": "S256",
             }
-            
-            # 特殊处理TikTok
-            if platform_type == "tiktok":
-                auth_params["client_key"] = config["client_id"]
-                del auth_params["client_id"]
-            
-            authorization_url = f"{config['authorize_url']}?{urlencode(auth_params)}"
-            
-            return {
-                "authorization_url": authorization_url,
-                "state": state
-            }
-            
-        except Exception as e:
-            log.error(f"Error generating OAuth URL for {platform_type}: {e}")
-            raise
-    
-    def handle_oauth_callback(
-        self, 
-        platform_type: str, 
-        code: str, 
-        state: str
-    ) -> Dict[str, Any]:
-        """处理OAuth回调，交换access token"""
-        try:
-            # 验证state参数
-            state_data = self.state_storage.get(state)
-            if not state_data:
-                raise ValueError("Invalid or expired state parameter")
-            
-            # 检查state是否过期（10分钟）
-            if time.time() - state_data["created_at"] > 600:
-                del self.state_storage[state]
-                raise ValueError("State parameter expired")
-            
-            config = self.platform_configs.get(platform_type)
-            if not config:
-                raise ValueError(f"Unsupported platform: {platform_type}")
-            
-            # 交换access token
-            token_data = self._exchange_access_token(
-                config, code, state_data["redirect_uri"]
-            )
-            
-            # 获取用户信息
-            user_info = self._get_user_info(config, token_data, platform_type)
-            
-            # 创建或更新账号记录
-            account = self._create_or_update_account(
-                state_data["user_id"],
-                platform_type,
-                token_data,
-                user_info
-            )
-            
-            # 清理state
-            del self.state_storage[state]
-            
-            return {
-                "success": True,
-                "account_id": account.id,
-                "user_info": user_info
-            }
-            
-        except Exception as e:
-            log.error(f"Error handling OAuth callback for {platform_type}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
-    
-    def _exchange_access_token(
-        self, 
-        config: Dict[str, str], 
-        code: str, 
-        redirect_uri: str
-    ) -> Dict[str, Any]:
-        """交换access token"""
-        token_params = {
-            "grant_type": "authorization_code",
-            "client_id": config["client_id"],
-            "client_secret": config["client_secret"],
-            "code": code,
-            "redirect_uri": redirect_uri
-        }
-        
-        response = requests.post(config["token_url"], data=token_params)
-        response.raise_for_status()
-        
-        return response.json()
-    
-    def _get_user_info(
-        self, 
-        config: Dict[str, str], 
-        token_data: Dict[str, Any], 
-        platform_type: str
-    ) -> Dict[str, Any]:
-        """获取用户信息"""
-        access_token = token_data.get("access_token")
-        if not access_token:
-            raise ValueError("No access token in response")
-        
-        headers = {"Authorization": f"Bearer {access_token}"}
-        
-        # 根据平台构建用户信息API URL
-        user_info_urls = {
-            "tiktok": f"{config['api_base']}/v2/user/info/",
-            "instagram": f"{config['api_base']}/me?fields=id,username,media_count",
-            "youtube": f"{config['api_base']}/channels?part=snippet,statistics&mine=true",
-            "weibo": f"{config['api_base']}/users/show.json"
-        }
-        
-        url = user_info_urls.get(platform_type)
-        if not url:
-            return {"username": "unknown", "display_name": "Unknown User"}
-        
-        try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            
-            user_data = response.json()
-            
-            # 根据平台解析用户信息
-            if platform_type == "tiktok":
-                return {
-                    "username": user_data.get("data", {}).get("display_name", ""),
-                    "display_name": user_data.get("data", {}).get("display_name", ""),
-                    "avatar_url": user_data.get("data", {}).get("avatar_url", ""),
-                    "follower_count": 0,
-                    "following_count": 0,
-                    "posts_count": 0
-                }
-            elif platform_type == "instagram":
-                return {
-                    "username": user_data.get("username", ""),
-                    "display_name": user_data.get("username", ""),
-                    "avatar_url": "",
-                    "follower_count": 0,
-                    "following_count": 0,
-                    "posts_count": user_data.get("media_count", 0)
-                }
-            elif platform_type == "youtube":
-                if user_data.get("items"):
-                    item = user_data["items"][0]
-                    return {
-                        "username": item.get("snippet", {}).get("title", ""),
-                        "display_name": item.get("snippet", {}).get("title", ""),
-                        "avatar_url": item.get("snippet", {}).get("thumbnails", {}).get("default", {}).get("url", ""),
-                        "follower_count": item.get("statistics", {}).get("subscriberCount", 0),
-                        "following_count": 0,
-                        "posts_count": item.get("statistics", {}).get("videoCount", 0)
-                    }
-            elif platform_type == "weibo":
-                return {
-                    "username": user_data.get("screen_name", ""),
-                    "display_name": user_data.get("name", ""),
-                    "avatar_url": user_data.get("profile_image_url", ""),
-                    "follower_count": user_data.get("followers_count", 0),
-                    "following_count": user_data.get("friends_count", 0),
-                    "posts_count": user_data.get("statuses_count", 0)
-                }
-            
-            return {"username": "unknown", "display_name": "Unknown User"}
-            
-        except Exception as e:
-            log.warning(f"Failed to get user info for {platform_type}: {e}")
-            return {"username": "unknown", "display_name": "Unknown User"}
-    
-    def _create_or_update_account(
-        self, 
-        user_id: str, 
-        platform_type: str, 
-        token_data: Dict[str, Any], 
-        user_info: Dict[str, Any]
-    ) -> Any:
-        """创建或更新账号记录"""
-        
-        # 检查是否已存在该平台账号
-        existing_accounts = HSAIPlatformAccounts.get_accounts_by_user_id(
-            user_id, platform_type=platform_type
-        )
-        
-        access_token = token_data.get("access_token")
-        refresh_token = token_data.get("refresh_token")
-        expires_in = token_data.get("expires_in")
-        
-        # 计算token过期时间
-        token_expires_at = None
-        if expires_in:
-            token_expires_at = int(time.time()) + int(expires_in)
-        
-        account_data = HSAIPlatformAccountForm(
-            name=f"{platform_type}_{user_info.get('username', 'account')}",
-            platform_type=platform_type,
-            username=user_info.get("username", ""),
-            display_name=user_info.get("display_name", ""),
-            avatar_url=user_info.get("avatar_url", ""),
-            status=HSAIAccountStatus.ACTIVE,
-            follower_count=int(user_info.get("follower_count", 0)),
-            following_count=int(user_info.get("following_count", 0)),
-            posts_count=int(user_info.get("posts_count", 0)),
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_expires_at=token_expires_at,
-            last_sync_at=int(time.time())
-        )
-        
-        if existing_accounts:
-            # 更新现有账号
-            account = existing_accounts[0]
-            HSAIPlatformAccounts.update_account_by_id(account.id, account_data.model_dump())
-            return HSAIPlatformAccounts.get_account_by_id(account.id)
         else:
-            # 创建新账号
-            return HSAIPlatformAccounts.insert_new_account(user_id, account_data)
-    
-    def refresh_access_token(self, account_id: str) -> bool:
-        """刷新access token"""
-        try:
-            account = HSAIPlatformAccounts.get_account_by_id(account_id)
-            if not account or not account.refresh_token:
-                return False
-            
-            config = self.platform_configs.get(account.platform_type)
-            if not config:
-                return False
-            
-            # 使用refresh token获取新的access token
-            refresh_params = {
-                "grant_type": "refresh_token",
-                "client_id": config["client_id"],
-                "client_secret": config["client_secret"],
-                "refresh_token": account.refresh_token
-            }
-            
-            response = requests.post(config["token_url"], data=refresh_params)
-            response.raise_for_status()
-            
-            token_data = response.json()
-            access_token = token_data.get("access_token")
-            refresh_token = token_data.get("refresh_token", account.refresh_token)
-            expires_in = token_data.get("expires_in")
-            
-            # 计算新的过期时间
-            token_expires_at = None
-            if expires_in:
-                token_expires_at = int(time.time()) + int(expires_in)
-            
-            # 更新账号token信息
-            return HSAIPlatformAccounts.update_account_token(
-                account_id, access_token, refresh_token, token_expires_at
+            raise ValueError(f"Unsupported platform for OAuth URL: {platform_type}")
+
+        authorization_url = f"{config['authorize_url']}?{urlencode(auth_params)}"
+        return {
+            "authorization_url": authorization_url,
+            "state": state,
+        }
+
+    # ------------------------------------------------------------------
+    # OAuth Callback 处理
+    # ------------------------------------------------------------------
+    def handle_oauth_callback(
+        self,
+        platform_type: str,
+        code: str,
+        state: str,
+    ) -> Dict[str, Any]:
+        """
+        处理 OAuth 回调，交换 access_token 并持久化账号信息。
+        返回 token_data + user_info + account 元信息，用于调用方进一步处理。
+        """
+        state_data = self.state_storage.pop(state, None)
+        if not state_data:
+            raise ValueError("Invalid or expired state parameter")
+
+        if time.time() - float(state_data.get("created_at", 0)) > 600:
+            raise ValueError("State parameter expired")
+
+        if platform_type != state_data.get("platform_type"):
+            raise ValueError("Platform mismatch in state")
+
+        if platform_type == "tiktok":
+            token_data = self._exchange_tiktok_token(code, state_data)
+            user_info = self._get_tiktok_user_info(token_data)
+            account = self._create_or_update_tiktok_account(
+                state_data=state_data,
+                token_data=token_data,
+                user_info=user_info,
             )
-            
-        except Exception as e:
-            log.error(f"Error refreshing token for account {account_id}: {e}")
+        else:
+            raise ValueError(f"Unsupported platform in callback: {platform_type}")
+
+        return {
+            "platform_type": platform_type,
+            "token_data": token_data,
+            "user_info": user_info,
+            "account_id": getattr(account, "id", None) if account else None,
+            "redirect_uri": state_data.get("redirect_uri"),
+        }
+
+    # ------------------------------------------------------------------
+    # Token 刷新
+    # ------------------------------------------------------------------
+    def refresh_access_token(self, account_id: int) -> bool:
+        """
+        使用 refresh_token 刷新 TikTok access_token，
+        并更新 social_accounts 表对应记录。
+        """
+        account = SocialAccounts.get_account_by_id(account_id)
+        if not account or not account.refresh_token:
             return False
 
+        platform = (account.platform or "").lower()
+        if platform != "tiktok":
+            log.warning("refresh_access_token called for unsupported platform=%s", platform)
+            return False
 
-# 全局OAuth处理器实例
+        config = self.platform_configs.get("tiktok")
+        if not config:
+            return False
+
+        data = {
+            "client_key": config["client_key"],
+            "client_secret": config["client_secret"],
+            "grant_type": "refresh_token",
+            "refresh_token": account.refresh_token,
+        }
+        try:
+            resp = requests.post(
+                config["token_url"],
+                data=data,
+                timeout=15,
+            )
+            resp.raise_for_status()
+            token_data = resp.json()
+
+            access_token = token_data.get("access_token")
+            refresh_token = token_data.get("refresh_token") or account.refresh_token
+            expires_in = token_data.get("expires_in")
+            scope = token_data.get("scope") or account.scope
+            token_type = token_data.get("token_type") or account.token_type
+
+            if not access_token:
+                log.warning("TikTok refresh_token response missing access_token: %s", token_data)
+                return False
+
+            return SocialAccounts.update_token(
+                account_id,
+                access_token=access_token,
+                refresh_token=refresh_token,
+                expires_in=expires_in,
+                scope=scope,
+                token_type=token_type,
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            log.error("Error refreshing token for account %s: %s", account_id, exc, exc_info=True)
+            return False
+
+    # ------------------------------------------------------------------
+    # 内部工具：TikTok 交换 token 与拉取用户信息
+    # ------------------------------------------------------------------
+    def _exchange_tiktok_token(self, code: str, state_data: Dict[str, Any]) -> Dict[str, Any]:
+        config = self.platform_configs["tiktok"]
+        data = {
+            "client_key": config["client_key"],
+            "client_secret": config["client_secret"],
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": state_data.get("redirect_uri"),
+            "code_verifier": state_data.get("code_verifier"),
+        }
+        resp = requests.post(
+            config["token_url"],
+            data=data,
+            timeout=15,
+        )
+        resp.raise_for_status()
+        token_data = resp.json()
+        if "access_token" not in token_data:
+            log.warning("TikTok token response missing access_token: %s", token_data)
+        return token_data
+
+    def _get_tiktok_user_info(self, token_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        使用 TikTok 用户信息接口获取用户名、头像等元数据。
+        """
+        access_token = token_data.get("access_token")
+        open_id = token_data.get("open_id") or token_data.get("openId")
+        if not access_token or not open_id:
+            return {"username": "unknown", "display_name": "Unknown User"}
+
+        config = self.platform_configs["tiktok"]
+        url = f"{config['api_base'].rstrip('/')}/v2/user/info/"
+        params = {
+            "open_id": open_id,
+            "fields": "display_name,username,avatar_url,follower_count,following_count,likes_count,video_count",
+        }
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+        try:
+            resp = requests.get(url, params=params, headers=headers, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+            user = (data.get("data") or {}).get("user") or {}
+        except Exception as exc:  # pylint: disable=broad-except
+            log.warning("Failed to get TikTok user info: %s", exc, exc_info=True)
+            return {"username": "unknown", "display_name": "Unknown User"}
+
+        return {
+            "username": user.get("username") or "",
+            "display_name": user.get("display_name") or "",
+            "avatar_url": user.get("avatar_url") or "",
+            "follower_count": user.get("follower_count") or 0,
+            "following_count": user.get("following_count") or 0,
+            "posts_count": user.get("video_count") or 0,
+            "open_id": open_id,
+        }
+
+    def _create_or_update_tiktok_account(
+        self,
+        *,
+        state_data: Dict[str, Any],
+        token_data: Dict[str, Any],
+        user_info: Dict[str, Any],
+    ):
+        company_id = state_data.get("company_id")
+        owner_user_id = state_data.get("user_id")
+
+        username = user_info.get("username") or ""
+        display_name = user_info.get("display_name") or username or "tiktok_account"
+        open_id = user_info.get("open_id") or token_data.get("open_id")
+
+        if username:
+            account_url = f"https://www.tiktok.com/@{username}"
+        else:
+            account_url = ""
+
+        account = SocialAccounts.upsert_tiktok_account(
+            company_id=company_id,
+            owner_user_id=owner_user_id,
+            account_name=display_name,
+            account_id=open_id or username or "",
+            account_url=account_url,
+            token_data=token_data,
+            user_info=user_info,
+        )
+        return account
+
+    # ------------------------------------------------------------------
+    # 工具函数：state / PKCE
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _generate_state() -> str:
+        return secrets.token_urlsafe(32)
+
+    @staticmethod
+    def _generate_pkce_pair() -> tuple[str, str]:
+        """
+        生成 (code_verifier, code_challenge)。
+        """
+        code_verifier = base64.urlsafe_b64encode(os.urandom(40)).rstrip(b"=").decode("ascii")
+        digest = hashlib.sha256(code_verifier.encode("ascii")).digest()
+        code_challenge = base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+        return code_verifier, code_challenge
+
+
+# 全局 OAuth 处理器实例
 hsai_oauth_handler = HSAIOAuthHandler()

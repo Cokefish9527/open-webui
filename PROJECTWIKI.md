@@ -92,6 +92,8 @@ flowchart LR
 - `POST /external/admin/users`：新增 `business_name` 校验，并在创建用户后调用企业编排服务。
 - `PUT /external/admin/users/{id}`：允许在更新时重新绑定企业名称，自动触发企业 / 项目同步。
 - `/external/admin/companies|projects`：提供完整的分页列表、详情、创建、更新、删除与企业内项目列表接口，统一输出 `PaginatedCompanyResponse` / `PaginatedHSAIProjectResponse`，并沿用 `_build_*_pagination()` 计算分页信息。
+- 2025-12-23：`GET /external/admin/projects` 与 `GET /external/admin/companies/{company_id}/projects` 在返回的 `HSAIProjectResponse` 中新增 TikTok 账号矩阵字段 `tiktok_required_accounts` / `tiktok_active_accounts`，分别来源于 `hsai_blueprint_progress.required_tiktok_accounts` 抽取的整数值与 `social_accounts` 表中 `company_id` + `platform='tiktok'` 的 active 账号计数，供 hsai_admin 项目列表进行“active/required” 运营可视化。
+- 2025-12-24：新增 `GET /external/admin/projects/{project_id}/tiktok-stats` 返回项目维度 TikTok 运营指标（账号矩阵 + 近 7 天发稿 + 最后发稿时间），其中发稿统计来自 `hsai_tiktok_publish_logs`（要求发布时传入 `project_id` 才能落到项目维度）。
 - `/external/admin/companies/{company_id}/users/{user_id}`：允许后台批量绑定 / 解绑企业管理员，保持用户 `business_name`、`company_id` 一致。
 - `GET|PATCH /external/admin/users/{user_id}/permissions`：当 `ENABLE_CUSTOMER_PERMISSION_API` 启用时，后台可查询/修改账号角色与 `settings.permissions`，供 hsai_admin 客户管理面板使用；若 WebUI 客户端被裁剪，仍可通过该接口完成权限联动。
 - `GET|PATCH /external/admin/companies/{company_id}/permissions`：提供企业维度的角色/权限分页列表，并支持批量更新（可套用 `CUSTOMER_PERMISSION_TEMPLATE`），方便一次性同步多个账号的授权策略。
@@ -104,6 +106,18 @@ flowchart LR
 - 2025-11-14：`GET /hsai/projects` 参数描述文本因编码损坏触发 SyntaxError（`backend/open_webui/routers/hsai_projects.py:96-101`），现已还原为 UTF-8 中文说明，保障 Uvicorn 可正常导入。
 - 普通用户保持原有边界，仅能访问自身资源，从而保证 API 既能支撑后台联动，也不会破坏多租户隔离。
 - 为兼容 WebUI 内部场景，main.py 重新注册 hsai_companies.router，携带 JWT 的用户继续走 /api/v1/hsai/companies|projects，后台统一使用 /api/v1/external/admin/\*。
+
+### TikTok 集成与发布日志（`backend/open_webui/routers/hsai_tiktok.py`，`backend/open_webui/models/hsai_tiktok_publish_log.py`）
+
+- 职责：封装 TikTok Content Posting API（Inbox Upload + Direct Post）调用链路，并对每一次发布尝试（无论成功或失败）记录结构化日志，便于运营后台按公司/项目维度检索。
+- 发布接口：`POST /api/v1/hsai/tiktok/publish`
+  - 请求体：`company_id`、可选 `project_id`、`account_id`（social_accounts 主键）、`video_url`、`mode`（INBOX|DIRECT）、`caption`、`privacy_level`。
+  - 行为：根据 `mode` 调用 `TikTokPublisher.init_inbox_upload` 或 `init_direct_post`，异常时返回 502 并记录失败日志。
+  - 日志落库：调用 `HSAITikTokPublishLogs.record_publish(...)` 将 `company_id`、`project_id`、`social_account_id`、`mode`、`video_url`、`caption`、`status`（success/failed）与 `error_message` 写入 `hsai_tiktok_publish_logs` 表。
+- 日志查询接口：`GET /api/v1/hsai/tiktok/logs`
+  - 参数：`company_id`（必填）、`project_id`（可选）、`mode`、`status`（success/failed）、`limit`、`offset`。
+  - 权限：仅允许公司所有者或超级管理员访问指定 `company_id` 下的日志（基于 `hsai_companies.Company.owner_user_id` 校验）。
+  - 返回：`TikTokPublishLogsResponse`，包含 `data: List[HSAITikTokPublishLogModel]` 与简单分页结构 `pagination {total, limit, offset}`，供 hsai_admin 运营日志页面使用。
 
 ### HSAI Materials（`backend/open_webui/models/hsai_materials.py`）
 

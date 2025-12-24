@@ -36,10 +36,6 @@ class OssObject:
     url: Optional[str]
 
 
-def _enterprise_materials_prefix(company_id: str) -> str:
-    return f"enterprises/{company_id}/materials"
-
-
 def _parse_last_modified(value: Any) -> Optional[int]:
     if not value:
         return None
@@ -158,7 +154,11 @@ class MaterialsOssSyncService:
             log.warning("FFmpeg OSS client unavailable; skip materials oss sync")
             return {"folders_upserted": 0, "materials_upserted": 0}
 
-        materials_prefix = _enterprise_materials_prefix(company_id)
+        # 约定：使用企业名称（business_name）作为 OSS 顶层前缀。
+        # 这里通过 actor_user_id 反查用户信息时已经在上层完成，当前实现直接假定
+        # OSS 中的对象 key 已经以企业名称段作为前缀，例如 HSAI_TEST/人物口播/....
+        # 因此，这里不再对前缀做额外拼接，交由调用方控制。
+        materials_prefix = ""
         try:
             payload = client.list_objects(
                 prefix=materials_prefix,

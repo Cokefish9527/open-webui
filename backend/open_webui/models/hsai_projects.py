@@ -116,6 +116,15 @@ class HSAIProjectResponse(BaseModel):
     company_id: Optional[str] = Field(default=None, description="所属公司ID")
     created_at: int = Field(description="创建时间戳")
     updated_at: int = Field(description="更新时间戳")
+    # TikTok 账号矩阵：用于项目维度直观看到所需/已绑定的 TikTok 账号数量
+    tiktok_required_accounts: Optional[int] = Field(
+        default=None,
+        description="蓝图配置中所需的 TikTok 账号数量（从 required_tiktok_accounts 抽取整数）",
+    )
+    tiktok_active_accounts: Optional[int] = Field(
+        default=None,
+        description="当前所属公司下状态为 active 的 TikTok 账号数量，用于评估绑定完成度",
+    )
 
 
 class PaginationData(BaseModel):

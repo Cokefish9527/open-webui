@@ -84,13 +84,28 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 LOCAL_STORAGE_PATH = os.path.join(UPLOAD_DIR, "materials")
 os.makedirs(LOCAL_STORAGE_PATH, exist_ok=True)
 
-DEFAULT_COMPANY_SEGMENT = "default-company"
+DEFAULT_COMPANY_SEGMENT = "HSAI"
 DEFAULT_USER_SEGMENT = "unknown-user"
 OSS_VIRTUAL_FOLDER_TYPE = "oss_virtual"
 
 
-def _enterprise_materials_prefix(company_id: str) -> str:
-    return f"enterprises/{company_id}/materials".strip("/")
+def _enterprise_materials_prefix_for_user(user) -> str:
+    """
+    根据当前用户的企业名称（business_name）计算 OSS 顶层前缀。
+
+    约定：
+    - 企业名称在 admin 端以 business_name 维护，例如 HSAI_TEST；
+    - 该名称直接作为 OSS 顶层目录，用来隔离不同企业的素材；
+    - 若缺失，则回退到 DEFAULT_COMPANY_SEGMENT。
+    """
+    name = getattr(user, "business_name", None)
+    if not (isinstance(name, str) and name.strip()):
+        info = getattr(user, "info", None)
+        if isinstance(info, dict):
+            info_name = info.get("business_name")
+            if isinstance(info_name, str) and info_name.strip():
+                name = info_name
+    return _normalize_segment_for_oss(name, DEFAULT_COMPANY_SEGMENT)
 
 
 def _join_oss_path(*parts: str) -> str:
@@ -1190,8 +1205,9 @@ async def upload_material(
     company_id = _resolve_company_scope_id(user)
     folder_id = _normalize_folder_id_input(folder_id)
     relative_prefix = _resolve_folder_oss_prefix(folder_id, company_id) if folder_id else ""
-    oss_root_prefix = _enterprise_materials_prefix(company_id)
-    business_segment_override = _normalize_segment_for_oss(company_id, DEFAULT_COMPANY_SEGMENT)
+    # 使用企业名称作为 OSS 顶层前缀，例如 HSAI_TEST
+    oss_root_prefix = _enterprise_materials_prefix_for_user(user)
+    business_segment_override = oss_root_prefix
     user_segment_override = relative_prefix or "root"
     
     try:
