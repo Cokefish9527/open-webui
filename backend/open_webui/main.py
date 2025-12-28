@@ -81,7 +81,7 @@ from open_webui.routers import (
     credit,
     hsai_materials,
     hsai_materials_recovery,  # 添加回收站路由导入
-    hsai_materials_categories,  # 添加分类管理路由导入
+    # hsai_materials_categories,  # 素材分类设计已作废（2025-12-28），不再对外暴露该路由
     hsai_materials_logs,  # 添加日志管理路由导入
     hsai_tasks,
     hsai_ai,
@@ -1355,7 +1355,7 @@ app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 # HSAI Extension Routes
 app.include_router(hsai_materials.router, prefix="/api/v1")
 app.include_router(hsai_materials_recovery.router, prefix="/api/v1")  # 添加回收站路由
-app.include_router(hsai_materials_categories.router, prefix="/api/v1")  # 添加分类管理路由
+# app.include_router(hsai_materials_categories.router, prefix="/api/v1")  # 素材分类设计已作废（2025-12-28）
 app.include_router(hsai_materials_logs.router, prefix="/api/v1")  # 添加日志管理路由
 app.include_router(hsai_tasks.router, prefix="/api/v1")
 app.include_router(hsai_ai.router, prefix="/api/v1")

@@ -285,6 +285,18 @@ class HSAIComposeTraceStore:
                 query = query.filter(HSAIComposeTrace.status == status)
             return query.count()
 
+    def find_trace_id_by_n8n_session_id(self, n8n_session_id: str) -> Optional[str]:
+        if not n8n_session_id or not str(n8n_session_id).strip():
+            return None
+        with _schema_aware_db() as db:
+            row = (
+                db.query(HSAIComposeTrace)
+                .filter(HSAIComposeTrace.n8n_session_id == str(n8n_session_id).strip())
+                .order_by(HSAIComposeTrace.updated_at.desc())
+                .first()
+            )
+            return str(row.trace_id) if row and row.trace_id else None
+
     def get_trace(self, trace_id: str) -> Optional[HSAIComposeTraceModel]:
         with _schema_aware_db() as db:
             record = db.get(HSAIComposeTrace, trace_id)
@@ -464,4 +476,3 @@ class HSAIComposeTraceStore:
 
 
 HSAIComposeTraces = HSAIComposeTraceStore()
-

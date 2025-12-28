@@ -4,12 +4,19 @@ HSAI工作流管理路由
 """
 
 import logging
+import time
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.services.workflow_orchestration_center import workflow_orchestration_center
+from open_webui.services.workflow_meta_update_service import (
+    DEFAULT_N8N_UPDATE_HOT_VIDEO_META_URL,
+    DEFAULT_N8N_UPDATE_VIDEO_META_URL,
+    post_json,
+)
+from open_webui.models.hsai_compose_traces import HSAIComposeTraces
 from open_webui.constants import ERROR_MESSAGES
 
 log = logging.getLogger(__name__)
@@ -81,3 +88,121 @@ async def trigger_workflow(
             status_code=500,
             detail=ERROR_MESSAGES.DEFAULT()
         )
+
+
+class UpdateHotVideoMetaRequest(BaseModel):
+    """对话过程中：用户修正主推广文案/脚本"""
+
+    session_id: str = Field(description="n8n_workflow 会话 session_id（uuid）")
+    hot_video_meta: Dict[str, Any] = Field(description="hot_video_meta（text/hashtags/videoscript 等）")
+
+
+class UpdateVideoMetaRequest(BaseModel):
+    """对话过程中：用户替换/确认候选素材"""
+
+    session_id: str = Field(description="n8n_workflow 会话 session_id（uuid）")
+    video_meta: Dict[str, Any] = Field(description="video_meta（bgm/tts/text/video 等）")
+
+
+class WorkflowMetaUpdateResponse(BaseModel):
+    success: bool = Field(description="是否成功")
+    forwarded_status_code: Optional[int] = Field(default=None, description="转发到 n8n 的 HTTP 状态码")
+    trace_id: Optional[str] = Field(default=None, description="若能映射到 compose trace，则返回 trace_id")
+
+
+@router.post(
+    "/update_hot_video_meta",
+    response_model=WorkflowMetaUpdateResponse,
+    summary="脚本文案修正",
+)
+async def update_hot_video_meta(
+    request: UpdateHotVideoMetaRequest,
+    user=Depends(get_verified_user),
+):
+    """
+    对应 PDF 示例：`POST /webhook/update_hot_video_meta`（此处由 open-webui 接收并转发到 n8n webhook）。
+    """
+    try:
+        trace_id = HSAIComposeTraces.find_trace_id_by_n8n_session_id(request.session_id)
+        now = int(time.time())
+        if trace_id:
+            HSAIComposeTraces.upsert_step(
+                trace_id,
+                step_key="user_override_hot_video_meta",
+                stage_name="user_override",
+                status="updated",
+                raw_stage_json={"session_id": request.session_id, "hot_video_meta": request.hot_video_meta},
+                extracted_json=request.hot_video_meta,
+                updated_at=now,
+            )
+
+        forwarded_status, _, _ = await post_json(
+            DEFAULT_N8N_UPDATE_HOT_VIDEO_META_URL,
+            {"session_id": request.session_id, "hot_video_meta": request.hot_video_meta},
+        )
+
+        if forwarded_status >= 400:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"n8n webhook forward failed: {forwarded_status}",
+            )
+
+        return WorkflowMetaUpdateResponse(
+            success=True,
+            forwarded_status_code=forwarded_status,
+            trace_id=trace_id,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.error("update_hot_video_meta failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=ERROR_MESSAGES.DEFAULT())
+
+
+@router.post(
+    "/update_video_meta",
+    response_model=WorkflowMetaUpdateResponse,
+    summary="素材候选替换",
+)
+async def update_video_meta(
+    request: UpdateVideoMetaRequest,
+    user=Depends(get_verified_user),
+):
+    """
+    对应 PDF 示例：`POST /webhook/update_video_meta`（此处由 open-webui 接收并转发到 n8n webhook）。
+    """
+    try:
+        trace_id = HSAIComposeTraces.find_trace_id_by_n8n_session_id(request.session_id)
+        now = int(time.time())
+        if trace_id:
+            HSAIComposeTraces.upsert_step(
+                trace_id,
+                step_key="user_override_video_meta",
+                stage_name="user_override",
+                status="updated",
+                raw_stage_json={"session_id": request.session_id, "video_meta": request.video_meta},
+                extracted_json=request.video_meta,
+                updated_at=now,
+            )
+
+        forwarded_status, _, _ = await post_json(
+            DEFAULT_N8N_UPDATE_VIDEO_META_URL,
+            {"session_id": request.session_id, "video_meta": request.video_meta},
+        )
+
+        if forwarded_status >= 400:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"n8n webhook forward failed: {forwarded_status}",
+            )
+
+        return WorkflowMetaUpdateResponse(
+            success=True,
+            forwarded_status_code=forwarded_status,
+            trace_id=trace_id,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.error("update_video_meta failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=ERROR_MESSAGES.DEFAULT())

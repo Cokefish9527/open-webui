@@ -22,7 +22,6 @@ from open_webui.models.hsai_materials import (
     HSAIMaterialTag,
     HSAIMaterialFolders,
     HSAIMaterials,
-    HSAIMaterialFolderForm,
     HSAIMaterialForm,
     HSAIMaterialTagForm,
     HSAIMaterialFolderResponse,
@@ -846,291 +845,10 @@ async def get_material_folders(
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
-@router.post("/folders", response_model=HSAIMaterialFolderResponse, summary="创建素材文件夹")
-async def create_material_folder(
-    request: Request,
-    form_data: HSAIMaterialFolderForm,
-    user=Depends(get_verified_user)
-):
-    """
-    创建新的素材文件夹。
-    """
-    try:
-        company_id = _resolve_company_scope_id(user)
-        # 验证输入数据
-        folder_name = (form_data.name or "").strip()
-        if not folder_name:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Folder name cannot be empty"
-            )
 
-        parent_id = form_data.parent_id
-        parent_prefix = ""
-
-        # 验证父目录是否存在（如果提供了的话）
-        if parent_id:
-            parent_folder = HSAIMaterialFolders.get_folder_by_id(parent_id)
-            if not parent_folder or parent_folder.user_id != company_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid parent folder ID or insufficient permissions"
-                )
-            parent_prefix = _resolve_folder_oss_prefix(parent_id, company_id)
-
-        segment = _normalize_segment_for_oss(folder_name, "folder")
-        relative_prefix = _join_oss_path(parent_prefix, segment)
-        settings = {"folder_type": OSS_VIRTUAL_FOLDER_TYPE, "oss_prefix": relative_prefix}
-        now_ts = int(time.time())
-
-        with get_db() as db:
-            ensure_materials_storage_schema(
-                db.get_bind(),
-                schema=DATABASE_SCHEMA,
-                logger=log.debug,
-            )
-
-            existing_folders = db.query(HSAIMaterialFolder).filter_by(user_id=company_id).all()
-            matched = None
-            legacy_same_name = None
-            for existing in existing_folders:
-                existing_settings = existing.settings or {}
-                if isinstance(existing_settings, dict):
-                    existing_prefix = str(existing_settings.get("oss_prefix") or "").strip("/")
-                    if (
-                        existing_settings.get("folder_type") == OSS_VIRTUAL_FOLDER_TYPE
-                        and existing_prefix == relative_prefix
-                    ):
-                        matched = existing
-                        break
-                if (
-                    existing.parent_id == parent_id
-                    and str(existing.name or "").strip() == folder_name
-                ):
-                    legacy_same_name = existing
-
-            if matched is None and legacy_same_name is not None:
-                # 兼容旧目录：补写映射信息，避免与 OSS 同步时产生重复目录
-                merged_settings = dict(legacy_same_name.settings or {}) if isinstance(legacy_same_name.settings, dict) else {}
-                merged_settings.update(settings)
-                legacy_same_name.settings = merged_settings
-                legacy_same_name.updated_at = now_ts
-                db.commit()
-                db.refresh(legacy_same_name)
-                matched = legacy_same_name
-
-            if matched is None:
-                folder_id = _virtual_folder_id(company_id, relative_prefix)
-                matched = db.query(HSAIMaterialFolder).filter_by(id=folder_id).first()
-
-            if matched is None:
-                folder_row = HSAIMaterialFolder(
-                    id=_virtual_folder_id(company_id, relative_prefix),
-                    name=folder_name,
-                    description=form_data.description,
-                    parent_id=parent_id,
-                    user_id=company_id,
-                    settings=settings,
-                    sort_order=int(form_data.sort_order or 0),
-                    created_at=now_ts,
-                    updated_at=now_ts,
-                )
-                db.add(folder_row)
-                db.commit()
-                db.refresh(folder_row)
-                matched = folder_row
-
-        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
-        await cache.invalidate_company(company_id)
-        await cache.mark_company_active(company_id)
-
-        return HSAIMaterialFolderResponse(
-            id=str(matched.id),
-            name=str(matched.name),
-            label=str(matched.name),
-            description=getattr(matched, "description", None),
-            parent_id=getattr(matched, "parent_id", None),
-            parent_name=None,
-            settings=getattr(matched, "settings", None),
-            sort_order=int(getattr(matched, "sort_order", 0) or 0),
-            children=[],
-            material_count=0,
-            created_at=int(getattr(matched, "created_at", None) or now_ts),
-            updated_at=int(getattr(matched, "updated_at", None) or now_ts),
-        )
-        
-    except HTTPException:
-        # 重新抛出 HTTP 异常
-        raise
-    except Exception as e:
-        log.exception(f"Error creating material folder: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-
-@router.post("/folders/{folder_id}/rename", response_model=HSAIMaterialFolderResponse, summary="重命名素材文件夹")
-async def rename_material_folder(
-    folder_id: str,
-    request: Request,
-    form_data: HSAIMaterialFolderForm,
-    user=Depends(get_verified_user)
-):
-    """
-    重命名素材文件夹。
-    
-    Args:
-        folder_id (str): 文件夹唯一标识符
-        form_data (HSAIMaterialFolderForm): 包含新文件夹名称的表单数据
-        user: 已认证的用户对象
-        
-    Returns:
-        HSAIMaterialFolderResponse: 更新后的文件夹信息
-        
-    Raises:
-        HTTPException: 404 - 文件夹不存在或无权限访问
-        HTTPException: 400 - 文件夹名称已存在
-        HTTPException: 500 - 更新失败
-    """
-    try:
-        company_id = _resolve_company_scope_id(user)
-        # 首先验证文件夹所有权
-        folder = HSAIMaterialFolders.get_folder_by_id(folder_id)
-        if not folder or folder.user_id != company_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Folder not found or insufficient permissions"
-            )
-        
-        # 验证文件夹所有权并更新名称
-        updated_folder = HSAIMaterialFolders.update_folder_name_by_id(folder_id, form_data.name)
-        if not updated_folder:
-            # 检查具体原因
-            existing_folder_check = None
-            with get_db() as db:
-                existing_folder_check = db.query(HSAIMaterialFolder).filter_by(
-                    id=folder_id,
-                    user_id=company_id
-                ).first()
-            
-            if not existing_folder_check:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Folder not found or insufficient permissions"
-                )
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="A folder with the same name already exists in this location"
-                )
-        
-        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
-        await cache.invalidate_company(company_id)
-        await cache.mark_company_active(company_id)
-
-        return HSAIMaterialFolderResponse(
-            **updated_folder.model_dump(),
-            label=updated_folder.name,  # 为 label 字段赋与 name 字段相同的值
-            children=[],
-            material_count=0
-        )
-        
-    except HTTPException:
-        # 重新抛出 HTTP 异常
-        raise
-    except Exception as e:
-        log.exception(f"Error renaming material folder: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-@router.delete("/folders/{folder_id}", response_model=bool, summary="删除素材文件夹")
-async def delete_material_folder(
-    folder_id: str,
-    request: Request,
-    user=Depends(get_verified_user)
-):
-    """
-    删除指定的素材文件夹。
-    
-    Args:
-        folder_id (str): 文件夹唯一标识符
-        user: 已认证的用户对象
-        
-    Returns:
-        bool: 删除成功返回true
-        
-    Raises:
-        HTTPException: 404 - 文件夹不存在或无权限访问
-        HTTPException: 400 - 文件夹不为空，无法删除
-        HTTPException: 500 - 删除失败
-    """
-    try:
-        company_id = _resolve_company_scope_id(user)
-        # 验证文件夹所有权
-        folder = HSAIMaterialFolders.get_folder_by_id(folder_id)
-        if not folder or folder.user_id != company_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Folder not found or insufficient permissions"
-            )
-        
-        # 检查文件夹是否为空（没有子文件夹和素材）
-        with get_db() as db:
-            # 检查子文件夹
-            child_folders = db.query(HSAIMaterialFolder).filter_by(
-                parent_id=folder_id,
-                user_id=company_id
-            ).all()
-            
-            if child_folders:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Cannot delete folder: contains {len(child_folders)} subfolder(s). Please delete or move subfolders first."
-                )
-            
-            # 检查文件夹中的素材
-            materials = (
-                db.query(HSAIMaterial)
-                .join(User, HSAIMaterial.user_id == User.id)
-                .filter(User.company_id == company_id)
-                .filter(HSAIMaterial.folder_id == folder_id)
-                .filter(HSAIMaterial.is_deleted.is_(False))
-                .all()
-            )
-            
-            if materials:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Cannot delete folder: contains {len(materials)} material(s). Please delete or move materials first."
-                )
-        
-        # 执行删除
-        result = HSAIMaterialFolders.delete_folder_by_id(folder_id)
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to delete folder"
-            )
-
-        cache = MaterialsCacheService(getattr(request.app.state, "redis", None))
-        await cache.invalidate_company(company_id)
-        await cache.mark_company_active(company_id)
-        
-        log.info(f"Folder deleted successfully: {folder.name} (ID: {folder_id}) by user {user.id}")
-        return True
-        
-    except HTTPException:
-        # 重新抛出 HTTP 异常
-        raise
-    except Exception as e:
-        log.exception(f"Error deleting material folder: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT()
-        )
+# NOTE(2025-12-28): “文件夹管理（增删改）”设计已作废。
+# - 文件夹仅由服务端根据 OSS/DB 快照下发（见 get_material_folders）。
+# - 对外仅保留：GET /api/v1/hsai/materials/folders
 
 ############################
 # 素材上传 - 支持本地存储和OSS存储
@@ -1843,7 +1561,13 @@ async def get_materials(
             detail=ERROR_MESSAGES.DEFAULT()
         )
 
-@router.get("/{material_id}", response_model=HSAIMaterialResponse, summary="获取素材详情")
+@router.get(
+    "/{material_id}",
+    response_model=HSAIMaterialResponse,
+    summary="获取素材详情",
+    deprecated=True,
+    description="【Deprecated】根据 hasi_prototype 最新素材管理设计，当前 `hsai_client` 不会直接使用该“素材详情”接口。优先使用 `GET /hsai/materials/`（列表）及 `GET /hsai/materials/{material_id}/properties`（属性）。",
+)
 async def get_material(
     material_id: str,
     user=Depends(get_verified_user)
@@ -1999,7 +1723,12 @@ class MaterialStatsResponse(BaseModel):
     recent_uploads: int
 
 
-@router.get("/statistics", summary="获取素材统计")
+@router.get(
+    "/statistics",
+    summary="获取素材统计",
+    deprecated=True,
+    description="【Deprecated】根据 hasi_prototype 最新素材管理设计，当前 `hsai_client` 不使用该统计接口；后续将考虑删除或合并到 dashboard 类接口。",
+)
 async def get_material_stats(user=Depends(get_verified_user)):
     """
     获取用户的素材统计信息。
