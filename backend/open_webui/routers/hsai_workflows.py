@@ -14,7 +14,11 @@ from open_webui.constants import ERROR_MESSAGES
 
 log = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/workflows", tags=["工作流管理"])
+router = APIRouter(
+    # 统一由 main.py 以 prefix="/api/v1" 挂载，避免出现 /api/v1/api/v1 的重复前缀
+    prefix="/workflows",
+    tags=["工作流管理"],
+)
 
 class WorkflowTriggerRequest(BaseModel):
     """工作流触发请求"""

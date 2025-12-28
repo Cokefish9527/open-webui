@@ -491,6 +491,10 @@ from open_webui.services.ops_dashboard_ingestor import (
     start_conversation_ingestion,
     stop_conversation_ingestion,
 )
+from open_webui.services.compose_trace_sync_service import (
+    start_compose_trace_sync,
+    stop_compose_trace_sync,
+)
 
 if SAFE_MODE:
     print("SAFE MODE ENABLED")
@@ -622,6 +626,13 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         log.error("Conversation ingestion dispatcher start failed: %s", exc)
 
+    # 合成追溯：轮询 n8n_workflow stages 并落库到 open-webui 主库（受 ENV 配置控制）
+    try:
+        await start_compose_trace_sync()
+        app.state.compose_trace_sync_ready = True
+    except Exception as exc:
+        log.error("Compose trace sync start failed: %s", exc)
+
     # 初始化告警服务
     from open_webui.env import ALERT_SERVICE_ADMIN_BASE_URL, ALERT_SERVICE_API_KEY
     from open_webui.services.alert_service import init_alert_service
@@ -649,6 +660,11 @@ async def lifespan(app: FastAPI):
         await stop_conversation_ingestion()
     except Exception as exc:
         log.error(f"Conversation ingestion dispatcher stop failed: {exc}")
+
+    try:
+        await stop_compose_trace_sync()
+    except Exception as exc:
+        log.error(f"Compose trace sync stop failed: {exc}")
 
     if hasattr(app.state, "redis_task_command_listener"):
         app.state.redis_task_command_listener.cancel()

@@ -12,6 +12,7 @@ from urllib.parse import urlencode
 import requests
 
 from open_webui.models.social_accounts import SocialAccounts
+from open_webui.models.hsai_oauth_states import HSAIOAuthStates
 
 log = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class HSAIOAuthHandler:
 
         # 存储 state 参数的临时字典（生产建议替换为 Redis）
         self.state_storage: Dict[str, Dict[str, Any]] = {}
+        self.state_ttl_seconds = int(os.getenv("HSAI_OAUTH_STATE_TTL_SECONDS", "600"))
 
     # ------------------------------------------------------------------
     # OAuth URL 生成（带 PKCE）
@@ -54,6 +56,7 @@ class HSAIOAuthHandler:
         redirect_uri: str,
         user_id: Optional[str] = None,
         company_id: Optional[str] = None,
+        purpose: str = "connect",
     ) -> Dict[str, str]:
         """
         生成 OAuth 授权 URL（TikTok Login Kit）。
@@ -70,14 +73,20 @@ class HSAIOAuthHandler:
         code_verifier, code_challenge = self._generate_pkce_pair()
 
         # 临时保存 state 对应的上下文
-        self.state_storage[state] = {
+        state_payload = {
             "user_id": user_id,
             "company_id": company_id,
             "platform_type": platform_type,
+            "purpose": purpose,
             "redirect_uri": redirect_uri,
             "code_verifier": code_verifier,
             "created_at": time.time(),
         }
+        self.state_storage[state] = state_payload
+        try:
+            HSAIOAuthStates.upsert_state(state, state_payload, ttl_seconds=self.state_ttl_seconds)
+        except Exception:  # pragma: no cover
+            pass
 
         if platform_type == "tiktok":
             auth_params = {
@@ -113,9 +122,11 @@ class HSAIOAuthHandler:
         """
         state_data = self.state_storage.pop(state, None)
         if not state_data:
+            state_data = HSAIOAuthStates.pop_state(state)
+        if not state_data:
             raise ValueError("Invalid or expired state parameter")
 
-        if time.time() - float(state_data.get("created_at", 0)) > 600:
+        if time.time() - float(state_data.get("created_at", 0)) > float(self.state_ttl_seconds):
             raise ValueError("State parameter expired")
 
         if platform_type != state_data.get("platform_type"):
@@ -137,6 +148,35 @@ class HSAIOAuthHandler:
             "token_data": token_data,
             "user_info": user_info,
             "account_id": getattr(account, "id", None) if account else None,
+            "purpose": state_data.get("purpose"),
+            "redirect_uri": state_data.get("redirect_uri"),
+        }
+
+    def handle_tiktok_sso_callback(self, *, code: str, state: str) -> Dict[str, Any]:
+        """
+        TikTok SSO 专用回调处理：
+        - 仅交换 token 并拉取 user_info
+        - 不落库 social_accounts（SSO 场景不一定具备 company_id）
+        """
+        state_data = self.state_storage.pop(state, None)
+        if not state_data:
+            state_data = HSAIOAuthStates.pop_state(state)
+        if not state_data:
+            raise ValueError("Invalid or expired state parameter")
+
+        if time.time() - float(state_data.get("created_at", 0)) > float(self.state_ttl_seconds):
+            raise ValueError("State parameter expired")
+
+        if state_data.get("platform_type") != "tiktok":
+            raise ValueError("Platform mismatch in state")
+
+        token_data = self._exchange_tiktok_token(code, state_data)
+        user_info = self._get_tiktok_user_info(token_data)
+        return {
+            "platform_type": "tiktok",
+            "token_data": token_data,
+            "user_info": user_info,
+            "purpose": state_data.get("purpose") or "sso",
             "redirect_uri": state_data.get("redirect_uri"),
         }
 

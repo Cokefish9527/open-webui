@@ -18,7 +18,8 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS.get("MAIN", "INFO"))
 
 router = APIRouter(
-    prefix="/api/v1/hsai/tiktok",
+    # 统一由 main.py 以 prefix="/api/v1" 挂载，避免出现 /api/v1/api/v1 的重复前缀
+    prefix="/hsai/tiktok",
     tags=["HSAI TikTok 集成"],
 )
 

@@ -25,9 +25,22 @@ from open_webui.models.hsai_projects import (
     PaginatedHSAIProjectResponse,
     PaginationData as ProjectPaginationData,
 )
-from open_webui.models.hsai_blueprint_progress import HSAIBlueprintProgressTable
+from open_webui.models.hsai_blueprint_progress import (
+    HSAIBlueprintProgressTable,
+    HSAIBlueprintProgressModel,
+    HSAIBlueprintProgressHistoryModel,
+    BlueprintProgressState,
+)
 from open_webui.models.social_accounts import SocialAccounts
 from open_webui.models.hsai_tiktok_publish_log import HSAITikTokPublishLogs
+from open_webui.models.hsai_compose_traces import (
+    ComposeTraceCreateForm,
+    HSAIComposeTraces,
+    HSAIComposeTraceModel,
+    HSAIComposeStepModel,
+    HSAIComposeArtifactModel,
+)
+from open_webui.services.compose_trace_sync_service import sync_trace_once
 from open_webui.models.auths import (
     Auths,
     AddUserForm,
@@ -118,6 +131,111 @@ class TikTokProjectStatsResponse(BaseModel):
     publish_last_7d_total: int = Field(description="近 7 天成功发布总数")
     publish_last_7d_inbox: int = Field(description="近 7 天成功发布（INBOX）数量")
     publish_last_7d_direct: int = Field(description="近 7 天成功发布（DIRECT）数量")
+
+
+class BlueprintProgressResponse(BaseModel):
+    id: str = Field(description="蓝图进度 ID")
+    project_id: str = Field(description="项目 ID")
+    blueprint_version: str = Field(description="蓝图版本")
+    execution_duration_days: Optional[str] = Field(default=None, description="执行周期天数（原始字符串）")
+    planned_total_posts: Optional[str] = Field(default=None, description="计划总帖子数（原始字符串）")
+    posting_frequency: Optional[str] = Field(default=None, description="发帖频率（原始字符串）")
+    required_tiktok_accounts: Optional[str] = Field(default=None, description="所需 TikTok 账号数（原始字符串）")
+    summary_md: Optional[str] = Field(default=None, description="战略蓝图 Markdown（摘要/正文）")
+    blueprint_raw: Optional[str] = Field(default=None, description="战略蓝图原始内容（通常同 summary_md）")
+    latest_digest: Optional[Dict] = Field(default=None, description="最近一次同步摘要信息")
+    progress_state: BlueprintProgressState = Field(description="蓝图进度状态")
+    daily_cycle_config: Optional[Dict] = Field(default=None, description="每日周期配置")
+    info_collection_processed: bool = Field(description="是否已处理信息收集完成状态")
+    last_synced_at: int = Field(description="最后同步时间戳（秒）")
+    created_at: int = Field(description="创建时间戳（秒）")
+    updated_at: int = Field(description="更新时间戳（秒）")
+
+    @classmethod
+    def from_model(cls, progress: HSAIBlueprintProgressModel) -> "BlueprintProgressResponse":
+        return cls(**progress.model_dump())
+
+
+class BlueprintHistoryEntry(BaseModel):
+    id: str = Field(description="历史记录 ID")
+    progress_id: str = Field(description="蓝图进度 ID")
+    operation: str = Field(description="操作类型（INSERT/UPDATE/...）")
+    operator_id: Optional[str] = Field(default=None, description="操作者 ID（可空）")
+    changes_json: Optional[Dict] = Field(default=None, description="变更前后快照（可空）")
+    snapshot_md: Optional[str] = Field(default=None, description="当时的蓝图内容快照（可空）")
+    created_at: int = Field(description="创建时间戳（秒）")
+
+    @classmethod
+    def from_model(
+        cls, history: HSAIBlueprintProgressHistoryModel
+    ) -> "BlueprintHistoryEntry":
+        return cls(**history.model_dump())
+
+
+class ProjectBlueprintResponse(BaseModel):
+    project_id: str = Field(description="项目 ID")
+    company_id: Optional[str] = Field(default=None, description="公司 ID（若可解析）")
+    blueprint: BlueprintProgressResponse = Field(description="蓝图详情（含 Markdown）")
+    history: List[BlueprintHistoryEntry] = Field(description="蓝图历史记录（倒序）")
+
+
+class CompanyBlueprintResponse(BaseModel):
+    company_id: str = Field(description="公司 ID")
+    resolved_project_id: str = Field(description="命中的项目 ID（默认项目或最新项目）")
+    blueprint: BlueprintProgressResponse = Field(description="蓝图详情（含 Markdown）")
+    history: List[BlueprintHistoryEntry] = Field(description="蓝图历史记录（倒序）")
+
+
+class ComposeTraceListItem(BaseModel):
+    trace_id: str
+    n8n_session_id: Optional[str] = None
+    company_id: Optional[str] = None
+    project_id: Optional[str] = None
+    user_id: Optional[str] = None
+    business_name: Optional[str] = None
+    source_learned_id: Optional[int] = None
+    status: str
+    final_video_url: Optional[str] = None
+    last_n8n_updated_at: Optional[int] = None
+    last_synced_at: Optional[int] = None
+    created_at: int
+    updated_at: int
+
+
+class PaginatedComposeTraceResponse(BaseModel):
+    items: List[ComposeTraceListItem]
+    pagination: ProjectPaginationData
+
+
+class ComposeTraceDetailResponse(BaseModel):
+    trace: HSAIComposeTraceModel
+    final_video_url: Optional[str] = None
+    steps: List[HSAIComposeStepModel]
+    artifacts: List[HSAIComposeArtifactModel]
+
+
+def _resolve_default_project_for_company(company_id: str):
+    projects = HSAIProjects.get_projects_by_company_id(company_id, limit=50)
+    if not projects:
+        return None
+    for project in projects:
+        config = getattr(project, "config", None) or {}
+        if isinstance(config, dict) and config.get("is_default"):
+            return project
+    return projects[0]
+
+
+def _load_project_blueprint_or_404(project_id: str, history_limit: int):
+    progress = HSAIBlueprintProgressTable.get_by_project(project_id)
+    if not progress:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="该项目暂无战略蓝图",
+        )
+    history = []
+    if history_limit > 0:
+        history = HSAIBlueprintProgressTable.list_history(progress.id, limit=history_limit)
+    return progress, history
 
 
 
@@ -1162,6 +1280,177 @@ async def get_project_tiktok_stats_admin(project_id: str, request: Request):
         publish_last_7d_total=publish_last_7d_total,
         publish_last_7d_inbox=publish_last_7d_inbox,
         publish_last_7d_direct=publish_last_7d_direct,
+    )
+
+
+@router.post("/compose/traces", response_model=HSAIComposeTraceModel)
+async def upsert_compose_trace_admin(form_data: ComposeTraceCreateForm, request: Request):
+    """注册/更新合成追溯（仅外部管理系统可访问）"""
+    verify_external_request(request)
+    trace = HSAIComposeTraces.upsert_trace(form_data)
+    # 尽量同步一次（失败不影响注册）
+    try:
+        sync_trace_once(trace.trace_id)
+    except Exception:  # pragma: no cover
+        pass
+    return trace
+
+
+@router.get("/compose/traces", response_model=PaginatedComposeTraceResponse)
+async def list_compose_traces_admin(
+    request: Request,
+    company_id: Optional[str] = Query(None, description="公司ID过滤"),
+    project_id: Optional[str] = Query(None, description="项目ID过滤"),
+    status_filter: Optional[str] = Query(None, alias="status", description="状态过滤"),
+    ps: int = Query(20, ge=1, le=100, description="分页大小"),
+    pi: int = Query(1, ge=1, description="分页索引（从 1 开始）"),
+):
+    """分页列出合成追溯（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
+    offset = (pi - 1) * ps
+    total = HSAIComposeTraces.count_traces(
+        company_id=company_id,
+        project_id=project_id,
+        status=status_filter,
+    )
+    traces = HSAIComposeTraces.list_traces(
+        company_id=company_id,
+        project_id=project_id,
+        status=status_filter,
+        limit=ps,
+        offset=offset,
+    )
+
+    items: List[ComposeTraceListItem] = []
+    for trace in traces:
+        final_url = None
+        try:
+            final_url = HSAIComposeTraces.get_final_video_url(trace.trace_id)
+        except Exception:  # pragma: no cover
+            final_url = None
+        items.append(
+            ComposeTraceListItem(
+                trace_id=trace.trace_id,
+                n8n_session_id=trace.n8n_session_id,
+                company_id=trace.company_id,
+                project_id=trace.project_id,
+                user_id=trace.user_id,
+                business_name=trace.business_name,
+                source_learned_id=trace.source_learned_id,
+                status=trace.status,
+                final_video_url=final_url,
+                last_n8n_updated_at=trace.last_n8n_updated_at,
+                last_synced_at=trace.last_synced_at,
+                created_at=trace.created_at,
+                updated_at=trace.updated_at,
+            )
+        )
+
+    pagination = _build_project_pagination(total, pi, ps)
+    return PaginatedComposeTraceResponse(items=items, pagination=pagination)
+
+
+@router.get("/compose/traces/{trace_id}", response_model=ComposeTraceDetailResponse)
+async def get_compose_trace_admin(trace_id: str, request: Request):
+    """获取合成追溯详情（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
+    # 先同步一次，确保详情尽量新
+    try:
+        sync_trace_once(trace_id)
+    except Exception:  # pragma: no cover
+        pass
+
+    trace = HSAIComposeTraces.get_trace(trace_id)
+    if not trace:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="追溯记录不存在",
+        )
+
+    steps = HSAIComposeTraces.list_steps(trace_id)
+    artifacts = HSAIComposeTraces.list_artifacts(trace_id)
+    final_url = HSAIComposeTraces.get_final_video_url(trace_id)
+    return ComposeTraceDetailResponse(
+        trace=trace,
+        final_video_url=final_url,
+        steps=steps,
+        artifacts=artifacts,
+    )
+
+
+@router.get("/projects/{project_id}/blueprint", response_model=ProjectBlueprintResponse)
+async def get_project_blueprint_admin(
+    project_id: str,
+    request: Request,
+    history_limit: int = Query(20, description="返回历史记录条数（0-100）", ge=0, le=100),
+):
+    """获取项目战略蓝图（Markdown + 元信息 + 历史）（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
+    project = HSAIProjects.get_project_by_id(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目不存在",
+        )
+
+    progress, history = _load_project_blueprint_or_404(project_id, history_limit=history_limit)
+
+    company_id = str(getattr(project, "company_id", "") or "") or None
+    return ProjectBlueprintResponse(
+        project_id=project_id,
+        company_id=company_id,
+        blueprint=BlueprintProgressResponse.from_model(progress),
+        history=[BlueprintHistoryEntry.from_model(item) for item in history],
+    )
+
+
+@router.get("/companies/{company_id}/blueprint", response_model=CompanyBlueprintResponse)
+async def get_company_blueprint_admin(
+    company_id: str,
+    request: Request,
+    project_id: Optional[str] = Query(None, description="指定项目 ID（可选，必须属于该公司）"),
+    history_limit: int = Query(20, description="返回历史记录条数（0-100）", ge=0, le=100),
+):
+    """获取公司战略蓝图（默认项目/指定项目）（仅外部管理系统可访问）"""
+    verify_external_request(request)
+
+    company = Companies.get_company_by_id(company_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="公司不存在",
+        )
+
+    resolved_project = None
+    if project_id:
+        resolved_project = HSAIProjects.get_project_by_id(project_id)
+        if not resolved_project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="项目不存在",
+            )
+        if str(getattr(resolved_project, "company_id", "") or "") != company_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="该项目不属于指定公司",
+            )
+    else:
+        resolved_project = _resolve_default_project_for_company(company_id)
+        if not resolved_project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="公司下暂无项目，无法解析战略蓝图",
+            )
+
+    progress, history = _load_project_blueprint_or_404(resolved_project.id, history_limit=history_limit)
+    return CompanyBlueprintResponse(
+        company_id=company_id,
+        resolved_project_id=resolved_project.id,
+        blueprint=BlueprintProgressResponse.from_model(progress),
+        history=[BlueprintHistoryEntry.from_model(item) for item in history],
     )
 
 

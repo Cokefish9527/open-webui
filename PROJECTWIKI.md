@@ -94,6 +94,13 @@ flowchart LR
 - `/external/admin/companies|projects`：提供完整的分页列表、详情、创建、更新、删除与企业内项目列表接口，统一输出 `PaginatedCompanyResponse` / `PaginatedHSAIProjectResponse`，并沿用 `_build_*_pagination()` 计算分页信息。
 - 2025-12-23：`GET /external/admin/projects` 与 `GET /external/admin/companies/{company_id}/projects` 在返回的 `HSAIProjectResponse` 中新增 TikTok 账号矩阵字段 `tiktok_required_accounts` / `tiktok_active_accounts`，分别来源于 `hsai_blueprint_progress.required_tiktok_accounts` 抽取的整数值与 `social_accounts` 表中 `company_id` + `platform='tiktok'` 的 active 账号计数，供 hsai_admin 项目列表进行“active/required” 运营可视化。
 - 2025-12-24：新增 `GET /external/admin/projects/{project_id}/tiktok-stats` 返回项目维度 TikTok 运营指标（账号矩阵 + 近 7 天发稿 + 最后发稿时间），其中发稿统计来自 `hsai_tiktok_publish_logs`（要求发布时传入 `project_id` 才能落到项目维度）。
+- 2025-12-26：新增战略蓝图查看接口：
+  - `GET /external/admin/projects/{project_id}/blueprint`：返回项目蓝图（含 `summary_md` Markdown）与 `hsai_blueprint_progress_history` 倒序历史；
+  - `GET /external/admin/companies/{company_id}/blueprint`：公司维度返回默认项目/指定项目蓝图（用于后台“企业战略蓝图”展示）。
+- 2025-12-27：新增“合成追溯（方案B：读 n8n_workflow stages）”接口：
+  - `POST /external/admin/compose/traces`：注册/更新追溯记录（trace_id + n8n_session_id），供后台在触发合成时写入映射；
+  - `GET /external/admin/compose/traces`：分页列出追溯记录（含 final_video_url）；
+  - `GET /external/admin/compose/traces/{trace_id}`：追溯详情（trace + steps + artifacts），会触发一次按需同步。
 - `/external/admin/companies/{company_id}/users/{user_id}`：允许后台批量绑定 / 解绑企业管理员，保持用户 `business_name`、`company_id` 一致。
 - `GET|PATCH /external/admin/users/{user_id}/permissions`：当 `ENABLE_CUSTOMER_PERMISSION_API` 启用时，后台可查询/修改账号角色与 `settings.permissions`，供 hsai_admin 客户管理面板使用；若 WebUI 客户端被裁剪，仍可通过该接口完成权限联动。
 - `GET|PATCH /external/admin/companies/{company_id}/permissions`：提供企业维度的角色/权限分页列表，并支持批量更新（可套用 `CUSTOMER_PERMISSION_TEMPLATE`），方便一次性同步多个账号的授权策略。
@@ -110,6 +117,19 @@ flowchart LR
 ### TikTok 集成与发布日志（`backend/open_webui/routers/hsai_tiktok.py`，`backend/open_webui/models/hsai_tiktok_publish_log.py`）
 
 - 职责：封装 TikTok Content Posting API（Inbox Upload + Direct Post）调用链路，并对每一次发布尝试（无论成功或失败）记录结构化日志，便于运营后台按公司/项目维度检索。
+- 路由挂载约定：`backend/open_webui/main.py` 统一以 `app.include_router(..., prefix="/api/v1")` 挂载；各 `hsai_*` 路由文件内的 `APIRouter(prefix=...)` 不应重复包含 `/api/v1`，避免出现 `/api/v1/api/v1/...`。
+- 账号绑定接口（Login Kit / OAuth2 + PKCE，`backend/open_webui/routers/hsai_social.py`）：
+  - TikTok SSO（不要求 OwenAI 先登录）：
+    - `GET /api/v1/hsai/social/tiktok/sso/login`：返回 `authorization_url`，前端跳转完成 TikTok 授权。
+    - `GET /api/v1/hsai/social/tiktok/sso/callback?code=...&state=...`：回调后优先按 `social_accounts(owner_user_id)` 找回已绑定用户，否则自动创建新用户并登录；默认 302 到 `/auth#token=...`（同时写入 `token` Cookie），也支持 `response_type=json` 返回 `{token,is_new_user,user,...}`。
+    - Redirect URL（TikTok 后台配置）：`${WEBUI_URL}/api/v1/hsai/social/tiktok/sso/callback`（生产域名示例：`https://owen-ai.hsai.cc/api/v1/hsai/social/tiktok/sso/callback`）
+    - 2025-12-26：`tiktok_sso_login` 统一从配置项 `WEBUI_URL`（建议填 `https://owen-ai.hsai.cc/`）构造 `redirect_uri`，避免使用请求来源域名导致 TikTok 回调不匹配。
+  - `GET /api/v1/hsai/social/tiktok/login?company_id=...`：返回 `authorization_url` 供前端跳转授权。
+  - `GET /api/v1/hsai/social/tiktok/callback?code=...&state=...`：TikTok 回调，后端完成 token 交换与账号落库后重定向回前端。
+    - 2025-12-27：state 参数由内存缓存升级为 DB 持久化（`backend/open_webui/models/hsai_oauth_states.py`），避免多进程/重启导致回调报 `Invalid or expired state parameter`；并在回调失败时重定向回 WEBUI 并带上 `tiktok_error`。
+  - 账号绑定 Redirect URL（TikTok 后台配置）：`${WEBUI_URL}/api/v1/hsai/social/tiktok/callback`（生产域名示例：`https://owen-ai.hsai.cc/api/v1/hsai/social/tiktok/callback`）
+  - `GET /api/v1/hsai/social/tiktok/accounts?company_id=...`：列出 company 下已绑定账号（不返回 token）。
+  - `POST /api/v1/hsai/social/tiktok/unlink`：软解绑（将账号标记为 disabled）。
 - 发布接口：`POST /api/v1/hsai/tiktok/publish`
   - 请求体：`company_id`、可选 `project_id`、`account_id`（social_accounts 主键）、`video_url`、`mode`（INBOX|DIRECT）、`caption`、`privacy_level`。
   - 行为：根据 `mode` 调用 `TikTokPublisher.init_inbox_upload` 或 `init_direct_post`，异常时返回 502 并记录失败日志。
@@ -118,6 +138,17 @@ flowchart LR
   - 参数：`company_id`（必填）、`project_id`（可选）、`mode`、`status`（success/failed）、`limit`、`offset`。
   - 权限：仅允许公司所有者或超级管理员访问指定 `company_id` 下的日志（基于 `hsai_companies.Company.owner_user_id` 校验）。
   - 返回：`TikTokPublishLogsResponse`，包含 `data: List[HSAITikTokPublishLogModel]` 与简单分页结构 `pagination {total, limit, offset}`，供 hsai_admin 运营日志页面使用。
+- 2025-12-26：`social_accounts` 表在部分环境缺少 `company_id` 列会导致 external_admin 项目列表统计 TikTok 账号矩阵时崩溃；已新增运行期迁移 `backend/open_webui/internal/migrations/social_accounts.py` 并在 `backend/open_webui/models/social_accounts.py` 中自动自愈补列。
+
+### 合成追溯同步（方案B：读 n8n_workflow stages）（`backend/open_webui/services/compose_trace_sync_service.py`）
+
+- 目标：不依赖 n8n 回调，直接轮询 `n8n_workflow.staff_main_flow_session_storage.stages(jsonb)`，抽取 `STATE_WAITING_PUBLISH_CONFIRMATION.oss_video_link` 并落到 open-webui 主库追溯表，供后台查看“历史成品 + 逐环节追溯”。
+- 主库表：
+  - `backend/open_webui/models/hsai_compose_traces.py`：`hsai_compose_traces/hsai_compose_steps/hsai_compose_artifacts`（运行期迁移：`backend/open_webui/internal/migrations/compose_traces.py`）。
+- 同步机制：
+  - FastAPI 启动时在 `backend/open_webui/main.py` 内启动同步任务（可通过 `HSAI_COMPOSE_TRACE_SYNC_ENABLED` 关闭）；
+  - 仅轮询 `status=running` 的追溯记录；
+  - 解析到 `oss_video_link` 后写入 `artifact_type=final_video` 并将 trace 状态更新为 `ready_to_publish`。
 
 ### HSAI Materials（`backend/open_webui/models/hsai_materials.py`）
 

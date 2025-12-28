@@ -1,15 +1,43 @@
 import logging
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
+from threading import Lock
 
+from open_webui.env import DATABASE_SCHEMA, SRC_LOG_LEVELS
 from open_webui.internal.db import Base, get_db
-from open_webui.env import SRC_LOG_LEVELS
+from open_webui.internal.migrations import ensure_social_accounts_schema
 
 from sqlalchemy import BigInteger, Column, String, Text, DateTime
 from sqlalchemy import func
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS.get("MODELS", "INFO"))
+
+_SCHEMA_LOCK = Lock()
+_SCHEMA_READY = False
+
+
+def _ensure_social_accounts_schema(session) -> None:
+    global _SCHEMA_READY
+    if _SCHEMA_READY:
+        return
+    with _SCHEMA_LOCK:
+        if _SCHEMA_READY:
+            return
+        ensure_social_accounts_schema(
+            session.get_bind(),
+            schema=DATABASE_SCHEMA,
+            logger=log.debug,
+        )
+        _SCHEMA_READY = True
+
+
+@contextmanager
+def _schema_aware_db():
+    with get_db() as db:
+        _ensure_social_accounts_schema(db)
+        yield db
 
 
 class SocialAccount(Base):
@@ -41,7 +69,7 @@ class SocialAccount(Base):
 class SocialAccountsTable:
     def get_account_by_id(self, account_id: int) -> Optional[SocialAccount]:
         """根据主键获取社交账号记录。"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 return db.get(SocialAccount, account_id)
             except Exception as exc:  # pylint: disable=broad-except
@@ -56,7 +84,7 @@ class SocialAccountsTable:
         """按公司与平台列出社交账号。"""
         if not company_id:
             return []
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(SocialAccount).filter(
                     SocialAccount.company_id == company_id,
@@ -84,7 +112,7 @@ class SocialAccountsTable:
     ) -> int:
         if not company_id:
             return 0
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(func.count(SocialAccount.id)).filter(
                     SocialAccount.company_id == company_id,
@@ -96,6 +124,10 @@ class SocialAccountsTable:
                     )
                 return query.scalar() or 0
             except Exception as exc:  # pylint: disable=broad-except
+                try:
+                    db.rollback()
+                except Exception:  # pragma: no cover
+                    pass
                 log.error(
                     "Failed counting social accounts company=%s platform=%s err=%s",
                     company_id,
@@ -142,7 +174,7 @@ class SocialAccountsTable:
 
         now = datetime.now(tz=timezone.utc)
 
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 query = db.query(SocialAccount).filter(
                     SocialAccount.company_id == company_id,
@@ -195,6 +227,10 @@ class SocialAccountsTable:
                 db.refresh(account)
                 return account
             except Exception as exc:  # pylint: disable=broad-except
+                try:
+                    db.rollback()
+                except Exception:  # pragma: no cover
+                    pass
                 log.error(
                     "Failed upserting TikTok social account company=%s open_id=%s account_id=%s err=%s",
                     company_id,
@@ -216,7 +252,7 @@ class SocialAccountsTable:
         token_type: Optional[str] = None,
     ) -> bool:
         """刷新已存在账号的 token。"""
-        with get_db() as db:
+        with _schema_aware_db() as db:
             try:
                 account = db.get(SocialAccount, account_id)
                 if not account:
@@ -241,7 +277,74 @@ class SocialAccountsTable:
                 db.commit()
                 return True
             except Exception as exc:  # pylint: disable=broad-except
+                try:
+                    db.rollback()
+                except Exception:  # pragma: no cover
+                    pass
                 log.error("Failed updating token for social account %s err=%s", account_id, exc, exc_info=True)
+                return False
+
+    def get_active_tiktok_account_by_open_id(self, open_id: str) -> Optional[SocialAccount]:
+        """
+        按 TikTok open_id 查找已绑定的 active 账号。
+
+        说明：
+        - 现有实现中，TikTok 的 open_id 同时会写入 `open_id` 字段，
+          且 `account_id` 通常也会保存 open_id（兼容老数据）。
+        - 若存在多条匹配记录（理论上不应出现），返回最近更新的一条。
+        """
+        if not open_id:
+            return None
+        with _schema_aware_db() as db:
+            try:
+                query = (
+                    db.query(SocialAccount)
+                    .filter(
+                        func.lower(SocialAccount.platform) == func.lower("tiktok"),
+                        SocialAccount.status == "active",
+                        (
+                            (SocialAccount.open_id == open_id)
+                            | (SocialAccount.account_id == open_id)
+                        ),
+                    )
+                    .order_by(SocialAccount.updated_at.desc().nullslast(), SocialAccount.id.desc())
+                )
+                return query.first()
+            except Exception as exc:  # pylint: disable=broad-except
+                try:
+                    db.rollback()
+                except Exception:  # pragma: no cover
+                    pass
+                log.error("Failed getting TikTok account by open_id=%s err=%s", open_id, exc, exc_info=True)
+                return None
+
+    def set_owner_user_id(self, account_id: int, owner_user_id: Optional[str]) -> bool:
+        """为社交账号记录设置 owner_user_id（用于 SSO 自动关联）。"""
+        with _schema_aware_db() as db:
+            try:
+                updated = (
+                    db.query(SocialAccount)
+                    .filter(SocialAccount.id == account_id)
+                    .update(
+                        {
+                            "owner_user_id": owner_user_id,
+                            "updated_at": datetime.now(tz=timezone.utc),
+                        }
+                    )
+                )
+                db.commit()
+                return True if updated == 1 else False
+            except Exception as exc:  # pylint: disable=broad-except
+                try:
+                    db.rollback()
+                except Exception:  # pragma: no cover
+                    pass
+                log.error(
+                    "Failed setting owner_user_id for social account %s err=%s",
+                    account_id,
+                    exc,
+                    exc_info=True,
+                )
                 return False
 
 
