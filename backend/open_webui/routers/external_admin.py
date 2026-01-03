@@ -1524,3 +1524,21 @@ async def remove_user_from_company(company_id: str, user_id: str, request: Reque
         )
 
     return {"message": "用户已成功从公司移除"}
+
+
+# ========================================================================
+# Materials Management Routes (素材管理路由)
+# ========================================================================
+
+from open_webui.routers.external_admin_materials import (
+    list_materials,
+    get_material_detail,
+    resync_material,
+    MaterialDetailResponse,
+    PaginatedHSAIMaterialResponse as MaterialsPaginatedResponse,
+)
+
+# 注册素材管理路由
+router.get("/materials/", response_model=MaterialsPaginatedResponse, summary="查询素材列表")(list_materials)
+router.get("/materials/{material_id}", response_model=MaterialDetailResponse, summary="查询素材详情")(get_material_detail)
+router.post("/materials/{material_id}/resync", summary="强制重新同步OSS")(resync_material)

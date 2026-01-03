@@ -59,11 +59,19 @@ from open_webui.config import UPLOAD_DIR
 from open_webui.config.oss import STORAGE_PROVIDER, S3_BUCKET_NAME
 from open_webui.models.users import Users, User
 from open_webui.integrations.ffmpeg_oss import ensure_download_url
+from open_webui.config.n8n_workflows import (
+    N8N_WORKFLOW_WEBHOOKS,
+    N8NWorkflowType,
+    WORKFLOW_TIMEOUTS,
+)
+from open_webui.internal.db_n8n import get_n8n_db
 
 import aiofiles
 import hashlib
 import mimetypes
 import json
+import requests
+from sqlalchemy import text
 try:
     from open_webui.storage.provider import Storage
     HAS_OSS = True
@@ -391,6 +399,101 @@ def _build_storage_filename(base_filename: str, content_hash: str) -> str:
     path = Path(base_filename)
     safe_stem = path.stem or "material"
     return f"{safe_stem}_{content_hash}{path.suffix}"
+
+
+async def _trigger_material_tagging(material: HSAIMaterial):
+    """
+    触发n8n打标webhook（异步）
+    
+    Args:
+        material: 素材对象
+    
+    Note:
+        - 使用快速ACK模式（10秒超时）
+        - 失败不影响主流程，仅记录日志
+        - 错误会记录到 material_metadata.tag_trigger_error
+    """
+    if not material.oss_object_path:
+        log.warning(f"Material {material.id} has no oss_object_path, skip tagging")
+        return
+    
+    # 检查路径长度（契约要求 ≤250字符）
+    if len(material.oss_object_path) > 250:
+        log.error(
+            f"Material {material.id} oss_object_path too long ({len(material.oss_object_path)} > 250), "
+            f"skip tagging to avoid n8n database constraint violation"
+        )
+        return
+    
+    try:
+        webhook_url = N8N_WORKFLOW_WEBHOOKS.get(N8NWorkflowType.MATERIAL_TAGGING)
+        if not webhook_url:
+            log.warning("N8N_MATERIAL_TAGGING_URL not configured, skip tagging")
+            return
+        
+        # 生成长时效下载URL（24小时，符合契约要求）
+        download_url = ensure_download_url(
+            material.oss_object_path,
+            expires=86400,  # 24小时
+            fallback_url=material.file_path,
+            bucket=material.oss_bucket,
+        )
+        
+        payload = {
+            "path": material.oss_object_path,
+            "name": material.name,
+            "url": download_url,
+        }
+        
+        timeout = WORKFLOW_TIMEOUTS.get(N8NWorkflowType.MATERIAL_TAGGING, 10)
+        
+        log.info(
+            f"Triggering material tagging for {material.id}: "
+            f"path={material.oss_object_path}, url={download_url}"
+        )
+        
+        # 异步调用webhook
+        response = await asyncio.to_thread(
+            requests.post,
+            webhook_url,
+            json=payload,
+            timeout=timeout,
+        )
+        
+        if response.status_code != 200:
+            log.warning(
+                f"Material tagging webhook failed for {material.id}: "
+                f"status={response.status_code}, response={response.text}"
+            )
+            # 记录到元数据
+            metadata = material.material_metadata or {}
+            metadata["tag_trigger_error"] = {
+                "timestamp": int(time.time()),
+                "status_code": response.status_code,
+                "error": response.text[:500],  # 限制长度
+            }
+            HSAIMaterials.update_material_by_id(
+                material.id,
+                {"material_metadata": metadata}
+            )
+        else:
+            log.info(f"Material tagging triggered successfully for {material.id}")
+            
+    except Exception as e:
+        log.error(f"Failed to trigger material tagging for {material.id}: {e}")
+        # 记录失败信息到元数据
+        try:
+            metadata = material.material_metadata or {}
+            metadata["tag_trigger_error"] = {
+                "timestamp": int(time.time()),
+                "error": str(e)[:500],
+            }
+            HSAIMaterials.update_material_by_id(
+                material.id,
+                {"material_metadata": metadata}
+            )
+        except Exception as meta_error:
+            log.error(f"Failed to record tagging error to metadata: {meta_error}")
 
 
 def _build_project_filename(project_name: Optional[str], original_filename: str) -> str:
@@ -1087,6 +1190,12 @@ async def upload_material(
                     except Exception as ai_error:
                         log.warning(f"Failed to schedule AI analysis: {ai_error}")
                 
+                # 触发n8n打标（P0-2.2）
+                try:
+                    await _trigger_material_tagging(material)
+                except Exception as tagging_error:
+                    log.warning(f"Failed to trigger material tagging: {tagging_error}")
+                
                 # 处理可能的字节类型数据
                 safe_file_url = file_url
                 if isinstance(safe_file_url, bytes):
@@ -1310,6 +1419,12 @@ async def upload_material(
                     await _schedule_ai_analysis(material.id, file_url, material_type, user.id)
                 except Exception as ai_error:
                     log.warning(f"Failed to schedule AI analysis: {ai_error}")
+            
+            # 触发n8n打标（P0-2.2）
+            try:
+                await _trigger_material_tagging(material)
+            except Exception as tagging_error:
+                log.warning(f"Failed to trigger material tagging: {tagging_error}")
             
             # 处理可能的字节类型数据
             safe_file_url = file_url
@@ -1769,6 +1884,118 @@ async def get_material_stats(user=Depends(get_verified_user)):
         
     except Exception as e:
         log.exception(f"Error getting material stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT()
+        )
+
+
+############################
+# 素材AI打标查询
+############################
+
+class MaterialLocalVideoTagResponse(BaseModel):
+    """素材AI打标结果响应模型"""
+    status: str = Field(description="打标状态：waiting/completed/error")
+    message: Optional[str] = Field(default=None, description="状态消息")
+    category: Optional[str] = Field(default=None, description="类别")
+    scene_name: Optional[str] = Field(default=None, description="场景名称")
+    shot_type: Optional[str] = Field(default=None, description="镜头类型")
+    camera_move: Optional[str] = Field(default=None, description="相机运动")
+    camera_angle: Optional[str] = Field(default=None, description="相机角度")
+    description: Optional[str] = Field(default=None, description="描述")
+    duration: Optional[float] = Field(default=None, description="时长（秒）")
+    created_at: Optional[float] = Field(default=None, description="打标创建时间戳")
+
+
+@router.get(
+    "/{material_id}/local-video-tag",
+    response_model=MaterialLocalVideoTagResponse,
+    summary="获取素材AI打标结果"
+)
+async def get_material_local_video_tag(
+    material_id: str,
+    user=Depends(get_verified_user)
+):
+    """
+    查询n8n打标结果（只读）。
+    
+    该接口从 n8n_workflow.hsai_business_local_video_tag 表中查询打标结果。
+    
+    Args:
+        material_id (str): 素材ID
+        user: 已认证的用户对象
+        
+    Returns:
+        MaterialLocalVideoTagResponse: 打标结果
+        - status: waiting/completed/error
+        - 其他字段：打标结果详细信息
+        
+    Raises:
+        HTTPException: 404 - 素材不存在或无权限访问
+        HTTPException: 500 - 服务器内部错误
+    """
+    try:
+        material = HSAIMaterials.get_material_by_id(material_id)
+        if not material or not _has_company_material_access(user, getattr(material, "user_id", "")):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Material not found"
+            )
+        
+        oss_path = getattr(material, "oss_object_path", None)
+        if not oss_path:
+            return MaterialLocalVideoTagResponse(
+                status="waiting",
+                message="素材路径缺失，无法查询打标结果"
+            )
+        
+        # 检查是否有触发错误
+        metadata = material.material_metadata or {}
+        tag_trigger_error = metadata.get("tag_trigger_error")
+        if tag_trigger_error:
+            return MaterialLocalVideoTagResponse(
+                status="error",
+                message=f"打标触发失败：{tag_trigger_error.get('error', '未知错误')}"
+            )
+        
+        # 查询 n8n_workflow.hsai_business_local_video_tag
+        with get_n8n_db() as db:
+            result = db.execute(
+                text(
+                    "SELECT * FROM hsai_business_local_video_tag "
+                    "WHERE videopath = :path "
+                    "ORDER BY createdat DESC LIMIT 1"
+                ),
+                {"path": oss_path}
+            )
+            tag_record = result.fetchone()
+        
+        if not tag_record:
+            return MaterialLocalVideoTagResponse(
+                status="waiting",
+                message="等待打标，通常需要1-3分钟"
+            )
+        
+        # 转换为dict以便访问
+        tag_data = dict(tag_record._mapping) if hasattr(tag_record, '_mapping') else dict(tag_record)
+        
+        return MaterialLocalVideoTagResponse(
+            status="completed",
+            category=tag_data.get("category"),
+            scene_name=tag_data.get("scene_name"),
+            shot_type=tag_data.get("shot_type"),
+            camera_move=tag_data.get("camera_move"),
+            camera_angle=tag_data.get("camera_angle"),
+            description=tag_data.get("description"),
+            duration=float(tag_data["duration"]) if tag_data.get("duration") is not None else None,
+            created_at=tag_data["createdat"].timestamp() if tag_data.get("createdat") else None,
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception(f"Error getting material local video tag: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()
