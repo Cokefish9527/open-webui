@@ -25,7 +25,7 @@ from open_webui.env import SRC_LOG_LEVELS
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
 
-router = APIRouter(prefix="/hsai/video-learning", tags=["HSAI Video Learning"])
+router = APIRouter(prefix="/hsai/video-learning", tags=["HSAI 视频学习"])
 
 
 def _resolve_business_name(user) -> str:
@@ -38,75 +38,75 @@ def _resolve_business_name(user) -> str:
 
 
 class VideoWithStatus(BaseModel):
-    """Video entry enriched with learning status."""
+    """包含学习状态的视频条目"""
 
-    video: HSAIBusinessGoodVideoV1Model = Field(description="Video information")
+    video: HSAIBusinessGoodVideoV1Model = Field(description="视频信息")
     status: str = Field(
-        description="Learning status: pending, learning, learned, abandoned",
+        description="学习状态: pending(待学习), learning(学习中), learned(已学习), abandoned(已放弃)",
         default=HSAIVideoLearningStatusEnum.PENDING.value,
     )
 
 
 class PaginatedVideosResponse(BaseModel):
-    """Paginated response model for video listings."""
+    """视频列表分页响应模型"""
 
-    videos: List[VideoWithStatus] = Field(description="Video list")
-    total: int = Field(description="Total number of videos")
-    page: int = Field(description="Current page number")
-    limit: int = Field(description="Page size")
-    total_pages: int = Field(description="Total page count")
+    videos: List[VideoWithStatus] = Field(description="视频列表")
+    total: int = Field(description="视频总数")
+    page: int = Field(description="当前页码")
+    limit: int = Field(description="每页数量")
+    total_pages: int = Field(description="总页数")
 
 
 class GetVideosRequest(BaseModel):
-    """Request model for listing videos."""
+    """视频列表请求模型"""
 
-    page: int = Field(default=1, description="Page number", ge=1)
-    limit: int = Field(default=50, description="Page size", ge=1, le=100)
+    page: int = Field(default=1, description="页码", ge=1)
+    limit: int = Field(default=50, description="每页数量", ge=1, le=100)
     status_filter: Optional[str] = Field(
         default="all",
-        description="Status filter: all, pending, learning, learned, abandoned",
+        description="状态过滤: all(全部), pending(待学习), learning(学习中), learned(已学习), abandoned(已放弃)",
     )
 
 
 class StartLearningRequest(BaseModel):
-    """Request model for starting a learning task."""
+    """开始学习请求模型"""
 
-    video_id: int = Field(description="Video identifier")
+    video_id: int = Field(description="视频ID")
 
 
 class StartLearningResponse(BaseModel):
-    """Response model for start learning action."""
+    """开始学习响应模型"""
 
-    success: bool = Field(description="Whether the operation succeeded")
-    message: str = Field(description="Response message")
-    status_id: Optional[int] = Field(default=None, description="Learning status record id")
+    success: bool = Field(description="操作是否成功")
+    message: str = Field(description="响应消息")
+    status_id: Optional[int] = Field(default=None, description="学习状态记录ID")
 
 
 class UpdateVideoContentLearnedResponse(BaseModel):
-    """Response model for update video content learned action."""
+    """更新视频学习内容响应模型"""
     
-    success: bool = Field(description="Whether the operation succeeded")
-    message: str = Field(description="Response message")
-    updated_content: Optional[HSAIBusinessVideoContentLearnedModel] = Field(default=None, description="Updated video content")
+    success: bool = Field(description="操作是否成功")
+    message: str = Field(description="响应消息")
+    updated_content: Optional[HSAIBusinessVideoContentLearnedModel] = Field(default=None, description="更新后的视频内容")
 
 
 class RevokeLearningRequest(BaseModel):
-    """Request model for revoking learned videos."""
+    """撤销学习请求模型"""
 
-    learned_id: int = Field(description="Identifier of hsai_business_video_content_learned entry")
+    learned_id: int = Field(description="视频学习内容记录ID (hsai_business_video_content_learned 表)")
     reason: Optional[str] = Field(
         default=None,
-        description="Optional reason for revoking the learning result",
+        description="撤销学习的原因(可选)",
         max_length=500,
     )
 
 
 class RevokeLearningResponse(BaseModel):
-    """Response model for revoke learning action."""
+    """撤销学习响应模型"""
 
-    success: bool = Field(description="Whether the operation succeeded")
-    message: str = Field(description="Response message")
-    restored_status: str = Field(description="Resulting learning status after revocation")
+    success: bool = Field(description="操作是否成功")
+    message: str = Field(description="响应消息")
+    restored_status: str = Field(description="撤销后的学习状态")
 
 
 def _normalize_status_filter(value: Optional[str]) -> str:
@@ -120,7 +120,7 @@ def _normalize_status_filter(value: Optional[str]) -> str:
     return result
 
 
-@router.get("/videos", response_model=PaginatedVideosResponse, summary="List videos with learning status")
+@router.get("/videos", response_model=PaginatedVideosResponse, summary="获取视频列表及学习状态")
 async def get_pending_videos(
     page: int = Query(default=1, ge=1, description="Page number"),
     limit: int = Query(default=50, ge=1, le=100, description="Page size"),
@@ -183,7 +183,7 @@ async def get_pending_videos(
         ) from exc
 
 
-@router.post("/start-learning", response_model=StartLearningResponse, summary="Start learning a video")
+@router.post("/start-learning", response_model=StartLearningResponse, summary="开始学习视频")
 async def start_video_learning(request: StartLearningRequest, user=Depends(get_verified_user)):
     """触发给定视频的学习工作流程。"""
     try:
@@ -264,7 +264,7 @@ async def start_video_learning(request: StartLearningRequest, user=Depends(get_v
         ) from exc
 
 
-@router.put("/update-video-content", response_model=UpdateVideoContentLearnedResponse, summary="Update video content learned")
+@router.put("/update-video-content", response_model=UpdateVideoContentLearnedResponse, summary="更新视频学习内容")
 async def update_video_content_learned(request: UpdateVideoContentLearnedRequest, user=Depends(get_verified_user)):
     """更新视频内容学习信息。"""
     try:
@@ -321,7 +321,7 @@ async def update_video_content_learned(request: UpdateVideoContentLearnedRequest
 @router.post(
     "/revoke-learning",
     response_model=RevokeLearningResponse,
-    summary="Revoke learned video and reset status to pending",
+    summary="撤销视频学习并重置为待学习状态",
 )
 async def revoke_video_learning(request: RevokeLearningRequest, user=Depends(get_verified_user)):
     """删除已学习的视频条目并恢复学习状态。"""

@@ -64,20 +64,19 @@ async def list_materials(
         
         if company_id:
             # 查询该企业下所有用户的素材
-            company_users = Users.get_users()
+            company_users_response = Users.get_users()
             company_user_ids = [
-                u.id for u in company_users 
+                u.id for u in company_users_response.users 
                 if getattr(u, "company_id", None) == company_id
             ]
             if not company_user_ids:
                 return PaginatedHSAIMaterialResponse(
-                    items=[],
-                    total=0,
+                    data=[],
                     pagination=PaginationData(
                         page=offset // limit + 1,
-                        pageSize=limit,
+                        size=limit,
                         total=0,
-                        totalPages=0
+                        total_pages=0
                     )
                 )
             # 查询每个用户的素材并合并
@@ -97,8 +96,8 @@ async def list_materials(
             )
         else:
             # 查询所有素材（可能很慢，仅用于管理员）
-            all_users = Users.get_users()
-            for u in all_users:
+            all_users_response = Users.get_users()
+            for u in all_users_response.users:
                 user_materials = HSAIMaterials.get_materials_by_user_id(
                     u.id,
                     material_type=material_type,
@@ -122,9 +121,8 @@ async def list_materials(
         # 转换为响应格式
         items = []
         for material in paginated_materials:
-            properties_list = None
-            if material.properties_code:
-                properties_list = material.properties_code.split("_")
+            # properties_code 已经是列表类型，不需要 split
+            properties_list = material.properties_code if material.properties_code else None
             
             item = HSAIMaterialResponse(
                 **{k: v for k, v in material.model_dump().items() if k != 'properties_code'},
@@ -137,13 +135,12 @@ async def list_materials(
         total_pages = (total + limit - 1) // limit
         
         return PaginatedHSAIMaterialResponse(
-            items=items,
-            total=total,
+            data=items,
             pagination=PaginationData(
                 page=offset // limit + 1,
-                pageSize=limit,
+                size=limit,
                 total=total,
-                totalPages=total_pages
+                total_pages=total_pages
             )
         )
         
@@ -178,10 +175,8 @@ async def get_material_detail(
         user_name = getattr(user, "name", None) if user else None
         company_name = getattr(user, "business_name", None) if user else None
         
-        # 处理属性代码
-        properties_list = None
-        if material.properties_code:
-            properties_list = material.properties_code.split("_")
+        # 处理属性代码（已经是列表类型）
+        properties_list = material.properties_code if material.properties_code else None
         
         # 构建基础响应
         response_data = {

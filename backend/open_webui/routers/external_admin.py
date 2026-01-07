@@ -340,6 +340,12 @@ def verify_external_request(request: Request):
         )
 
     raw_token = auth_header.split(" ", 1)[1].strip()
+    
+    # Check against environment variable API Key first (Dev/Simple mode)
+    env_api_key = os.environ.get("EXTERNAL_ADMIN_API_KEY") or os.environ.get("MAIN_SYSTEM_API_KEY")
+    if env_api_key and raw_token == env_api_key:
+         return "env-key-client"
+
     token_record = ExternalAdminTokens.get_valid_token(raw_token)
     if not token_record:
         raise _oauth_error(

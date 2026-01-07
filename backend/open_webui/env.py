@@ -476,6 +476,12 @@ else:
 REDIS_SENTINEL_HOSTS = os.environ.get("REDIS_SENTINEL_HOSTS", "")
 REDIS_SENTINEL_PORT = os.environ.get("REDIS_SENTINEL_PORT", "26379")
 
+# Enable Redis queue listener (default: False)
+# When multiple instances are running, only one should listen to avoid message contention
+ENABLE_REDIS_QUEUE_LISTENER = (
+    os.environ.get("ENABLE_REDIS_QUEUE_LISTENER", "False").lower() == "true"
+)
+
 ####################################
 # HSAI MATERIALS CACHE / OSS SYNC
 ####################################

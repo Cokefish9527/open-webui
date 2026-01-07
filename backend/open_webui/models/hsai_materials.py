@@ -516,10 +516,12 @@ class HSAIMaterialResponse(BaseModel):
 # 添加分页响应模型
 class PaginationData(BaseModel):
     """分页数据模型"""
+    model_config = ConfigDict(populate_by_name=True)
+    
     total: int = Field(description="总记录数")
     page: int = Field(description="当前页码")
-    size: int = Field(description="每页大小")
-    total_pages: int = Field(description="总页数")
+    size: int = Field(description="每页大小", alias="pageSize")
+    total_pages: int = Field(description="总页数", alias="totalPages")
 
 
 class HSAIMaterialCategoryResponse(BaseModel):

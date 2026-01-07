@@ -431,6 +431,7 @@ from open_webui.env import (
     REDIS_URL,
     REDIS_SENTINEL_HOSTS,
     REDIS_SENTINEL_PORT,
+    ENABLE_REDIS_QUEUE_LISTENER,
     GLOBAL_LOG_LEVEL,
     MAX_BODY_LOG_SIZE,
     SAFE_MODE,
@@ -568,10 +569,16 @@ async def lifespan(app: FastAPI):
         async_mode=True,
     )
 
-    if app.state.redis is not None:
+    # Only start Redis queue listener if enabled
+    if app.state.redis is not None and ENABLE_REDIS_QUEUE_LISTENER:
+        log.info("Starting Redis queue listener...")
         app.state.redis_task_command_listener = asyncio.create_task(
             redis_task_command_listener(app)
         )
+    elif app.state.redis is not None:
+        log.info("Redis queue listener is disabled (ENABLE_REDIS_QUEUE_LISTENER=False)")
+    else:
+        log.info("Redis connection not available, skipping queue listener")
 
     # HSAI 素材管理：Redis 缓存定时刷新（仅在启用缓存 + Redis 可用时生效）
     try:
@@ -613,12 +620,17 @@ async def lifespan(app: FastAPI):
     from open_webui.utils.redis_signal_handler import redis_signal_handler, initialize_redis_handlers
     await redis_signal_handler.initialize()
     app.state.redis_signal_handler = redis_signal_handler
-    app.state.redis_signal_monitoring_task = asyncio.create_task(
-        redis_signal_handler.start_monitoring()
-    )
+    
+    if ENABLE_REDIS_QUEUE_LISTENER:
+        app.state.redis_signal_monitoring_task = asyncio.create_task(
+            redis_signal_handler.start_monitoring()
+        )
 
-    # 注册所有Redis队列处理器
-    initialize_redis_handlers()
+        # 注册所有Redis队列处理器
+        initialize_redis_handlers()
+        log.info("Redis signal monitoring started")
+    else:
+        log.info("Redis signal monitoring is disabled (ENABLE_REDIS_QUEUE_LISTENER=False)")
 
     try:
         await start_conversation_ingestion()
