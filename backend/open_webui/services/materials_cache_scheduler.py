@@ -6,6 +6,8 @@ from redis.asyncio import Redis
 
 from open_webui.env import (
     HSAI_MATERIALS_CACHE_ENABLED,
+    HSAI_MATERIALS_CACHE_ACTIVE_COMPANIES_SCAN_COUNT,
+    HSAI_MATERIALS_CACHE_MAX_COMPANIES_PER_REFRESH,
     HSAI_MATERIALS_CACHE_REFRESH_INTERVAL_SEC,
     SRC_LOG_LEVELS,
 )
@@ -69,14 +71,20 @@ class MaterialsCacheScheduler:
     async def _refresh_once(self) -> None:
         if self.redis is None:
             return
-        company_ids = await self.redis.smembers(ACTIVE_COMPANIES_SET_KEY)
-        if not company_ids:
-            return
-
-        for raw_company_id in company_ids:
+        processed = 0
+        async for raw_company_id in self.redis.sscan_iter(
+            ACTIVE_COMPANIES_SET_KEY,
+            count=HSAI_MATERIALS_CACHE_ACTIVE_COMPANIES_SCAN_COUNT,
+        ):
             company_id = raw_company_id.decode("utf-8") if isinstance(raw_company_id, bytes) else str(raw_company_id)
             if not company_id:
                 continue
+            processed += 1
+            if (
+                HSAI_MATERIALS_CACHE_MAX_COMPANIES_PER_REFRESH > 0
+                and processed > HSAI_MATERIALS_CACHE_MAX_COMPANIES_PER_REFRESH
+            ):
+                break
 
             # 预热/刷新：OSS -> DB -> rebuild cache
             actor_user_id = await asyncio.to_thread(pick_any_user_id_for_company, company_id)

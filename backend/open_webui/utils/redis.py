@@ -3,6 +3,12 @@ from urllib.parse import urlparse
 from typing import Optional
 
 from .redis_manager import init_redis_manager, get_redis_manager
+from open_webui.env import (
+    REDIS_HEALTH_CHECK_INTERVAL_SECONDS,
+    REDIS_RETRY_ON_TIMEOUT,
+    REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS,
+    REDIS_SOCKET_TIMEOUT_SECONDS,
+)
 
 
 def parse_redis_service_url(redis_url):
@@ -38,11 +44,21 @@ def get_redis_connection(
                 username=redis_config["username"],
                 password=redis_config["password"],
                 decode_responses=decode_responses,
-                socket_timeout=5,  # 添加socket超时设置
+                socket_timeout=REDIS_SOCKET_TIMEOUT_SECONDS,
+                socket_connect_timeout=REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS,
+                retry_on_timeout=REDIS_RETRY_ON_TIMEOUT,
+                health_check_interval=REDIS_HEALTH_CHECK_INTERVAL_SECONDS,
             )
             return sentinel.master_for(redis_config["service"])
         elif redis_url:
-            return redis.from_url(redis_url, decode_responses=decode_responses, socket_timeout=5)
+            return redis.from_url(
+                redis_url,
+                decode_responses=decode_responses,
+                socket_timeout=REDIS_SOCKET_TIMEOUT_SECONDS,
+                socket_connect_timeout=REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS,
+                retry_on_timeout=REDIS_RETRY_ON_TIMEOUT,
+                health_check_interval=REDIS_HEALTH_CHECK_INTERVAL_SECONDS,
+            )
         else:
             return None
     else:
@@ -57,7 +73,10 @@ def get_redis_connection(
                 username=redis_config["username"],
                 password=redis_config["password"],
                 decode_responses=decode_responses,
-                socket_timeout=5,  # 添加socket超时设置
+                socket_timeout=REDIS_SOCKET_TIMEOUT_SECONDS,
+                socket_connect_timeout=REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS,
+                retry_on_timeout=REDIS_RETRY_ON_TIMEOUT,
+                health_check_interval=REDIS_HEALTH_CHECK_INTERVAL_SECONDS,
             )
             return sentinel.master_for(redis_config["service"])
         elif redis_url:
@@ -67,7 +86,14 @@ def get_redis_connection(
                 return manager.get_connection()
             else:
                 # 为Redis连接添加超时设置
-                return redis.Redis.from_url(redis_url, decode_responses=decode_responses, socket_timeout=5)
+                return redis.Redis.from_url(
+                    redis_url,
+                    decode_responses=decode_responses,
+                    socket_timeout=REDIS_SOCKET_TIMEOUT_SECONDS,
+                    socket_connect_timeout=REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS,
+                    retry_on_timeout=REDIS_RETRY_ON_TIMEOUT,
+                    health_check_interval=REDIS_HEALTH_CHECK_INTERVAL_SECONDS,
+                )
         else:
             return None
 

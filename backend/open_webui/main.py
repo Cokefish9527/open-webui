@@ -93,6 +93,7 @@ from open_webui.routers import (
     hsai_companies,  # 添加公司管理路由导入
     hsai_projects,  # 添加项目管理路由导入
     external_admin,  # 添加外部管理路由导入
+    hsai_ugc,  # 添加 UGC 视频生成路由导入
     # 移除hsai_websocket路由以避免与Socket.IO冲突
     # hsai_websocket,
     # 根据新流程说明，不再需要爆款视频路由
@@ -616,6 +617,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         log.error(f"Recurring task scheduler start failed: {e}")
 
+    # UGC 视频生成 Watchdog（按设计文档 V3.2）
+    try:
+        from open_webui.utils.ugc_watchdog_scheduler import UGCWatchdogScheduler
+        app.state.ugc_watchdog_scheduler = UGCWatchdogScheduler()
+        await app.state.ugc_watchdog_scheduler.start()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("UGC watchdog scheduler start failed: %s", exc, exc_info=True)
+
     # 启动Redis信号处理器
     from open_webui.utils.redis_signal_handler import redis_signal_handler, initialize_redis_handlers
     await redis_signal_handler.initialize()
@@ -705,6 +714,12 @@ async def lifespan(app: FastAPI):
             await app.state.viral_learning_scheduler.stop()
     except Exception as e:
         log.error(f"Viral learning scheduler stop failed: {e}")
+
+    try:
+        if hasattr(app.state, "ugc_watchdog_scheduler") and app.state.ugc_watchdog_scheduler:
+            await app.state.ugc_watchdog_scheduler.stop()
+    except Exception as exc:  # noqa: BLE001
+        log.warning("UGC watchdog scheduler stop failed: %s", exc, exc_info=True)
 
 
 app = FastAPI(
@@ -1378,7 +1393,8 @@ app.include_router(hsai_video_learning.router, prefix="/api/v1")  # 添加视频
 # 根据新流程说明，不再需要爆款视频路由
 # app.include_router(hsai_viral_videos.router, prefix="/api/v1")  # 添加爆款视频路由
 app.include_router(hsai_companies.router, prefix="/api/v1")  # 添加公司管理路由
-app.include_router(hsai_projects.router, prefix="/api/v1")  # 添加项目管理路由
+app.include_router(hsai_projects.router, prefix="/api/v1")
+app.include_router(hsai_ugc.router, prefix="/api/v1")  # 添加项目管理路由
 
 # 添加组织管理路由
 # 添加外部管理路由

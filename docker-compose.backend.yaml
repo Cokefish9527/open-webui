@@ -14,6 +14,11 @@ services:
       - PORT=8080
       - HOST=0.0.0.0
       - WEBUI_SECRET_KEY=
+      # UGC asset upload fallback (when STORAGE_PROVIDER=local and no public URL can be generated)
+      - USE_FFMPEG_OSS=true
+      - FFMPEG_API_BASE_URL=http://192.168.20.32:8082
+      - FFMPEG_OSS_API_PREFIX=/api/v1
+      - UGC_ASSET_OSS_PATH_PREFIX=ugc/assets
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

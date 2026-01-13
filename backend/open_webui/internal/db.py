@@ -7,6 +7,7 @@ from open_webui.env import (
     DATABASE_URL,
     DATABASE_SCHEMA,
     SRC_LOG_LEVELS,
+    DATABASE_CONNECT_TIMEOUT,
     DATABASE_POOL_MAX_OVERFLOW,
     DATABASE_POOL_RECYCLE,
     DATABASE_POOL_SIZE,
@@ -71,9 +72,15 @@ if "sqlite" in SQLALCHEMY_DATABASE_URL.lower():
         SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
     )
 else:
+    connect_args = {}
+    if "postgresql" in SQLALCHEMY_DATABASE_URL.lower():
+        connect_timeout = int(DATABASE_CONNECT_TIMEOUT or 0)
+        if connect_timeout > 0:
+            connect_args["connect_timeout"] = connect_timeout
     if DATABASE_POOL_SIZE > 0:
         engine = create_engine(
             SQLALCHEMY_DATABASE_URL,
+            connect_args=connect_args,
             pool_size=DATABASE_POOL_SIZE,
             max_overflow=DATABASE_POOL_MAX_OVERFLOW,
             pool_timeout=DATABASE_POOL_TIMEOUT,
@@ -83,7 +90,10 @@ else:
         )
     else:
         engine = create_engine(
-            SQLALCHEMY_DATABASE_URL, pool_pre_ping=True, poolclass=NullPool
+            SQLALCHEMY_DATABASE_URL,
+            connect_args=connect_args,
+            pool_pre_ping=True,
+            poolclass=NullPool,
         )
 
 

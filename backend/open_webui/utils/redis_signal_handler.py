@@ -489,6 +489,10 @@ def initialize_redis_handlers():
         # 注册思维链阶段消息队列处理器
         from open_webui.utils.chain_stage_handler import register_chain_stage_queue_handler
         register_chain_stage_queue_handler(redis_signal_handler)
+
+        # 注册 UGC 视频生成任务处理器
+        from open_webui.utils.ugc_handler import register_ugc_handler
+        register_ugc_handler(redis_signal_handler)
         
         log.info("所有Redis队列处理器注册完成")
     except Exception as e:

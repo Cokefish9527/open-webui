@@ -19,6 +19,10 @@ flowchart LR
     Models -->|触发| Migrations[Runtime Migrations<br/>backend/open_webui/internal/migrations]
     Models --> Storage[Storage Services<br/>backend/open_webui/materials]
     Storage --> OSS[(OSS/S3)]
+    Router -->|Webhook| n8n[n8n Workflow]
+    n8n -->|Callback| Redis[(Redis Queue)]
+    Redis -->|Worker| Handler[UGC Handler]
+    Handler -->|Update| Models
 ```
 
 ### 质量基线
@@ -69,7 +73,19 @@ flowchart LR
 - 验证：`pytest backend/test/test_materials_storage_schema.py` 覆盖 SQLite 场景；在 PostgreSQL 上依赖相同 SQL 片段。
 - 回滚：若需关闭自愈，可在 `HSAIMaterials` 注释 `_schema_aware_db()` 调用并手动迁移（需在变更说明记录）。
 
+### ADR-2025-01-10：UGC 视频生成工作流（`backend/open_webui/routers/hsai_ugc.py`）
+
+- 背景：需要一个多阶段 UGC 视频生成系统，涉及脚本生成、分镜处理、口型同步和最终合并。流程涉及长时间运行的任务，需要异步通信。
+- 决策：
+  1. 采用 **FastAPI ↔ n8n ↔ Redis** 异步架构。
+  2. 使用 `hsai_ugc_video_tasks` 维护状态机（0-6 状态）。
+  3. 通过 Socket.IO (`hsai_ugc_update` 事件) 向前端实时推送状态变更。
+  4. 采用运行时迁移 (`ensure_ugc_schema`) 保证数据库表结构对齐。
+- 影响：支持高度交互的 3 阶段生成向导；解耦了 Web 服务与繁重的基础模型计算。
+- 验证：通过 Mock Redis 消息测试状态流转。
+
 ## 设计决策 & 技术债务
+
 
 - 仍缺少系统化的 Alembic 迁移；短期通过 runtime migrations 保持列一致性，但建议中期补齐版本化脚本。
 - 素材 OSS 元数据没有冗余校验（如桶名称合法性），可在下个迭代补充约束。
@@ -114,6 +130,14 @@ flowchart LR
 - 普通用户保持原有边界，仅能访问自身资源，从而保证 API 既能支撑后台联动，也不会破坏多租户隔离。
 - 为兼容 WebUI 内部场景，main.py 重新注册 hsai_companies.router，携带 JWT 的用户继续走 /api/v1/hsai/companies|projects，后台统一使用 /api/v1/external/admin/\*。
 
+### UGC Video Generation（`backend/open_webui/routers/hsai_ugc.py`）
+
+- 职责：管理数字人资产 (Step 0)、编排 3 阶段视频生成任务、处理 n8n 回调。
+- 入口：`hsai_ugc.router` 挂载于 `/api/v1/ugc`。
+- 核心模型：`HSAIUGCMaterialModel`, `HSAIUGCTask`, `HSAIUGCTaskScene`。
+- 异步通知：通过 `RedisSignalHandler` 监听 `ugc_callback_queue`，触发 `ugc_handler.py` 处理结果并发送 Socket.IO。
+
+### Content Management
 ### TikTok 集成与发布日志（`backend/open_webui/routers/hsai_tiktok.py`，`backend/open_webui/models/hsai_tiktok_publish_log.py`）
 
 - 职责：封装 TikTok Content Posting API（Inbox Upload + Direct Post）调用链路，并对每一次发布尝试（无论成功或失败）记录结构化日志，便于运营后台按公司/项目维度检索。

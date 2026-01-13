@@ -352,6 +352,17 @@ else:
     except Exception:
         DATABASE_POOL_RECYCLE = 3600
 
+# Database connect timeout (seconds). Helps avoid long hangs when DB is unreachable.
+DATABASE_CONNECT_TIMEOUT = os.environ.get("DATABASE_CONNECT_TIMEOUT", 5)
+
+if DATABASE_CONNECT_TIMEOUT == "":
+    DATABASE_CONNECT_TIMEOUT = 5
+else:
+    try:
+        DATABASE_CONNECT_TIMEOUT = int(DATABASE_CONNECT_TIMEOUT)
+    except Exception:
+        DATABASE_CONNECT_TIMEOUT = 5
+
 
 def _get_admin_int(name: str, fallback: int) -> int:
     value = os.environ.get(name, "")
@@ -476,6 +487,27 @@ else:
 REDIS_SENTINEL_HOSTS = os.environ.get("REDIS_SENTINEL_HOSTS", "")
 REDIS_SENTINEL_PORT = os.environ.get("REDIS_SENTINEL_PORT", "26379")
 
+# Redis client timeouts (seconds)
+try:
+    REDIS_SOCKET_TIMEOUT_SECONDS = int(os.environ.get("REDIS_SOCKET_TIMEOUT_SECONDS", "5"))
+except ValueError:
+    REDIS_SOCKET_TIMEOUT_SECONDS = 5
+REDIS_SOCKET_TIMEOUT_SECONDS = max(1, REDIS_SOCKET_TIMEOUT_SECONDS)
+
+try:
+    REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS = int(os.environ.get("REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS", "5"))
+except ValueError:
+    REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS = 5
+REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS = max(1, REDIS_SOCKET_CONNECT_TIMEOUT_SECONDS)
+
+try:
+    REDIS_HEALTH_CHECK_INTERVAL_SECONDS = int(os.environ.get("REDIS_HEALTH_CHECK_INTERVAL_SECONDS", "30"))
+except ValueError:
+    REDIS_HEALTH_CHECK_INTERVAL_SECONDS = 30
+REDIS_HEALTH_CHECK_INTERVAL_SECONDS = max(0, REDIS_HEALTH_CHECK_INTERVAL_SECONDS)
+
+REDIS_RETRY_ON_TIMEOUT = os.environ.get("REDIS_RETRY_ON_TIMEOUT", "true").lower() == "true"
+
 # Enable Redis queue listener (default: False)
 # When multiple instances are running, only one should listen to avoid message contention
 ENABLE_REDIS_QUEUE_LISTENER = (
@@ -505,6 +537,22 @@ except ValueError:
 HSAI_MATERIALS_CACHE_REFRESH_INTERVAL_SEC = max(
     HSAI_MATERIALS_CACHE_REFRESH_INTERVAL_SEC, 30
 )
+
+try:
+    HSAI_MATERIALS_CACHE_ACTIVE_COMPANIES_SCAN_COUNT = int(
+        os.environ.get("HSAI_MATERIALS_CACHE_ACTIVE_COMPANIES_SCAN_COUNT", "200")
+    )
+except ValueError:
+    HSAI_MATERIALS_CACHE_ACTIVE_COMPANIES_SCAN_COUNT = 200
+HSAI_MATERIALS_CACHE_ACTIVE_COMPANIES_SCAN_COUNT = min(max(HSAI_MATERIALS_CACHE_ACTIVE_COMPANIES_SCAN_COUNT, 1), 1000)
+
+try:
+    HSAI_MATERIALS_CACHE_MAX_COMPANIES_PER_REFRESH = int(
+        os.environ.get("HSAI_MATERIALS_CACHE_MAX_COMPANIES_PER_REFRESH", "200")
+    )
+except ValueError:
+    HSAI_MATERIALS_CACHE_MAX_COMPANIES_PER_REFRESH = 200
+HSAI_MATERIALS_CACHE_MAX_COMPANIES_PER_REFRESH = max(0, HSAI_MATERIALS_CACHE_MAX_COMPANIES_PER_REFRESH)
 
 HSAI_MATERIALS_OSS_SYNC_ENABLED = (
     os.environ.get("HSAI_MATERIALS_OSS_SYNC_ENABLED", "true").lower() == "true"
