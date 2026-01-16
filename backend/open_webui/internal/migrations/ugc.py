@@ -51,10 +51,15 @@ def ensure_ugc_schema(
     """
     Ensure UGC Video Generation tables exist (per design doc V3.2).
 
-    Design tables:
-    - Material_Models
-    - Video_Tasks
-    - Task_Scenes
+    Final tables:
+    - hsai_ugc_material_models
+    - hsai_ugc_video_tasks
+    - hsai_ugc_task_scenes
+
+    Legacy tables (will be renamed during a planned downtime migration):
+    - Material_Models -> hsai_ugc_material_models
+    - Video_Tasks -> hsai_ugc_video_tasks
+    - Task_Scenes -> hsai_ugc_task_scenes
     """
 
     executed_statements: List[str] = []
@@ -63,11 +68,47 @@ def ensure_ugc_schema(
         inspector = inspect(connection)
         effective_schema = schema or inspector.default_schema_name
         dialect = connection.dialect.name.lower()
-        material_models_table = _qualified_name("Material_Models", effective_schema, connection=connection)
-        video_tasks_table = _qualified_name("Video_Tasks", effective_schema, connection=connection)
-        task_scenes_table = _qualified_name("Task_Scenes", effective_schema, connection=connection)
+        preparer = connection.dialect.identifier_preparer
+
+        legacy_material_models = "Material_Models"
+        legacy_video_tasks = "Video_Tasks"
+        legacy_task_scenes = "Task_Scenes"
+
+        material_models = "hsai_ugc_material_models"
+        video_tasks = "hsai_ugc_video_tasks"
+        task_scenes = "hsai_ugc_task_scenes"
+
+        legacy_material_models_table = _qualified_name(legacy_material_models, effective_schema, connection=connection)
+        legacy_video_tasks_table = _qualified_name(legacy_video_tasks, effective_schema, connection=connection)
+        legacy_task_scenes_table = _qualified_name(legacy_task_scenes, effective_schema, connection=connection)
+
+        material_models_table = _qualified_name(material_models, effective_schema, connection=connection)
+        video_tasks_table = _qualified_name(video_tasks, effective_schema, connection=connection)
+        task_scenes_table = _qualified_name(task_scenes, effective_schema, connection=connection)
 
         statements: List[str] = []
+
+        legacy_material_models_exists = inspector.has_table(legacy_material_models, schema=effective_schema)
+        legacy_video_tasks_exists = inspector.has_table(legacy_video_tasks, schema=effective_schema)
+        legacy_task_scenes_exists = inspector.has_table(legacy_task_scenes, schema=effective_schema)
+
+        material_models_exists = inspector.has_table(material_models, schema=effective_schema)
+        video_tasks_exists = inspector.has_table(video_tasks, schema=effective_schema)
+        task_scenes_exists = inspector.has_table(task_scenes, schema=effective_schema)
+
+        def _rename_table(old_identifier: str, new_identifier: str) -> str:
+            """
+            Rename table within the same schema/database.
+
+            - PostgreSQL/SQLite: ALTER TABLE <qualified old> RENAME TO <new_identifier>
+            - MySQL: RENAME TABLE <qualified old> TO <qualified new>
+            """
+            old_qualified = _qualified_name(old_identifier, effective_schema, connection=connection)
+            if dialect == "mysql":
+                new_qualified = _qualified_name(new_identifier, effective_schema, connection=connection)
+                return f"RENAME TABLE {old_qualified} TO {new_qualified}"
+            new_quoted = preparer.quote_identifier(new_identifier)
+            return f"ALTER TABLE {old_qualified} RENAME TO {new_quoted}"
 
         def _id_autoincrement_type() -> str:
             if dialect == "postgresql":
@@ -115,22 +156,57 @@ def ensure_ugc_schema(
                     return str(t).lower() if t is not None else None
             return None
 
+        def _column_names(table_name: str) -> set[str]:
+            try:
+                cols = inspector.get_columns(table_name, schema=effective_schema)
+            except Exception:
+                return set()
+            return {str(col.get("name") or "") for col in cols if col.get("name")}
+
         # Best-effort runtime schema alignment for PostgreSQL (safe cast to TEXT).
+        # Important: we only *plan* these statements here; actual ALTERs are appended after potential renames,
+        # so we don't try to ALTER a table name that doesn't exist yet.
+        need_material_user_id_cast = False
+        need_video_user_id_cast = False
         if dialect == "postgresql":
-            current = _column_type_name("Material_Models", "user_id")
-            if current and "text" not in current and inspector.has_table("Material_Models", schema=effective_schema):
-                statements.append(
-                    f"ALTER TABLE {material_models_table} ALTER COLUMN user_id TYPE TEXT USING user_id::text"
-                )
+            material_inspect_name = material_models if material_models_exists else (
+                legacy_material_models if legacy_material_models_exists else None
+            )
+            current = _column_type_name(material_inspect_name, "user_id") if material_inspect_name else None
+            if current and "text" not in current:
+                need_material_user_id_cast = True
 
-            current = _column_type_name("Video_Tasks", "user_id")
-            if current and "text" not in current and inspector.has_table("Video_Tasks", schema=effective_schema):
-                statements.append(
-                    f"ALTER TABLE {video_tasks_table} ALTER COLUMN user_id TYPE TEXT USING user_id::text"
-                )
+            video_inspect_name = video_tasks if video_tasks_exists else (
+                legacy_video_tasks if legacy_video_tasks_exists else None
+            )
+            current = _column_type_name(video_inspect_name, "user_id") if video_inspect_name else None
+            if current and "text" not in current:
+                need_video_user_id_cast = True
 
-        # 1. Material_Models (数字人资产表)
-        if not inspector.has_table("Material_Models", schema=effective_schema):
+        # Planned downtime migration: rename legacy tables to final names.
+        # Note: this is safe only when the service is stopped (no concurrent writes/reads).
+        if legacy_material_models_exists and not material_models_exists:
+            statements.append(_rename_table(legacy_material_models, material_models))
+            material_models_exists = True
+        if legacy_video_tasks_exists and not video_tasks_exists:
+            statements.append(_rename_table(legacy_video_tasks, video_tasks))
+            video_tasks_exists = True
+        if legacy_task_scenes_exists and not task_scenes_exists:
+            statements.append(_rename_table(legacy_task_scenes, task_scenes))
+            task_scenes_exists = True
+
+        if need_material_user_id_cast:
+            statements.append(
+                f"ALTER TABLE {material_models_table} ALTER COLUMN user_id TYPE TEXT USING user_id::text"
+            )
+
+        if need_video_user_id_cast:
+            statements.append(
+                f"ALTER TABLE {video_tasks_table} ALTER COLUMN user_id TYPE TEXT USING user_id::text"
+            )
+
+        # 1. hsai_ugc_material_models (数字人资产表)
+        if not material_models_exists:
             id_type = _id_autoincrement_type()
             created_at_type = _datetime_type()
             user_id_type = _user_id_type()
@@ -163,12 +239,13 @@ CREATE TABLE IF NOT EXISTS {material_models_table} (
                     """.strip()
                 )
 
-        # 2. Video_Tasks (主任务表)
-        if not inspector.has_table("Video_Tasks", schema=effective_schema):
+        # 2. hsai_ugc_video_tasks (主任务表)
+        if not video_tasks_exists:
             status_type = _tinyint_type()
             step_type = _tinyint_type()
             base_inputs_type = _json_type()
             dt_type = _datetime_type()
+            progress_percent_type = _tinyint_type()
             user_id_type = _user_id_type()
             statements.append(
                 f"""
@@ -180,6 +257,10 @@ CREATE TABLE IF NOT EXISTS {video_tasks_table} (
     model_id BIGINT NOT NULL,
     base_inputs {base_inputs_type} NOT NULL,
     result_video_url VARCHAR(512),
+    progress_percent {progress_percent_type} NOT NULL DEFAULT 0,
+    last_progress_at {dt_type},
+    closed_at {dt_type},
+    closed_reason TEXT,
     created_at {dt_type} NOT NULL,
     updated_at {dt_type} NOT NULL,
     FOREIGN KEY(model_id) REFERENCES {material_models_table}(id)
@@ -187,8 +268,58 @@ CREATE TABLE IF NOT EXISTS {video_tasks_table} (
                 """.strip()
             )
 
-        # 3. Task_Scenes (分镜明细表)
-        if not inspector.has_table("Task_Scenes", schema=effective_schema):
+        # Add missing columns for existing hsai_ugc_video_tasks (or legacy before rename).
+        # We inspect the currently-existing table (legacy or final), but always generate ALTERs against the final name.
+        inspect_video_table = video_tasks if video_tasks_exists else (legacy_video_tasks if legacy_video_tasks_exists else None)
+        if inspect_video_table:
+            existing_cols = _column_names(inspect_video_table)
+            dt_type = _datetime_type()
+            progress_percent_type = _tinyint_type()
+
+            if "progress_percent" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {video_tasks_table} ADD COLUMN progress_percent {progress_percent_type} NOT NULL DEFAULT 0"
+                )
+            if "last_progress_at" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {video_tasks_table} ADD COLUMN last_progress_at {dt_type}"
+                )
+            if "closed_at" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {video_tasks_table} ADD COLUMN closed_at {dt_type}"
+                )
+            if "closed_reason" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {video_tasks_table} ADD COLUMN closed_reason TEXT"
+                )
+
+            # Backfill best-effort for older rows.
+            statements.append(
+                f"""
+UPDATE {video_tasks_table}
+SET last_progress_at = COALESCE(last_progress_at, updated_at, created_at)
+WHERE last_progress_at IS NULL
+                """.strip()
+            )
+            statements.append(
+                f"""
+UPDATE {video_tasks_table}
+SET progress_percent = CASE
+    WHEN status = 0 THEN 5
+    WHEN status = 1 THEN 20
+    WHEN status = 2 THEN 35
+    WHEN status = 3 THEN 50
+    WHEN status = 4 THEN 85
+    WHEN status = 5 THEN 90
+    WHEN status = 6 THEN 100
+    ELSE 0
+END
+WHERE COALESCE(progress_percent, 0) = 0 AND status IN (-2, -1, 0, 1, 2, 3, 4, 5, 6)
+                """.strip()
+            )
+
+        # 3. hsai_ugc_task_scenes (分镜明细表)
+        if not task_scenes_exists:
             id_type = _id_autoincrement_type()
             if dialect == "sqlite":
                 statements.append(

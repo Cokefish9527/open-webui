@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 from typing import Awaitable, Callable, Dict, Optional
 
 from open_webui.env import SRC_LOG_LEVELS
@@ -21,6 +22,41 @@ except ImportError:
 
 OutboxHandler = Callable[[HSAIOutboxEventModel], Awaitable[None]]
 _HANDLERS: Dict[str, OutboxHandler] = {}
+
+
+def _calc_backoff_seconds(
+    attempt: int,
+    *,
+    base_seconds: float = 1.0,
+    cap_seconds: float = 60.0,
+    jitter_ratio: float = 0.1,
+) -> float:
+    attempt = max(int(attempt), 1)
+    delay = min(float(cap_seconds), float(base_seconds) * (2 ** (attempt - 1)))
+    if jitter_ratio and jitter_ratio > 0:
+        delay = delay * (1 + random.uniform(-float(jitter_ratio), float(jitter_ratio)))
+    return max(delay, 0.0)
+
+
+def _format_loop_error(exc: Exception) -> str:
+    if isinstance(exc, UnicodeDecodeError) and isinstance(getattr(exc, "object", None), (bytes, bytearray)):
+        raw = bytes(exc.object)
+        for enc in ("utf-8", "gbk", "cp936", "latin-1"):
+            try:
+                decoded = raw.decode(enc, errors="replace")
+                return f"{exc} | decoded({enc})={decoded}"
+            except Exception:
+                continue
+        return f"{exc} | raw={raw!r}"
+    return str(exc)
+
+
+def _is_db_decode_or_network_error(exc: Exception) -> bool:
+    # 该类错误通常来自 DB 连接阶段（例如 DNS/网络异常导致 libpq 返回非 UTF-8 消息）
+    if isinstance(exc, UnicodeDecodeError):
+        return True
+    msg = str(exc).lower()
+    return "could not translate host name" in msg or "name or service not known" in msg
 
 
 def register_outbox_handler(event_type: str, handler: OutboxHandler) -> None:
@@ -57,13 +93,19 @@ class OutboxDispatcher:
         log.info("Outbox dispatcher stopped")
 
     async def _run_loop(self) -> None:
+        error_attempt = 0
         while self._running:
+            sleep_seconds = self.interval_seconds
             try:
                 await self._process_batch()
+                error_attempt = 0
             except Exception as exc:  # pylint: disable=broad-except
-                log.error("Outbox dispatcher loop error: %s", exc, exc_info=True)
+                error_attempt += 1
+                sleep_seconds = max(sleep_seconds, _calc_backoff_seconds(error_attempt, base_seconds=1.0, cap_seconds=60.0))
+                log.error("Outbox dispatcher loop error: %s", _format_loop_error(exc), exc_info=True)
                 # 发送告警到后台
-                if ALERT_SERVICE_AVAILABLE:
+                # DB/网络不可用时优先降噪（避免重复告警刷屏），等待恢复后再继续。
+                if ALERT_SERVICE_AVAILABLE and not _is_db_decode_or_network_error(exc):
                     try:
                         await send_alert_to_admin(
                             title="Outbox分发器错误",
@@ -74,7 +116,7 @@ class OutboxDispatcher:
                         )
                     except Exception as alert_exc:
                         log.error("发送告警失败: %s", alert_exc)
-            await asyncio.sleep(self.interval_seconds)
+            await asyncio.sleep(sleep_seconds)
 
     async def _process_batch(self) -> None:
         events = HSAIOutboxEvents.acquire_pending(batch_size=self.batch_size)
@@ -119,4 +161,3 @@ class OutboxDispatcher:
 
 
 outbox_dispatcher = OutboxDispatcher()
-

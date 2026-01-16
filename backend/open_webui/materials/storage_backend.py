@@ -103,7 +103,15 @@ def generate_download_payload(material, expires: int = 900) -> Dict[str, str]:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Material missing oss_key for FFmpeg backend",
             )
-        signed_url = ensure_download_url(material.oss_key, expires=expires)
+        # 可通过 FFMPEG_OSS_SIGNED_URL_ENABLED 控制是否签名：
+        # - true：返回签名 URL
+        # - false：直接返回已存储的 file_path（要求 OSS 公网可读）
+        signed_url = ensure_download_url(
+            material.oss_key,
+            expires=expires,
+            fallback_url=getattr(material, "file_path", None),
+            bucket=getattr(material, "oss_bucket", None),
+        )
         return {
             "download_url": signed_url,
             "filename": material.name,
@@ -124,4 +132,3 @@ def generate_download_payload(material, expires: int = 900) -> Dict[str, str]:
         "file_size": material.file_size,
         "mime_type": material.mime_type,
     }
-

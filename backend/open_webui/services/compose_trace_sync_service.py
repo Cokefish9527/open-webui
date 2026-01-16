@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import random
 import re
 import time
 from datetime import datetime, timezone
@@ -31,6 +32,41 @@ STAGE_SCRIPT_SELECTION = "STATE_WAITING_SCRIPT_SELECTION"
 
 
 _URL_HINT_RE = re.compile(r"https?://[^\\s\\\"']+", re.IGNORECASE)
+
+
+def _calc_backoff_seconds(
+    attempt: int,
+    *,
+    base_seconds: float = 1.0,
+    cap_seconds: float = 60.0,
+    jitter_ratio: float = 0.1,
+) -> float:
+    """
+    指数退避（带轻微抖动），用于后台循环在 DB/网络异常时降噪。
+    - attempt 从 1 开始
+    """
+    attempt = max(int(attempt), 1)
+    delay = min(float(cap_seconds), float(base_seconds) * (2 ** (attempt - 1)))
+    if jitter_ratio and jitter_ratio > 0:
+        delay = delay * (1 + random.uniform(-float(jitter_ratio), float(jitter_ratio)))
+    return max(delay, 0.0)
+
+
+def _format_loop_error(exc: Exception) -> str:
+    """
+    psycopg2 在 Windows 中文环境下，当 DNS/网络异常时可能抛出 UnicodeDecodeError（解码 libpq 错误消息失败）。
+    这里做 best-effort 解码，便于定位真正原因，同时避免日志里只剩 decode error。
+    """
+    if isinstance(exc, UnicodeDecodeError) and isinstance(getattr(exc, "object", None), (bytes, bytearray)):
+        raw = bytes(exc.object)
+        for enc in ("utf-8", "gbk", "cp936", "latin-1"):
+            try:
+                decoded = raw.decode(enc, errors="replace")
+                return f"{exc} | decoded({enc})={decoded}"
+            except Exception:
+                continue
+        return f"{exc} | raw={raw!r}"
+    return str(exc)
 
 
 def _to_epoch_seconds(value: Any) -> Optional[int]:
@@ -257,18 +293,23 @@ _STOP: Optional[asyncio.Event] = None
 async def _runner_loop(interval_seconds: int, batch_size: int) -> None:
     global _STOP
     assert _STOP is not None
+    error_attempt = 0
     while not _STOP.is_set():
+        sleep_seconds = max(1, interval_seconds)
         try:
             traces = HSAIComposeTraces.list_traces(status="running", limit=batch_size, offset=0)
+            error_attempt = 0
             for trace in traces:
                 try:
                     sync_trace_once(trace.trace_id)
                 except Exception as exc:  # pylint: disable=broad-except
                     log.warning("ComposeTrace sync failed trace_id=%s err=%s", trace.trace_id, exc, exc_info=True)
         except Exception as exc:  # pylint: disable=broad-except
-            log.warning("ComposeTrace sync loop error: %s", exc, exc_info=True)
+            error_attempt += 1
+            sleep_seconds = max(sleep_seconds, _calc_backoff_seconds(error_attempt, base_seconds=1.0, cap_seconds=60.0))
+            log.warning("ComposeTrace sync loop error: %s", _format_loop_error(exc), exc_info=True)
         try:
-            await asyncio.wait_for(_STOP.wait(), timeout=max(1, interval_seconds))
+            await asyncio.wait_for(_STOP.wait(), timeout=sleep_seconds)
         except asyncio.TimeoutError:
             continue
 
@@ -304,4 +345,3 @@ async def stop_compose_trace_sync() -> None:
     _TASK = None
     _STOP = None
     log.info("ComposeTrace sync stopped.")
-

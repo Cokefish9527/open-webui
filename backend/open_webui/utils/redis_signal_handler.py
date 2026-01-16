@@ -5,6 +5,7 @@ Redis信号处理器，用于监听Redis队列中的信号并触发相应的操�
 import asyncio
 import json
 import logging
+import random
 import threading
 import time
 from typing import Dict, Any, Callable, Optional, List, Tuple, Union
@@ -33,6 +34,28 @@ _video_crawl_notification_thread: Optional[threading.Thread] = None
 
 # 处理标志
 _processing = False
+
+def _calc_backoff_seconds(
+    attempt: int,
+    *,
+    base_seconds: float = 1.0,
+    cap_seconds: float = 30.0,
+    jitter_ratio: float = 0.1,
+) -> float:
+    """
+    指数退避（带轻微抖动），用于 Redis 连接/监听异常与 handler 重试。
+    - attempt 从 1 开始
+    """
+    attempt = max(int(attempt), 1)
+    base_seconds = float(base_seconds)
+    cap_seconds = float(cap_seconds)
+    jitter_ratio = float(jitter_ratio)
+
+    delay = min(cap_seconds, base_seconds * (2 ** (attempt - 1)))
+    if jitter_ratio > 0:
+        delay = delay * (1 + random.uniform(-jitter_ratio, jitter_ratio))
+    return max(delay, 0.0)
+
 
 def get_redis_client() -> redis.Redis:
     """获取Redis客户端实例"""
@@ -83,13 +106,16 @@ class RedisSignalHandler:
         try:
             log.info(f"开始监听队列: {queue_name}")
             redis_client = get_redis_client()
-            
+            error_attempt = 0
+             
             while self._processing:
                 try:
                     # 从队列中阻塞式获取消息
                     # 使用BLPOP命令，超时时间为30秒
                     result = redis_client.blpop([queue_name], timeout=30)
-                    
+                    # 一次成功的 round-trip（即使 result 为 None 也代表连接正常），重置退避计数
+                    error_attempt = 0
+                     
                     if result:
                         # 解析消息
                         # blpop返回的是一个元组 (queue_name, message_data)
@@ -159,8 +185,15 @@ class RedisSignalHandler:
                         
                 except Exception as e:
                     log.error(f"监听队列 {queue_name} 时发生错误: {e}", exc_info=True)
-                    time.sleep(1)  # 短暂休眠后重试
-                    
+                    # 设计对齐：Redis 连接/监听异常时采用指数退避重试，避免瞬时抖动导致忙等。
+                    error_attempt += 1
+                    sleep_seconds = _calc_backoff_seconds(error_attempt, base_seconds=1.0, cap_seconds=30.0)
+                    # 连接异常时重建客户端（redis-py 会自动重连，但这里显式重建更稳妥）
+                    global _redis_client
+                    _redis_client = None
+                    redis_client = get_redis_client()
+                    time.sleep(sleep_seconds)
+                     
         except Exception as e:
             log.error(f"监听队列 {queue_name} 失败: {e}", exc_info=True)
     
@@ -412,26 +445,53 @@ class RedisSignalHandler:
                 handler = handler_info["handler"]
                 config = handler_info["config"]
                 
-                # 创建一个新的事件循环来处理异步函数
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                
-                try:
-                    # 调用处理函数
-                    if asyncio.iscoroutinefunction(handler):
-                        loop.run_until_complete(handler(message, config))
-                    else:
-                        handler(message, config)
-                finally:
-                    loop.close()
-                    
+                max_retry = int(config.get("max_retry", 1) or 1)
+                backoff_base = float(config.get("retry_backoff_base_seconds", 1.0) or 1.0)
+                backoff_cap = float(config.get("retry_backoff_cap_seconds", 30.0) or 30.0)
+
+                last_error: Optional[Exception] = None
+                for attempt in range(1, max_retry + 1):
+                    # 创建一个新的事件循环来处理异步函数（避免跨线程复用 loop）
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        if asyncio.iscoroutinefunction(handler):
+                            loop.run_until_complete(handler(message, config))
+                        else:
+                            handler(message, config)
+                        last_error = None
+                        break
+                    except Exception as exc:
+                        last_error = exc
+                        if attempt >= max_retry:
+                            break
+                        sleep_seconds = _calc_backoff_seconds(
+                            attempt,
+                            base_seconds=backoff_base,
+                            cap_seconds=backoff_cap,
+                        )
+                        log.warning(
+                            "处理队列 %s 消息失败，将重试（%s/%s），等待 %.2fs：%s",
+                            queue_name,
+                            attempt,
+                            max_retry,
+                            sleep_seconds,
+                            exc,
+                        )
+                        time.sleep(sleep_seconds)
+                    finally:
+                        loop.close()
+
+                if last_error is not None:
+                    raise last_error
+                     
                 log.info(f"已处理队列 {queue_name} 的消息")
             else:
                 # 如果没有找到特定的处理器，尝试使用通用的消息重新封装和转发机制
                 log.warning(f"未找到队列 {queue_name} 的处理器，尝试通用处理")
                 self._handle_generic_message(message)
         except Exception as e:
-            log.error(f"处理队列 {queue_name} 的消息时发生错误: {e}")
+            log.error(f"处理队列 {queue_name} 的消息时发生错误: {e}", exc_info=True)
     
     async def stop_monitoring(self):
         """停止信号监控"""

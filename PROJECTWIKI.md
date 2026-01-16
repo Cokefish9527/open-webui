@@ -84,6 +84,16 @@ flowchart LR
 - 影响：支持高度交互的 3 阶段生成向导；解耦了 Web 服务与繁重的基础模型计算。
 - 验证：通过 Mock Redis 消息测试状态流转。
 
+### ADR-2026-01-15：服务端架构升级 (LangChain Ecosystem)
+
+- 背景：为了提升 UGC 业务的编排性能与可维护性，计划移除对 n8n 的强依赖，转向代码优先的架构。
+- 决策：
+  1. 引入 **LangGraph** 作为进程内编排引擎，接管原 n8n 的 Script/Video/Merge 流程。
+  2. 采用 **双写策略**：Graph 状态持久化于 Postgres (Checkpointers)，业务数据同步写入 MySQL (`VideoTasks`) 以兼容前端读取。
+  3. 保持 API 与 Socket.IO 契约不变，实现对前端透明的后端重构。
+- 状态：已规划 (Planned)，详见 `hsai_prototype/docs/10-决策与架构/102-LangChain架构升级方案.md`。
+- 验证：通过 `test/workflows/test_ugc_graph.py` 进行单元测试与全链路 Mock 验证。
+
 ## 设计决策 & 技术债务
 
 

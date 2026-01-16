@@ -2,9 +2,10 @@ import logging
 import os
 import re
 import uuid
+from datetime import datetime
 from typing import List, Dict, Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
 from pydantic import BaseModel, Field
 
 from open_webui.utils.auth import get_verified_user
@@ -18,7 +19,9 @@ from open_webui.models.hsai_ugc import (
     TaskSceneUpdateForm,
     MaterialModelData,
     VideoTaskData,
-    TaskSceneData
+    TaskSceneData,
+    UGCLibraryTasksResponse,
+    UGCTaskCloseForm,
 )
 from open_webui.services.workflow_meta_update_service import post_json
 from open_webui.constants import ERROR_MESSAGES
@@ -83,6 +86,22 @@ def _sanitize_oss_path_segment(value: str) -> str:
     if not normalized:
         return "unknown"
     return re.sub(r"[^a-zA-Z0-9._-]+", "_", normalized)
+
+
+class UGCTaskStatusData(BaseModel):
+    """
+    轮询用：只返回任务状态相关字段，避免前端每次轮询拿到过多数据。
+    """
+    task_id: str
+    status: int
+    step: int
+    result_video_url: Optional[str] = None
+    updated_at: Optional[int] = None
+    progress_percent: Optional[int] = None
+    progress_stage: Optional[str] = None
+    progress_message: Optional[str] = None
+    closed_at: Optional[int] = None
+    closed_reason: Optional[str] = None
 
 
 def _ugc_upload_and_get_url(
@@ -153,7 +172,7 @@ async def create_material_model(
 ):
     """
     创建数字人基础资产，绑定图片和音色。
-    触发 n8n hs001 进行音色克隆，并将返回的 voice_id 写入 Material_Models.voice_provider_id。
+    触发 n8n hs001 进行音色克隆，并将返回的 voice_id 写入 hsai_ugc_material_models.voice_provider_id。
     """
     try:
         user_id = _require_user_id(user)
@@ -238,7 +257,7 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
 
         task = VideoTasks.create_task(user_id, form)
         
-        # 触发 n8n 生成脚本（严格按设计文档 V3.2 payload）
+        # 触发 n8n 生成脚本（与当前联调 payload 约定保持一致；ffmpeg_api_key 已作废，不再注入）
         payload = {
             "task_id": task.id,
             "ip_id": f"model_{model.id}",
@@ -270,18 +289,86 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
         log.error(f"Failed to create video task: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/tasks", response_model=List[VideoTaskData], summary="获取任务列表")
-async def get_video_tasks(user=Depends(get_verified_user)):
+@router.get(
+    "/library/tasks",
+    response_model=UGCLibraryTasksResponse,
+    summary="视频库：获取任务列表（支持筛选/排序/分页）",
+)
+async def get_library_tasks(
+    q: Optional[str] = None,
+    status: Optional[List[int]] = Query(default=None),
+    model_id: Optional[int] = None,
+    created_from: Optional[int] = None,
+    created_to: Optional[int] = None,
+    order_by: str = "updated_at",
+    order: str = "desc",
+    page: int = 1,
+    page_size: int = 20,
+    user=Depends(get_verified_user),
+):
     user_id = _require_user_id(user)
-    return VideoTasks.get_tasks_by_user_id(user_id)
 
-@router.get("/tasks/{task_id}", response_model=VideoTaskData, summary="获取任务详情")
-async def get_task_details(task_id: str, user=Depends(get_verified_user)):
+    created_from_dt = datetime.utcfromtimestamp(created_from) if created_from else None
+    created_to_dt = datetime.utcfromtimestamp(created_to) if created_to else None
+
+    timeout_minutes = int(
+        os.getenv("UGC_TASK_STALE_TIMEOUT_MINUTES", os.getenv("UGC_WATCHDOG_TIMEOUT_MINUTES", "60"))
+    )
+
+    return VideoTasks.get_library_tasks(
+        user_id,
+        q=q,
+        status=status,
+        model_id=model_id,
+        created_from=created_from_dt,
+        created_to=created_to_dt,
+        order_by=order_by,
+        order=order,
+        page=page,
+        page_size=page_size,
+        stale_timeout_minutes=timeout_minutes,
+    )
+
+@router.post("/tasks/{task_id}/close", summary="关闭任务（手动）")
+async def close_task(task_id: str, form: UGCTaskCloseForm, user=Depends(get_verified_user)):
     task = VideoTasks.get_task_by_id(task_id)
     user_id = _require_user_id(user)
     if not task or task.user_id != user_id:
         raise HTTPException(status_code=404, detail="Task not found")
-    return task
+
+    if int(task.status or 0) == -2:
+        return {"success": True, "task_id": task_id, "status": -2}
+
+    reason = (form.reason or "user_abort").strip()
+    message = (form.message or "").strip()
+    closed_reason = f"{reason}:{message}" if message else reason
+
+    ok = VideoTasks.close_task(task_id, closed_reason=closed_reason)
+    if not ok:
+        raise HTTPException(status_code=409, detail="Task is already closed")
+    return {"success": True, "task_id": task_id, "status": -2}
+
+@router.get("/tasks/{task_id}/status", response_model=UGCTaskStatusData, summary="轮询任务状态（推荐）")
+async def get_task_status(task_id: str, user=Depends(get_verified_user)):
+    """
+    轮询接口：用于前端高频查询任务状态。
+    """
+    task = VideoTasks.get_task_by_id(task_id)
+    user_id = _require_user_id(user)
+    if not task or task.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return UGCTaskStatusData(
+        task_id=task.id,
+        status=task.status,
+        step=task.step,
+        result_video_url=task.result_video_url,
+        updated_at=getattr(task, "updated_at", None),
+        progress_percent=getattr(task, "progress_percent", None),
+        progress_stage=VideoTasks._status_to_stage(int(task.status or 0)),
+        progress_message=VideoTasks._status_to_message(int(task.status or 0)),
+        closed_at=getattr(task, "closed_at", None),
+        closed_reason=getattr(task, "closed_reason", None),
+    )
 
 @router.get("/tasks/{task_id}/scenes", response_model=List[TaskSceneData], summary="获取任务分镜列表")
 async def get_task_scenes(task_id: str, user=Depends(get_verified_user)):
@@ -293,7 +380,7 @@ async def get_task_scenes(task_id: str, user=Depends(get_verified_user)):
     return TaskScenes.get_scenes_by_task_id(task_id)
 
 ####################
-# Step 2: Update Script & Generate Scene Videos
+# Step 2/3: Confirm Script & Process To Final
 ####################
 
 class TaskSceneEditItem(BaseModel):
@@ -302,20 +389,37 @@ class TaskSceneEditItem(BaseModel):
     script_desc: Optional[str] = None
     reference_img_url: Optional[str] = None
 
-@router.post("/tasks/{task_id}/generate_video", summary="提交编辑并生成分镜视频 (Step 2)")
-async def generate_scene_videos(task_id: str, scenes: List[TaskSceneEditItem], user=Depends(get_verified_user)):
+@router.post("/tasks/{task_id}/process", summary="自动推进：生成分镜视频/合成最终视频（按任务状态判断）")
+async def process_task_to_final(
+    task_id: str,
+    scenes: Optional[List[TaskSceneEditItem]] = None,
+    user=Depends(get_verified_user),
+):
     """
-    用户完成脚本编辑后，提交此接口。
-    1. 更新本地分镜脚本。
-    2. 触发 n8n hs003 生成所有分镜视频。
-    """
-    try:
-        task = VideoTasks.get_task_by_id(task_id)
-        user_id = _require_user_id(user)
-        if not task or task.user_id != user_id:
-            raise HTTPException(status_code=404, detail="Task not found")
+    合并 Step2 + Step3：前端只需调用一个接口，后续通过轮询/视频库等待最终成片。
 
-        # 1) 更新数据库（逐条更新，避免覆盖 fragment_video_url）
+    - status=2（待编辑）：可携带 scenes 更新分镜并触发 hs003；
+    - status=4（待合成）：触发 hs004；
+    - status∈{0,1,3,5}（进行中）：幂等返回，让前端继续轮询；
+    - status=6：直接返回 result_video_url；
+    - status=-2：返回 409（已关闭）。
+
+    注：为实现“一次调用后等待最终成片”，Worker 在 VIDEO_RESULT 后会自动触发合成（可通过 UGC_AUTO_MERGE_ENABLED 控制）。
+    """
+    task = VideoTasks.get_task_by_id(task_id)
+    user_id = _require_user_id(user)
+    if not task or task.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if int(task.status or 0) == -2:
+        raise HTTPException(status_code=409, detail="Task is closed")
+
+    current_status = int(task.status or 0)
+
+    if current_status == 2:
+        scenes = scenes or []
+        if not scenes:
+            raise HTTPException(status_code=400, detail="Missing scenes for pending-edit task")
+
         existing = TaskScenes.get_scenes_by_task_id(task_id)
         existing_map = {s.scene_index: s for s in existing}
         for item in scenes:
@@ -329,18 +433,15 @@ async def generate_scene_videos(task_id: str, scenes: List[TaskSceneEditItem], u
                     reference_img_url=item.reference_img_url,
                 ),
             )
-        
-        # 2) 读取最新分镜并组装 hs003 payload（按设计文档）
+
         updated_scenes = TaskScenes.get_scenes_by_task_id(task_id)
         updated_scenes.sort(key=lambda s: s.scene_index)
         subtitle_list = [s.subtitle or "" for s in updated_scenes]
         shot_script_img_list = [s.reference_img_url or "" for s in updated_scenes]
         shot_script_list = [s.script_desc or "" for s in updated_scenes]
 
-        # 3) 切换状态为 3 (视频生成中)
         VideoTasks.update_task_status(task_id, status=3, step=2)
 
-        # 4) 触发 n8n 生成视频
         payload = {
             "task_id": task_id,
             "subtitle_list": subtitle_list,
@@ -353,59 +454,47 @@ async def generate_scene_videos(task_id: str, scenes: List[TaskSceneEditItem], u
             "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
         }
         status_code, _, _ = await post_json(URL_HS003, payload)
-        
         if status_code >= 400:
-             VideoTasks.update_task_status(task_id, status=-1)
-             raise HTTPException(status_code=502, detail=f"n8n video generation trigger failed: {status_code}")
+            VideoTasks.update_task_status(task_id, status=-1)
+            raise HTTPException(status_code=502, detail=f"n8n video generation trigger failed: {status_code}")
 
-        return {"success": True, "message": "Video generation started"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.error(f"Failed to trigger video generation: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"success": True, "task_id": task_id, "status": 3, "message": "Scene video generation started"}
 
-####################
-# Step 3: Final Merge
-####################
-
-@router.post("/tasks/{task_id}/merge", summary="合成最终视频 (Step 3)")
-async def merge_video(task_id: str, user=Depends(get_verified_user)):
-    """
-    分镜视频生成完毕后，用户点击合成。
-    触发 n8n hs004 完成视频拼接。
-    """
-    try:
-        task = VideoTasks.get_task_by_id(task_id)
-        user_id = _require_user_id(user)
-        if not task or task.user_id != user_id:
-            raise HTTPException(status_code=404, detail="Task not found")
-
-        # 1) 获取分镜视频列表（必须全部就绪）
-        scenes = TaskScenes.get_scenes_by_task_id(task_id)
-        scenes.sort(key=lambda s: s.scene_index)
-        video_urls = [s.fragment_video_url for s in scenes]
+    if current_status == 4:
+        scenes_rows = TaskScenes.get_scenes_by_task_id(task_id)
+        scenes_rows.sort(key=lambda s: s.scene_index)
+        video_urls = [s.fragment_video_url for s in scenes_rows]
         if not video_urls or any(not u for u in video_urls):
             raise HTTPException(status_code=400, detail="Not all scene videos are ready")
 
-        # 2) 切换状态为 5 (合成中)
         VideoTasks.update_task_status(task_id, status=5, step=3)
-
-        # 3) 触发 n8n 合成（按设计文档：shot_video_list）
         payload = {
             "task_id": task_id,
             "shot_video_list": video_urls,
             "jarvis_api_key": _require_env("JARVIS_API_KEY"),
         }
         status_code, _, _ = await post_json(URL_HS004, payload)
-
         if status_code >= 400:
-             VideoTasks.update_task_status(task_id, status=-1)
-             raise HTTPException(status_code=502, detail=f"n8n merge trigger failed: {status_code}")
+            VideoTasks.update_task_status(task_id, status=-1)
+            raise HTTPException(status_code=502, detail=f"n8n merge trigger failed: {status_code}")
 
-        return {"success": True, "message": "Merge process started"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.error(f"Failed to trigger merge: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"success": True, "task_id": task_id, "status": 5, "message": "Merge process started"}
+
+    if current_status == 6:
+        return {
+            "success": True,
+            "task_id": task_id,
+            "status": 6,
+            "result_video_url": getattr(task, "result_video_url", None),
+            "message": "Task already completed",
+        }
+
+    if current_status in (0, 1, 3, 5):
+        return {"success": True, "task_id": task_id, "status": current_status, "message": "Task is in progress"}
+
+    return {"success": False, "task_id": task_id, "status": current_status, "message": "Task is not actionable"}
+
+####################
+# Step 3: Final Merge
+####################
+

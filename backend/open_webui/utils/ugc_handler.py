@@ -1,10 +1,12 @@
 import logging
 import json
 import time
+import os
 from typing import Dict, Any, Optional
 
 from open_webui.models.hsai_ugc import VideoTasks, TaskScenes
 from open_webui.socket.main import sio
+from open_webui.services.workflow_meta_update_service import post_json
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -20,6 +22,14 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
 
         if not task_id or not msg_type:
             log.error(f"UGC Callback message missing task_id or type: {message}")
+            return
+
+        task = VideoTasks.get_task_by_id(task_id)
+        if not task:
+            log.error(f"UGC Callback task not found: task_id={task_id}")
+            return
+        if int(task.status or 0) == -2:
+            log.info(f"UGC Callback ignored (task closed): task_id={task_id}, type={msg_type}")
             return
 
         log.info(f"Processing UGC Callback: task_id={task_id}, type={msg_type}")
@@ -81,6 +91,32 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
             # 更新任务状态为 4 (待合成)
             VideoTasks.update_task_status(task_id, status=4, step=2)
             log.info(f"Task {task_id} status updated to 4 (Pending Merge)")
+
+            # 自动触发合成：前端只需调用一次 /process，然后等待最终成片。
+            auto_merge_enabled = os.getenv("UGC_AUTO_MERGE_ENABLED", "true").lower() in ("1", "true", "yes", "on")
+            if auto_merge_enabled:
+                base_url = os.getenv("N8N_UGC_BASE_URL", "https://webhook-n8n.hsai.cc/webhook").strip().rstrip("/")
+                url_hs004 = f"{base_url}/ugc_result"
+
+                jarvis_key = os.getenv("JARVIS_API_KEY", "").strip()
+                if not jarvis_key:
+                    log.error("UGC auto-merge skipped: missing env JARVIS_API_KEY")
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+
+                # 进入合成中
+                VideoTasks.update_task_status(task_id, status=5, step=3)
+                payload = {
+                    "task_id": task_id,
+                    "shot_video_list": shot_video_list,
+                    "jarvis_api_key": jarvis_key,
+                }
+                status_code, _, _ = await post_json(url_hs004, payload)
+                if status_code >= 400:
+                    log.error(f"UGC auto-merge trigger failed: {status_code}")
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+                log.info(f"UGC auto-merge triggered: task_id={task_id}")
 
         elif msg_type == "MERGE_RESULT":
             # 最终合成结果 (Step 3 -> Finish)

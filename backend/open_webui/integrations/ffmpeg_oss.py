@@ -14,39 +14,27 @@ log.setLevel(SRC_LOG_LEVELS.get("INTEGRATIONS", logging.INFO))
 
 class FfmpegOssClient:
     """
-    轻量封装 FFmpeg OSS 服务 (`/oss/*`)，统一处理鉴权、请求与错误日志。
+    轻量封装 FFmpeg OSS 服务 (`/oss/*`)，统一处理请求与错误日志。
     """
 
     def __init__(
         self,
         base_url: str,
-        api_key: Optional[str],
         api_prefix: str = "/api/v1",
         timeout: float = 30.0,
     ) -> None:
         self.base_url = base_url.rstrip("/")
-        self.api_key = api_key
         self.api_prefix = api_prefix if api_prefix.startswith("/") else f"/{api_prefix}"
         self.api_prefix = self.api_prefix.rstrip("/")
         self.timeout = timeout
         self._client: Optional[httpx.Client] = None
-
-    def _get_headers(self) -> Dict[str, str]:
-        headers = {"Accept": "application/json"}
-        if self.api_key:
-            token = self.api_key.strip()
-            if token:
-                headers["Authorization"] = (
-                    token if token.lower().startswith("bearer ") else f"Bearer {token}"
-                )
-        return headers
 
     def _ensure_client(self) -> httpx.Client:
         if not self._client:
             self._client = httpx.Client(
                 base_url=self.base_url,
                 timeout=self.timeout,
-                headers=self._get_headers(),
+                headers={"Accept": "application/json"},
             )
         return self._client
 
@@ -155,9 +143,15 @@ _FFMPEG_API_BASE_URL = os.environ.get("FFMPEG_API_BASE_URL", "").strip()
 _FFMPEG_API_TIMEOUT = float(os.environ.get("FFMPEG_API_TIMEOUT", "30"))
 _FFMPEG_OSS_API_PREFIX = os.environ.get("FFMPEG_OSS_API_PREFIX", "/api/v1").strip() or "/api/v1"
 
-# OSS 管理接口（ffmpeg-go `/oss/*`）默认不需要鉴权。
-# 若未来需要鉴权，显式配置 FFMPEG_OSS_API_KEY 才会发送 Authorization 头。
-_FFMPEG_OSS_API_KEY = os.environ.get("FFMPEG_OSS_API_KEY", "").strip()
+# 控制是否生成签名下载链接：
+# - true：通过 `/oss/download-url` 生成签名 URL（默认）
+# - false：直接返回对象 URL（要求 OSS 对象/桶已配置公网可读），不再请求 `/oss/download-url`
+FFMPEG_OSS_SIGNED_URL_ENABLED = os.environ.get("FFMPEG_OSS_SIGNED_URL_ENABLED", "true").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 
 
 USE_FFMPEG_OSS = os.environ.get("USE_FFMPEG_OSS", "false").lower() == "true"
@@ -176,7 +170,6 @@ def get_client() -> Optional[FfmpegOssClient]:
     if _ffmpeg_client is None:
         _ffmpeg_client = FfmpegOssClient(
             base_url=_FFMPEG_API_BASE_URL,
-            api_key=_FFMPEG_OSS_API_KEY or None,
             api_prefix=_FFMPEG_OSS_API_PREFIX,
             timeout=_FFMPEG_API_TIMEOUT,
         )
@@ -199,6 +192,12 @@ def ensure_download_url(
     """
     若启用 FFmpeg OSS 且可用，则生成签名链接；否则返回 fallback。
     """
+    if not FFMPEG_OSS_SIGNED_URL_ENABLED:
+        # 开关关闭时：优先返回可直接访问的 URL（通常由 upload 返回），否则回退 fallback。
+        if isinstance(object_name, str) and object_name.startswith(("http://", "https://")):
+            return object_name
+        return fallback_url
+
     client = get_client()
     if client:
         try:
