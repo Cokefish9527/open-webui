@@ -92,8 +92,10 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
             VideoTasks.update_task_status(task_id, status=4, step=2)
             log.info(f"Task {task_id} status updated to 4 (Pending Merge)")
 
-            # 自动触发合成：前端只需调用一次 /process，然后等待最终成片。
-            auto_merge_enabled = os.getenv("UGC_AUTO_MERGE_ENABLED", "true").lower() in ("1", "true", "yes", "on")
+            # 是否自动触发合成（hs004）：
+            # - 默认关闭：前端需展示分镜视频并让用户确认后，再调用 /tasks/{task_id}/process 触发合成；
+            # - 若需要“一次调用自动到成片”，可显式设置 UGC_AUTO_MERGE_ENABLED=true。
+            auto_merge_enabled = os.getenv("UGC_AUTO_MERGE_ENABLED", "false").lower() in ("1", "true", "yes", "on")
             if auto_merge_enabled:
                 base_url = os.getenv("N8N_UGC_BASE_URL", "https://webhook-n8n.hsai.cc/webhook").strip().rstrip("/")
                 url_hs004 = f"{base_url}/ugc_result"

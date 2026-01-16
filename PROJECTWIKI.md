@@ -147,6 +147,20 @@ flowchart LR
 - 核心模型：`HSAIUGCMaterialModel`, `HSAIUGCTask`, `HSAIUGCTaskScene`。
 - 异步通知：通过 `RedisSignalHandler` 监听 `ugc_callback_queue`，触发 `ugc_handler.py` 处理结果并发送 Socket.IO。
 - 状态枚举（核心）：`-2 CLOSED`、`-1 FAILED`、`1 SCRIPTING`、`2 PENDING_EDIT`、`3 RENDERING`、`4 PENDING_MERGE`、`5 MERGING`、`6 SUCCESS`。
+- 流程调整（2026-01-16）：hs003（分镜视频）回调后默认不再自动触发 hs004（最终合成）；任务停留在 `status=4(PENDING_MERGE)`，前端展示分镜视频并确认后再调用 `/api/v1/ugc/tasks/{task_id}/process` 触发合成。
+  - 开关：`UGC_AUTO_MERGE_ENABLED` 默认 `false`；如需“一次调用自动到成片”，显式设为 `true`。
+  - 超时：`status=4` 默认保留 3 天，Watchdog 超时自动关闭（`UGC_TASK_PENDING_MERGE_TIMEOUT_MINUTES=4320`，可配置）。
+- 主要接口（v1）：
+  - `POST /api/v1/ugc/models`：创建数字人资产（Step 0）。
+  - `GET /api/v1/ugc/models`：获取数字人资产列表。
+  - `GET /api/v1/ugc/models/{model_id}`：获取数字人资产详情（按 id）。
+  - `POST /api/v1/ugc/tasks`：创建任务（Step 1，触发脚本生成）。
+  - `GET /api/v1/ugc/tasks/{task_id}`：获取任务详情（前端必需，返回 `VideoTaskData`）。
+  - `GET /api/v1/ugc/tasks/{task_id}/status`：推荐轮询口径（高频、轻量）。
+  - `GET /api/v1/ugc/tasks/{task_id}/scenes`：获取分镜列表。
+  - `POST /api/v1/ugc/tasks/{task_id}/process`：推进生成（合并 Step 2/3）。
+  - `POST /api/v1/ugc/tasks/{task_id}/close`：关闭任务（手动）。
+  - `GET /api/v1/ugc/library/tasks`：视频库列表（筛选/排序/分页 + 进度快照）。
 
 ### Content Management
 ### TikTok 集成与发布日志（`backend/open_webui/routers/hsai_tiktok.py`，`backend/open_webui/models/hsai_tiktok_publish_log.py`）

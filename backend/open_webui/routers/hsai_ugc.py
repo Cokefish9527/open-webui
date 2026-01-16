@@ -240,6 +240,19 @@ async def get_material_models(user=Depends(get_verified_user)):
     user_id = _require_user_id(user)
     return MaterialModels.get_models_by_user_id(user_id)
 
+
+@router.get("/models/{model_id}", response_model=MaterialModelData, summary="获取数字人资产详情")
+async def get_material_model_detail(model_id: int, user=Depends(get_verified_user)):
+    """
+    兼容前端：按 id 获取单个数字人资产。
+    权限边界：仅允许资产 owner 访问；否则返回 404（不泄漏存在性）。
+    """
+    user_id = _require_user_id(user)
+    model = MaterialModels.get_model_by_id_and_user_id(model_id, user_id)
+    if not model:
+        raise HTTPException(status_code=404, detail="Model not found")
+    return model
+
 ####################
 # Step 1: Video Task Creation & Script Generation
 ####################
@@ -288,6 +301,20 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
     except Exception as e:
         log.error(f"Failed to create video task: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/tasks/{task_id}", response_model=VideoTaskData, summary="获取任务详情")
+async def get_task_detail(task_id: str, user=Depends(get_verified_user)):
+    """
+    兼容前端：`GET /api/v1/ugc/tasks/{task_id}`（返回完整任务信息）。
+    注意：与 /status、/scenes 一致，只有任务 owner 可访问；否则返回 404（不泄漏存在性）。
+    """
+    task = VideoTasks.get_task_by_id(task_id)
+    user_id = _require_user_id(user)
+    if not task or task.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
 
 @router.get(
     "/library/tasks",
@@ -404,7 +431,7 @@ async def process_task_to_final(
     - status=6：直接返回 result_video_url；
     - status=-2：返回 409（已关闭）。
 
-    注：为实现“一次调用后等待最终成片”，Worker 在 VIDEO_RESULT 后会自动触发合成（可通过 UGC_AUTO_MERGE_ENABLED 控制）。
+    注：默认不自动触发合成；当任务进入 status=4（待合成）后，前端应展示分镜视频让用户确认，再调用本接口触发 hs004。
     """
     task = VideoTasks.get_task_by_id(task_id)
     user_id = _require_user_id(user)
@@ -497,4 +524,3 @@ async def process_task_to_final(
 ####################
 # Step 3: Final Merge
 ####################
-

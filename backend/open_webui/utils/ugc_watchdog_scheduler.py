@@ -49,6 +49,7 @@ class UGCWatchdogScheduler:
     async def _schedule_loop(self):
         interval_minutes = int(os.getenv("UGC_WATCHDOG_INTERVAL_MINUTES", "5"))
         timeout_minutes = int(os.getenv("UGC_TASK_STALE_TIMEOUT_MINUTES", os.getenv("UGC_WATCHDOG_TIMEOUT_MINUTES", "60")))
+        pending_merge_timeout_minutes = int(os.getenv("UGC_TASK_PENDING_MERGE_TIMEOUT_MINUTES", str(3 * 24 * 60)))
 
         statuses_raw = os.getenv("UGC_TASK_STALE_STATUSES", "1,3,5").strip()
         statuses = []
@@ -65,13 +66,32 @@ class UGCWatchdogScheduler:
 
         while self.is_running:
             try:
-                marked = VideoTasks.mark_stale_tasks_closed(timeout_minutes=timeout_minutes, statuses=statuses or None)
+                # status=4（PENDING_MERGE）需要更长的保留期：默认 3 天，
+                # 避免用户离开页面后无法返回确认合成。
+                statuses_no_pending_merge = [s for s in statuses if s != 4]
+
+                marked = VideoTasks.mark_stale_tasks_closed(
+                    timeout_minutes=timeout_minutes,
+                    statuses=statuses_no_pending_merge or None,
+                )
                 if marked:
                     log.warning(
                         "UGC watchdog closed %s stale tasks (timeout=%s minutes)",
                         marked,
                         timeout_minutes,
                     )
+
+                marked_pending_merge = VideoTasks.mark_stale_tasks_closed(
+                    timeout_minutes=pending_merge_timeout_minutes,
+                    statuses=[4],
+                )
+                if marked_pending_merge:
+                    log.warning(
+                        "UGC watchdog closed %s pending-merge tasks (timeout=%s minutes)",
+                        marked_pending_merge,
+                        pending_merge_timeout_minutes,
+                    )
+
                 await asyncio.sleep(interval_seconds)
             except asyncio.CancelledError:
                 break
