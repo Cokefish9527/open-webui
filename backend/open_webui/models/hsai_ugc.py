@@ -86,9 +86,10 @@ class HSAIUGCTask(Base):
 
     id = Column(String(36), primary_key=True)
     user_id = Column(Text, nullable=False)
-    # 状态机: 0:排队, 1:脚本生成, 2:待编辑, 3:视频生成, 4:待合成, 5:合成中, 6:成功, -1:失败
+    # 状态机:
+    # -2:已关闭, -1:失败, 0:排队(保留), 1:脚本生成中, 2:待确认脚本, 3:分镜视频生成中, 4:待合成(短暂态), 5:合成中, 6:成功
     status = Column(SmallInteger, nullable=False, default=0)
-    # 当前步骤: 1:脚本阶段, 2:分镜视频阶段, 3:合成阶段
+    # 当前阶段(标记)：1:脚本阶段(hs002), 2:分镜视频阶段(hs003), 3:合成阶段(hs004)
     step = Column(SmallInteger, nullable=False, default=1)
     model_id = Column(BigInteger, ForeignKey("hsai_ugc_material_models.id"), nullable=False)
     base_inputs = Column(JSON, nullable=False)  # product_url, product_name, language

@@ -146,6 +146,7 @@ flowchart LR
 - 入口：`hsai_ugc.router` 挂载于 `/api/v1/ugc`。
 - 核心模型：`HSAIUGCMaterialModel`, `HSAIUGCTask`, `HSAIUGCTaskScene`。
 - 异步通知：通过 `RedisSignalHandler` 监听 `ugc_callback_queue`，触发 `ugc_handler.py` 处理结果并发送 Socket.IO。
+- 状态枚举（核心）：`-2 CLOSED`、`-1 FAILED`、`1 SCRIPTING`、`2 PENDING_EDIT`、`3 RENDERING`、`4 PENDING_MERGE`、`5 MERGING`、`6 SUCCESS`。
 
 ### Content Management
 ### TikTok 集成与发布日志（`backend/open_webui/routers/hsai_tiktok.py`，`backend/open_webui/models/hsai_tiktok_publish_log.py`）
