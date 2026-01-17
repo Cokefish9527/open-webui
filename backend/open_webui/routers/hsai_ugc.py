@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query, Body
 from pydantic import BaseModel, Field
 
 from open_webui.utils.auth import get_verified_user
@@ -416,22 +416,40 @@ class TaskSceneEditItem(BaseModel):
     script_desc: Optional[str] = None
     reference_img_url: Optional[str] = None
 
-@router.post("/tasks/{task_id}/process", summary="自动推进：生成分镜视频/合成最终视频（按任务状态判断）")
-async def process_task_to_final(
+
+class TaskSceneVideoSelectItem(BaseModel):
+    scene_index: int = Field(..., ge=0)
+    video_url: str = Field(..., min_length=1)
+
+
+class UGCMergeForm(BaseModel):
+    """
+    hs004 合成输入：
+    - selections：按 scene_index 指定用户选择的视频（用于“多候选分镜”场景）；
+    - shot_video_list：直接提供按 scene_index 排序的视频列表（与 n8n hs004 对齐）。
+    """
+
+    selections: Optional[List[TaskSceneVideoSelectItem]] = None
+    shot_video_list: Optional[List[str]] = None
+
+
+@router.post(
+    "/tasks/{task_id}/generate_video",
+    response_model=List[TaskSceneData],
+    summary="生成分镜视频（hs003）",
+)
+async def generate_scene_videos(
     task_id: str,
     scenes: Optional[List[TaskSceneEditItem]] = None,
     user=Depends(get_verified_user),
 ):
     """
-    合并 Step2 + Step3：前端只需调用一个接口，后续通过轮询/视频库等待最终成片。
+    对标 n8n hs003：生成分镜视频（Step 2）。
 
-    - status=2（待编辑）：可携带 scenes 更新分镜并触发 hs003；
-    - status=4（待合成）：触发 hs004；
-    - status∈{0,1,3,5}（进行中）：幂等返回，让前端继续轮询；
-    - status=6：直接返回 result_video_url；
-    - status=-2：返回 409（已关闭）。
-
-    注：默认不自动触发合成；当任务进入 status=4（待合成）后，前端应展示分镜视频让用户确认，再调用本接口触发 hs004。
+    - 前端可在 status=2(PENDING_EDIT) 时提交分镜编辑内容；
+    - 服务端更新分镜后触发 hs003；
+    - 服务端会注入 `voice_id`（来源：数字人资产 `voice_provider_id`）以对齐 n8n 入参；
+    - 返回更新后的分镜列表（不等待视频生成完成），前端后续轮询 status 并拉取 scenes 获取结果。
     """
     task = VideoTasks.get_task_by_id(task_id)
     user_id = _require_user_id(user)
@@ -441,12 +459,16 @@ async def process_task_to_final(
         raise HTTPException(status_code=409, detail="Task is closed")
 
     current_status = int(task.status or 0)
+    if current_status != 2:
+        raise HTTPException(status_code=409, detail="Task is not in pending-edit state")
 
-    if current_status == 2:
-        scenes = scenes or []
-        if not scenes:
-            raise HTTPException(status_code=400, detail="Missing scenes for pending-edit task")
+    # n8n hs003 对齐：需要 voice_id（来源：数字人资产 voice_provider_id）。
+    model = MaterialModels.get_model_by_id_and_user_id(int(task.model_id), user_id)
+    if not model:
+        raise HTTPException(status_code=404, detail="Model not found")
 
+    scenes = scenes or []
+    if scenes:
         existing = TaskScenes.get_scenes_by_task_id(task_id)
         existing_map = {s.scene_index: s for s in existing}
         for item in scenes:
@@ -461,66 +483,104 @@ async def process_task_to_final(
                 ),
             )
 
-        updated_scenes = TaskScenes.get_scenes_by_task_id(task_id)
-        updated_scenes.sort(key=lambda s: s.scene_index)
-        subtitle_list = [s.subtitle or "" for s in updated_scenes]
-        shot_script_img_list = [s.reference_img_url or "" for s in updated_scenes]
-        shot_script_list = [s.script_desc or "" for s in updated_scenes]
+    updated_scenes = TaskScenes.get_scenes_by_task_id(task_id)
+    updated_scenes.sort(key=lambda s: s.scene_index)
+    if not updated_scenes:
+        raise HTTPException(status_code=400, detail="No scenes found for task")
 
-        VideoTasks.update_task_status(task_id, status=3, step=2)
+    subtitle_list = [s.subtitle or "" for s in updated_scenes]
+    shot_script_img_list = [s.reference_img_url or "" for s in updated_scenes]
+    shot_script_list = [s.script_desc or "" for s in updated_scenes]
 
-        payload = {
-            "task_id": task_id,
-            "subtitle_list": subtitle_list,
-            "shot_script_img_list": shot_script_img_list,
-            "shot_script_list": shot_script_list,
-            "jarvis_api_key": _require_env("JARVIS_API_KEY"),
-            "minimax_key": _require_env("MINIMAX_KEY"),
-            "minimax_group": _require_env("MINIMAX_GROUP"),
-            "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
-            "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
-        }
-        status_code, _, _ = await post_json(URL_HS003, payload)
-        if status_code >= 400:
-            VideoTasks.update_task_status(task_id, status=-1)
-            raise HTTPException(status_code=502, detail=f"n8n video generation trigger failed: {status_code}")
+    VideoTasks.update_task_status(task_id, status=3, step=2)
+    payload = {
+        "task_id": task_id,
+        "voice_id": model.voice_provider_id,
+        "subtitle_list": subtitle_list,
+        "shot_script_img_list": shot_script_img_list,
+        "shot_script_list": shot_script_list,
+        "jarvis_api_key": _require_env("JARVIS_API_KEY"),
+        "minimax_key": _require_env("MINIMAX_KEY"),
+        "minimax_group": _require_env("MINIMAX_GROUP"),
+        "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
+        "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
+    }
+    status_code, _, _ = await post_json(URL_HS003, payload)
+    if status_code >= 400:
+        VideoTasks.update_task_status(task_id, status=-1)
+        raise HTTPException(status_code=502, detail=f"n8n video generation trigger failed: {status_code}")
 
-        return {"success": True, "task_id": task_id, "status": 3, "message": "Scene video generation started"}
+    return updated_scenes
 
-    if current_status == 4:
-        scenes_rows = TaskScenes.get_scenes_by_task_id(task_id)
-        scenes_rows.sort(key=lambda s: s.scene_index)
-        video_urls = [s.fragment_video_url for s in scenes_rows]
-        if not video_urls or any(not u for u in video_urls):
-            raise HTTPException(status_code=400, detail="Not all scene videos are ready")
 
-        VideoTasks.update_task_status(task_id, status=5, step=3)
-        payload = {
-            "task_id": task_id,
-            "shot_video_list": video_urls,
-            "jarvis_api_key": _require_env("JARVIS_API_KEY"),
-        }
-        status_code, _, _ = await post_json(URL_HS004, payload)
-        if status_code >= 400:
-            VideoTasks.update_task_status(task_id, status=-1)
-            raise HTTPException(status_code=502, detail=f"n8n merge trigger failed: {status_code}")
+@router.post("/tasks/{task_id}/merge", summary="合成最终视频（hs004）")
+async def merge_final_video(
+    task_id: str,
+    payload: Any = Body(default=None),
+    user=Depends(get_verified_user),
+):
+    """
+    对标 n8n hs004：最终合成（Step 3）。
 
-        return {"success": True, "task_id": task_id, "status": 5, "message": "Merge process started"}
+    - status=4(PENDING_MERGE) 时由前端显式调用；
+    - 支持“多候选分镜”：payload.selections 指定每个 scene_index 选择的视频；
+    - 也可直接传 shot_video_list（与 n8n 对齐）。
+    """
+    task = VideoTasks.get_task_by_id(task_id)
+    user_id = _require_user_id(user)
+    if not task or task.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if int(task.status or 0) == -2:
+        raise HTTPException(status_code=409, detail="Task is closed")
 
-    if current_status == 6:
-        return {
-            "success": True,
-            "task_id": task_id,
-            "status": 6,
-            "result_video_url": getattr(task, "result_video_url", None),
-            "message": "Task already completed",
-        }
+    current_status = int(task.status or 0)
+    if current_status != 4:
+        raise HTTPException(status_code=409, detail="Task is not in pending-merge state")
 
-    if current_status in (0, 1, 3, 5):
-        return {"success": True, "task_id": task_id, "status": current_status, "message": "Task is in progress"}
+    scenes_rows = TaskScenes.get_scenes_by_task_id(task_id)
+    scenes_rows.sort(key=lambda s: s.scene_index)
+    if not scenes_rows:
+        raise HTTPException(status_code=400, detail="No scenes found for task")
 
-    return {"success": False, "task_id": task_id, "status": current_status, "message": "Task is not actionable"}
+    form: Optional[UGCMergeForm] = None
+    if isinstance(payload, dict):
+        try:
+            form = UGCMergeForm.model_validate(payload)
+        except Exception:
+            form = None
 
-####################
-# Step 3: Final Merge
-####################
+    # Compatibility: allow payload to be a raw list of urls.
+    shot_video_list = payload if isinstance(payload, list) else (form.shot_video_list if form else None)
+
+    if form and form.selections:
+        existing_map = {s.scene_index: s for s in scenes_rows}
+        selection_map: Dict[int, str] = {}
+        for item in form.selections:
+            if item.scene_index not in existing_map:
+                raise HTTPException(status_code=400, detail=f"Invalid scene_index: {item.scene_index}")
+            selection_map[item.scene_index] = item.video_url
+            # Persist user selection for traceability / future retries.
+            TaskScenes.update_fragment_video_url(task_id, item.scene_index, item.video_url)
+
+        shot_video_list = [selection_map.get(s.scene_index) or s.fragment_video_url for s in scenes_rows]
+
+    if not shot_video_list:
+        shot_video_list = [s.fragment_video_url for s in scenes_rows]
+
+    if len(shot_video_list) != len(scenes_rows):
+        raise HTTPException(status_code=400, detail="shot_video_list length mismatch")
+    if any(not u for u in shot_video_list):
+        raise HTTPException(status_code=400, detail="Not all scene videos are selected/ready")
+
+    VideoTasks.update_task_status(task_id, status=5, step=3)
+    hs004_payload = {
+        "task_id": task_id,
+        "shot_video_list": shot_video_list,
+        "jarvis_api_key": _require_env("JARVIS_API_KEY"),
+    }
+    status_code, _, _ = await post_json(URL_HS004, hs004_payload)
+    if status_code >= 400:
+        VideoTasks.update_task_status(task_id, status=-1)
+        raise HTTPException(status_code=502, detail=f"n8n merge trigger failed: {status_code}")
+
+    return {"success": True, "task_id": task_id, "status": 5, "message": "Merge process started"}

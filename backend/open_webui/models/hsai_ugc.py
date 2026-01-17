@@ -1,4 +1,5 @@
 import logging
+import json
 import time
 import uuid
 from contextlib import contextmanager
@@ -119,6 +120,8 @@ class HSAIUGCTaskScene(Base):
     script_desc = Column(Text, nullable=True)
     reference_img_url = Column(String(512), nullable=True)
     fragment_video_url = Column(String(512), nullable=True)
+    # JSON string: ["url1","url2",...], used for multi-candidate per scene (hs003 output).
+    fragment_video_urls = Column(Text, nullable=True)
 
     task = relationship("HSAIUGCTask", back_populates="scenes")
 
@@ -224,6 +227,45 @@ class TaskSceneData(BaseModel):
     script_desc: Optional[str] = None
     reference_img_url: Optional[str] = None
     fragment_video_url: Optional[str] = None
+    fragment_video_urls: Optional[List[str]] = None
+
+    @classmethod
+    def _coerce_source(cls, value: Any) -> Dict[str, Any]:
+        if isinstance(value, dict):
+            data = dict(value)
+        else:
+            attr_names = [
+                "id",
+                "task_id",
+                "scene_index",
+                "subtitle",
+                "script_desc",
+                "reference_img_url",
+                "fragment_video_url",
+                "fragment_video_urls",
+            ]
+            data = {key: getattr(value, key, None) for key in attr_names}
+
+        raw = data.get("fragment_video_urls")
+        if isinstance(raw, str) and raw.strip():
+            try:
+                parsed = json.loads(raw)
+                if isinstance(parsed, list):
+                    data["fragment_video_urls"] = [str(v) for v in parsed if v]
+                else:
+                    data["fragment_video_urls"] = None
+            except Exception:
+                data["fragment_video_urls"] = None
+        elif isinstance(raw, list):
+            data["fragment_video_urls"] = [str(v) for v in raw if v]
+        else:
+            data["fragment_video_urls"] = None if raw is None else raw
+
+        return data
+
+    @classmethod
+    def model_validate(cls, value, *args, **kwargs):
+        return super().model_validate(cls._coerce_source(value), *args, **kwargs)
 
 
 class UGCLibraryTaskItem(BaseModel):
@@ -667,6 +709,59 @@ class HSAIUGCTaskScenesTable:
                 .update({"fragment_video_url": video_url})
             )
 
+            # 同步任务进度（主要用于 status=3 的“分镜视频生成中”场景）。
+            # 注意：进度同步失败不影响主流程。
+            try:
+                current_status = db.query(HSAIUGCTask.status).filter_by(id=task_id).scalar()
+                if current_status != -2:
+                    total = db.query(func.count(HSAIUGCTaskScene.id)).filter_by(task_id=task_id).scalar() or 0
+                    done = (
+                        db.query(func.sum(case((HSAIUGCTaskScene.fragment_video_url.isnot(None), 1), else_=0)))
+                        .filter_by(task_id=task_id)
+                        .scalar()
+                        or 0
+                    )
+                    percent = HSAIUGCTasksTable._status_to_percent(
+                        int(current_status or 0),
+                        scenes_done=int(done),
+                        scenes_total=int(total),
+                    )
+                    now = datetime.utcnow()
+                    db.query(HSAIUGCTask).filter_by(id=task_id).update(
+                        {
+                            "progress_percent": int(max(min(percent, 100), 0)),
+                            "updated_at": now,
+                            "last_progress_at": now,
+                        }
+                    )
+            except Exception:
+                pass
+            db.commit()
+            return result > 0
+
+    def update_fragment_video_candidates(
+        self,
+        task_id: str,
+        scene_index: int,
+        candidates: List[str],
+        *,
+        selected_url: Optional[str] = None,
+    ) -> bool:
+        cleaned = [str(v) for v in (candidates or []) if v]
+        if not cleaned:
+            return False
+        selected = selected_url or cleaned[0]
+        with _schema_aware_db() as db:
+            result = (
+                db.query(HSAIUGCTaskScene)
+                .filter_by(task_id=task_id, scene_index=scene_index)
+                .update(
+                    {
+                        "fragment_video_urls": json.dumps(cleaned, ensure_ascii=False),
+                        "fragment_video_url": selected,
+                    }
+                )
+            )
             # 同步任务进度（主要用于 status=3 的“分镜视频生成中”场景）。
             # 注意：进度同步失败不影响主流程。
             try:

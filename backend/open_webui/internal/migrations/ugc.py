@@ -293,6 +293,16 @@ CREATE TABLE IF NOT EXISTS {video_tasks_table} (
                     f"ALTER TABLE {video_tasks_table} ADD COLUMN closed_reason TEXT"
                 )
 
+        # Add missing columns for existing hsai_ugc_task_scenes.
+        inspect_scenes_table = task_scenes if task_scenes_exists else (legacy_task_scenes if legacy_task_scenes_exists else None)
+        if inspect_scenes_table:
+            existing_cols = _column_names(inspect_scenes_table)
+            if "fragment_video_urls" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {task_scenes_table} ADD COLUMN fragment_video_urls TEXT"
+                )
+
+        if inspect_video_table:
             # Backfill best-effort for older rows.
             statements.append(
                 f"""
@@ -332,6 +342,7 @@ CREATE TABLE IF NOT EXISTS {task_scenes_table} (
     script_desc TEXT,
     reference_img_url VARCHAR(512),
     fragment_video_url VARCHAR(512),
+    fragment_video_urls TEXT,
     UNIQUE(task_id, scene_index),
     FOREIGN KEY(task_id) REFERENCES {video_tasks_table}(id) ON DELETE CASCADE
 )
@@ -348,6 +359,7 @@ CREATE TABLE IF NOT EXISTS {task_scenes_table} (
     script_desc TEXT,
     reference_img_url VARCHAR(512),
     fragment_video_url VARCHAR(512),
+    fragment_video_urls TEXT,
     UNIQUE(task_id, scene_index),
     FOREIGN KEY(task_id) REFERENCES {video_tasks_table}(id) ON DELETE CASCADE
 )

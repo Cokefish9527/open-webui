@@ -85,15 +85,40 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                 VideoTasks.update_task_status(task_id, status=-1)
                 return
 
-            for i, video_url in enumerate(shot_video_list):
-                TaskScenes.update_fragment_video_url(task_id, i, video_url)
+            # 支持每个分镜返回多个备选视频：
+            # - 旧格式：shot_video_list = ["u1","u2",...]
+            # - 新格式：shot_video_list = [["u1a","u1b"], ["u2a","u2b"], ...]
+            selected_video_list = []
+            for i, item in enumerate(shot_video_list):
+                candidates = None
+                if isinstance(item, list):
+                    candidates = [str(v) for v in item if v]
+                elif isinstance(item, str):
+                    candidates = [item]
+                elif isinstance(item, dict):
+                    raw = item.get("candidates") or item.get("videos") or item.get("shot_video_candidates")
+                    if isinstance(raw, list):
+                        candidates = [str(v) for v in raw if v]
+                    else:
+                        url = item.get("video_url") or item.get("url")
+                        candidates = [str(url)] if url else []
+                else:
+                    candidates = []
+
+                if not candidates:
+                    log.error(f"VIDEO_RESULT missing candidates for scene_index={i}: {item}")
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+
+                selected_video_list.append(candidates[0])
+                TaskScenes.update_fragment_video_candidates(task_id, i, candidates, selected_url=candidates[0])
             
             # 更新任务状态为 4 (待合成)
             VideoTasks.update_task_status(task_id, status=4, step=2)
             log.info(f"Task {task_id} status updated to 4 (Pending Merge)")
 
             # 是否自动触发合成（hs004）：
-            # - 默认关闭：前端需展示分镜视频并让用户确认后，再调用 /tasks/{task_id}/process 触发合成；
+            # - 默认关闭：前端需展示分镜视频并让用户确认/选择后，再调用 /tasks/{task_id}/merge 触发合成；
             # - 若需要“一次调用自动到成片”，可显式设置 UGC_AUTO_MERGE_ENABLED=true。
             auto_merge_enabled = os.getenv("UGC_AUTO_MERGE_ENABLED", "false").lower() in ("1", "true", "yes", "on")
             if auto_merge_enabled:
@@ -110,7 +135,8 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                 VideoTasks.update_task_status(task_id, status=5, step=3)
                 payload = {
                     "task_id": task_id,
-                    "shot_video_list": shot_video_list,
+                    # 自动合成仅使用每个分镜的默认选中项（第一个候选）。
+                    "shot_video_list": selected_video_list,
                     "jarvis_api_key": jarvis_key,
                 }
                 status_code, _, _ = await post_json(url_hs004, payload)

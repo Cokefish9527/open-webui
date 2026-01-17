@@ -31,7 +31,11 @@ def test_video_result_does_not_auto_merge_by_default(monkeypatch):
         lambda task_id: type("T", (), {"id": task_id, "status": 3})(),
     )
     monkeypatch.setattr(ugc_handler.TaskScenes, "get_scenes_by_task_id", lambda task_id: [object(), object()])
-    monkeypatch.setattr(ugc_handler.TaskScenes, "update_fragment_video_url", lambda task_id, idx, url: None)
+    monkeypatch.setattr(
+        ugc_handler.TaskScenes,
+        "update_fragment_video_candidates",
+        lambda task_id, idx, candidates, selected_url=None: None,
+    )
     monkeypatch.setattr(
         ugc_handler.VideoTasks,
         "update_task_status",
@@ -74,7 +78,11 @@ def test_video_result_auto_merge_when_enabled(monkeypatch):
         lambda task_id: type("T", (), {"id": task_id, "status": 3})(),
     )
     monkeypatch.setattr(ugc_handler.TaskScenes, "get_scenes_by_task_id", lambda task_id: [object(), object()])
-    monkeypatch.setattr(ugc_handler.TaskScenes, "update_fragment_video_url", lambda task_id, idx, url: None)
+    monkeypatch.setattr(
+        ugc_handler.TaskScenes,
+        "update_fragment_video_candidates",
+        lambda task_id, idx, candidates, selected_url=None: None,
+    )
     monkeypatch.setattr(
         ugc_handler.VideoTasks,
         "update_task_status",
