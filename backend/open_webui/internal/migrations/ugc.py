@@ -220,6 +220,7 @@ CREATE TABLE IF NOT EXISTS {material_models_table} (
     model_img_url VARCHAR(512) NOT NULL,
     voice_provider_id VARCHAR(128) NOT NULL,
     voice_preview_url VARCHAR(512) NOT NULL,
+    minimax_account_id INTEGER,
     created_at {created_at_type} NOT NULL
 )
                     """.strip()
@@ -234,9 +235,22 @@ CREATE TABLE IF NOT EXISTS {material_models_table} (
     model_img_url VARCHAR(512) NOT NULL,
     voice_provider_id VARCHAR(128) NOT NULL,
     voice_preview_url VARCHAR(512) NOT NULL,
+    minimax_account_id BIGINT,
     created_at {created_at_type} NOT NULL
 )
                     """.strip()
+                )
+
+        # Add missing columns for existing hsai_ugc_material_models (or legacy before rename).
+        inspect_material_table = material_models if material_models_exists else (
+            legacy_material_models if legacy_material_models_exists else None
+        )
+        if inspect_material_table:
+            existing_cols = _column_names(inspect_material_table)
+            account_id_type = "BIGINT" if dialect in ("postgresql", "mysql") else "INTEGER"
+            if "minimax_account_id" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {material_models_table} ADD COLUMN minimax_account_id {account_id_type}"
                 )
 
         # 2. hsai_ugc_video_tasks (主任务表)

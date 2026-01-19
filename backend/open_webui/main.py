@@ -93,6 +93,7 @@ from open_webui.routers import (
     hsai_companies,  # 添加公司管理路由导入
     hsai_projects,  # 添加项目管理路由导入
     external_admin,  # 添加外部管理路由导入
+    external_admin_minimax,  # MiniMax Speech 外部管理路由
     hsai_ugc,  # 添加 UGC 视频生成路由导入
     # 移除hsai_websocket路由以避免与Socket.IO冲突
     # hsai_websocket,
@@ -1405,6 +1406,7 @@ app.include_router(
     prefix="/api/v1",
     tags=["external_admin"],
 )
+app.include_router(external_admin_minimax.router, prefix="/api/v1")
 
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)

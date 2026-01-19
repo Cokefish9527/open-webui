@@ -26,6 +26,7 @@ from open_webui.models.hsai_ugc import (
 from open_webui.services.workflow_meta_update_service import post_json
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.integrations.ffmpeg_oss import ensure_download_url, upload_via_ffmpeg, USE_FFMPEG_OSS
+from open_webui.models.hsai_minimax_accounts import MiniMaxAccounts
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +55,57 @@ def _require_env(name: str) -> str:
             detail=f"Missing required env var: {name}",
         )
     return value
+
+
+def _resolve_minimax_credentials(
+    minimax_account_id: Optional[int],
+    *,
+    require_group: bool,
+    allow_env_fallback: bool,
+) -> Dict[str, Optional[str]]:
+    """
+    Resolve MiniMax credentials for UGC:
+    - If minimax_account_id is provided: must exist/enabled and have api_key; no env fallback.
+    - Else: try default enabled MiniMax account; if missing and allow_env_fallback, fallback to env.
+    """
+    if minimax_account_id is not None:
+        account = MiniMaxAccounts.get_account(int(minimax_account_id))
+        if not account:
+            raise HTTPException(status_code=404, detail="MiniMax account not found")
+        if not bool(getattr(account, "enabled", False)):
+            raise HTTPException(status_code=409, detail="MiniMax account is disabled")
+        api_key = (getattr(account, "api_key", None) or "").strip()
+        if not api_key:
+            raise HTTPException(status_code=409, detail="MiniMax account missing api_key")
+        group_id = (getattr(account, "group_id", None) or "").strip() or None
+        if require_group and not group_id:
+            raise HTTPException(status_code=409, detail="MiniMax account missing group_id")
+        return {"api_key": api_key, "group_id": group_id, "resolved_account_id": str(int(account.id))}
+
+    env_key = os.getenv("MINIMAX_KEY", "").strip() or None
+    env_group = os.getenv("MINIMAX_GROUP", "").strip() or None
+
+    resolved_id, api_key, group_id = MiniMaxAccounts.resolve_credentials(
+        account_id=None,
+        allow_fallback_env=bool(allow_env_fallback),
+        env_api_key=env_key,
+        env_group_id=env_group,
+    )
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Missing MiniMax credentials (configure hsai_minimax_accounts or env MINIMAX_KEY)",
+        )
+    if require_group and not group_id:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Missing MiniMax group_id (configure hsai_minimax_accounts.group_id or env MINIMAX_GROUP)",
+        )
+    return {
+        "api_key": api_key,
+        "group_id": group_id,
+        "resolved_account_id": str(resolved_id) if resolved_id is not None else None,
+    }
 
 
 def _ugc_asset_url(file_path: str) -> str:
@@ -166,6 +218,7 @@ def _ugc_upload_and_get_url(
 @router.post("/models", response_model=MaterialModelData, summary="创建数字人资产 (Step 0)")
 async def create_material_model(
     model_name: str = Form(...),
+    minimax_account_id: Optional[int] = Form(default=None),
     model_img: UploadFile = File(...),
     voice_audio: UploadFile = File(...),
     user=Depends(get_verified_user),
@@ -196,7 +249,12 @@ async def create_material_model(
 
         # 2) 调用 n8n hs001 获取 voice_id
         # 设计文档未固定 hs001 入参字段，这里按现有 n8n 文档的最小集合传递并注入 minimax_key。
-        minimax_key = _require_env("MINIMAX_KEY")
+        minimax = _resolve_minimax_credentials(
+            minimax_account_id,
+            require_group=False,
+            allow_env_fallback=True,
+        )
+        minimax_key = minimax["api_key"]
         payload = {
             "ip_id": f"tmp_{uuid.uuid4()}",
             "ip_name": model_name,
@@ -226,6 +284,7 @@ async def create_material_model(
                 model_img_url=model_img_url,
                 voice_provider_id=str(voice_id),
                 voice_preview_url=voice_preview_url,
+                minimax_account_id=(int(minimax["resolved_account_id"]) if minimax.get("resolved_account_id") else None),
             ),
         )
         return model
@@ -271,6 +330,11 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
         task = VideoTasks.create_task(user_id, form)
         
         # 触发 n8n 生成脚本（与当前联调 payload 约定保持一致；ffmpeg_api_key 已作废，不再注入）
+        minimax = _resolve_minimax_credentials(
+            getattr(model, "minimax_account_id", None),
+            require_group=True,
+            allow_env_fallback=True,
+        )
         payload = {
             "task_id": task.id,
             "ip_id": f"model_{model.id}",
@@ -284,8 +348,8 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
             "subtitle": form.subtitle or "",
             "shot_script": form.shot_script or "",
             "jarvis_api_key": _require_env("JARVIS_API_KEY"),
-            "minimax_key": _require_env("MINIMAX_KEY"),
-            "minimax_group": _require_env("MINIMAX_GROUP"),
+            "minimax_key": minimax["api_key"],
+            "minimax_group": minimax["group_id"],
             "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
             "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
         }
@@ -493,6 +557,11 @@ async def generate_scene_videos(
     shot_script_list = [s.script_desc or "" for s in updated_scenes]
 
     VideoTasks.update_task_status(task_id, status=3, step=2)
+    minimax = _resolve_minimax_credentials(
+        getattr(model, "minimax_account_id", None),
+        require_group=True,
+        allow_env_fallback=True,
+    )
     payload = {
         "task_id": task_id,
         "voice_id": model.voice_provider_id,
@@ -500,8 +569,8 @@ async def generate_scene_videos(
         "shot_script_img_list": shot_script_img_list,
         "shot_script_list": shot_script_list,
         "jarvis_api_key": _require_env("JARVIS_API_KEY"),
-        "minimax_key": _require_env("MINIMAX_KEY"),
-        "minimax_group": _require_env("MINIMAX_GROUP"),
+        "minimax_key": minimax["api_key"],
+        "minimax_group": minimax["group_id"],
         "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
         "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
     }

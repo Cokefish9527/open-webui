@@ -78,6 +78,7 @@ class HSAIUGCMaterialModel(Base):
     model_img_url = Column(String(512), nullable=False)
     voice_provider_id = Column(String(128), nullable=False)
     voice_preview_url = Column(String(512), nullable=False)
+    minimax_account_id = Column(BigInteger, nullable=True)
     created_at = Column(DateTime, nullable=False, default=func.now())
 
 
@@ -137,6 +138,7 @@ class MaterialModelData(BaseModel):
     model_img_url: str
     voice_provider_id: str
     voice_preview_url: str
+    minimax_account_id: Optional[int] = None
     created_at: int
 
     @classmethod
@@ -151,11 +153,17 @@ class MaterialModelData(BaseModel):
                 "model_img_url",
                 "voice_provider_id",
                 "voice_preview_url",
+                "minimax_account_id",
                 "created_at",
             ]
             data = {key: getattr(value, key, None) for key in attr_names}
         if data.get("user_id") is not None:
             data["user_id"] = str(data["user_id"])
+        if data.get("minimax_account_id") is not None:
+            try:
+                data["minimax_account_id"] = int(data["minimax_account_id"])
+            except Exception:
+                data["minimax_account_id"] = None
         created_at = data.get("created_at")
         if isinstance(created_at, datetime):
             if created_at.tzinfo is None:
@@ -313,6 +321,7 @@ class MaterialModelCreateForm(BaseModel):
     model_img_url: str
     voice_provider_id: str
     voice_preview_url: str
+    minimax_account_id: Optional[int] = None
 
 class VideoTaskCreateForm(BaseModel):
     model_id: int
@@ -341,6 +350,7 @@ class HSAIUGCMaterialModelsTable:
                 model_img_url=form.model_img_url,
                 voice_provider_id=form.voice_provider_id,
                 voice_preview_url=form.voice_preview_url,
+                minimax_account_id=form.minimax_account_id,
                 created_at=datetime.utcnow()
             )
             db.add(model)
