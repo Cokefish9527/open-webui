@@ -60,6 +60,12 @@ def ensure_ugc_schema(
     - Material_Models -> hsai_ugc_material_models
     - Video_Tasks -> hsai_ugc_video_tasks
     - Task_Scenes -> hsai_ugc_task_scenes
+    
+    New tables (V3.3 Product Library):
+    - hsai_ugc_products (Product Library)
+
+    New tables (V3.3.1 Debugging):
+    - hsai_ugc_callback_logs (Queue Logs)
     """
 
     executed_statements: List[str] = []
@@ -77,6 +83,8 @@ def ensure_ugc_schema(
         material_models = "hsai_ugc_material_models"
         video_tasks = "hsai_ugc_video_tasks"
         task_scenes = "hsai_ugc_task_scenes"
+        products = "hsai_ugc_products"
+        callback_logs = "hsai_ugc_callback_logs"
 
         legacy_material_models_table = _qualified_name(legacy_material_models, effective_schema, connection=connection)
         legacy_video_tasks_table = _qualified_name(legacy_video_tasks, effective_schema, connection=connection)
@@ -85,6 +93,8 @@ def ensure_ugc_schema(
         material_models_table = _qualified_name(material_models, effective_schema, connection=connection)
         video_tasks_table = _qualified_name(video_tasks, effective_schema, connection=connection)
         task_scenes_table = _qualified_name(task_scenes, effective_schema, connection=connection)
+        products_table = _qualified_name(products, effective_schema, connection=connection)
+        callback_logs_table = _qualified_name(callback_logs, effective_schema, connection=connection)
 
         statements: List[str] = []
 
@@ -95,6 +105,9 @@ def ensure_ugc_schema(
         material_models_exists = inspector.has_table(material_models, schema=effective_schema)
         video_tasks_exists = inspector.has_table(video_tasks, schema=effective_schema)
         task_scenes_exists = inspector.has_table(task_scenes, schema=effective_schema)
+        products_exists = inspector.has_table(products, schema=effective_schema)
+        callback_logs_exists = inspector.has_table(callback_logs, schema=effective_schema)
+
 
         def _rename_table(old_identifier: str, new_identifier: str) -> str:
             """
@@ -376,6 +389,88 @@ CREATE TABLE IF NOT EXISTS {task_scenes_table} (
     fragment_video_urls TEXT,
     UNIQUE(task_id, scene_index),
     FOREIGN KEY(task_id) REFERENCES {video_tasks_table}(id) ON DELETE CASCADE
+)
+                    """.strip()
+                )
+
+        # 4. hsai_ugc_products (产品库表)
+        if not products_exists:
+            id_type = _id_autoincrement_type()
+            created_at_type = _datetime_type()
+            user_id_type = _user_id_type()
+            # Common fields
+            if dialect == "sqlite":
+                statements.append(
+                    f"""
+CREATE TABLE IF NOT EXISTS {products_table} (
+    id {id_type} PRIMARY KEY AUTOINCREMENT,
+    user_id {user_id_type} NOT NULL,
+    name VARCHAR(128) NOT NULL,
+    url VARCHAR(512) NOT NULL,
+    country VARCHAR(64),
+    language VARCHAR(64),
+    description TEXT,
+    cover_img VARCHAR(512),
+    created_at {created_at_type} NOT NULL,
+    updated_at {created_at_type} NOT NULL
+)
+                    """.strip()
+                )
+            else:
+                statements.append(
+                    f"""
+CREATE TABLE IF NOT EXISTS {products_table} (
+    id {id_type} PRIMARY KEY,
+    user_id {user_id_type} NOT NULL,
+    name VARCHAR(128) NOT NULL,
+    url VARCHAR(512) NOT NULL,
+    country VARCHAR(64),
+    language VARCHAR(64),
+    description TEXT,
+    cover_img VARCHAR(512),
+    created_at {created_at_type} NOT NULL,
+    updated_at {created_at_type} NOT NULL
+)
+                    """.strip()
+                )
+
+
+        # 5. hsai_ugc_callback_logs (回调日志表)
+        if not callback_logs_exists:
+            id_type = _id_autoincrement_type()
+            created_at_type = _datetime_type()
+            json_type = "JSON"
+            if dialect == "sqlite":
+                # SQLite doesn't strictly enforce JSON type but supports it in newer versions via extension,
+                # or we just store as TEXT. SQLAlchemy JSON type handles it.
+                # But for raw SQL, we use TEXT or JSON. Let's use TEXT for compatibility if needed, 
+                # but SQLAlchemy dialects usually map JSON to suitable type.
+                # However, raw SQL string here needs specific type.
+                json_type = "TEXT" 
+
+            if dialect == "sqlite":
+                statements.append(
+                    f"""
+CREATE TABLE IF NOT EXISTS {callback_logs_table} (
+    id {id_type} PRIMARY KEY AUTOINCREMENT,
+    task_id VARCHAR(36),
+    msg_type VARCHAR(64),
+    payload {json_type},
+    error_msg TEXT,
+    created_at {created_at_type} NOT NULL
+)
+                    """.strip()
+                )
+            else:
+                statements.append(
+                    f"""
+CREATE TABLE IF NOT EXISTS {callback_logs_table} (
+    id {id_type} PRIMARY KEY,
+    task_id VARCHAR(36),
+    msg_type VARCHAR(64),
+    payload {json_type},
+    error_msg TEXT,
+    created_at {created_at_type} NOT NULL
 )
                     """.strip()
                 )

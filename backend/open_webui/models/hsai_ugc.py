@@ -126,6 +126,36 @@ class HSAIUGCTaskScene(Base):
 
     task = relationship("HSAIUGCTask", back_populates="scenes")
 
+
+class HSAIUGCProduct(Base):
+    """产品库表 (hsai_ugc_products)"""
+    __tablename__ = "hsai_ugc_products"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(Text, nullable=False)
+    name = Column(String(128), nullable=False)
+    url = Column(String(512), nullable=False)
+    country = Column(String(64), nullable=True)
+    language = Column(String(64), nullable=True)
+    description = Column(Text, nullable=True)
+    cover_img = Column(String(512), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=func.now())
+    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
+
+
+class HSAIUGCCallbackLog(Base):
+    """UGC 消息队列回调日志表 (hsai_ugc_callback_logs)"""
+    __tablename__ = "hsai_ugc_callback_logs"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    task_id = Column(String(36), nullable=True)  # task_id might be missing
+    msg_type = Column(String(64), nullable=True) # type might be missing
+    payload = Column(JSON, nullable=True)        # raw message
+    error_msg = Column(Text, nullable=True)      # processing error if any
+    created_at = Column(DateTime, nullable=False, default=func.now())
+
+
+
 ####################
 # Pydantic Models
 ####################
@@ -312,6 +342,69 @@ class UGCTaskCloseForm(BaseModel):
     reason: str = "user_abort"
     message: Optional[str] = None
 
+
+class ProductData(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: str
+    name: str
+    url: str
+    country: Optional[str] = None
+    language: Optional[str] = None
+    description: Optional[str] = None
+    cover_img: Optional[str] = None
+    created_at: int
+    updated_at: int
+
+    @classmethod
+    def _coerce_source(cls, value: Any) -> Dict[str, Any]:
+        if isinstance(value, dict):
+            data = dict(value)
+        else:
+            attr_names = [
+                "id",
+                "user_id",
+                "name",
+                "url",
+                "country",
+                "language",
+                "description",
+                "cover_img",
+                "created_at",
+                "updated_at",
+            ]
+            data = {key: getattr(value, key, None) for key in attr_names}
+        if data.get("user_id") is not None:
+            data["user_id"] = str(data["user_id"])
+        for key in ("created_at", "updated_at"):
+            v = data.get(key)
+            if isinstance(v, datetime):
+                if v.tzinfo is None:
+                    v = v.replace(tzinfo=timezone.utc)
+                data[key] = int(v.timestamp())
+        return data
+
+    @classmethod
+    def model_validate(cls, value, *args, **kwargs):
+        return super().model_validate(cls._coerce_source(value), *args, **kwargs)
+
+class ProductCreateForm(BaseModel):
+    name: str
+    url: str
+    country: Optional[str] = None
+    language: Optional[str] = None
+    description: Optional[str] = None
+    cover_img: Optional[str] = None
+
+class ProductUpdateForm(BaseModel):
+    name: Optional[str] = None
+    url: Optional[str] = None
+    country: Optional[str] = None
+    language: Optional[str] = None
+    description: Optional[str] = None
+    cover_img: Optional[str] = None
+
+
 ####################
 # Forms
 ####################
@@ -372,6 +465,15 @@ class HSAIUGCMaterialModelsTable:
         with _schema_aware_db() as db:
             model = db.query(HSAIUGCMaterialModel).filter_by(id=model_id, user_id=user_id).first()
             return MaterialModelData.model_validate(model) if model else None
+
+    def delete_model(self, model_id: int) -> bool:
+        with _schema_aware_db() as db:
+            model = db.query(HSAIUGCMaterialModel).filter_by(id=model_id).first()
+            if not model:
+                return False
+            db.delete(model)
+            db.commit()
+            return True
 
 
 class HSAIUGCTasksTable:
@@ -773,7 +875,6 @@ class HSAIUGCTaskScenesTable:
                 )
             )
             # 同步任务进度（主要用于 status=3 的“分镜视频生成中”场景）。
-            # 注意：进度同步失败不影响主流程。
             try:
                 current_status = db.query(HSAIUGCTask.status).filter_by(id=task_id).scalar()
                 if current_status != -2:
@@ -803,7 +904,106 @@ class HSAIUGCTaskScenesTable:
             return result > 0
 
 
+class HSAIUGCProductsTable:
+    def create_product(self, user_id: str, form: ProductCreateForm) -> ProductData:
+        with _schema_aware_db() as db:
+            prod = HSAIUGCProduct(
+                user_id=user_id,
+                name=form.name,
+                url=form.url,
+                country=form.country,
+                language=form.language,
+                description=form.description,
+                cover_img=form.cover_img,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(prod)
+            db.commit()
+            db.refresh(prod)
+            return ProductData.model_validate(prod)
+
+    def get_product(self, product_id: int) -> Optional[ProductData]:
+        with _schema_aware_db() as db:
+            prod = db.query(HSAIUGCProduct).filter_by(id=product_id).first()
+            return ProductData.model_validate(prod) if prod else None
+
+    def get_products(
+        self,
+        user_id: str,
+        q: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> List[ProductData]:
+        with _schema_aware_db() as db:
+            query = db.query(HSAIUGCProduct).filter_by(user_id=user_id)
+            if q:
+                # Simple name filter
+                query = query.filter(HSAIUGCProduct.name.ilike(f"%{q}%"))
+            
+            query = query.order_by(HSAIUGCProduct.updated_at.desc())
+            
+            offset = (max(1, page) - 1) * max(1, page_size)
+            products = query.offset(offset).limit(max(1, page_size)).all()
+            return [ProductData.model_validate(p) for p in products]
+
+    def get_products_count(self, user_id: str, q: Optional[str] = None) -> int:
+        with _schema_aware_db() as db:
+            query = db.query(HSAIUGCProduct).filter_by(user_id=user_id)
+            if q:
+                query = query.filter(HSAIUGCProduct.name.ilike(f"%{q}%"))
+            return query.count()
+
+    def update_product(self, product_id: int, form: ProductUpdateForm) -> Optional[ProductData]:
+        with _schema_aware_db() as db:
+            prod = db.query(HSAIUGCProduct).filter_by(id=product_id).first()
+            if not prod:
+                return None
+            
+            update_data = form.model_dump(exclude_unset=True)
+            for k, v in update_data.items():
+                setattr(prod, k, v)
+            
+            prod.updated_at = datetime.utcnow()
+            db.commit()
+            db.refresh(prod)
+            return ProductData.model_validate(prod)
+
+    def delete_product(self, product_id: int) -> bool:
+        with _schema_aware_db() as db:
+            prod = db.query(HSAIUGCProduct).filter_by(id=product_id).first()
+            if not prod:
+                return False
+            db.delete(prod)
+            db.commit()
+            return True
+
+class HSAIUGCCallbackLogsTable:
+    def insert_log(
+        self,
+        message: Dict[str, Any],
+        task_id: Optional[str] = None,
+        msg_type: Optional[str] = None,
+        error_msg: Optional[str] = None
+    ) -> HSAIUGCCallbackLog:
+        with _schema_aware_db() as db:
+            log_entry = HSAIUGCCallbackLog(
+                task_id=task_id,
+                msg_type=msg_type,
+                payload=message,
+                error_msg=error_msg,
+                created_at=datetime.utcnow(),
+            )
+            db.add(log_entry)
+            db.commit()
+            db.refresh(log_entry)
+            return log_entry
+
+
 # Singletons
 MaterialModels = HSAIUGCMaterialModelsTable()
 VideoTasks = HSAIUGCTasksTable()
 TaskScenes = HSAIUGCTaskScenesTable()
+Products = HSAIUGCProductsTable()
+CallbackLogs = HSAIUGCCallbackLogsTable()
+

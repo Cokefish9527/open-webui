@@ -3,6 +3,7 @@ import os
 import re
 import uuid
 from datetime import datetime
+import traceback
 from typing import List, Dict, Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query, Body
@@ -14,6 +15,7 @@ from open_webui.models.hsai_ugc import (
     MaterialModels,
     VideoTasks,
     TaskScenes,
+    Products,
     MaterialModelCreateForm,
     VideoTaskCreateForm,
     TaskSceneUpdateForm,
@@ -22,11 +24,15 @@ from open_webui.models.hsai_ugc import (
     TaskSceneData,
     UGCLibraryTasksResponse,
     UGCTaskCloseForm,
+    ProductCreateForm,
+    ProductUpdateForm,
+    ProductData,
 )
 from open_webui.services.workflow_meta_update_service import post_json
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.integrations.ffmpeg_oss import ensure_download_url, upload_via_ffmpeg, USE_FFMPEG_OSS
 from open_webui.models.hsai_minimax_accounts import MiniMaxAccounts
+from open_webui.services.minimax_speech_client import MinimaxAPIError, minimax_speech_client
 
 log = logging.getLogger(__name__)
 
@@ -229,6 +235,7 @@ async def create_material_model(
     """
     try:
         user_id = _require_user_id(user)
+        log.info(f"Creating material model for user {user_id}: name={model_name}")
 
         # 1) 上传资源到存储
         img_filename = f"ugc_model_img_{uuid.uuid4()}_{os.path.basename(model_img.filename or 'model.jpg')}"
@@ -263,9 +270,16 @@ async def create_material_model(
             "minimax_key": minimax_key,
             "minimax-key": minimax_key,
         }
+        log.info(f"Triggering n8n hs001: {URL_HS001}")
         status_code, data, raw_text = await post_json(URL_HS001, payload)
+        log.info(f"n8n hs001 response: code={status_code}, data={data}, text={raw_text}")
         if status_code >= 400:
-            raise HTTPException(status_code=502, detail=f"n8n hs001 failed: {status_code}")
+            error_msg = f"n8n hs001 failed: {status_code}"
+            if isinstance(data, dict) and "error" in data:
+                error_msg = data["error"]
+            elif raw_text and len(raw_text) < 200:
+                error_msg = raw_text
+            raise HTTPException(status_code=502, detail=error_msg)
 
         voice_id = None
         if isinstance(data, dict):
@@ -291,7 +305,7 @@ async def create_material_model(
     except HTTPException:
         raise
     except Exception as e:
-        log.error(f"Failed to create material model: {e}")
+        log.error(f"Failed to create material model: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/models", response_model=List[MaterialModelData], summary="获取数字人资产列表")
@@ -313,8 +327,139 @@ async def get_material_model_detail(model_id: int, user=Depends(get_verified_use
     return model
 
 ####################
+    return model
+
+
+@router.delete("/models/{model_id}", summary="删除数字人资产 (含MiniMax Voice)")
+async def delete_material_model(model_id: int, user=Depends(get_verified_user)):
+    """
+    删除数字人资产：
+    1. 根据 model_id 查找资产（校验所有权）。
+    2. 获取关联的 voice_provider_id 和 minimax_account_id。
+    3. 调用 MiniMax API 删除远端 Voice（释放插槽）。
+    4. 删除本地 DB 记录。
+    """
+    try:
+        user_id = _require_user_id(user)
+        model = MaterialModels.get_model_by_id_and_user_id(model_id, user_id)
+        if not model:
+            raise HTTPException(status_code=404, detail="Model not found")
+
+        # Delete from MiniMax
+        voice_id = getattr(model, "voice_provider_id", "")
+        account_id = getattr(model, "minimax_account_id", None)
+        
+        if voice_id:
+            try:
+                minimax = _resolve_minimax_credentials(
+                    account_id,
+                    require_group=False,
+                    allow_env_fallback=True, # Allow fallback if account was deleted but we have env key? Maybe safer.
+                )
+                api_key = minimax["api_key"]
+                
+                # Assume voice_type="voice_cloning" (T2A) as per Step 0 usage.
+                # If failed, just log warning or swallow 404/invalid-id errors to allow local cleanup?
+                # User request implies "avoid slot full", so we must try.
+                log.info(f"Deleting MiniMax voice {voice_id} using key ...{api_key[-4:]}")
+                await minimax_speech_client.delete_voice(
+                    api_key=api_key,
+                    voice_type="voice_cloning", # Most likely type for UGC
+                    voice_id=voice_id
+                )
+            except HTTPException:
+                pass # Minimax creds missing?
+            except MinimaxAPIError as e:
+                log.warning(f"MiniMax delete voice failed: {e.message} (status={e.status}). Proceeding with local delete.")
+            except Exception as e:
+                log.error(f"Unexpected error deleting MiniMax voice: {e}")
+
+        # Delete from DB
+        ok = MaterialModels.delete_model(model.id)
+        if not ok:
+            raise HTTPException(status_code=500, detail="Failed to delete model from DB")
+            
+        return {"success": True, "model_id": model_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error(f"Failed to delete material model: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+####################
+# Product Library
+####################
+
+@router.post("/products", response_model=ProductData, summary="创建产品")
+async def create_product(form: ProductCreateForm, user=Depends(get_verified_user)):
+    user_id = _require_user_id(user)
+    return Products.create_product(user_id, form)
+
+@router.get("/products", response_model=List[ProductData], summary="产品列表")
+async def get_products(
+    q: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 20,
+    user=Depends(get_verified_user)
+):
+    user_id = _require_user_id(user)
+    return Products.get_products(user_id, q=q, page=page, page_size=page_size)
+
+@router.put("/products/{product_id}", response_model=ProductData, summary="更新产品")
+async def update_product(product_id: int, form: ProductUpdateForm, user=Depends(get_verified_user)):
+    user_id = _require_user_id(user)
+    prod = Products.get_product(product_id)
+    if not prod or prod.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    updated = Products.update_product(product_id, form)
+    return updated
+
+@router.delete("/products/{product_id}", summary="删除产品")
+async def delete_product(product_id: int, user=Depends(get_verified_user)):
+    user_id = _require_user_id(user)
+    prod = Products.get_product(product_id)
+    if not prod or prod.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    Products.delete_product(product_id)
+    return {"success": True, "product_id": product_id}
+
+####################
 # Step 1: Video Task Creation & Script Generation
 ####################
+
+def _get_sharded_api_key(index: int = 0) -> str:
+    """
+    Get the JARVIS_API_KEY at a specific index.
+    Supports comma-separated keys in the environment variable.
+    If index is out of bounds, falls back to the first key (or strictly compliant logic).
+    
+    Logic:
+    - Split env JARVIS_API_KEY by comma.
+    - If index < len(keys), return keys[index].
+    - Else if keys exist, return keys[0] (fallback to first).
+    - Else raise error.
+    """
+    raw_val = _require_env("JARVIS_API_KEY")
+    keys = [k.strip() for k in raw_val.split(",") if k.strip()]
+    
+    if not keys:
+         # Should be caught by _require_env but double check
+         raise HTTPException(status_code=500, detail="JARVIS_API_KEY is empty")
+
+    if 0 <= index < len(keys):
+        return keys[index]
+    
+    # Fallback: if we requested key #2 but only 1 exists, use key #1?
+    # Or should we strictly error? 
+    # User request: "hs002 -> key1, hs003 -> key2". 
+    # Let's fallback to key[0] to accept legacy config, but log warning?
+    # For now, safe fallback to keys[0].
+    return keys[0]
+
 
 @router.post("/tasks", response_model=VideoTaskData, summary="创建视频生成任务 (Step 1)")
 async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified_user)):
@@ -347,7 +492,7 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
             "language": form.language,
             "subtitle": form.subtitle or "",
             "shot_script": form.shot_script or "",
-            "jarvis_api_key": _require_env("JARVIS_API_KEY"),
+            "jarvis_api_key": _get_sharded_api_key(0), # Key #1 for Step 1
             "minimax_key": minimax["api_key"],
             "minimax_group": minimax["group_id"],
             "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
@@ -568,7 +713,7 @@ async def generate_scene_videos(
         "subtitle_list": subtitle_list,
         "shot_script_img_list": shot_script_img_list,
         "shot_script_list": shot_script_list,
-        "jarvis_api_key": _require_env("JARVIS_API_KEY"),
+        "jarvis_api_key": _get_sharded_api_key(1), # Key #2 for Step 2
         "minimax_key": minimax["api_key"],
         "minimax_group": minimax["group_id"],
         "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
@@ -645,7 +790,7 @@ async def merge_final_video(
     hs004_payload = {
         "task_id": task_id,
         "shot_video_list": shot_video_list,
-        "jarvis_api_key": _require_env("JARVIS_API_KEY"),
+        "jarvis_api_key": _get_sharded_api_key(0), # Key #1 (default) or should we allow Key #3? Using Key #1 for now.
     }
     status_code, _, _ = await post_json(URL_HS004, hs004_payload)
     if status_code >= 400:
@@ -653,3 +798,117 @@ async def merge_final_video(
         raise HTTPException(status_code=502, detail=f"n8n merge trigger failed: {status_code}")
 
     return {"success": True, "task_id": task_id, "status": 5, "message": "Merge process started"}
+
+
+@router.post("/tasks/{task_id}/retry", summary="重试失败任务")
+async def retry_task(task_id: str, user=Depends(get_verified_user)):
+    """
+    重试失败或超时的任务。
+    根据 step 自动判断重试逻辑：
+    - step=1: 重试脚本生成 (hs002)
+    - step=2: 重试分镜视频生成 (hs003)
+    - step=3: 重试最终合成 (hs004)
+    """
+    task = VideoTasks.get_task_by_id(task_id)
+    user_id = _require_user_id(user)
+    if not task or task.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # 仅允许重试失败(-1)或超时关闭(-2)的任务
+    if int(task.status or 0) not in (-1, -2):
+         raise HTTPException(status_code=409, detail="Task is not in failed state")
+
+    step = int(task.step or 1)
+    
+    # 重新加载模型信息
+    model = MaterialModels.get_model_by_id_and_user_id(int(task.model_id), user_id)
+    if not model:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    minimax = _resolve_minimax_credentials(
+        getattr(model, "minimax_account_id", None),
+        require_group=True,
+        allow_env_fallback=True,
+    )
+
+    if step == 1:
+        # Retry HS002
+        form_dict = getattr(task, "base_inputs", {}) or {}
+        # 恢复 status=1 (SCRIPTING)
+        VideoTasks.update_task_status(task.id, status=1)
+        
+        payload = {
+            "task_id": task.id,
+            "ip_id": f"model_{model.id}",
+            "ip_name": model.model_name,
+            "ip_img": model.model_img_url,
+            "voice_id": model.voice_provider_id,
+            "product_url": form_dict.get("product_url"),
+            "product_name": form_dict.get("product_name"),
+            "product_country": form_dict.get("product_country") or "",
+            "language": form_dict.get("language"),
+            "subtitle": form_dict.get("subtitle") or "",
+            "shot_script": form_dict.get("shot_script") or "",
+            "jarvis_api_key": _get_sharded_api_key(0), # Key #1
+            "minimax_key": minimax["api_key"],
+            "minimax_group": minimax["group_id"],
+            "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
+            "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
+        }
+        target_url = URL_HS002
+        new_status = 1
+
+    elif step == 2:
+        # Retry HS003
+        scenes_rows = TaskScenes.get_scenes_by_task_id(task.id)
+        scenes_rows.sort(key=lambda s: s.scene_index)
+        if not scenes_rows:
+            raise HTTPException(status_code=400, detail="No scenes found for retry step 2")
+
+        subtitle_list = [s.subtitle or "" for s in scenes_rows]
+        shot_script_img_list = [s.reference_img_url or "" for s in scenes_rows]
+        shot_script_list = [s.script_desc or "" for s in scenes_rows]
+
+        VideoTasks.update_task_status(task.id, status=3)
+        payload = {
+            "task_id": task.id,
+            "voice_id": model.voice_provider_id,
+            "subtitle_list": subtitle_list,
+            "shot_script_img_list": shot_script_img_list,
+            "shot_script_list": shot_script_list,
+            "jarvis_api_key": _get_sharded_api_key(1), # Key #2
+            "minimax_key": minimax["api_key"],
+            "minimax_group": minimax["group_id"],
+            "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
+            "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
+        }
+        target_url = URL_HS003
+        new_status = 3
+
+    elif step == 3:
+        # Retry HS004
+        scenes_rows = TaskScenes.get_scenes_by_task_id(task.id)
+        scenes_rows.sort(key=lambda s: s.scene_index)
+        # Use existing fragments
+        shot_video_list = [s.fragment_video_url for s in scenes_rows]
+        if any(not u for u in shot_video_list):
+             raise HTTPException(status_code=400, detail="Missing fragment videos for retry step 3")
+
+        VideoTasks.update_task_status(task.id, status=5)
+        payload = {
+            "task_id": task.id,
+            "shot_video_list": shot_video_list,
+            "jarvis_api_key": _get_sharded_api_key(0), # Key #1 (Default)
+        }
+        target_url = URL_HS004
+        new_status = 5
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid step for retry: {step}")
+
+    # Trigger n8n
+    status_code, _, _ = await post_json(target_url, payload)
+    if status_code >= 400:
+        VideoTasks.update_task_status(task.id, status=-1)
+        raise HTTPException(status_code=502, detail=f"n8n retry trigger failed: {status_code}")
+
+    return {"success": True, "task_id": task.id, "status": new_status, "step": step, "message": "Retry triggered"}

@@ -4,12 +4,14 @@ import time
 import os
 from typing import Dict, Any, Optional
 
-from open_webui.models.hsai_ugc import VideoTasks, TaskScenes
+from open_webui.models.hsai_ugc import VideoTasks, TaskScenes, CallbackLogs
 from open_webui.socket.main import sio
 from open_webui.services.workflow_meta_update_service import post_json
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+
 
 async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> None:
     """
@@ -20,8 +22,29 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
         msg_type = message.get("type")
         data = message.get("data", {})
 
+        # 1. Persistent Logging (Step 15: Debugging)
+        log_entry = None
+        try:
+             log_entry = CallbackLogs.insert_log(message, task_id=task_id, msg_type=msg_type)
+        except Exception as e:
+            log.error(f"Failed to persist UGC callback log: {e}")
+
+        # 2. Type Inference (Fix for missing type in n8n payload)
+        if not msg_type and data:
+            if "shot_video_list" in data:
+                msg_type = "VIDEO_RESULT"
+                log.warning(f"Inferred msg_type='VIDEO_RESULT' for task_id={task_id}")
+            elif "subtitle_list" in data:
+                msg_type = "SCRIPT_RESULT"
+                log.warning(f"Inferred msg_type='SCRIPT_RESULT' for task_id={task_id}")
+            elif "video_url" in data:
+                msg_type = "MERGE_RESULT"
+                log.warning(f"Inferred msg_type='MERGE_RESULT' for task_id={task_id}")
+
         if not task_id or not msg_type:
-            log.error(f"UGC Callback message missing task_id or type: {message}")
+            error_msg = f"UGC Callback message missing task_id or type: {message}"
+            log.error(error_msg)
+            # Optionally update log_entry with error
             return
 
         task = VideoTasks.get_task_by_id(task_id)
