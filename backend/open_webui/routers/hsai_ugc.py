@@ -333,11 +333,16 @@ async def get_material_model_detail(model_id: int, user=Depends(get_verified_use
 @router.delete("/models/{model_id}", summary="删除数字人资产 (含MiniMax Voice)")
 async def delete_material_model(model_id: int, user=Depends(get_verified_user)):
     """
-    删除数字人资产：
-    1. 根据 model_id 查找资产（校验所有权）。
+    删除数字人资产(软删除):
+    1. 根据 model_id 查找资产(校验所有权)。
     2. 获取关联的 voice_provider_id 和 minimax_account_id。
-    3. 调用 MiniMax API 删除远端 Voice（释放插槽）。
-    4. 删除本地 DB 记录。
+    3. 调用 MiniMax API 删除远端 Voice(释放插槽) - 必须成功。
+    4. 标记本地 DB 记录为已删除(软删除,保留历史任务引用)。
+    
+    流程一致性保证:
+    - MiniMax API 调用失败 → 抛出异常,不执行软删除
+    - MiniMax API 调用成功 → 执行软删除
+    - 软删除失败 → 抛出异常(此时插槽已释放,需人工介入)
     """
     try:
         user_id = _require_user_id(user)
@@ -345,47 +350,83 @@ async def delete_material_model(model_id: int, user=Depends(get_verified_user)):
         if not model:
             raise HTTPException(status_code=404, detail="Model not found")
 
-        # Delete from MiniMax
         voice_id = getattr(model, "voice_provider_id", "")
         account_id = getattr(model, "minimax_account_id", None)
         
+        # Step 1: 释放 MiniMax 插槽(关键步骤,必须成功)
+        minimax_deleted = False
         if voice_id:
             try:
                 minimax = _resolve_minimax_credentials(
                     account_id,
                     require_group=False,
-                    allow_env_fallback=True, # Allow fallback if account was deleted but we have env key? Maybe safer.
+                    allow_env_fallback=True,
                 )
                 api_key = minimax["api_key"]
                 
-                # Assume voice_type="voice_cloning" (T2A) as per Step 0 usage.
-                # If failed, just log warning or swallow 404/invalid-id errors to allow local cleanup?
-                # User request implies "avoid slot full", so we must try.
-                log.info(f"Deleting MiniMax voice {voice_id} using key ...{api_key[-4:]}")
+                log.info(f"Deleting MiniMax voice {voice_id} for model {model_id}")
                 await minimax_speech_client.delete_voice(
                     api_key=api_key,
-                    voice_type="voice_cloning", # Most likely type for UGC
+                    voice_type="voice_cloning",
                     voice_id=voice_id
                 )
-            except HTTPException:
-                pass # Minimax creds missing?
+                minimax_deleted = True
+                log.info(f"MiniMax voice {voice_id} deleted successfully")
+                
+            except HTTPException as e:
+                # 凭证问题
+                log.error(f"MiniMax credentials error: {e.detail}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"无法获取 MiniMax 凭证以释放插槽: {e.detail}"
+                )
             except MinimaxAPIError as e:
-                log.warning(f"MiniMax delete voice failed: {e.message} (status={e.status}). Proceeding with local delete.")
+                # MiniMax API 错误
+                # 404 可能表示插槽已被释放,可以容忍
+                if e.status == 404:
+                    log.warning(f"MiniMax voice {voice_id} not found (already deleted?), proceeding")
+                    minimax_deleted = True
+                else:
+                    log.error(f"MiniMax API error: {e.message} (status={e.status})")
+                    raise HTTPException(
+                        status_code=502,
+                        detail=f"MiniMax 插槽释放失败: {e.message}"
+                    )
             except Exception as e:
                 log.error(f"Unexpected error deleting MiniMax voice: {e}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"释放 MiniMax 插槽时发生未知错误: {str(e)}"
+                )
+        else:
+            # 没有 voice_id,跳过 MiniMax 删除
+            log.warning(f"Model {model_id} has no voice_provider_id, skipping MiniMax deletion")
+            minimax_deleted = True
 
-        # Delete from DB
-        ok = MaterialModels.delete_model(model.id)
-        if not ok:
-            raise HTTPException(status_code=500, detail="Failed to delete model from DB")
+        # Step 2: 软删除本地记录(仅在 MiniMax 成功后执行)
+        if minimax_deleted:
+            ok = MaterialModels.delete_model(model.id)
+            if not ok:
+                # 严重错误:插槽已释放但本地标记失败
+                log.error(f"CRITICAL: MiniMax voice deleted but local soft-delete failed for model {model_id}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="MiniMax 插槽已释放,但本地删除标记失败,请联系管理员"
+                )
             
-        return {"success": True, "model_id": model_id}
+            log.info(f"Model {model_id} soft-deleted successfully")
+            return {"success": True, "model_id": model_id, "minimax_deleted": True}
+        else:
+            # 理论上不会到这里
+            raise HTTPException(status_code=500, detail="删除流程异常")
 
     except HTTPException:
         raise
     except Exception as e:
         log.error(f"Failed to delete material model: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 
 ####################

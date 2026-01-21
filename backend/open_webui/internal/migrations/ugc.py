@@ -234,7 +234,8 @@ CREATE TABLE IF NOT EXISTS {material_models_table} (
     voice_provider_id VARCHAR(128) NOT NULL,
     voice_preview_url VARCHAR(512) NOT NULL,
     minimax_account_id INTEGER,
-    created_at {created_at_type} NOT NULL
+    created_at {created_at_type} NOT NULL,
+    deleted_at {created_at_type}
 )
                     """.strip()
                 )
@@ -249,10 +250,21 @@ CREATE TABLE IF NOT EXISTS {material_models_table} (
     voice_provider_id VARCHAR(128) NOT NULL,
     voice_preview_url VARCHAR(512) NOT NULL,
     minimax_account_id BIGINT,
-    created_at {created_at_type} NOT NULL
+    created_at {created_at_type} NOT NULL,
+    deleted_at {created_at_type}
+)
 )
                     """.strip()
                 )
+        else:
+            # Table exists, check if deleted_at column exists
+            material_cols = _column_names(material_models)
+            if "deleted_at" not in material_cols:
+                created_at_type = _datetime_type()
+                statements.append(
+                    f"ALTER TABLE {material_models_table} ADD COLUMN deleted_at {created_at_type}"
+                )
+
 
         # Add missing columns for existing hsai_ugc_material_models (or legacy before rename).
         inspect_material_table = material_models if material_models_exists else (
@@ -394,11 +406,23 @@ CREATE TABLE IF NOT EXISTS {task_scenes_table} (
                 )
 
         # 4. hsai_ugc_products (产品库表)
+        #
+        # 方案B：产品库仅维护「产品名称/描述/产品图链接」三项业务属性。
+        # 为可追溯与审计，仍保留 id/user_id/created_at/updated_at。
+        desired_product_columns = {
+            "id",
+            "user_id",
+            "name",
+            "description",
+            "cover_img",
+            "created_at",
+            "updated_at",
+        }
+
         if not products_exists:
             id_type = _id_autoincrement_type()
             created_at_type = _datetime_type()
             user_id_type = _user_id_type()
-            # Common fields
             if dialect == "sqlite":
                 statements.append(
                     f"""
@@ -406,9 +430,6 @@ CREATE TABLE IF NOT EXISTS {products_table} (
     id {id_type} PRIMARY KEY AUTOINCREMENT,
     user_id {user_id_type} NOT NULL,
     name VARCHAR(128) NOT NULL,
-    url VARCHAR(512) NOT NULL,
-    country VARCHAR(64),
-    language VARCHAR(64),
     description TEXT,
     cover_img VARCHAR(512),
     created_at {created_at_type} NOT NULL,
@@ -423,9 +444,6 @@ CREATE TABLE IF NOT EXISTS {products_table} (
     id {id_type} PRIMARY KEY,
     user_id {user_id_type} NOT NULL,
     name VARCHAR(128) NOT NULL,
-    url VARCHAR(512) NOT NULL,
-    country VARCHAR(64),
-    language VARCHAR(64),
     description TEXT,
     cover_img VARCHAR(512),
     created_at {created_at_type} NOT NULL,
@@ -433,6 +451,63 @@ CREATE TABLE IF NOT EXISTS {products_table} (
 )
                     """.strip()
                 )
+        else:
+            # 表已存在：对齐到精简后的列集合（删除多余字段）。
+            existing_cols = _column_names(products)
+
+            # 先补齐缺失列，保证后续 SQLite 重建表时可直接 SELECT。
+            if "description" not in existing_cols:
+                statements.append(f"ALTER TABLE {products_table} ADD COLUMN description TEXT")
+                existing_cols.add("description")
+            if "cover_img" not in existing_cols:
+                statements.append(f"ALTER TABLE {products_table} ADD COLUMN cover_img VARCHAR(512)")
+                existing_cols.add("cover_img")
+
+            extra_cols = sorted([c for c in existing_cols if c not in desired_product_columns])
+
+            if extra_cols:
+                if dialect == "sqlite":
+                    # SQLite 不支持 DROP COLUMN：通过“重建表 + 迁移数据”实现删除多余列。
+                    tmp_identifier = f"{products}__tmp_pruned"
+                    tmp_table = _qualified_name(tmp_identifier, effective_schema, connection=connection)
+                    id_type = _id_autoincrement_type()
+                    created_at_type = _datetime_type()
+                    user_id_type = _user_id_type()
+
+                    statements.append(f"DROP TABLE IF EXISTS {tmp_table}")
+                    statements.append(
+                        f"""
+CREATE TABLE IF NOT EXISTS {tmp_table} (
+    id {id_type} PRIMARY KEY AUTOINCREMENT,
+    user_id {user_id_type} NOT NULL,
+    name VARCHAR(128) NOT NULL,
+    description TEXT,
+    cover_img VARCHAR(512),
+    created_at {created_at_type} NOT NULL,
+    updated_at {created_at_type} NOT NULL
+)
+                        """.strip()
+                    )
+                    statements.append(
+                        f"""
+INSERT INTO {tmp_table} (id, user_id, name, description, cover_img, created_at, updated_at)
+SELECT id, user_id, name, description, cover_img, created_at, updated_at
+FROM {products_table}
+                        """.strip()
+                    )
+                    statements.append(f"DROP TABLE {products_table}")
+                    statements.append(_rename_table(tmp_identifier, products))
+                else:
+                    # PostgreSQL: DROP COLUMN IF EXISTS; MySQL: 仅在列存在时 DROP COLUMN。
+                    for col in extra_cols:
+                        quoted = preparer.quote_identifier(col)
+                        if dialect == "postgresql":
+                            statements.append(f"ALTER TABLE {products_table} DROP COLUMN IF EXISTS {quoted}")
+                        elif dialect == "mysql":
+                            statements.append(f"ALTER TABLE {products_table} DROP COLUMN {quoted}")
+                        else:
+                            # 兜底：尽力而为（若不支持会在执行时抛错，提示人工介入）
+                            statements.append(f"ALTER TABLE {products_table} DROP COLUMN {quoted}")
 
 
         # 5. hsai_ugc_callback_logs (回调日志表)

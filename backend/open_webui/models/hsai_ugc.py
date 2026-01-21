@@ -80,6 +80,7 @@ class HSAIUGCMaterialModel(Base):
     voice_preview_url = Column(String(512), nullable=False)
     minimax_account_id = Column(BigInteger, nullable=True)
     created_at = Column(DateTime, nullable=False, default=func.now())
+    deleted_at = Column(DateTime, nullable=True)  # 软删除标记
 
 
 class HSAIUGCTask(Base):
@@ -134,9 +135,6 @@ class HSAIUGCProduct(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(Text, nullable=False)
     name = Column(String(128), nullable=False)
-    url = Column(String(512), nullable=False)
-    country = Column(String(64), nullable=True)
-    language = Column(String(64), nullable=True)
     description = Column(Text, nullable=True)
     cover_img = Column(String(512), nullable=True)
     created_at = Column(DateTime, nullable=False, default=func.now())
@@ -348,9 +346,6 @@ class ProductData(BaseModel):
     id: int
     user_id: str
     name: str
-    url: str
-    country: Optional[str] = None
-    language: Optional[str] = None
     description: Optional[str] = None
     cover_img: Optional[str] = None
     created_at: int
@@ -365,9 +360,6 @@ class ProductData(BaseModel):
                 "id",
                 "user_id",
                 "name",
-                "url",
-                "country",
-                "language",
                 "description",
                 "cover_img",
                 "created_at",
@@ -389,18 +381,14 @@ class ProductData(BaseModel):
         return super().model_validate(cls._coerce_source(value), *args, **kwargs)
 
 class ProductCreateForm(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: str
-    url: str
-    country: Optional[str] = None
-    language: Optional[str] = None
     description: Optional[str] = None
     cover_img: Optional[str] = None
 
 class ProductUpdateForm(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     name: Optional[str] = None
-    url: Optional[str] = None
-    country: Optional[str] = None
-    language: Optional[str] = None
     description: Optional[str] = None
     cover_img: Optional[str] = None
 
@@ -453,25 +441,28 @@ class HSAIUGCMaterialModelsTable:
 
     def get_models_by_user_id(self, user_id: str) -> List[MaterialModelData]:
         with _schema_aware_db() as db:
-            models = db.query(HSAIUGCMaterialModel).filter_by(user_id=user_id).all()
+            models = db.query(HSAIUGCMaterialModel).filter_by(user_id=user_id).filter(HSAIUGCMaterialModel.deleted_at.is_(None)).all()
             return [MaterialModelData.model_validate(m) for m in models]
 
     def get_model_by_id(self, model_id: int) -> Optional[MaterialModelData]:
         with _schema_aware_db() as db:
-            model = db.query(HSAIUGCMaterialModel).filter_by(id=model_id).first()
+            model = db.query(HSAIUGCMaterialModel).filter_by(id=model_id).filter(HSAIUGCMaterialModel.deleted_at.is_(None)).first()
             return MaterialModelData.model_validate(model) if model else None
 
     def get_model_by_id_and_user_id(self, model_id: int, user_id: str) -> Optional[MaterialModelData]:
         with _schema_aware_db() as db:
-            model = db.query(HSAIUGCMaterialModel).filter_by(id=model_id, user_id=user_id).first()
+            model = db.query(HSAIUGCMaterialModel).filter_by(id=model_id, user_id=user_id).filter(HSAIUGCMaterialModel.deleted_at.is_(None)).first()
             return MaterialModelData.model_validate(model) if model else None
 
     def delete_model(self, model_id: int) -> bool:
+        """
+        软删除:标记 deleted_at 而不是物理删除,以保留历史任务的引用完整性。
+        """
         with _schema_aware_db() as db:
-            model = db.query(HSAIUGCMaterialModel).filter_by(id=model_id).first()
+            model = db.query(HSAIUGCMaterialModel).filter_by(id=model_id).filter(HSAIUGCMaterialModel.deleted_at.is_(None)).first()
             if not model:
                 return False
-            db.delete(model)
+            model.deleted_at = datetime.utcnow()
             db.commit()
             return True
 
@@ -910,9 +901,6 @@ class HSAIUGCProductsTable:
             prod = HSAIUGCProduct(
                 user_id=user_id,
                 name=form.name,
-                url=form.url,
-                country=form.country,
-                language=form.language,
                 description=form.description,
                 cover_img=form.cover_img,
                 created_at=datetime.utcnow(),
@@ -1006,4 +994,3 @@ VideoTasks = HSAIUGCTasksTable()
 TaskScenes = HSAIUGCTaskScenesTable()
 Products = HSAIUGCProductsTable()
 CallbackLogs = HSAIUGCCallbackLogsTable()
-

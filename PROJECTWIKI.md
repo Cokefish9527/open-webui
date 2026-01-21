@@ -154,6 +154,11 @@ flowchart LR
   - `POST /api/v1/ugc/models`：创建数字人资产（Step 0）。
   - `GET /api/v1/ugc/models`：获取数字人资产列表。
   - `GET /api/v1/ugc/models/{model_id}`：获取数字人资产详情（按 id）。
+  - 产品库（UGC Product Library，`hsai_ugc_products`）：仅维护 `name`（产品名称）、`description`（描述）、`cover_img`（产品图链接）。
+    - `POST /api/v1/ugc/products`：创建产品。
+    - `GET /api/v1/ugc/products`：产品列表（支持 `q/page/page_size`）。
+    - `PUT /api/v1/ugc/products/{product_id}`：更新产品。
+    - `DELETE /api/v1/ugc/products/{product_id}`：删除产品。
   - `POST /api/v1/ugc/tasks`：创建任务（Step 1，触发脚本生成）。
   - `GET /api/v1/ugc/tasks/{task_id}`：获取任务详情（前端必需，返回 `VideoTaskData`）。
   - `GET /api/v1/ugc/tasks/{task_id}/status`：推荐轮询口径（高频、轻量）。
