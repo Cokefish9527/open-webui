@@ -380,6 +380,14 @@ class ProductData(BaseModel):
     def model_validate(cls, value, *args, **kwargs):
         return super().model_validate(cls._coerce_source(value), *args, **kwargs)
 
+class ProductsListResponse(BaseModel):
+    """产品列表分页响应"""
+    items: List[ProductData]
+    page: int
+    page_size: int
+    total: int
+
+
 class ProductCreateForm(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str
@@ -405,9 +413,14 @@ class MaterialModelCreateForm(BaseModel):
     minimax_account_id: Optional[int] = None
 
 class VideoTaskCreateForm(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     model_id: int
-    product_url: str
-    product_name: str
+    # 产品库支持(优先)
+    product_id: Optional[int] = None
+    # 兼容旧接口(降级为可选)
+    product_url: Optional[str] = None
+    product_name: Optional[str] = None
+    # 其他参数
     language: str
     product_country: Optional[str] = None
     subtitle: Optional[str] = None
@@ -922,18 +935,25 @@ class HSAIUGCProductsTable:
         q: Optional[str] = None,
         page: int = 1,
         page_size: int = 20,
-    ) -> List[ProductData]:
+    ) -> "ProductsListResponse":
         with _schema_aware_db() as db:
             query = db.query(HSAIUGCProduct).filter_by(user_id=user_id)
             if q:
                 # Simple name filter
                 query = query.filter(HSAIUGCProduct.name.ilike(f"%{q}%"))
             
+            # Get total count
+            total = query.count()
+            
             query = query.order_by(HSAIUGCProduct.updated_at.desc())
             
             offset = (max(1, page) - 1) * max(1, page_size)
             products = query.offset(offset).limit(max(1, page_size)).all()
-            return [ProductData.model_validate(p) for p in products]
+            items = [ProductData.model_validate(p) for p in products]
+            
+            # Import at function level to avoid circular import
+            from open_webui.models.hsai_ugc import ProductsListResponse
+            return ProductsListResponse(items=items, page=page, page_size=page_size, total=total)
 
     def get_products_count(self, user_id: str, q: Optional[str] = None) -> int:
         with _schema_aware_db() as db:

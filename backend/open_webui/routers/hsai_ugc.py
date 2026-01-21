@@ -27,6 +27,7 @@ from open_webui.models.hsai_ugc import (
     ProductCreateForm,
     ProductUpdateForm,
     ProductData,
+    ProductsListResponse,
 )
 from open_webui.services.workflow_meta_update_service import post_json
 from open_webui.constants import ERROR_MESSAGES
@@ -271,8 +272,29 @@ async def create_material_model(
             "minimax-key": minimax_key,
         }
         log.info(f"Triggering n8n hs001: {URL_HS001}")
-        status_code, data, raw_text = await post_json(URL_HS001, payload)
-        log.info(f"n8n hs001 response: code={status_code}, data={data}, text={raw_text}")
+        
+        # hs001 音色克隆需要较长时间,设置 60 秒超时
+        hs001_timeout = int(os.getenv("N8N_UGC_HS001_TIMEOUT", "60"))
+        try:
+            status_code, data, raw_text = await post_json(
+                URL_HS001, 
+                payload, 
+                timeout_seconds=hs001_timeout
+            )
+            log.info(f"n8n hs001 response: code={status_code}, data={data}, text={raw_text[:200] if raw_text else ''}")
+        except Exception as e:
+            error_type = type(e).__name__
+            log.error(f"n8n hs001 request failed ({error_type}): {e}")
+            if "TimeoutError" in error_type:
+                raise HTTPException(
+                    status_code=504,
+                    detail=f"音色克隆服务超时(>{hs001_timeout}秒),请稍后重试或联系管理员"
+                )
+            raise HTTPException(
+                status_code=502,
+                detail=f"音色克隆服务异常: {str(e)[:100]}"
+            )
+        
         if status_code >= 400:
             error_msg = f"n8n hs001 failed: {status_code}"
             if isinstance(data, dict) and "error" in data:
@@ -438,7 +460,7 @@ async def create_product(form: ProductCreateForm, user=Depends(get_verified_user
     user_id = _require_user_id(user)
     return Products.create_product(user_id, form)
 
-@router.get("/products", response_model=List[ProductData], summary="产品列表")
+@router.get("/products", response_model=ProductsListResponse, summary="产品列表")
 async def get_products(
     q: Optional[str] = None,
     page: int = 1,
@@ -505,7 +527,11 @@ def _get_sharded_api_key(index: int = 0) -> str:
 @router.post("/tasks", response_model=VideoTaskData, summary="创建视频生成任务 (Step 1)")
 async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified_user)):
     """
-    创建视频生成任务，并触发 n8n hs002 生成脚本。
+    创建视频生成任务,并触发 n8n hs002 生成脚本。
+    
+    支持两种模式:
+    1. 产品库模式(推荐): 提交 product_id,从产品库获取产品信息
+    2. 兼容模式: 直接提交 product_name 和 product_url (已废弃,但保持兼容)
     """
     try:
         user_id = _require_user_id(user)
@@ -513,9 +539,38 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
         if not model:
             raise HTTPException(status_code=404, detail="Model not found")
 
+        # 产品信息解析:优先使用产品库
+        product_name = None
+        product_cover_img = None
+        
+        if form.product_id is not None:
+            # 模式1: 从产品库获取
+            product = Products.get_product(form.product_id)
+            if not product:
+                raise HTTPException(status_code=404, detail="Product not found")
+            if product.user_id != user_id:
+                raise HTTPException(status_code=403, detail="Product access denied")
+            
+            product_name = product.name
+            product_cover_img = product.cover_img or ""
+            log.info(f"Using product from library: id={form.product_id}, name={product_name}")
+            
+        elif form.product_name:
+            # 模式2: 兼容旧接口(直接使用提交的参数)
+            product_name = form.product_name
+            product_cover_img = ""  # 旧接口没有产品图
+            log.warning(f"Using legacy product parameters: name={product_name}")
+            
+        else:
+            # 两者都没提供
+            raise HTTPException(
+                status_code=400,
+                detail="Either product_id or product_name must be provided"
+            )
+
         task = VideoTasks.create_task(user_id, form)
         
-        # 触发 n8n 生成脚本（与当前联调 payload 约定保持一致；ffmpeg_api_key 已作废，不再注入）
+        # 触发 n8n 生成脚本
         minimax = _resolve_minimax_credentials(
             getattr(model, "minimax_account_id", None),
             require_group=True,
@@ -527,13 +582,14 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
             "ip_name": model.model_name,
             "ip_img": model.model_img_url,
             "voice_id": model.voice_provider_id,
-            "product_url": form.product_url,
-            "product_name": form.product_name,
+            "product_url": form.product_url or "",  # 兼容旧接口
+            "product_name": product_name,
+            "product_img": product_cover_img,  # 新增:产品图链接
             "product_country": form.product_country or "",
             "language": form.language,
             "subtitle": form.subtitle or "",
             "shot_script": form.shot_script or "",
-            "jarvis_api_key": _get_sharded_api_key(0), # Key #1 for Step 1
+            "jarvis_api_key": _get_sharded_api_key(0),
             "minimax_key": minimax["api_key"],
             "minimax_group": minimax["group_id"],
             "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
