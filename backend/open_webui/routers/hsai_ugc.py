@@ -4,10 +4,10 @@ import re
 import uuid
 from datetime import datetime
 import traceback
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple, Set, Union
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query, Body
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices, ConfigDict
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.storage.provider import Storage
@@ -540,8 +540,14 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
             raise HTTPException(status_code=404, detail="Model not found")
 
         # 产品信息解析:优先使用产品库
+        # 约定：
+        # - product_url: 产品图 URL（n8n hs002 仍可能按旧字段读取）
+        # - product_img: 产品图 URL（新字段，逐步迁移）
         product_name = None
-        product_cover_img = None
+        product_desc = ""
+        product_img = ""
+        product_url = ""
+        payload_product_name = None
         
         if form.product_id is not None:
             # 模式1: 从产品库获取
@@ -552,14 +558,29 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
                 raise HTTPException(status_code=403, detail="Product access denied")
             
             product_name = product.name
-            product_cover_img = product.cover_img or ""
+            product_desc = (product.description or "").strip()
+            product_img = product.cover_img or ""
+            # 兼容：n8n 侧仍可能读取 product_url（旧字段）
+            product_url = (form.product_url or "").strip() or product_img
+            if not product_url:
+                raise HTTPException(status_code=400, detail="Product cover image is required")
             log.info(f"Using product from library: id={form.product_id}, name={product_name}")
+            # n8n hs002 兼容：当使用产品库 product_id 时，将“名称+描述”合并到 product_name 字段中。
+            # 约定格式："产品名称,产品描述"（字符串）
+            payload_product_name = f"{product_name},{product_desc}"
             
         elif form.product_name:
             # 模式2: 兼容旧接口(直接使用提交的参数)
             product_name = form.product_name
-            product_cover_img = ""  # 旧接口没有产品图
+            product_url = (form.product_url or "").strip()
+            if not product_url:
+                # 旧接口历史上允许缺省，但 n8n hs002 已在多数流程中强依赖产品图；
+                # 提前返回 400 让前端可明确提示用户补齐输入，而不是让任务卡住/报 500。
+                raise HTTPException(status_code=400, detail="product_url is required in legacy mode")
+            # 兼容：补齐新字段 product_img，便于 n8n 新旧版本都可消费
+            product_img = product_url
             log.warning(f"Using legacy product parameters: name={product_name}")
+            payload_product_name = product_name
             
         else:
             # 两者都没提供
@@ -568,7 +589,21 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
                 detail="Either product_id or product_name must be provided"
             )
 
-        task = VideoTasks.create_task(user_id, form)
+        # 确保任务可追溯：将解析后的 product_name/product_url 写入 base_inputs（而不是保留 None）
+        form_for_task = form.model_copy(update={"product_name": product_name, "product_url": product_url})
+        task = VideoTasks.create_task(user_id, form_for_task)
+        # 保存产品库上下文，便于 hs002 重试/审计（legacy 模式下 product_id 为空，不写入也不影响）
+        try:
+            VideoTasks.patch_base_inputs(
+                task.id,
+                {
+                    "product_id": form.product_id,
+                    "product_desc": product_desc,
+                },
+            )
+        except Exception:
+            # best-effort: 不影响主流程
+            pass
         
         # 触发 n8n 生成脚本
         minimax = _resolve_minimax_credentials(
@@ -582,9 +617,10 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
             "ip_name": model.model_name,
             "ip_img": model.model_img_url,
             "voice_id": model.voice_provider_id,
-            "product_url": form.product_url or "",  # 兼容旧接口
-            "product_name": product_name,
-            "product_img": product_cover_img,  # 新增:产品图链接
+            # product_url/product_img 同时发送：兼容 n8n 旧流程与新流程
+            "product_url": product_url,
+            "product_name": payload_product_name,
+            "product_img": product_img,
             "product_country": form.product_country or "",
             "language": form.language,
             "subtitle": form.subtitle or "",
@@ -595,7 +631,12 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
             "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
             "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
         }
-        status_code, _, _ = await post_json(URL_HS002, payload)
+        try:
+            status_code, _, _ = await post_json(URL_HS002, payload)
+        except Exception as e:
+            # post_json 对 5xx 会重试后抛异常；此处将任务标记为 FAILED，且对外返回 502（上游错误）
+            VideoTasks.update_task_status(task.id, status=-1)
+            raise HTTPException(status_code=502, detail=f"n8n script generation trigger failed: {e}")
         
         if status_code >= 400:
             VideoTasks.update_task_status(task.id, status=-1)
@@ -719,8 +760,13 @@ async def get_task_scenes(task_id: str, user=Depends(get_verified_user)):
 class TaskSceneEditItem(BaseModel):
     scene_index: int = Field(..., ge=0)
     subtitle: Optional[str] = None
-    script_desc: Optional[str] = None
-    reference_img_url: Optional[str] = None
+    # input-only aliases:
+    # - shot_script -> script_desc
+    # - shot_script_img -> reference_img_url
+    script_desc: Optional[str] = Field(default=None, validation_alias=AliasChoices("script_desc", "shot_script"))
+    reference_img_url: Optional[str] = Field(
+        default=None, validation_alias=AliasChoices("reference_img_url", "shot_script_img")
+    )
 
 
 class TaskSceneVideoSelectItem(BaseModel):
@@ -739,6 +785,49 @@ class UGCMergeForm(BaseModel):
     shot_video_list: Optional[List[str]] = None
 
 
+class UGCGenerateVideoForm(BaseModel):
+    """
+    Body wrapper for /tasks/{task_id}/generate_video.
+    NOTE: extra fields are ignored for forward/backward compatibility.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+    scenes: List[TaskSceneEditItem]
+
+
+UGCGenerateVideoPayload = Union[List[TaskSceneEditItem], UGCGenerateVideoForm]
+
+
+def _parse_generate_video_scenes(payload: Any) -> List[TaskSceneEditItem]:
+    """
+    Body parser for /tasks/{task_id}/generate_video.
+
+    Supported formats:
+    - Legacy/Recommended: List[TaskSceneEditItem]  (the list itself is the selected scenes, in order)
+    - Wrapper: {"scenes": [...]}  (extra keys are ignored)
+    """
+    if payload is None:
+        return []
+    if isinstance(payload, list):
+        scenes: List[TaskSceneEditItem] = []
+        for item in payload:
+            if isinstance(item, TaskSceneEditItem):
+                scenes.append(item)
+                continue
+            if not isinstance(item, dict):
+                raise HTTPException(status_code=400, detail="Each scene must be an object")
+            scenes.append(TaskSceneEditItem.model_validate(item))
+        return scenes
+    if isinstance(payload, UGCGenerateVideoForm):
+        return payload.scenes or []
+    if isinstance(payload, dict):
+        try:
+            return UGCGenerateVideoForm.model_validate(payload).scenes or []
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid request body")
+    raise HTTPException(status_code=400, detail="Invalid request body")
+
+
 @router.post(
     "/tasks/{task_id}/generate_video",
     response_model=List[TaskSceneData],
@@ -746,13 +835,15 @@ class UGCMergeForm(BaseModel):
 )
 async def generate_scene_videos(
     task_id: str,
-    scenes: Optional[List[TaskSceneEditItem]] = None,
+    payload: Optional[UGCGenerateVideoPayload] = Body(default=None),
     user=Depends(get_verified_user),
 ):
     """
     对标 n8n hs003：生成分镜视频（Step 2）。
 
     - 前端可在 status=2(PENDING_EDIT) 时提交分镜编辑内容；
+    - 以本次提交的 scenes 列表作为“选中分镜集合”（服务端会删除未提交分镜；scene_index 可不连续）；
+    - 入参字段别名兼容（仅入参）：shot_script -> script_desc，shot_script_img -> reference_img_url；
     - 服务端更新分镜后触发 hs003；
     - 服务端会注入 `voice_id`（来源：数字人资产 `voice_provider_id`）以对齐 n8n 入参；
     - 返回更新后的分镜列表（不等待视频生成完成），前端后续轮询 status 并拉取 scenes 获取结果。
@@ -773,30 +864,53 @@ async def generate_scene_videos(
     if not model:
         raise HTTPException(status_code=404, detail="Model not found")
 
-    scenes = scenes or []
-    if scenes:
-        existing = TaskScenes.get_scenes_by_task_id(task_id)
-        existing_map = {s.scene_index: s for s in existing}
-        for item in scenes:
-            if item.scene_index not in existing_map:
-                raise HTTPException(status_code=400, detail=f"Invalid scene_index: {item.scene_index}")
-            TaskScenes.update_scene(
-                existing_map[item.scene_index].id,
-                TaskSceneUpdateForm(
-                    subtitle=item.subtitle,
-                    script_desc=item.script_desc,
-                    reference_img_url=item.reference_img_url,
-                ),
-            )
+    scenes = _parse_generate_video_scenes(payload)
+    if not scenes:
+        raise HTTPException(status_code=400, detail="scenes is required")
 
-    updated_scenes = TaskScenes.get_scenes_by_task_id(task_id)
-    updated_scenes.sort(key=lambda s: s.scene_index)
-    if not updated_scenes:
-        raise HTTPException(status_code=400, detail="No scenes found for task")
+    ordered_indices: List[int] = []
+    seen_indices: Set[int] = set()
+    for item in scenes:
+        try:
+            idx = int(item.scene_index)
+        except Exception:
+            raise HTTPException(status_code=400, detail="scene_index must be an integer")
+        if idx < 0:
+            raise HTTPException(status_code=400, detail="scene_index must be >= 0")
+        if idx in seen_indices:
+            raise HTTPException(status_code=400, detail=f"Duplicate scene_index: {idx}")
+        ordered_indices.append(idx)
+        seen_indices.add(idx)
 
-    subtitle_list = [s.subtitle or "" for s in updated_scenes]
-    shot_script_img_list = [s.reference_img_url or "" for s in updated_scenes]
-    shot_script_list = [s.script_desc or "" for s in updated_scenes]
+    existing = TaskScenes.get_scenes_by_task_id(task_id)
+    existing_map = {s.scene_index: s for s in existing}
+
+    # 1) Validate indices exist, then apply user edits (patch semantics).
+    missing = [i for i in ordered_indices if i not in existing_map]
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Invalid scene_index: {missing}")
+
+    for item in scenes:
+        patch = item.model_dump(exclude_unset=True)
+        patch.pop("scene_index", None)
+        if not patch:
+            continue
+        TaskScenes.update_scene(existing_map[item.scene_index].id, TaskSceneUpdateForm(**patch))
+
+    # 2) Treat submitted scenes as the selected set: delete unsubmitted scenes.
+    TaskScenes.delete_scenes_except_indices(task_id, ordered_indices)
+
+    updated_all = TaskScenes.get_scenes_by_task_id(task_id)
+    updated_map = {s.scene_index: s for s in updated_all}
+    updated_scenes_in_order = [updated_map[i] for i in ordered_indices]
+
+    # Persist mapping for VIDEO_RESULT callback handling.
+    # The list order is the canonical "scene order" from the frontend submission.
+    VideoTasks.patch_base_inputs(task_id, {"hs003_scene_index_list": ordered_indices})
+
+    subtitle_list = [s.subtitle or "" for s in updated_scenes_in_order]
+    shot_script_img_list = [s.reference_img_url or "" for s in updated_scenes_in_order]
+    shot_script_list = [s.script_desc or "" for s in updated_scenes_in_order]
 
     VideoTasks.update_task_status(task_id, status=3, step=2)
     minimax = _resolve_minimax_credentials(
@@ -821,7 +935,7 @@ async def generate_scene_videos(
         VideoTasks.update_task_status(task_id, status=-1)
         raise HTTPException(status_code=502, detail=f"n8n video generation trigger failed: {status_code}")
 
-    return updated_scenes
+    return updated_scenes_in_order
 
 
 @router.post("/tasks/{task_id}/merge", summary="合成最终视频（hs004）")
@@ -849,9 +963,27 @@ async def merge_final_video(
         raise HTTPException(status_code=409, detail="Task is not in pending-merge state")
 
     scenes_rows = TaskScenes.get_scenes_by_task_id(task_id)
-    scenes_rows.sort(key=lambda s: s.scene_index)
     if not scenes_rows:
         raise HTTPException(status_code=400, detail="No scenes found for task")
+
+    # Respect frontend-selected order when available (persisted in base_inputs during hs003 trigger).
+    scenes_map = {s.scene_index: s for s in scenes_rows}
+    ordered_scene_indices: List[int]
+    base_inputs = getattr(task, "base_inputs", {}) or {}
+    raw_order = base_inputs.get("hs003_scene_index_list") if isinstance(base_inputs, dict) else None
+    if isinstance(raw_order, list):
+        try:
+            candidate = [int(v) for v in raw_order]
+        except Exception:
+            candidate = []
+        if candidate and len(candidate) == len(scenes_rows) and set(candidate) == set(scenes_map.keys()):
+            ordered_scene_indices = candidate
+        else:
+            ordered_scene_indices = sorted(scenes_map.keys())
+    else:
+        ordered_scene_indices = sorted(scenes_map.keys())
+
+    ordered_scenes_rows = [scenes_map[i] for i in ordered_scene_indices]
 
     form: Optional[UGCMergeForm] = None
     if isinstance(payload, dict):
@@ -864,21 +996,20 @@ async def merge_final_video(
     shot_video_list = payload if isinstance(payload, list) else (form.shot_video_list if form else None)
 
     if form and form.selections:
-        existing_map = {s.scene_index: s for s in scenes_rows}
         selection_map: Dict[int, str] = {}
         for item in form.selections:
-            if item.scene_index not in existing_map:
+            if item.scene_index not in scenes_map:
                 raise HTTPException(status_code=400, detail=f"Invalid scene_index: {item.scene_index}")
             selection_map[item.scene_index] = item.video_url
             # Persist user selection for traceability / future retries.
             TaskScenes.update_fragment_video_url(task_id, item.scene_index, item.video_url)
 
-        shot_video_list = [selection_map.get(s.scene_index) or s.fragment_video_url for s in scenes_rows]
+        shot_video_list = [selection_map.get(s.scene_index) or s.fragment_video_url for s in ordered_scenes_rows]
 
     if not shot_video_list:
-        shot_video_list = [s.fragment_video_url for s in scenes_rows]
+        shot_video_list = [s.fragment_video_url for s in ordered_scenes_rows]
 
-    if len(shot_video_list) != len(scenes_rows):
+    if len(shot_video_list) != len(ordered_scenes_rows):
         raise HTTPException(status_code=400, detail="shot_video_list length mismatch")
     if any(not u for u in shot_video_list):
         raise HTTPException(status_code=400, detail="Not all scene videos are selected/ready")
@@ -933,7 +1064,14 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
         form_dict = getattr(task, "base_inputs", {}) or {}
         # 恢复 status=1 (SCRIPTING)
         VideoTasks.update_task_status(task.id, status=1)
-        
+
+        # 产品库模式：按约定将“名称+描述”合并到 hs002 product_name 字段（字符串）。
+        retry_product_name = form_dict.get("product_name")
+        if isinstance(form_dict, dict) and form_dict.get("product_id") is not None:
+            name = str(form_dict.get("product_name") or "")
+            desc = str(form_dict.get("product_desc") or "")
+            retry_product_name = f"{name},{desc}"
+         
         payload = {
             "task_id": task.id,
             "ip_id": f"model_{model.id}",
@@ -941,7 +1079,7 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
             "ip_img": model.model_img_url,
             "voice_id": model.voice_provider_id,
             "product_url": form_dict.get("product_url"),
-            "product_name": form_dict.get("product_name"),
+            "product_name": retry_product_name,
             "product_country": form_dict.get("product_country") or "",
             "language": form_dict.get("language"),
             "subtitle": form_dict.get("subtitle") or "",
@@ -958,13 +1096,32 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
     elif step == 2:
         # Retry HS003
         scenes_rows = TaskScenes.get_scenes_by_task_id(task.id)
-        scenes_rows.sort(key=lambda s: s.scene_index)
         if not scenes_rows:
             raise HTTPException(status_code=400, detail="No scenes found for retry step 2")
 
-        subtitle_list = [s.subtitle or "" for s in scenes_rows]
-        shot_script_img_list = [s.reference_img_url or "" for s in scenes_rows]
-        shot_script_list = [s.script_desc or "" for s in scenes_rows]
+        scenes_map = {s.scene_index: s for s in scenes_rows}
+        base_inputs = getattr(task, "base_inputs", {}) or {}
+        raw_order = base_inputs.get("hs003_scene_index_list") if isinstance(base_inputs, dict) else None
+        if isinstance(raw_order, list):
+            try:
+                candidate = [int(v) for v in raw_order]
+            except Exception:
+                candidate = []
+            if candidate and len(candidate) == len(scenes_rows) and set(candidate) == set(scenes_map.keys()):
+                ordered_scene_indices = candidate
+            else:
+                ordered_scene_indices = sorted(scenes_map.keys())
+        else:
+            ordered_scene_indices = sorted(scenes_map.keys())
+
+        ordered_scenes_rows = [scenes_map[i] for i in ordered_scene_indices]
+
+        # Persist mapping for VIDEO_RESULT callback handling (scene_index can be non-contiguous and ordered by frontend).
+        VideoTasks.patch_base_inputs(task.id, {"hs003_scene_index_list": ordered_scene_indices})
+
+        subtitle_list = [s.subtitle or "" for s in ordered_scenes_rows]
+        shot_script_img_list = [s.reference_img_url or "" for s in ordered_scenes_rows]
+        shot_script_list = [s.script_desc or "" for s in ordered_scenes_rows]
 
         VideoTasks.update_task_status(task.id, status=3)
         payload = {

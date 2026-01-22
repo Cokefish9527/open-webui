@@ -576,6 +576,31 @@ class HSAIUGCTasksTable:
             task = db.query(HSAIUGCTask).filter_by(id=task_id).first()
             return VideoTaskData.model_validate(task) if task else None
 
+    def patch_base_inputs(self, task_id: str, patch: Dict[str, Any]) -> bool:
+        """
+        Merge patch into task.base_inputs (JSON).
+        This is used to persist step-level metadata (e.g. hs003 scene_index mapping) for callback handling.
+        """
+        if not isinstance(patch, dict) or not patch:
+            return True
+        with _schema_aware_db() as db:
+            task = db.query(HSAIUGCTask).filter_by(id=task_id).first()
+            if not task:
+                return False
+            current = getattr(task, "base_inputs", None) or {}
+            if not isinstance(current, dict):
+                current = {}
+            merged = dict(current)
+            merged.update(patch)
+            now = datetime.utcnow()
+            result = (
+                db.query(HSAIUGCTask)
+                .filter_by(id=task_id)
+                .update({"base_inputs": merged, "updated_at": now}, synchronize_session=False)
+            )
+            db.commit()
+            return result > 0
+
     def update_task_status(self, task_id: str, status: int, step: Optional[int] = None, result_url: Optional[str] = None) -> bool:
         with _schema_aware_db() as db:
             current_status = db.query(HSAIUGCTask.status).filter_by(id=task_id).scalar()
@@ -816,6 +841,20 @@ class HSAIUGCTaskScenesTable:
             result = db.query(HSAIUGCTaskScene).filter_by(id=scene_id).update(update_data)
             db.commit()
             return result > 0
+
+    def delete_scenes_except_indices(self, task_id: str, keep_indices: List[int]) -> int:
+        """
+        Delete scenes for a task except those whose scene_index is in keep_indices.
+        This enables "selected scenes only" workflows while keeping original scene_index (can be non-contiguous).
+        """
+        keep = [int(v) for v in (keep_indices or []) if v is not None]
+        with _schema_aware_db() as db:
+            q = db.query(HSAIUGCTaskScene).filter_by(task_id=task_id)
+            if keep:
+                q = q.filter(~HSAIUGCTaskScene.scene_index.in_(keep))
+            deleted = q.delete(synchronize_session=False)
+            db.commit()
+            return int(deleted or 0)
 
     def update_fragment_video_url(self, task_id: str, scene_index: int, video_url: str) -> bool:
         with _schema_aware_db() as db:

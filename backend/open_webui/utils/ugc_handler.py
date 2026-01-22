@@ -101,18 +101,63 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                 return
 
             existing_scenes = TaskScenes.get_scenes_by_task_id(task_id)
-            if len(existing_scenes) != len(shot_video_list):
-                log.error(
-                    f"VIDEO_RESULT length mismatch: existing={len(existing_scenes)}, returned={len(shot_video_list)}"
-                )
-                VideoTasks.update_task_status(task_id, status=-1)
-                return
+            existing_map = {s.scene_index: s for s in (existing_scenes or [])}
+
+            # scene_index mapping for Step 2 (hs003) -> callback (VIDEO_RESULT)
+            # When user selects a subset of scenes, DB scene_index can be non-contiguous; we persist the
+            # "selected scene_index list" in task.base_inputs to map callback array indices to scene_index.
+            base_inputs = getattr(task, "base_inputs", {}) or {}
+            raw_mapping = base_inputs.get("hs003_scene_index_list") if isinstance(base_inputs, dict) else None
+
+            mapped_scene_indices = None
+            if raw_mapping is not None:
+                if not isinstance(raw_mapping, list):
+                    log.error(f"VIDEO_RESULT invalid hs003_scene_index_list type: {type(raw_mapping)}")
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+                if len(raw_mapping) != len(shot_video_list):
+                    log.error(
+                        f"VIDEO_RESULT length mismatch: mapping={len(raw_mapping)}, returned={len(shot_video_list)}"
+                    )
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+                try:
+                    mapped_scene_indices = [int(v) for v in raw_mapping]
+                except Exception:
+                    log.error(f"VIDEO_RESULT invalid hs003_scene_index_list values: {raw_mapping}")
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+                if any(i < 0 for i in mapped_scene_indices):
+                    log.error(f"VIDEO_RESULT invalid hs003_scene_index_list (negative index): {raw_mapping}")
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+                missing = [i for i in mapped_scene_indices if i not in existing_map]
+                if missing:
+                    log.error(f"VIDEO_RESULT mapping contains missing scene_index: {missing}")
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+                if len(existing_scenes) != len(mapped_scene_indices):
+                    log.error(
+                        f"VIDEO_RESULT scene set mismatch: existing={len(existing_scenes)}, mapping={len(mapped_scene_indices)}"
+                    )
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+            else:
+                # Legacy fallback: assume scene_index is contiguous [0..N-1]
+                if len(existing_scenes) != len(shot_video_list):
+                    log.error(
+                        f"VIDEO_RESULT length mismatch: existing={len(existing_scenes)}, returned={len(shot_video_list)}"
+                    )
+                    VideoTasks.update_task_status(task_id, status=-1)
+                    return
+                mapped_scene_indices = list(range(len(shot_video_list)))
 
             # 支持每个分镜返回多个备选视频：
             # - 旧格式：shot_video_list = ["u1","u2",...]
             # - 新格式：shot_video_list = [["u1a","u1b"], ["u2a","u2b"], ...]
             selected_video_list = []
             for i, item in enumerate(shot_video_list):
+                scene_index = mapped_scene_indices[i]
                 candidates = None
                 if isinstance(item, list):
                     candidates = [str(v) for v in item if v]
@@ -129,13 +174,13 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                     candidates = []
 
                 if not candidates:
-                    log.error(f"VIDEO_RESULT missing candidates for scene_index={i}: {item}")
+                    log.error(f"VIDEO_RESULT missing candidates for scene_index={scene_index}: {item}")
                     VideoTasks.update_task_status(task_id, status=-1)
                     return
 
                 selected_video_list.append(candidates[0])
-                TaskScenes.update_fragment_video_candidates(task_id, i, candidates, selected_url=candidates[0])
-            
+                TaskScenes.update_fragment_video_candidates(task_id, scene_index, candidates, selected_url=candidates[0])
+             
             # 更新任务状态为 4 (待合成)
             VideoTasks.update_task_status(task_id, status=4, step=2)
             log.info(f"Task {task_id} status updated to 4 (Pending Merge)")
