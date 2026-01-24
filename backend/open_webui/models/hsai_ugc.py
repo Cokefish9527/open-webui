@@ -124,6 +124,8 @@ class HSAIUGCTaskScene(Base):
     fragment_video_url = Column(String(512), nullable=True)
     # JSON string: ["url1","url2",...], used for multi-candidate per scene (hs003 output).
     fragment_video_urls = Column(Text, nullable=True)
+    retry_count = Column(Integer, nullable=False, default=0)
+    error_msg = Column(Text, nullable=True)
 
     task = relationship("HSAIUGCTask", back_populates="scenes")
 
@@ -425,6 +427,7 @@ class VideoTaskCreateForm(BaseModel):
     product_country: Optional[str] = None
     subtitle: Optional[str] = None
     shot_script: Optional[str] = None
+    creative_bias: Optional[str] = None
 
 class TaskSceneUpdateForm(BaseModel):
     subtitle: Optional[str] = None
@@ -562,6 +565,7 @@ class HSAIUGCTasksTable:
                     "product_country": form.product_country or "",
                     "subtitle": form.subtitle or "",
                     "shot_script": form.shot_script or "",
+                    "creative_bias": form.creative_bias or "",
                 },
                 created_at=now,
                 updated_at=now
@@ -687,6 +691,23 @@ class HSAIUGCTasksTable:
         新实现已迁移为“超时关闭(-2)”，这里保留方法名以避免调用方崩溃。
         """
         return self.mark_stale_tasks_closed(timeout_minutes=timeout_minutes)
+
+    def get_stale_retryable_tasks(self, *, timeout_minutes: int = 10) -> List[VideoTaskData]:
+        """
+        Get tasks that are stale but potentially retryable (e.g., status=3 with incomplete scenes).
+        Phase 3: Watchdog will attempt to retry these instead of closing them immediately.
+        """
+        with _schema_aware_db() as db:
+            now = datetime.utcnow()
+            threshold = now - timedelta(minutes=max(timeout_minutes, 0))
+            
+            # Status 3 = Rendering (Generating Scenes)
+            tasks = db.query(HSAIUGCTask).filter(
+                HSAIUGCTask.status == 3,
+                func.coalesce(HSAIUGCTask.last_progress_at, HSAIUGCTask.updated_at) < threshold
+            ).limit(20).all() # Process in batches to avoid thundering herd
+            
+            return [VideoTaskData.model_validate(t) for t in tasks]
 
     def get_library_tasks(
         self,
@@ -842,6 +863,22 @@ class HSAIUGCTaskScenesTable:
             db.commit()
             return result > 0
 
+    def update_scene_by_index(self, task_id: str, scene_index: int, form: TaskSceneUpdateForm) -> bool:
+        """
+        Update a scene by (task_id, scene_index) instead of primary key id.
+        """
+        with _schema_aware_db() as db:
+            update_data = form.model_dump(exclude_unset=True)
+            if not update_data:
+                return True
+            result = (
+                db.query(HSAIUGCTaskScene)
+                .filter_by(task_id=task_id, scene_index=scene_index)
+                .update(update_data)
+            )
+            db.commit()
+            return result > 0
+
     def delete_scenes_except_indices(self, task_id: str, keep_indices: List[int]) -> int:
         """
         Delete scenes for a task except those whose scene_index is in keep_indices.
@@ -944,7 +981,20 @@ class HSAIUGCTaskScenesTable:
             except Exception:
                 pass
             db.commit()
+            db.commit()
             return result > 0
+
+    def increment_retry_count(self, task_id: str, scene_index: int, error_msg: Optional[str] = None) -> int:
+        with _schema_aware_db() as db:
+            scene = db.query(HSAIUGCTaskScene).filter_by(task_id=task_id, scene_index=scene_index).first()
+            if not scene:
+                return -1
+            current = int(scene.retry_count or 0)
+            scene.retry_count = current + 1
+            if error_msg:
+                scene.error_msg = error_msg
+            db.commit()
+            return scene.retry_count
 
 
 class HSAIUGCProductsTable:

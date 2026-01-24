@@ -45,6 +45,8 @@ URL_HS001 = f"{N8N_UGC_BASE_URL}/ugc_voice_id"  # Clone Voice
 URL_HS002 = f"{N8N_UGC_BASE_URL}/ugc_product"  # Generate Script
 URL_HS003 = f"{N8N_UGC_BASE_URL}/ugc_video"  # Generate Video
 URL_HS004 = f"{N8N_UGC_BASE_URL}/ugc_result"  # Merge Video
+URL_HS002_SHOT_IMG = f"{N8N_UGC_BASE_URL}/ugc_product_shot_img" # Generate Shot Image (Retry)
+URL_HS003_SHOT_VIDEO = f"{N8N_UGC_BASE_URL}/ugc_video_shot" # Generate Shot Video (Retry)
 
 
 def _require_user_id(user) -> str:
@@ -625,6 +627,7 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
             "language": form.language,
             "subtitle": form.subtitle or "",
             "shot_script": form.shot_script or "",
+            "creative_bias": form.creative_bias or "",
             "jarvis_api_key": _get_sharded_api_key(0),
             "minimax_key": minimax["api_key"],
             "minimax_group": minimax["group_id"],
@@ -921,9 +924,15 @@ async def generate_scene_videos(
     payload = {
         "task_id": task_id,
         "voice_id": model.voice_provider_id,
-        "subtitle_list": subtitle_list,
-        "shot_script_img_list": shot_script_img_list,
-        "shot_script_list": shot_script_list,
+        "shot_list": [
+            {
+                "shot_id": s.scene_index, # Align with n8n terminology
+                "subtitle": s.subtitle or "",
+                "shot_script_img": s.reference_img_url or "",
+                "shot_script": s.script_desc or "",
+            }
+            for s in updated_scenes_in_order
+        ],
         "jarvis_api_key": _get_sharded_api_key(1), # Key #2 for Step 2
         "minimax_key": minimax["api_key"],
         "minimax_group": minimax["group_id"],
@@ -1017,8 +1026,11 @@ async def merge_final_video(
     VideoTasks.update_task_status(task_id, status=5, step=3)
     hs004_payload = {
         "task_id": task_id,
-        "shot_video_list": shot_video_list,
-        "jarvis_api_key": _get_sharded_api_key(0), # Key #1 (default) or should we allow Key #3? Using Key #1 for now.
+        "shot_list": [
+            {"shot_id": row.scene_index, "shot_video_url": url}
+            for row, url in zip(ordered_scenes_rows, shot_video_list)
+        ],
+        "jarvis_api_key": _get_sharded_api_key(0), # Key #1 (default)
     }
     status_code, _, _ = await post_json(URL_HS004, hs004_payload)
     if status_code >= 400:
@@ -1166,3 +1178,106 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
         raise HTTPException(status_code=502, detail=f"n8n retry trigger failed: {status_code}")
 
     return {"success": True, "task_id": task.id, "status": new_status, "step": step, "message": "Retry triggered"}
+
+
+@router.post("/tasks/{task_id}/scenes/{scene_index}/regenerate_image", summary="分镜重绘图片 (hs002_shot_img)")
+async def regenerate_scene_image(
+    task_id: str,
+    scene_index: int,
+    payload: Dict[str, Any] = Body(default=None),
+    user=Depends(get_verified_user),
+):
+    """
+    重绘单个分镜图片 (Step 1 -> 2 单点重试)。
+    """
+    user_id = _require_user_id(user)
+    task = VideoTasks.get_task_by_id(task_id)
+    if not task or task.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    scenes = TaskScenes.get_scenes_by_task_id(task_id)
+    target_scene = next((s for s in scenes if s.scene_index == scene_index), None)
+    if not target_scene:
+        raise HTTPException(status_code=404, detail=f"Scene {scene_index} not found")
+
+    # Construct Payload
+    base_inputs = getattr(task, "base_inputs", {}) or {}
+    product_url = base_inputs.get("product_url")
+    
+    # Optional overrides from request body
+    user_prompt = payload.get("image_prompt") if payload else None
+    
+    json_payload = {
+        "task_id": task_id,
+        "shot_id": scene_index,
+        "image_prompt": user_prompt, # prompt override
+        "ip_img": None, # Will be filled by n8n if empty, or we can look up model?
+        # Actually spec says: ip_img from DB, product_url from DB
+        "product_url": product_url,
+        "jarvis_api_key": _get_sharded_api_key(0)
+    }
+    
+    # We need model info for ip_img
+    model = MaterialModels.get_model_by_id_and_user_id(int(task.model_id), user_id)
+    if model:
+        json_payload["ip_img"] = model.model_img_url
+
+    status_code, _, _ = await post_json(URL_HS002_SHOT_IMG, json_payload)
+    if status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Trigger failed: {status_code}")
+
+    return {"success": True, "task_id": task_id, "scene_index": scene_index, "message": "Regenerating image"}
+
+
+@router.post("/tasks/{task_id}/scenes/{scene_index}/regenerate_video", summary="分镜重生成视频 (hs003_shot_video)")
+async def regenerate_scene_video(
+    task_id: str,
+    scene_index: int,
+    payload: Dict[str, Any] = Body(default=None),
+    user=Depends(get_verified_user),
+):
+    """
+    重生成单个分镜视频 (Step 2 -> 3 单点重试)。
+    """
+    user_id = _require_user_id(user)
+    task = VideoTasks.get_task_by_id(task_id)
+    if not task or task.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    scenes = TaskScenes.get_scenes_by_task_id(task_id)
+    target_scene = next((s for s in scenes if s.scene_index == scene_index), None)
+    if not target_scene:
+        raise HTTPException(status_code=404, detail=f"Scene {scene_index} not found")
+
+    model = MaterialModels.get_model_by_id_and_user_id(int(task.model_id), user_id)
+    if not model:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    minimax = _resolve_minimax_credentials(
+        getattr(model, "minimax_account_id", None),
+        require_group=True,
+        allow_env_fallback=True,
+    )
+
+    # Optional overrides
+    req_body = payload or {}
+    
+    json_payload = {
+        "task_id": task_id,
+        "shot_id": scene_index,
+        "shot_script": req_body.get("shot_script") or target_scene.script_desc or "",
+        "shot_script_img": req_body.get("shot_script_img") or target_scene.reference_img_url or "",
+        "subtitle": req_body.get("subtitle") or target_scene.subtitle or "",
+        # Credentials
+        "jarvis_api_key": _get_sharded_api_key(1),
+        "minimax_key": minimax["api_key"],
+        "minimax_group": minimax["group_id"],
+        "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
+        "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
+    }
+
+    status_code, _, _ = await post_json(URL_HS003_SHOT_VIDEO, json_payload)
+    if status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Trigger failed: {status_code}")
+
+    return {"success": True, "task_id": task_id, "scene_index": scene_index, "message": "Regenerating video"}

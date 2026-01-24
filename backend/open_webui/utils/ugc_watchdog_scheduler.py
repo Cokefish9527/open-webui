@@ -10,7 +10,9 @@ import logging
 import os
 from typing import Optional
 
-from open_webui.models.hsai_ugc import VideoTasks
+from open_webui.models.hsai_ugc import VideoTasks, TaskScenes, MaterialModels
+from open_webui.services.workflow_meta_update_service import post_json
+from open_webui.routers.hsai_ugc import URL_HS003_SHOT_VIDEO, _get_sharded_api_key, _require_env, _resolve_minimax_credentials
 
 log = logging.getLogger(__name__)
 
@@ -66,6 +68,72 @@ class UGCWatchdogScheduler:
 
         while self.is_running:
             try:
+                # Phase 3: Auto-Retry for Stale Rendering Tasks (status=3)
+                # Before we close stale tasks, we give them a chance to retry.
+                retryable_timeout = max(int(timeout_minutes / 2), 5) # Retry sooner than close
+                
+                try:
+                    stale_rendering_tasks = VideoTasks.get_stale_retryable_tasks(timeout_minutes=retryable_timeout)
+                    for task in stale_rendering_tasks:
+                        log.info(f"Watchdog: Checking stale task {task.id} (status={task.status}) for retry...")
+                        
+                        # Identify missing scenes
+                        scenes = TaskScenes.get_scenes_by_task_id(task.id)
+                        missing_scenes = [s for s in scenes if not s.fragment_video_url]
+                        
+                        if not missing_scenes:
+                            continue # Weird, status=3 but all done? Handler should have advanced it.
+                            
+                        # Trigger retries
+                        retry_triggered = False
+                        
+                        # Load context
+                        # Optim: we are in a loop, avoid resolving per scene if possible, but keep it simple first
+                        try:
+                            model_ctx = MaterialModels.get_model_by_id_and_user_id(int(task.model_id), task.user_id)
+                            if not model_ctx: continue
+                            
+                            minimax_creds = _resolve_minimax_credentials(
+                                getattr(model_ctx, "minimax_account_id", None),
+                                require_group=True,
+                                allow_env_fallback=True,
+                            )
+                            run_hub_key = _require_env("RUNNINGHUB_API_KEY")
+                            run_hub_wid = _require_env("RUNNINGHUB_WORKFLOW_ID")
+                            jarvis_key = _get_sharded_api_key(1)
+                            
+                            for s in missing_scenes:
+                                current_retries = int(s.retry_count or 0) # Schema updated
+                                if current_retries < 3: # Max retries
+                                    log.info(f"Watchdog: Triggering auto-retry for task {task.id} scene {s.scene_index}")
+                                    TaskScenes.increment_retry_count(task.id, s.scene_index, error_msg="Watchdog auto-retry")
+                                    
+                                    payload = {
+                                        "task_id": task.id,
+                                        "shot_id": s.scene_index,
+                                        "shot_script": s.script_desc or "",
+                                        "shot_script_img": s.reference_img_url or "",
+                                        "subtitle": s.subtitle or "",
+                                        "jarvis_api_key": jarvis_key,
+                                        "minimax_key": minimax_creds["api_key"],
+                                        "minimax_group": minimax_creds["group_id"],
+                                        "runninghub_api_key": run_hub_key,
+                                        "runninghub_workflow_id": run_hub_wid,
+                                    }
+                                    await post_json(URL_HS003_SHOT_VIDEO, payload)
+                                    retry_triggered = True
+                        
+                        except Exception as e:
+                            log.error(f"Watchdog: Failed to retry task {task.id}: {e}")
+                        
+                        if retry_triggered:
+                            # Bump last_progress_at so we don't retry immediately or close it
+                            VideoTasks.update_task_status(task.id, status=3)
+                            
+                except Exception as e:
+                    log.error(f"Watchdog: Error in retry loop: {e}")
+
+                # ... Proceed to Cleanup Logic ...
                 # status=4（PENDING_MERGE）需要更长的保留期：默认 3 天，
                 # 避免用户离开页面后无法返回确认合成。
                 statuses_no_pending_merge = [s for s in statuses if s != 4]
