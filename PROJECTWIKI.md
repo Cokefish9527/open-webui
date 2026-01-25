@@ -432,6 +432,20 @@ backend/open_webui/services/ops_dashboard_client.py:_post()` 以 ERROR 级别输
   - `backend/open_webui/services/ops_dashboard_ingestor.py`（重试用尽改为 WARNING）
 - 验证：本地复现 404 时仅产生 WARNING，业务路由与 WebSocket 消息正常。
 
+## 缺陷复盘｜UGC-2026-01-24：UGC Task Scene 缺失 retry_count 列
+
+- 背景：`GET /api/v1/ugc/tasks/{id}/scenes` 报错 `psycopg2.errors.UndefinedColumn: column ... retry_count does not exist`。
+- 根因：`HSAIUGCTaskScene` 模型新增了 `retry_count/error_msg` 字段，但 `open_webui/internal/migrations/ugc.py` 的 runtime migration 逻辑未同步更新，导致旧环境启动时未自动补列。
+- 修复：更新 `migrations/ugc.py`，在 `ensure_ugc_schema` 中补充对 `retry_count` 和 `error_msg` 的检查与 `ADD COLUMN` 语句；同时修正 `CREATE TABLE` 定义。
+- 验证：重启服务后，Schema Guard 自动检测并添加缺失列，接口恢复正常。
+
+## 缺陷复盘｜UGC-2026-01-24：UGC Regenerate Image 报错 image_prompt invalid
+
+- 背景：分镜重绘接口 `POST .../regenerate_image` 报错 500 `{"error":"image_prompt must be a non-empty string"}`。
+- 根因：当用户未修改提示词直接点击重试时，前端仅发送空 payload，后端未做 `image_prompt` 兜底逻辑，直接将 None 发送给 n8n 导致校验失败。
+- 修复：在 `hsai_ugc.py` 中增加回退逻辑：`user_prompt` > `script_desc` > `subtitle`；若均为空则抛出 400 阻断请求。
+- 验证：代码逻辑已更新，确保下发给 n8n 的 `image_prompt` 始终非空。
+
 ## 变更日志
 
 - 2025-12-11：前端 `svelte-check` 因现存大量类型告警（verbatimModuleSyntax 下类型导入、历史隐式 any）暂时停用，`package.json` 的 `check` 脚本改为直接输出跳过提示；`tsconfig.json` 放宽为 `strict: false`、`noImplicitAny: false`，并在 `src/global.d.ts` 补充全局类型占位（`APP_VERSION`、`APP_BUILD_HASH`、`uuid` 模块）。计划：待前端类型债务逐步清理后恢复严格校验与 svelte-check。

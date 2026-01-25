@@ -28,6 +28,7 @@ from open_webui.models.hsai_ugc import (
     ProductUpdateForm,
     ProductData,
     ProductsListResponse,
+    UGCTaskUpdateEvent,
 )
 from open_webui.services.workflow_meta_update_service import post_json
 from open_webui.constants import ERROR_MESSAGES
@@ -224,12 +225,26 @@ def _ugc_upload_and_get_url(
 # Step 0: Digital Human Asset Management
 ####################
 
-@router.post("/models", response_model=MaterialModelData, summary="创建数字人资产 (Step 0)")
+@router.post(
+    "/models", 
+    response_model=MaterialModelData, 
+    summary="创建数字人资产 (Step 0)",
+    description="""
+    创建数字人基础资产：
+    1. 上传数字人形象图片和音色音频到存储。
+    2. 调用 n8n hs001 克隆音色。
+    3. 保存资产记录到数据库。
+    """,
+    responses={
+        502: {"description": "音色克隆服务(n8n)调用失败或超时"},
+        504: {"description": "音色克隆服务超时"}
+    }
+)
 async def create_material_model(
-    model_name: str = Form(...),
-    minimax_account_id: Optional[int] = Form(default=None),
-    model_img: UploadFile = File(...),
-    voice_audio: UploadFile = File(...),
+    model_name: str = Form(..., description="数字人名称"),
+    minimax_account_id: Optional[int] = Form(None, description="指定MiniMax账号ID (可选)"),
+    model_img: UploadFile = File(..., description="数字人形象图片 (建议512x512)"),
+    voice_audio: UploadFile = File(..., description="音色克隆源音频 (WAV/MP3)"),
     user=Depends(get_verified_user),
 ):
     """
@@ -354,7 +369,20 @@ async def get_material_model_detail(model_id: int, user=Depends(get_verified_use
     return model
 
 
-@router.delete("/models/{model_id}", summary="删除数字人资产 (含MiniMax Voice)")
+@router.delete(
+    "/models/{model_id}", 
+    summary="删除数字人资产 (含MiniMax Voice)",
+    description="""
+    删除数字人资产(软删除)：
+    1. 调用 MiniMax API 删除远端 Voice 插槽。
+    2. 标记本地数据库记录为已删除 (保留历史任务引用)。
+    注意：此操作不可逆。
+    """,
+    responses={
+        404: {"description": "资产未找到"},
+        502: {"description": "MiniMax API 调用失败"}
+    }
+)
 async def delete_material_model(model_id: int, user=Depends(get_verified_user)):
     """
     删除数字人资产(软删除):
@@ -526,7 +554,20 @@ def _get_sharded_api_key(index: int = 0) -> str:
     return keys[0]
 
 
-@router.post("/tasks", response_model=VideoTaskData, summary="创建视频生成任务 (Step 1)")
+@router.post(
+    "/tasks", 
+    response_model=VideoTaskData, 
+    summary="创建视频生成任务 (Step 1)",
+    description="""
+    创建视频生成任务并触发脚本生成 (Step 1 -> hs002)：
+    - 支持按 `product_id` (推荐) 或直接传参 (兼容模式)。
+    - 成功创建后任务状态为 1 (脚本生成中)。
+    """,
+    responses={
+        404: {"description": "模型或产品未找到"},
+        502: {"description": "脚本生成服务(n8n)调用失败"}
+    }
+)
 async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified_user)):
     """
     创建视频生成任务,并触发 n8n hs002 生成脚本。
@@ -795,7 +836,21 @@ class UGCGenerateVideoForm(BaseModel):
     """
 
     model_config = ConfigDict(extra="ignore")
-    scenes: List[TaskSceneEditItem]
+
+# ---------------------------------------------------------
+# Documentation Endpoints
+# ---------------------------------------------------------
+
+@router.get("/docs/events", response_model=UGCTaskUpdateEvent, summary="WebSocket 事件结构")
+async def get_websocket_event_schema():
+    """
+    仅用于文档展示 WebSocket `hsai_ugc_update` 事件的 Payload 结构。
+    实际不返回数据。
+    """
+    return UGCTaskUpdateEvent(
+        task_id="demo_id", 
+        type="usage_info"
+    )
 
 
 UGCGenerateVideoPayload = Union[List[TaskSceneEditItem], UGCGenerateVideoForm]
@@ -1075,7 +1130,7 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
         # Retry HS002
         form_dict = getattr(task, "base_inputs", {}) or {}
         # 恢复 status=1 (SCRIPTING)
-        VideoTasks.update_task_status(task.id, status=1)
+        VideoTasks.update_task_status(task.id, status=1, step=1)
 
         # 产品库模式：按约定将“名称+描述”合并到 hs002 product_name 字段（字符串）。
         retry_product_name = form_dict.get("product_name")
@@ -1083,6 +1138,14 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
             name = str(form_dict.get("product_name") or "")
             desc = str(form_dict.get("product_desc") or "")
             retry_product_name = f"{name},{desc}"
+
+        # n8n hs002 兼容：同时发送 product_url + product_img（新旧字段并存）。
+        retry_product_url = (form_dict.get("product_url") or "").strip() if isinstance(form_dict, dict) else ""
+        retry_product_img = (form_dict.get("product_img") or "").strip() if isinstance(form_dict, dict) else ""
+        if not retry_product_url:
+            retry_product_url = retry_product_img
+        if not retry_product_img:
+            retry_product_img = retry_product_url
          
         payload = {
             "task_id": task.id,
@@ -1090,12 +1153,14 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
             "ip_name": model.model_name,
             "ip_img": model.model_img_url,
             "voice_id": model.voice_provider_id,
-            "product_url": form_dict.get("product_url"),
+            "product_url": retry_product_url,
             "product_name": retry_product_name,
+            "product_img": retry_product_img,
             "product_country": form_dict.get("product_country") or "",
             "language": form_dict.get("language"),
             "subtitle": form_dict.get("subtitle") or "",
             "shot_script": form_dict.get("shot_script") or "",
+            "creative_bias": form_dict.get("creative_bias") or "",
             "jarvis_api_key": _get_sharded_api_key(0), # Key #1
             "minimax_key": minimax["api_key"],
             "minimax_group": minimax["group_id"],
@@ -1135,10 +1200,20 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
         shot_script_img_list = [s.reference_img_url or "" for s in ordered_scenes_rows]
         shot_script_list = [s.script_desc or "" for s in ordered_scenes_rows]
 
-        VideoTasks.update_task_status(task.id, status=3)
+        VideoTasks.update_task_status(task.id, status=3, step=2)
         payload = {
             "task_id": task.id,
             "voice_id": model.voice_provider_id,
+            # n8n V2+ expects shot_list; keep legacy *_list fields for backward compatibility.
+            "shot_list": [
+                {
+                    "shot_id": s.scene_index,
+                    "subtitle": s.subtitle or "",
+                    "shot_script_img": s.reference_img_url or "",
+                    "shot_script": s.script_desc or "",
+                }
+                for s in ordered_scenes_rows
+            ],
             "subtitle_list": subtitle_list,
             "shot_script_img_list": shot_script_img_list,
             "shot_script_list": shot_script_list,
@@ -1155,15 +1230,18 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
         # Retry HS004
         scenes_rows = TaskScenes.get_scenes_by_task_id(task.id)
         scenes_rows.sort(key=lambda s: s.scene_index)
-        # Use existing fragments
-        shot_video_list = [s.fragment_video_url for s in scenes_rows]
-        if any(not u for u in shot_video_list):
-             raise HTTPException(status_code=400, detail="Missing fragment videos for retry step 3")
+        # Use existing fragments (hs004 expects shot_list)
+        shot_list = [
+            {"shot_id": s.scene_index, "shot_video_url": s.fragment_video_url}
+            for s in scenes_rows
+        ]
+        if not shot_list or any(not item.get("shot_video_url") for item in shot_list):
+            raise HTTPException(status_code=400, detail="Missing fragment videos for retry step 3")
 
         VideoTasks.update_task_status(task.id, status=5)
         payload = {
             "task_id": task.id,
-            "shot_video_list": shot_video_list,
+            "shot_list": shot_list,
             "jarvis_api_key": _get_sharded_api_key(0), # Key #1 (Default)
         }
         target_url = URL_HS004
@@ -1172,7 +1250,12 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
         raise HTTPException(status_code=400, detail=f"Invalid step for retry: {step}")
 
     # Trigger n8n
-    status_code, _, _ = await post_json(target_url, payload)
+    try:
+        status_code, _, _ = await post_json(target_url, payload)
+    except Exception as e:
+        # post_json raises after retrying on 5xx/timeout; convert to 502 to avoid leaking 500 to clients.
+        VideoTasks.update_task_status(task.id, status=-1)
+        raise HTTPException(status_code=502, detail=f"n8n retry trigger failed: {e}")
     if status_code >= 400:
         VideoTasks.update_task_status(task.id, status=-1)
         raise HTTPException(status_code=502, detail=f"n8n retry trigger failed: {status_code}")
@@ -1207,11 +1290,17 @@ async def regenerate_scene_image(
     # Optional overrides from request body
     user_prompt = payload.get("image_prompt") if payload else None
     
+    # Fallback: user input > scene script > scene subtitle > empty
+    final_prompt = user_prompt or target_scene.script_desc or target_scene.subtitle or ""
+
+    if not final_prompt:
+        raise HTTPException(status_code=400, detail="Image prompt (or script description) is required")
+    
     json_payload = {
         "task_id": task_id,
         "shot_id": scene_index,
-        "image_prompt": user_prompt, # prompt override
-        "ip_img": None, # Will be filled by n8n if empty, or we can look up model?
+        "image_prompt": final_prompt, 
+        "ip_img": None, # Will be filled by n8n if empty
         # Actually spec says: ip_img from DB, product_url from DB
         "product_url": product_url,
         "jarvis_api_key": _get_sharded_api_key(0)

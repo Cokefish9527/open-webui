@@ -126,6 +126,7 @@ class HSAIUGCTaskScene(Base):
     fragment_video_urls = Column(Text, nullable=True)
     retry_count = Column(Integer, nullable=False, default=0)
     error_msg = Column(Text, nullable=True)
+    image_prompt = Column(Text, nullable=True)
 
     task = relationship("HSAIUGCTask", back_populates="scenes")
 
@@ -162,14 +163,14 @@ class HSAIUGCCallbackLog(Base):
 
 class MaterialModelData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: int
-    user_id: str
-    model_name: str
-    model_img_url: str
-    voice_provider_id: str
-    voice_preview_url: str
-    minimax_account_id: Optional[int] = None
-    created_at: int
+    id: int = Field(..., description="数字人资产ID")
+    user_id: str = Field(..., description="用户ID")
+    model_name: str = Field(..., description="数字人名称", example="My Avatar")
+    model_img_url: str = Field(..., description="数字人形象图片URL")
+    voice_provider_id: str = Field(..., description="音色ID (MiniMax)")
+    voice_preview_url: str = Field(..., description="音色预览音频URL")
+    minimax_account_id: Optional[int] = Field(None, description="绑定的MiniMax账号ID")
+    created_at: int = Field(..., description="创建时间戳 (秒)")
 
     @classmethod
     def _coerce_source(cls, value: Any) -> Dict[str, Any]:
@@ -207,19 +208,19 @@ class MaterialModelData(BaseModel):
 
 class VideoTaskData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: str
-    user_id: str
-    status: int
-    step: int
-    model_id: int
-    base_inputs: Dict[str, Any]
-    result_video_url: Optional[str] = None
-    progress_percent: int = 0
-    last_progress_at: Optional[int] = None
-    closed_at: Optional[int] = None
-    closed_reason: Optional[str] = None
-    created_at: int
-    updated_at: int
+    id: str = Field(..., description="任务ID (UUID)")
+    user_id: str = Field(..., description="用户ID")
+    status: int = Field(..., description="任务状态: 0=排队, 1=脚本生成中, 2=待编辑, 3=分镜生成中, 4=待合成, 5=合成中, 6=成功, -1=失败, -2=已关闭")
+    step: int = Field(..., description="当前步骤: 1=脚本, 2=分镜, 3=合成")
+    model_id: int = Field(..., description="使用的数字人模型ID")
+    base_inputs: Dict[str, Any] = Field(..., description="基础输入参数快照")
+    result_video_url: Optional[str] = Field(None, description="最终合成视频URL")
+    progress_percent: int = Field(0, description="总体进度百分比 (0-100)")
+    last_progress_at: Optional[int] = Field(None, description="最后进度更新时间戳")
+    closed_at: Optional[int] = Field(None, description="关闭时间戳")
+    closed_reason: Optional[str] = Field(None, description="关闭/失败原因")
+    created_at: int = Field(..., description="创建时间戳")
+    updated_at: int = Field(..., description="更新时间戳")
 
     @classmethod
     def _coerce_source(cls, value: Any) -> Dict[str, Any]:
@@ -258,14 +259,15 @@ class VideoTaskData(BaseModel):
 
 class TaskSceneData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: int
-    task_id: str
-    scene_index: int
-    subtitle: Optional[str] = None
-    script_desc: Optional[str] = None
-    reference_img_url: Optional[str] = None
-    fragment_video_url: Optional[str] = None
-    fragment_video_urls: Optional[List[str]] = None
+    id: int = Field(..., description="分镜ID")
+    task_id: str = Field(..., description="所属任务ID")
+    scene_index: int = Field(..., description="分镜索引 (0-based)")
+    subtitle: Optional[str] = Field(None, description="口播字幕")
+    script_desc: Optional[str] = Field(None, description="分镜脚本描述")
+    reference_img_url: Optional[str] = Field(None, description="分镜参考图URL")
+    fragment_video_url: Optional[str] = Field(None, description="分镜视频片段URL")
+    fragment_video_urls: Optional[List[str]] = Field(None, description="分镜视频候选列表")
+    image_prompt: Optional[str] = Field(None, description="图片生成提示词")
 
     @classmethod
     def _coerce_source(cls, value: Any) -> Dict[str, Any]:
@@ -281,6 +283,7 @@ class TaskSceneData(BaseModel):
                 "reference_img_url",
                 "fragment_video_url",
                 "fragment_video_urls",
+                "image_prompt",
             ]
             data = {key: getattr(value, key, None) for key in attr_names}
 
@@ -345,13 +348,13 @@ class UGCTaskCloseForm(BaseModel):
 
 class ProductData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: int
-    user_id: str
-    name: str
-    description: Optional[str] = None
-    cover_img: Optional[str] = None
-    created_at: int
-    updated_at: int
+    id: int = Field(..., description="产品ID")
+    user_id: str = Field(..., description="用户ID")
+    name: str = Field(..., description="产品名称")
+    description: Optional[str] = Field(None, description="产品描述")
+    cover_img: Optional[str] = Field(None, description="产品封面图URL")
+    created_at: int = Field(..., description="创建时间戳")
+    updated_at: int = Field(..., description="更新时间戳")
 
     @classmethod
     def _coerce_source(cls, value: Any) -> Dict[str, Any]:
@@ -392,15 +395,15 @@ class ProductsListResponse(BaseModel):
 
 class ProductCreateForm(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    name: str
-    description: Optional[str] = None
-    cover_img: Optional[str] = None
+    name: str = Field(..., description="产品名称")
+    description: Optional[str] = Field(None, description="产品描述")
+    cover_img: Optional[str] = Field(None, description="产品封面图URL")
 
 class ProductUpdateForm(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    name: Optional[str] = None
-    description: Optional[str] = None
-    cover_img: Optional[str] = None
+    name: Optional[str] = Field(None, description="产品名称")
+    description: Optional[str] = Field(None, description="产品描述")
+    cover_img: Optional[str] = Field(None, description="产品封面图URL")
 
 
 ####################
@@ -408,31 +411,52 @@ class ProductUpdateForm(BaseModel):
 ####################
 
 class MaterialModelCreateForm(BaseModel):
-    model_name: str
-    model_img_url: str
-    voice_provider_id: str
-    voice_preview_url: str
-    minimax_account_id: Optional[int] = None
+    model_name: str = Field(..., description="数字人名称")
+    model_img_url: str = Field(..., description="数字人形象图片OSS URL")
+    voice_provider_id: str = Field(..., description="音色ID")
+    voice_preview_url: str = Field(..., description="音色预览音频OSS URL")
+    minimax_account_id: Optional[int] = Field(None, description="绑定的MiniMax账号ID")
 
 class VideoTaskCreateForm(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    model_id: int
+    model_id: int = Field(..., description="选择的数字人模型ID")
     # 产品库支持(优先)
-    product_id: Optional[int] = None
+    product_id: Optional[int] = Field(None, description="产品库ID (推荐)")
     # 兼容旧接口(降级为可选)
-    product_url: Optional[str] = None
-    product_name: Optional[str] = None
+    product_url: Optional[str] = Field(None, description="产品图片URL (兼容旧模式)")
+    product_name: Optional[str] = Field(None, description="产品名称 (兼容旧模式)")
     # 其他参数
-    language: str
-    product_country: Optional[str] = None
-    subtitle: Optional[str] = None
-    shot_script: Optional[str] = None
-    creative_bias: Optional[str] = None
+    language: str = Field(..., description="目标语言 (zh-CN/en-US)", example="zh-CN")
+    product_country: Optional[str] = Field(None, description="产品目标国家/地区")
+    subtitle: Optional[str] = Field(None, description="自定义字幕内容")
+    shot_script: Optional[str] = Field(None, description="自定义脚本大纲")
+    creative_bias: Optional[str] = Field(None, description="创意偏好描述")
 
 class TaskSceneUpdateForm(BaseModel):
-    subtitle: Optional[str] = None
-    script_desc: Optional[str] = None
-    reference_img_url: Optional[str] = None
+    subtitle: Optional[str] = Field(None, description="更新口播字幕")
+    script_desc: Optional[str] = Field(None, description="更新分镜脚本描述")
+    reference_img_url: Optional[str] = Field(None, description="更新分镜参考图URL")
+    image_prompt: Optional[str] = Field(None, description="更新图片生成提示词")
+
+# --- WebSocket Documentation Schemas ---
+
+class UGCTaskUpdateEvent(BaseModel):
+    """
+    WebSocket 'hsai_ugc_update' 事件负载结构
+    
+    设计说明:
+    - 推送完整的任务信息结构,包括任务状态、分镜列表、最终结果
+    - 对于单一分镜重试,scenes 数组只包含该分镜信息
+    - 对于全量更新(如脚本生成完成),scenes 包含所有分镜
+    - 前端可直接用此结构更新本地状态,无需额外 API 调用
+    """
+    task_id: str = Field(..., description="任务ID")
+    status: int = Field(..., description="任务状态: 0=排队, 1=脚本生成中, 2=待编辑, 3=分镜生成中, 4=待合成, 5=合成中, 6=成功, -1=失败, -2=已关闭")
+    step: int = Field(..., description="当前步骤: 1=脚本, 2=分镜, 3=合成")
+    progress_percent: Optional[int] = Field(None, description="总体进度百分比 (0-100)")
+    result_video_url: Optional[str] = Field(None, description="最终合成视频URL (status=6时有值)")
+    scenes: Optional[List[TaskSceneData]] = Field(None, description="分镜列表 (全量或增量)")
+    error_msg: Optional[str] = Field(None, description="错误信息 (status=-1时有值)")
 
 ####################
 # DAO Classes
@@ -844,7 +868,8 @@ class HSAIUGCTaskScenesTable:
                     scene_index=item["scene_index"],
                     subtitle=item.get("subtitle"),
                     script_desc=item.get("script_desc"),
-                    reference_img_url=item.get("reference_img_url")
+                    reference_img_url=item.get("reference_img_url"),
+                    image_prompt=item.get("image_prompt")
                 )
                 db.add(scene)
             db.commit()
@@ -853,6 +878,18 @@ class HSAIUGCTaskScenesTable:
         with _schema_aware_db() as db:
             scenes = db.query(HSAIUGCTaskScene).filter_by(task_id=task_id).order_by(HSAIUGCTaskScene.scene_index.asc()).all()
             return [TaskSceneData.model_validate(s) for s in scenes]
+
+    def get_scene_by_index(self, task_id: str, scene_index: int) -> Optional[TaskSceneData]:
+        """
+        Get a single scene by (task_id, scene_index).
+        """
+        with _schema_aware_db() as db:
+            scene = (
+                db.query(HSAIUGCTaskScene)
+                .filter_by(task_id=task_id, scene_index=scene_index)
+                .first()
+            )
+            return TaskSceneData.model_validate(scene) if scene else None
 
     def update_scene(self, scene_id: int, form: TaskSceneUpdateForm) -> bool:
         with _schema_aware_db() as db:

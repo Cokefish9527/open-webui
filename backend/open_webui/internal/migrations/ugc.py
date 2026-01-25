@@ -340,6 +340,18 @@ CREATE TABLE IF NOT EXISTS {video_tasks_table} (
                 statements.append(
                     f"ALTER TABLE {task_scenes_table} ADD COLUMN fragment_video_urls TEXT"
                 )
+            if "retry_count" not in existing_cols:
+                retry_count_type = "INTEGER"
+                statements.append(
+                    f"ALTER TABLE {task_scenes_table} ADD COLUMN retry_count {retry_count_type} NOT NULL DEFAULT 0"
+                )
+                statements.append(
+                    f"ALTER TABLE {task_scenes_table} ADD COLUMN error_msg TEXT"
+                )
+            if "image_prompt" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {task_scenes_table} ADD COLUMN image_prompt TEXT"
+                )
 
         if inspect_video_table:
             # Backfill best-effort for older rows.
@@ -382,6 +394,9 @@ CREATE TABLE IF NOT EXISTS {task_scenes_table} (
     reference_img_url VARCHAR(512),
     fragment_video_url VARCHAR(512),
     fragment_video_urls TEXT,
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    error_msg TEXT,
+    image_prompt TEXT,
     UNIQUE(task_id, scene_index),
     FOREIGN KEY(task_id) REFERENCES {video_tasks_table}(id) ON DELETE CASCADE
 )
@@ -399,6 +414,9 @@ CREATE TABLE IF NOT EXISTS {task_scenes_table} (
     reference_img_url VARCHAR(512),
     fragment_video_url VARCHAR(512),
     fragment_video_urls TEXT,
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    error_msg TEXT,
+    image_prompt TEXT,
     UNIQUE(task_id, scene_index),
     FOREIGN KEY(task_id) REFERENCES {video_tasks_table}(id) ON DELETE CASCADE
 )

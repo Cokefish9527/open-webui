@@ -12,6 +12,41 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
+def _log_ws_ugc_update(payload: Dict[str, Any]) -> None:
+    """
+    Log a compact, non-sensitive summary for the UGC websocket event.
+
+    Note: Avoid logging full payload (may include long strings / URLs).
+    """
+    try:
+        scenes = payload.get("scenes")
+        scenes_len = None
+        scene_index_hint = None
+
+        if scenes is None:
+            scenes_len = None
+        elif isinstance(scenes, list):
+            scenes_len = len(scenes)
+            if scenes_len == 1 and isinstance(scenes[0], dict):
+                scene_index_hint = scenes[0].get("scene_index")
+        else:
+            # Unexpected shape; keep it simple.
+            scenes_len = -1
+
+        log.info(
+            "UGC WS emit hsai_ugc_update: task_id=%s status=%s step=%s progress_percent=%s scenes_len=%s scene_index=%s error=%s",
+            payload.get("task_id"),
+            payload.get("status"),
+            payload.get("step"),
+            payload.get("progress_percent"),
+            scenes_len,
+            scene_index_hint,
+            bool(payload.get("error_msg")),
+        )
+    except Exception as e:
+        log.debug("UGC WS emit log failed: %s", e)
+
+
 
 async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str, Any]] = None) -> None:
     """
@@ -95,79 +130,91 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                     "scene_index": idx,
                     "subtitle": item.get("subtitle"),
                     "script_desc": item.get("shot_script") or item.get("script_desc"),
-                    "reference_img_url": item.get("shot_script_img") or item.get("reference_img_url") or item.get("image_url")
+                    "script_desc": item.get("shot_script") or item.get("script_desc"),
+                    "reference_img_url": item.get("shot_script_img") or item.get("reference_img_url") or item.get("image_url"),
+                    "image_prompt": item.get("image_prompt") or item.get("prompt")
                 })
             
             # 入库分镜
             TaskScenes.batch_insert_scenes(task_id, scenes_to_insert)
             # 更新任务状态为 2 (待编辑)
             VideoTasks.update_task_status(task_id, status=2, step=1)
+            # 更新任务状态为 2 (待编辑)
+            VideoTasks.update_task_status(task_id, status=2, step=1)
             log.info(f"Task {task_id} status updated to 2 (Pending Edit)")
+            
+            # Fetch updated scenes for full structure
+            updated_scenes = TaskScenes.get_scenes_by_task_id(task_id)
+            if sio is not None:
+                payload = {
+                    "task_id": task_id, 
+                    "status": 2, 
+                    "step": 1,
+                    "progress_percent": 35,
+                    "result_video_url": None,
+                    "scenes": [s.model_dump() for s in (updated_scenes or [])],
+                    "error_msg": None
+                }
+                _log_ws_ugc_update(payload)
+                await sio.emit("hsai_ugc_update", payload)
 
         elif msg_type == "VIDEO_RESULT":
             # 分镜视频生成结果 (Step 2 -> 3)
-            shot_list = data.get("shot_list", [])
+            shot_list = data.get("shot_list") or []
             
             # Backwards compatibility check
             if not shot_list and "shot_video_list" in data:
-                 shot_video_list_legacy = data.get("shot_video_list", [])
-                 # Legacy mapping logic is complex, simplify for now: assume index-based
-                 # But real legacy code had mapped_scene_indices logic. 
-                 # Given we are moving to V2.1 where n8n returns mapped shot_id, we prioritize that.
-                 # If we receive legacy payload, we might fail or try best effort. 
-                 # Let's keep specific legacy logic block only if needed. 
-                 # For V2.1 transition, n8n MUST update to return shot_list with shot_id.
+                 shot_video_list_legacy = data.get("shot_video_list", []) or []
                  log.warning("Received legacy VIDEO_RESULT payload (shot_video_list), attempting to map...")
-                 # ... (Implementation of legacy mapping if critical, otherwise assume V2.1)
-                 # Converting legacy to shot_list format for unified processing:
-                 # Limitation: we don't know shot_id easily without the mapping logic.
-                 # Let's reuse the mapping logic below but adapt it.
+                 # Legacy format: list aligned by scene_index.
+                 shot_list = [
+                     {"shot_id": idx, "shot_video_url": url}
+                     for idx, url in enumerate(shot_video_list_legacy)
+                     if url
+                 ]
 
-            # V2.1 Logic: Iterate over shot_list
-            if shot_list:
+            submitted_indices = set()
+            if isinstance(shot_list, list) and shot_list:
                 for item in shot_list:
                     try:
-                         # shot_id is scene_index
-                         idx = int(item.get("shot_id") if item.get("shot_id") is not None else item.get("scene_index", -1))
-                         if idx < 0: continue
-                         
-                         video_url = item.get("shot_video_url") or item.get("video_url")
-                         candidates = []
-                         
-                         # Check for candidates list
-                         raw_candidates = item.get("candidates") or item.get("videos")
-                         if isinstance(raw_candidates, list):
-                             candidates = [str(v) for v in raw_candidates if v]
-                         
-                         if not candidates and video_url:
-                             candidates = [video_url]
-                             
-                         if candidates:
-                             TaskScenes.update_fragment_video_candidates(task_id, idx, candidates, selected_url=candidates[0])
+                        idx = int(
+                            item.get("shot_id")
+                            if item.get("shot_id") is not None
+                            else item.get("scene_index", -1)
+                        )
+                        if idx < 0:
+                            continue
+                        submitted_indices.add(idx)
+
+                        video_url = item.get("shot_video_url") or item.get("video_url")
+                        candidates = []
+
+                        raw_candidates = item.get("candidates") or item.get("videos")
+                        if isinstance(raw_candidates, list):
+                            candidates = [str(v) for v in raw_candidates if v]
+
+                        if not candidates and video_url:
+                            candidates = [video_url]
+
+                        if candidates:
+                            TaskScenes.update_fragment_video_candidates(
+                                task_id, idx, candidates, selected_url=candidates[0]
+                            )
                     except Exception as e:
                         log.error(f"Error processing video shot item: {e}")
-            else:
-                 # Legacy Fallback Block (Original Code Logic adapted)
-                 shot_video_list = data.get("shot_video_list", [])
-                 if isinstance(shot_video_list, list) and shot_video_list:
-                    # ... (Keep specific legacy mapping if deemed necessary, or just log error and prompt n8n update)
-                    # For safety in this refactor, let's keep the legacy handling logic but wrapper it?
-                    # Since existing code is long, let's just use the logic from before?
-                    # To keep it clean, I will assume V2.1 is primary. If data has shot_video_list but no shot_list:
-                    pass 
 
             # Auto-Retry Partial Failure Logic (Phase 3)
             # Detect missing scenes and trigger retry instead of failing or partial merging if retry_count allows.
-            
-            # Identify missing scenes
-            # mapped_scene_indices was derived earlier or legacy-inferred
-            # We compare mapped_scene_indices (from payload) vs existing_map keys (DB state)
-            
-            # Wait, mapped_scene_indices is what we FOUND in the payload.
-            # existing_map keys are ALL scenes required for the task.
-            submitted_indices = set(mapped_scene_indices)
-            all_indices = set(existing_map.keys())
-            missing_indices = all_indices - submitted_indices
+            existing_map = {}
+            try:
+                for s in TaskScenes.get_scenes_by_task_id(task_id) or []:
+                    si = getattr(s, "scene_index", None)
+                    if si is not None:
+                        existing_map[int(si)] = s
+            except Exception:
+                existing_map = {}
+
+            missing_indices = set(existing_map.keys()) - set(submitted_indices)
             
             # Also check for empty video URLs in the returned list
             # If payload has entry but URL is empty, treating as "failed" generation for that shot?
@@ -202,20 +249,18 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                         
                         for missing_idx in missing_indices:
                             scene_row = existing_map[missing_idx]
-                            current_retries = int(scene_row.retry_count or 0)
-                            
-                            if current_retries < 3:
-                                log.info(f"Triggering auto-retry for scene {missing_idx} (attempt {current_retries + 1}/3)")
-                                # Increment DB counter
-                                TaskScenes.increment_retry_count(task_id, missing_idx, error_msg="Partial failure auto-retry")
+                            retry_count = int(TaskScenes.increment_retry_count(task_id, missing_idx, error_msg="Partial failure auto-retry") or 0)
+
+                            if 0 < retry_count <= 3:
+                                log.info(f"Triggering auto-retry for scene {missing_idx} (attempt {retry_count}/3)")
                                 
                                 # Trigger hs003_shot_video
                                 payload = {
                                     "task_id": task_id,
                                     "shot_id": missing_idx,
-                                    "shot_script": scene_row.script_desc or "",
-                                    "shot_script_img": scene_row.reference_img_url or "",
-                                    "subtitle": scene_row.subtitle or "",
+                                    "shot_script": getattr(scene_row, "script_desc", "") or "",
+                                    "shot_script_img": getattr(scene_row, "reference_img_url", "") or "",
+                                    "subtitle": getattr(scene_row, "subtitle", "") or "",
                                     "jarvis_api_key": jarvis_key,
                                     "minimax_key": minimax_creds["api_key"],
                                     "minimax_group": minimax_creds["group_id"],
@@ -226,9 +271,7 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                                 await post_json(URL_HS003_SHOT_VIDEO, payload)
                                 retry_triggered = True
                             else:
-                                log.error(f"Scene {missing_idx} exceeded max retries ({current_retries}). Giving up on auto-retry.")
-                                # Leave it to be missing, or mark error?
-                                # For now, we proceed. It will just be missing in the final list or user sees it empty.
+                                log.error(f"Scene {missing_idx} exceeded max retries ({retry_count}). Giving up on auto-retry.")
                                 TaskScenes.increment_retry_count(task_id, missing_idx, error_msg="Max retries exceeded")
 
                     except Exception as exc:
@@ -244,20 +287,44 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
             # 更新任务状态为 4 (待合成)
             VideoTasks.update_task_status(task_id, status=4, step=2)
             log.info(f"Task {task_id} status updated to 4 (Pending Merge)")
+            
+            # Fetch all scenes for full structure (like SCRIPT_RESULT)
+            all_scenes = TaskScenes.get_scenes_by_task_id(task_id)
+            if sio is not None:
+                payload = {
+                    "task_id": task_id, 
+                    "status": 4, 
+                    "step": 2,
+                    "progress_percent": 85,
+                    "result_video_url": None,
+                    "scenes": [s.model_dump() for s in (all_scenes or [])],
+                    "error_msg": None
+                }
+                _log_ws_ugc_update(payload)
+                await sio.emit("hsai_ugc_update", payload)
 
             # Auto-Merge Logic (Same as before)
             auto_merge_enabled = os.getenv("UGC_AUTO_MERGE_ENABLED", "false").lower() in ("1", "true", "yes", "on")
             if auto_merge_enabled:
-                 # ... (trigger hs004)
-                 # Since we refactored hs004 to use shot_list, we need to construct it
-                 updated_scenes = TaskScenes.get_scenes_by_task_id(task_id)
-                 valid_scenes = [s for s in updated_scenes if s.fragment_video_url]
-                 
-                 if valid_scenes:
-                     shot_list_payload = [
-                         {"shot_id": s.scene_index, "shot_video_url": s.fragment_video_url}
-                         for s in valid_scenes
-                     ]
+                 # Construct hs004 payload from callback data (prefer this over DB reads).
+                 shot_list_payload = []
+                 if isinstance(shot_list, list):
+                     for item in shot_list:
+                         try:
+                             idx = int(
+                                 item.get("shot_id")
+                                 if item.get("shot_id") is not None
+                                 else item.get("scene_index", -1)
+                             )
+                         except Exception:
+                             continue
+                         if idx < 0:
+                             continue
+                         url = item.get("shot_video_url") or item.get("video_url")
+                         if url:
+                             shot_list_payload.append({"shot_id": idx, "shot_video_url": url})
+
+                 if shot_list_payload:
                      
                      base_url = os.getenv("N8N_UGC_BASE_URL", "https://webhook-n8n.hsai.cc/webhook").strip().rstrip("/")
                      url_hs004 = f"{base_url}/ugc_result"
@@ -295,6 +362,8 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
             
             update_data = {}
             if img_url: update_data["reference_img_url"] = img_url
+            if img_url: update_data["reference_img_url"] = img_url
+            if prompt: update_data["image_prompt"] = prompt
             
             # If we want to save the prompt, we need schema support (not yet adding column, just logging or ignoring)
             # But we update the image url
@@ -302,9 +371,21 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                 TaskScenes.update_scene_by_index(task_id, scene_index, TaskSceneUpdateForm(**update_data))
                 log.info(f"Updated scene {scene_index} image for task {task_id}")
 
-            # Notify frontend
-            if sio is not None:
-                await sio.emit("hsai_ugc_update", {"task_id": task_id, "type": "SCENE_UPDATE", "scene_index": scene_index})
+            # Notify frontend with single scene update
+            updated_scene = TaskScenes.get_scene_by_index(task_id, scene_index)
+            task_curr = VideoTasks.get_task_by_id(task_id)
+            if sio is not None and updated_scene and task_curr:
+                payload = {
+                    "task_id": task_id, 
+                    "status": int(task_curr.status or 0),
+                    "step": int(task_curr.step or 0),
+                    "progress_percent": int(task_curr.progress_percent or 0),
+                    "result_video_url": task_curr.result_video_url,
+                    "scenes": [updated_scene.model_dump()],
+                    "error_msg": None
+                }
+                _log_ws_ugc_update(payload)
+                await sio.emit("hsai_ugc_update", payload)
 
         elif msg_type == "SHOT_VIDEO_RESULT":
             # 单分镜视频重生成结果
@@ -334,8 +415,21 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                          log.info(f"All scenes completed via retry for task {task_id}. Advancing to status 4.")
                          VideoTasks.update_task_status(task_id, status=4, step=2)
             
-            if sio is not None:
-                await sio.emit("hsai_ugc_update", {"task_id": task_id, "type": "SCENE_UPDATE", "scene_index": scene_index})
+            # Notify frontend with single scene update
+            updated_scene = TaskScenes.get_scene_by_index(task_id, scene_index)
+            task_curr_ws = VideoTasks.get_task_by_id(task_id)
+            if sio is not None and updated_scene and task_curr_ws:
+                payload = {
+                    "task_id": task_id, 
+                    "status": int(task_curr_ws.status or 0),
+                    "step": int(task_curr_ws.step or 0),
+                    "progress_percent": int(task_curr_ws.progress_percent or 0),
+                    "result_video_url": task_curr_ws.result_video_url,
+                    "scenes": [updated_scene.model_dump()],
+                    "error_msg": None
+                }
+                _log_ws_ugc_update(payload)
+                await sio.emit("hsai_ugc_update", payload)
 
         elif msg_type == "MERGE_RESULT":
             # 最终合成结果 (Step 3 -> Finish)
@@ -346,21 +440,49 @@ async def handle_ugc_callback(message: Dict[str, Any], config: Optional[Dict[str
                 return
             # 更新任务状态为 6 (成功) 并保存最终视频 URL
             VideoTasks.update_task_status(task_id, status=6, step=3, result_url=video_url)
+            VideoTasks.update_task_status(task_id, status=6, step=3, result_url=video_url)
             log.info(f"Task {task_id} completed successfully. Result: {video_url}")
+            
+            if sio is not None:
+                payload = {
+                    "task_id": task_id, 
+                    "status": 6, 
+                    "step": 3,
+                    "progress_percent": 100,
+                    "result_video_url": video_url,
+                    "scenes": None,
+                    "error_msg": None
+                }
+                _log_ws_ugc_update(payload)
+                await sio.emit("hsai_ugc_update", payload)
 
         elif msg_type == "ERROR":
             # 错误回调
             error_msg = data.get("msg", "Unknown error from n8n")
             log.error(f"UGC Task {task_id} failed: {error_msg}")
             VideoTasks.update_task_status(task_id, status=-1)
-            # 可以考虑把错误原因存入数据库某个字段，但当前 schema 没这个字段，暂记日志
+            
+            # Push error event to frontend
+            task_curr_err = VideoTasks.get_task_by_id(task_id)
+            if sio is not None and task_curr_err:
+                payload = {
+                    "task_id": task_id,
+                    "status": -1,
+                    "step": int(task_curr_err.step or 0),
+                    "progress_percent": 0,
+                    "result_video_url": None,
+                    "scenes": None,
+                    "error_msg": error_msg
+                }
+                _log_ws_ugc_update(payload)
+                await sio.emit("hsai_ugc_update", payload)
 
         else:
             log.warning(f"Unknown UGC Callback type: {msg_type}")
 
-        # 通知前端 (可选，hsai_response 事件)
-        if sio is not None:
-             await sio.emit("hsai_ugc_update", {"task_id": task_id, "type": msg_type, "status": "updated"})
+        # 通知前端 (可选，hsai_response 事件) - 已在各分支处理，此处不再通用发送
+        # if sio is not None:
+        #      await sio.emit("hsai_ugc_update", {"task_id": task_id, "type": msg_type, "status": "updated"})
 
     except Exception as e:
         log.error(f"Error handling UGC callback: {e}", exc_info=True)
