@@ -69,7 +69,17 @@ def _schema_aware_db():
             db.rollback()
         except Exception:
             pass
-        _ensure_ugc_schema(db)
+        
+        try:
+            _ensure_ugc_schema(db)
+        except Exception as e:
+            # If schema initialization fails, ensure we rollback before yielding
+            try:
+                db.rollback()
+            except Exception:
+                pass
+            raise
+        
         yield db
 
 ####################

@@ -73,10 +73,22 @@ def ensure_ugc_schema(
     with _connection_from(engine_or_connection) as connection:
         # Guard against pooled connections left in failed transactions.
         # This avoids "InFailedSqlTransaction" when running SET LOCAL.
+        # Multi-layer defense: rollback at both connection and transaction level.
         try:
             connection.rollback()
         except Exception:
             pass
+        
+        # Additional safeguard: if connection is in a transaction, explicitly rollback.
+        # This handles edge cases where connection.rollback() doesn't fully clear state.
+        try:
+            if connection.in_transaction():
+                trans = connection.get_transaction()
+                if trans is not None:
+                    trans.rollback()
+        except Exception:
+            pass
+        
         inspector = inspect(connection)
         effective_schema = schema or inspector.default_schema_name
         dialect = connection.dialect.name.lower()
@@ -522,11 +534,18 @@ CREATE TABLE IF NOT EXISTS {products_table} (
             existing_cols = _column_names(products)
 
             # 先补齐缺失列，保证后续 SQLite 重建表时可直接 SELECT。
+            # For PostgreSQL, use ADD COLUMN IF NOT EXISTS to avoid duplicate column errors.
             if "description" not in existing_cols:
-                statements.append(f"ALTER TABLE {products_table} ADD COLUMN description TEXT")
+                if dialect == "postgresql":
+                    statements.append(f"ALTER TABLE {products_table} ADD COLUMN IF NOT EXISTS description TEXT")
+                else:
+                    statements.append(f"ALTER TABLE {products_table} ADD COLUMN description TEXT")
                 existing_cols.add("description")
             if "cover_img" not in existing_cols:
-                statements.append(f"ALTER TABLE {products_table} ADD COLUMN cover_img VARCHAR(512)")
+                if dialect == "postgresql":
+                    statements.append(f"ALTER TABLE {products_table} ADD COLUMN IF NOT EXISTS cover_img VARCHAR(512)")
+                else:
+                    statements.append(f"ALTER TABLE {products_table} ADD COLUMN cover_img VARCHAR(512)")
                 existing_cols.add("cover_img")
 
             extra_cols = sorted([c for c in existing_cols if c not in desired_product_columns])
@@ -633,6 +652,24 @@ CREATE TABLE IF NOT EXISTS {callback_logs_table} (
             # Avoid long hangs on PostgreSQL when DDL waits for locks (e.g. concurrent schema init).
             # These settings apply only to the current transaction.
             if dialect == "postgresql":
+                # Extra safeguard: verify transaction is not in failed state before SET LOCAL.
+                # If in failed state, rollback and re-begin to get a clean transaction.
+                try:
+                    # Test query to detect failed transaction state
+                    connection.execute(text("SELECT 1"))
+                except Exception:
+                    # Transaction is in failed state, force rollback
+                    try:
+                        if trans is not None:
+                            trans.rollback()
+                        else:
+                            connection.rollback()
+                    except Exception:
+                        pass
+                    # Re-begin transaction
+                    if not connection.in_transaction():
+                        trans = connection.begin()
+                
                 lock_timeout = int(os.environ.get("UGC_SCHEMA_LOCK_TIMEOUT_SECONDS", "5") or 5)
                 statement_timeout = int(os.environ.get("UGC_SCHEMA_STATEMENT_TIMEOUT_SECONDS", "30") or 30)
                 if lock_timeout > 0:
