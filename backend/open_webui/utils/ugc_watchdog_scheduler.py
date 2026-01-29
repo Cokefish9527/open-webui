@@ -131,7 +131,19 @@ class UGCWatchdogScheduler:
                             VideoTasks.update_task_status(task.id, status=3)
                             
                 except Exception as e:
-                    log.error(f"Watchdog: Error in retry loop: {e}")
+                    # Use stack traces to surface the first failing SQL/exception in nested calls.
+                    log.error("Watchdog: Error in retry loop: %s", e, exc_info=True)
+
+                # Close tasks whose free-retry window has expired.
+                try:
+                    expired = VideoTasks.close_expired_free_retry_tasks()
+                    if expired:
+                        log.warning(
+                            "UGC watchdog closed %s tasks due to free-retry window expired",
+                            expired,
+                        )
+                except Exception as e:
+                    log.error("Watchdog: Error when closing free-retry expired tasks: %s", e, exc_info=True)
 
                 # ... Proceed to Cleanup Logic ...
                 # status=4（PENDING_MERGE）需要更长的保留期：默认 3 天，

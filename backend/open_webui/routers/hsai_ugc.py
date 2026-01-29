@@ -1,16 +1,23 @@
 import logging
 import os
 import re
+import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
+from decimal import Decimal
 import traceback
 from typing import List, Dict, Any, Optional, Tuple, Set, Union
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query, Body
 from pydantic import BaseModel, Field, AliasChoices, ConfigDict
 
+from open_webui.config import CREDIT_DEFAULT_CREDIT, CREDIT_NO_CREDIT_MSG
+from open_webui.internal.db import get_db
 from open_webui.utils.auth import get_verified_user
 from open_webui.storage.provider import Storage
+from open_webui.models.billing_config import BillingConfigs
+from open_webui.models.api_usage_log import APIUsageLogs, APIUsageLogForm
+from open_webui.models.credits import Credit, CreditLog, CreditLogModel, Credits, SetCreditFormDetail
 from open_webui.models.hsai_ugc import (
     MaterialModels,
     VideoTasks,
@@ -48,6 +55,184 @@ URL_HS003 = f"{N8N_UGC_BASE_URL}/ugc_video"  # Generate Video
 URL_HS004 = f"{N8N_UGC_BASE_URL}/ugc_result"  # Merge Video
 URL_HS002_SHOT_IMG = f"{N8N_UGC_BASE_URL}/ugc_product_shot_img" # Generate Shot Image (Retry)
 URL_HS003_SHOT_VIDEO = f"{N8N_UGC_BASE_URL}/ugc_video_shot" # Generate Shot Video (Retry)
+
+
+def _utcnow() -> datetime:
+    return datetime.utcnow()
+
+
+def _epoch_now() -> int:
+    return int(time.time())
+
+
+def _get_billing_int(config_type: str, config_key: str, field: str, default: int) -> int:
+    """
+    Read an integer field from billing_config.config_value.
+    Example:
+      config_type=ugc, config_key=retry_cooldown_seconds, config_value={"seconds":"600"}
+    """
+    cfg = BillingConfigs.get_config_by_type_and_key(config_type, config_key)
+    if not cfg or not isinstance(getattr(cfg, "config_value", None), dict):
+        return int(default)
+    raw = cfg.config_value.get(field, default)
+    try:
+        return int(raw)
+    except Exception:
+        return int(default)
+
+
+def _ugc_full_video_cost() -> Decimal:
+    # Option 2: rate comes from billing_config (resource/<key>). Missing config -> treat as 0.
+    cost = BillingConfigs.get_billing_rate("resource", "ugc_video_full")
+    try:
+        return Decimal(cost)
+    except Exception:
+        return Decimal("0")
+
+
+def _ugc_free_retry_window_days() -> int:
+    days = _get_billing_int("ugc", "free_retry_window_days", "days", 3)
+    return max(int(days), 1)
+
+
+def _ugc_retry_cooldown_seconds() -> int:
+    seconds = _get_billing_int("ugc", "retry_cooldown_seconds", "seconds", 600)
+    return max(int(seconds), 600)
+
+
+def _enforce_user_cooldown(*, user_id: str, now_dt: datetime) -> None:
+    cooldown = _ugc_retry_cooldown_seconds()
+    last_dt = VideoTasks.get_user_last_trigger_at(str(user_id))
+    if not last_dt:
+        return
+    try:
+        last_ts = int(last_dt.timestamp()) if isinstance(last_dt, datetime) else int(last_dt)
+    except Exception:
+        return
+    now_ts = int(now_dt.timestamp())
+    remaining = int(cooldown - (now_ts - last_ts))
+    if remaining > 0:
+        raise HTTPException(
+            status_code=429,
+            detail={"message": f"冷却时间未结束，请等待 {remaining} 秒后再发起生成", "remaining_seconds": remaining},
+        )
+
+
+def _record_ugc_usage_log(*, user_id: str, task_id: str, action: str, credits_consumed: Decimal) -> None:
+    # Best-effort: do not block main flow.
+    try:
+        APIUsageLogs.insert_new_log(
+            APIUsageLogForm(
+                user_id=str(user_id),
+                session_id=str(task_id),
+                service_provider="ugc",
+                model_name=str(action),
+                credits_consumed=Decimal(str(credits_consumed or 0)),
+            )
+        )
+    except Exception:
+        pass
+
+
+def _precharge_ugc_full_video(*, user_id: str, task_id: str, cost: Decimal) -> None:
+    """
+    Pre-charge credits at hs002 stage (script generation).
+    - Must be atomic: lock credit row, check balance, then deduct.
+    - Writes credit_log for traceability.
+    """
+    if cost is None or Decimal(str(cost)) <= 0:
+        return
+    cost = Decimal(str(cost))
+    now_epoch = _epoch_now()
+
+    with get_db() as db:
+        dialect_name = db.get_bind().dialect.name.lower() if db.get_bind() else ""
+
+        resolved_user_id, resolved_company_id = Credits._resolve_credit_owner(user_id=str(user_id), company_id=None)
+
+        q = None
+        if resolved_company_id:
+            q = db.query(Credit).filter(Credit.company_id == resolved_company_id)
+        else:
+            q = db.query(Credit).filter(Credit.user_id == resolved_user_id)
+        if dialect_name and dialect_name != "sqlite":
+            q = q.with_for_update()
+        credit_row = q.first()
+
+        if not credit_row:
+            credit_row = Credit(
+                id=uuid.uuid4().hex,
+                user_id=resolved_user_id,
+                company_id=resolved_company_id,
+                credit=Decimal(CREDIT_DEFAULT_CREDIT.value),
+                created_at=now_epoch,
+                updated_at=now_epoch,
+            )
+            db.add(credit_row)
+            db.flush()
+
+        current = Decimal(str(getattr(credit_row, "credit", 0) or 0))
+        if current < cost:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "message": CREDIT_NO_CREDIT_MSG.value,
+                    "required_credits": float(cost),
+                    "current_credits": float(current),
+                },
+            )
+
+        balance_after = current - cost
+
+        log_entry = CreditLogModel(
+            user_id=resolved_user_id,
+            company_id=resolved_company_id,
+            credit=balance_after,
+            detail=SetCreditFormDetail(
+                api_path="/api/v1/ugc/tasks",
+                api_params={"task_id": str(task_id), "cost": float(cost)},
+                desc="ugc full-video precharge",
+            ).model_dump(),
+            created_at=now_epoch,
+        )
+        db.add(CreditLog(**log_entry.model_dump()))
+
+        db.query(Credit).filter(Credit.id == credit_row.id).update(
+            {"credit": balance_after, "updated_at": now_epoch},
+            synchronize_session=False,
+        )
+        db.commit()
+
+
+def _enforce_free_retry_window_and_cooldown(*, user_id: str, task: VideoTaskData, now_dt: datetime) -> None:
+    # Free retry window: after expiry, close task and deny retry entrance.
+    if task.free_retry_until is not None:
+        try:
+            if int(task.free_retry_until) < int(now_dt.timestamp()):
+                VideoTasks.close_task(str(task.id), closed_reason="free_retry_window_expired")
+                raise HTTPException(status_code=400, detail="已超过免费重试窗口，请重新创建任务")
+        except HTTPException:
+            raise
+        except Exception:
+            # If parsing fails, do not block.
+            pass
+
+    # Cooldown: user-level, starts from each generate/retry request time (including scene retries).
+    cooldown = _ugc_retry_cooldown_seconds()
+    last_dt = VideoTasks.get_user_last_trigger_at(str(user_id))
+    if not last_dt:
+        return
+    try:
+        last_ts = int(last_dt.timestamp()) if isinstance(last_dt, datetime) else int(last_dt)
+    except Exception:
+        return
+    now_ts = int(now_dt.timestamp())
+    remaining = int(cooldown - (now_ts - last_ts))
+    if remaining > 0:
+        raise HTTPException(
+            status_code=429,
+            detail={"message": f"冷却时间未结束，请等待 {remaining} 秒后重试", "remaining_seconds": remaining},
+        )
 
 
 def _require_user_id(user) -> str:
@@ -554,6 +739,29 @@ def _get_sharded_api_key(index: int = 0) -> str:
     return keys[0]
 
 
+def _get_spare_jarvis_key() -> Optional[str]:
+    """
+    Optional spare Jarvis key for downstream LLM fallback in n8n workflows.
+
+    Priority:
+    1) Explicit env `JARVIS_API_KEY_SPARE`
+    2) The 3rd entry of `JARVIS_API_KEY` if configured as comma-separated list
+    """
+    spare = (os.getenv("JARVIS_API_KEY_SPARE") or "").strip()
+    if spare:
+        return spare
+
+    try:
+        raw_val = os.getenv("JARVIS_API_KEY") or ""
+        keys = [k.strip() for k in raw_val.split(",") if k.strip()]
+        if len(keys) >= 3:
+            return keys[2]
+    except Exception:
+        pass
+
+    return None
+
+
 @router.post(
     "/tasks", 
     response_model=VideoTaskData, 
@@ -581,6 +789,9 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
         model = MaterialModels.get_model_by_id_and_user_id(form.model_id, user_id)
         if not model:
             raise HTTPException(status_code=404, detail="Model not found")
+
+        # User-level cooldown (including scene retries) to avoid bursty load.
+        _enforce_user_cooldown(user_id=user_id, now_dt=_utcnow())
 
         # 产品信息解析:优先使用产品库
         # 约定：
@@ -634,7 +845,29 @@ async def create_video_task(form: VideoTaskCreateForm, user=Depends(get_verified
 
         # 确保任务可追溯：将解析后的 product_name/product_url 写入 base_inputs（而不是保留 None）
         form_for_task = form.model_copy(update={"product_name": product_name, "product_url": product_url})
-        task = VideoTasks.create_task(user_id, form_for_task)
+
+        # Billing: pre-charge full-video credits at script generation (hs002).
+        now_dt = _utcnow()
+        task_uuid = str(uuid.uuid4())
+        cost = _ugc_full_video_cost()
+        _precharge_ugc_full_video(user_id=user_id, task_id=task_uuid, cost=cost)
+
+        # Free retry window + cooldown anchor.
+        free_days = _ugc_free_retry_window_days()
+        free_until = now_dt + timedelta(days=free_days)
+
+        task = VideoTasks.create_task(
+            user_id,
+            form_for_task,
+            task_id=task_uuid,
+            billed_credits=cost,
+            billed_at=now_dt,
+            free_retry_until=free_until,
+            last_trigger_at=now_dt,
+        )
+
+        # Usage record: created when the generation request is issued.
+        _record_ugc_usage_log(user_id=user_id, task_id=task.id, action="ugc_video_full", credits_consumed=cost)
         # 保存产品库上下文，便于 hs002 重试/审计（legacy 模式下 product_id 为空，不写入也不影响）
         try:
             VideoTasks.patch_base_inputs(
@@ -994,6 +1227,9 @@ async def generate_scene_videos(
         "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
         "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
     }
+    sparekey = _get_spare_jarvis_key()
+    if sparekey:
+        payload["sparekey"] = sparekey
     status_code, _, _ = await post_json(URL_HS003, payload)
     if status_code >= 400:
         VideoTasks.update_task_status(task_id, status=-1)
@@ -1109,6 +1345,9 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
     if not task or task.user_id != user_id:
         raise HTTPException(status_code=404, detail="Task not found")
 
+    now_dt = _utcnow()
+    _enforce_free_retry_window_and_cooldown(user_id=user_id, task=task, now_dt=now_dt)
+
     # 仅允许重试失败(-1)或超时关闭(-2)的任务
     if int(task.status or 0) not in (-1, -2):
          raise HTTPException(status_code=409, detail="Task is not in failed state")
@@ -1223,6 +1462,9 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
             "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
             "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
         }
+        sparekey = _get_spare_jarvis_key()
+        if sparekey:
+            payload["sparekey"] = sparekey
         target_url = URL_HS003
         new_status = 3
 
@@ -1250,6 +1492,13 @@ async def retry_task(task_id: str, user=Depends(get_verified_user)):
         raise HTTPException(status_code=400, detail=f"Invalid step for retry: {step}")
 
     # Trigger n8n
+    VideoTasks.touch_last_trigger_at(task.id, when=now_dt)
+    _record_ugc_usage_log(
+        user_id=user_id,
+        task_id=task.id,
+        action=f"ugc_retry_task_step_{step}",
+        credits_consumed=Decimal("0"),
+    )
     try:
         status_code, _, _ = await post_json(target_url, payload)
     except Exception as e:
@@ -1277,6 +1526,12 @@ async def regenerate_scene_image(
     task = VideoTasks.get_task_by_id(task_id)
     if not task or task.user_id != user_id:
         raise HTTPException(status_code=404, detail="Task not found")
+
+    now_dt = _utcnow()
+    _enforce_free_retry_window_and_cooldown(user_id=user_id, task=task, now_dt=now_dt)
+
+    now_dt = _utcnow()
+    _enforce_free_retry_window_and_cooldown(user_id=user_id, task=task, now_dt=now_dt)
 
     scenes = TaskScenes.get_scenes_by_task_id(task_id)
     target_scene = next((s for s in scenes if s.scene_index == scene_index), None)
@@ -1310,6 +1565,14 @@ async def regenerate_scene_image(
     model = MaterialModels.get_model_by_id_and_user_id(int(task.model_id), user_id)
     if model:
         json_payload["ip_img"] = model.model_img_url
+
+    VideoTasks.touch_last_trigger_at(task.id, when=now_dt)
+    _record_ugc_usage_log(
+        user_id=user_id,
+        task_id=task.id,
+        action="ugc_retry_scene_image",
+        credits_consumed=Decimal("0"),
+    )
 
     status_code, _, _ = await post_json(URL_HS002_SHOT_IMG, json_payload)
     if status_code >= 400:
@@ -1364,6 +1627,14 @@ async def regenerate_scene_video(
         "runninghub_api_key": _require_env("RUNNINGHUB_API_KEY"),
         "runninghub_workflow_id": _require_env("RUNNINGHUB_WORKFLOW_ID"),
     }
+
+    VideoTasks.touch_last_trigger_at(task.id, when=now_dt)
+    _record_ugc_usage_log(
+        user_id=user_id,
+        task_id=task.id,
+        action="ugc_retry_scene_video",
+        credits_consumed=Decimal("0"),
+    )
 
     status_code, _, _ = await post_json(URL_HS003_SHOT_VIDEO, json_payload)
     if status_code >= 400:

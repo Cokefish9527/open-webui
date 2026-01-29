@@ -3,7 +3,7 @@ import logging
 from typing import Optional, List
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from pydantic import BaseModel, Field
 
 from open_webui.models.billing_config import (
@@ -25,6 +25,18 @@ from open_webui.models.api_usage_log import (
 
 from open_webui.models.credits import Credits
 from open_webui.models.hsai_companies import Companies
+from open_webui.models.hsai_coupons import (
+    Coupons,
+    CouponBatchCreateForm,
+    CouponBatchCreateResponse,
+    CouponRedeemForm,
+    CouponRedeemResponse,
+    CouponRedeemItem,
+    CouponUpdateForm,
+    CouponDestroyForm,
+    CouponData,
+    _parse_coupon_codes,
+)
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
@@ -441,3 +453,155 @@ async def get_total_credits_consumed_by_session(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT()
         )
+
+
+############################
+# 卡券充值（用户侧）
+############################
+
+
+@router.post(
+    "/coupons/redeem",
+    response_model=CouponRedeemResponse,
+    # Use unicode escapes to avoid any editor/encoding issues leaking into OpenAPI.
+    summary="\u9a8c\u5238\u5145\u503c\uff08\u652f\u6301\u591a\u5238\u7801\uff0c\\n \u6362\u884c\u5206\u9694\uff09",
+)
+async def redeem_coupons(
+    form_data: CouponRedeemForm,
+    request: Request,
+    user=Depends(get_verified_user),
+) -> CouponRedeemResponse:
+    deduped, duplicates, submitted = _parse_coupon_codes(form_data.coupons)
+    if submitted == 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="coupons is empty")
+    if submitted > 100:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="too many coupons (max=100)")
+
+    # 先把“请求内重复”的结果写入 items，再处理去重后的券码实际兑换
+    duplicate_items: List[CouponRedeemItem] = []
+    for code, dup_count in duplicates.items():
+        for _ in range(dup_count):
+            duplicate_items.append(
+                CouponRedeemItem(code=code, status="FAILED", reason="DUPLICATED_IN_REQUEST")
+            )
+
+    client_ip = request.client.host if request.client else None
+    resp = Coupons.redeem(user_id=user.id, codes=deduped, client_ip=client_ip)
+
+    # 调整统计口径：submitted/deduped 以解析结果为准；items 要包含重复券码的失败项
+    resp.total_submitted = submitted
+    resp.total_deduped = len(deduped)
+    if duplicate_items:
+        resp.items.extend(duplicate_items)
+        resp.total_failed += len(duplicate_items)
+    return resp
+
+
+############################
+# 卡券管理（后台/管理员）
+############################
+
+
+class PaginatedCouponResponse(BaseModel):
+    data: List[CouponData]
+    pagination: PaginationData
+
+
+@router.post(
+    "/admin/coupons/batch",
+    response_model=CouponBatchCreateResponse,
+    summary="[\u540e\u53f0] \u6279\u91cf\u521b\u5efa\u5361\u5238",
+)
+async def admin_create_coupon_batch(
+    form_data: CouponBatchCreateForm,
+    user=Depends(get_admin_user),
+) -> CouponBatchCreateResponse:
+    return Coupons.create_batch(form=form_data, created_by_user_id=getattr(user, "id", None))
+
+
+@router.get(
+    "/admin/coupons",
+    response_model=PaginatedCouponResponse,
+    summary="[\u540e\u53f0] \u5361\u5238\u5217\u8868\uff08\u5206\u9875/\u7b5b\u9009\uff09",
+)
+async def admin_list_coupons(
+    channel: Optional[str] = Query(None, description="\u6295\u653e\u6e20\u9053\u7b5b\u9009"),
+    status_filter: Optional[str] = Query(
+        None,
+        alias="status",
+        description="\u72b6\u6001\u7b5b\u9009\uff08UNUSED|USED|DESTROYED\uff09",
+    ),
+    q: Optional[str] = Query(None, description="\u5238\u7801\u5173\u952e\u5b57\uff08\u6a21\u7cca\u5339\u914d\uff09"),
+    expires_from: Optional[int] = Query(
+        None, description="\u5230\u671f\u65f6\u95f4\u8d77\uff08UTC epoch seconds\uff09"
+    ),
+    expires_to: Optional[int] = Query(
+        None, description="\u5230\u671f\u65f6\u95f4\u6b62\uff08UTC epoch seconds\uff09"
+    ),
+    ps: int = Query(20, description="\u5206\u9875\u5927\u5c0f", ge=1, le=100),
+    pi: int = Query(1, description="\u5206\u9875\u7d22\u5f15\uff08\u4ece1\u5f00\u59cb\uff09", ge=1),
+    user=Depends(get_admin_user),
+):
+    offset = (pi - 1) * ps
+    total, data = Coupons.list_coupons(
+        channel=channel,
+        status=status_filter,
+        q=q,
+        expires_from=expires_from,
+        expires_to=expires_to,
+        limit=ps,
+        offset=offset,
+    )
+    total_pages = (total + ps - 1) // ps
+    return PaginatedCouponResponse(
+        data=data,
+        pagination=PaginationData(total=total, page=pi, size=ps, total_pages=total_pages),
+    )
+
+
+@router.get(
+    "/admin/coupons/lookup",
+    response_model=Optional[CouponData],
+    summary="[\u540e\u53f0] \u5238\u7801\u67e5\u8be2\uff08\u7cbe\u786e\uff09",
+)
+async def admin_lookup_coupon_by_code(
+    code: str = Query(..., min_length=1, description="券码"),
+    user=Depends(get_admin_user),
+):
+    return Coupons.lookup_by_code(code=code)
+
+
+@router.put(
+    "/admin/coupons/{coupon_id}",
+    response_model=CouponData,
+    summary="[\u540e\u53f0] \u4fee\u6539\u5361\u5238\u4fe1\u606f\uff08\u4ec5\u672a\u4f7f\u7528\u4e14\u672a\u8fc7\u671f\uff09",
+)
+async def admin_update_coupon(
+    coupon_id: str,
+    form_data: CouponUpdateForm,
+    user=Depends(get_admin_user),
+):
+    updated = Coupons.update_coupon(coupon_id=coupon_id, form=form_data)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found")
+    return updated
+
+
+@router.post(
+    "/admin/coupons/{coupon_id}/destroy",
+    response_model=bool,
+    summary="[\u540e\u53f0] \u5f3a\u5236\u9500\u6bc1\u5361\u5238",
+)
+async def admin_destroy_coupon(
+    coupon_id: str,
+    form_data: CouponDestroyForm,
+    user=Depends(get_admin_user),
+):
+    ok = Coupons.destroy_coupon(
+        coupon_id=coupon_id,
+        destroyed_by_user_id=getattr(user, "id", None),
+        reason=form_data.reason,
+    )
+    if not ok:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found")
+    return ok

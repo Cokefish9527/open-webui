@@ -2,6 +2,7 @@ import logging
 import json
 import time
 import uuid
+from decimal import Decimal
 from contextlib import contextmanager
 from threading import Lock
 from typing import Optional, List, Dict, Any
@@ -22,6 +23,7 @@ from sqlalchemy import (
     Integer,
     SmallInteger,
     DateTime,
+    Numeric,
     func,
     UniqueConstraint,
     cast,
@@ -61,6 +63,12 @@ def _ensure_ugc_schema(session) -> None:
 @contextmanager
 def _schema_aware_db():
     with get_db() as db:
+        # Ensure pooled connections are not left in failed transactions
+        # (e.g., previous errors can cause "InFailedSqlTransaction" on SET LOCAL).
+        try:
+            db.rollback()
+        except Exception:
+            pass
         _ensure_ugc_schema(db)
         yield db
 
@@ -97,6 +105,12 @@ class HSAIUGCTask(Base):
     model_id = Column(BigInteger, ForeignKey("hsai_ugc_material_models.id"), nullable=False)
     base_inputs = Column(JSON, nullable=False)  # product_url, product_name, language
     result_video_url = Column(String(512), nullable=True)
+    # Billing / retry policy fields (UGC per-full-video pre-charge at hs002 stage).
+    billed_credits = Column(Numeric(12, 6), nullable=True)
+    billed_at = Column(DateTime, nullable=True)
+    free_retry_until = Column(DateTime, nullable=True)
+    # Cooldown window starts from each generate/retry request time.
+    last_trigger_at = Column(DateTime, nullable=True)
     # 用于“视频库/任务列表”排序和进度还原 (0~100)
     progress_percent = Column(SmallInteger, nullable=False, default=0)
     # 仅在进度实质推进时更新，用于“无进展”判断（避免读接口刷新 updated_at）
@@ -215,6 +229,10 @@ class VideoTaskData(BaseModel):
     model_id: int = Field(..., description="使用的数字人模型ID")
     base_inputs: Dict[str, Any] = Field(..., description="基础输入参数快照")
     result_video_url: Optional[str] = Field(None, description="最终合成视频URL")
+    billed_credits: Optional[Decimal] = Field(None, description="预扣费积分(整条视频)")
+    billed_at: Optional[int] = Field(None, description="预扣费时间戳(秒)")
+    free_retry_until: Optional[int] = Field(None, description="免费重试窗口截止时间戳(秒)")
+    last_trigger_at: Optional[int] = Field(None, description="最后一次触发生成/重试时间戳(秒)，用于冷却时间计算")
     progress_percent: int = Field(0, description="总体进度百分比 (0-100)")
     last_progress_at: Optional[int] = Field(None, description="最后进度更新时间戳")
     closed_at: Optional[int] = Field(None, description="关闭时间戳")
@@ -235,6 +253,10 @@ class VideoTaskData(BaseModel):
                 "model_id",
                 "base_inputs",
                 "result_video_url",
+                "billed_credits",
+                "billed_at",
+                "free_retry_until",
+                "last_trigger_at",
                 "progress_percent",
                 "last_progress_at",
                 "closed_at",
@@ -245,7 +267,15 @@ class VideoTaskData(BaseModel):
             data = {key: getattr(value, key, None) for key in attr_names}
         if data.get("user_id") is not None:
             data["user_id"] = str(data["user_id"])
-        for key in ("created_at", "updated_at", "last_progress_at", "closed_at"):
+        for key in (
+            "created_at",
+            "updated_at",
+            "last_progress_at",
+            "closed_at",
+            "billed_at",
+            "free_retry_until",
+            "last_trigger_at",
+        ):
             v = data.get(key)
             if isinstance(v, datetime):
                 if v.tzinfo is None:
@@ -569,12 +599,22 @@ class HSAIUGCTasksTable:
             return 100
         return 0
 
-    def create_task(self, user_id: str, form: VideoTaskCreateForm) -> VideoTaskData:
+    def create_task(
+        self,
+        user_id: str,
+        form: VideoTaskCreateForm,
+        *,
+        task_id: Optional[str] = None,
+        billed_credits: Optional[Decimal] = None,
+        billed_at: Optional[datetime] = None,
+        free_retry_until: Optional[datetime] = None,
+        last_trigger_at: Optional[datetime] = None,
+    ) -> VideoTaskData:
         with _schema_aware_db() as db:
-            task_id = str(uuid.uuid4())
             now = datetime.utcnow()
+            resolved_task_id = task_id or str(uuid.uuid4())
             task = HSAIUGCTask(
-                id=task_id,
+                id=resolved_task_id,
                 user_id=user_id,
                 status=1,  # Generating Script
                 step=1,
@@ -591,6 +631,10 @@ class HSAIUGCTasksTable:
                     "shot_script": form.shot_script or "",
                     "creative_bias": form.creative_bias or "",
                 },
+                billed_credits=billed_credits,
+                billed_at=billed_at,
+                free_retry_until=free_retry_until,
+                last_trigger_at=last_trigger_at or now,
                 created_at=now,
                 updated_at=now
             )
@@ -603,6 +647,16 @@ class HSAIUGCTasksTable:
         with _schema_aware_db() as db:
             task = db.query(HSAIUGCTask).filter_by(id=task_id).first()
             return VideoTaskData.model_validate(task) if task else None
+
+    def get_user_last_trigger_at(self, user_id: str) -> Optional[datetime]:
+        """
+        User-level cooldown anchor: the most recent trigger time among all tasks.
+        """
+        with _schema_aware_db() as db:
+            try:
+                return db.query(func.max(HSAIUGCTask.last_trigger_at)).filter_by(user_id=user_id).scalar()
+            except Exception:
+                return None
 
     def patch_base_inputs(self, task_id: str, patch: Dict[str, Any]) -> bool:
         """
@@ -628,6 +682,49 @@ class HSAIUGCTasksTable:
             )
             db.commit()
             return result > 0
+
+    def touch_last_trigger_at(self, task_id: str, when: Optional[datetime] = None) -> bool:
+        """
+        Update last_trigger_at for cooldown window calculation.
+        """
+        with _schema_aware_db() as db:
+            now = when or datetime.utcnow()
+            result = (
+                db.query(HSAIUGCTask)
+                .filter_by(id=task_id)
+                .update({"last_trigger_at": now, "updated_at": now}, synchronize_session=False)
+            )
+            db.commit()
+            return result > 0
+
+    def close_expired_free_retry_tasks(self, *, now: Optional[datetime] = None) -> int:
+        """
+        Close tasks whose free retry window has expired.
+        We only close tasks that are not already closed/success.
+        """
+        with _schema_aware_db() as db:
+            now_dt = now or datetime.utcnow()
+            q = db.query(HSAIUGCTask).filter(
+                HSAIUGCTask.status.notin_([-2, 6]),
+                HSAIUGCTask.free_retry_until.isnot(None),
+                HSAIUGCTask.free_retry_until < now_dt,
+            )
+            count = int(q.count() or 0)
+            if count <= 0:
+                return 0
+            q.update(
+                {
+                    "status": -2,
+                    "progress_percent": 0,
+                    "closed_at": now_dt,
+                    "closed_reason": "free_retry_window_expired",
+                    "updated_at": now_dt,
+                    "last_progress_at": now_dt,
+                },
+                synchronize_session=False,
+            )
+            db.commit()
+            return count
 
     def update_task_status(self, task_id: str, status: int, step: Optional[int] = None, result_url: Optional[str] = None) -> bool:
         with _schema_aware_db() as db:

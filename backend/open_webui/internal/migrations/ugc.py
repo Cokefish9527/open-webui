@@ -71,6 +71,12 @@ def ensure_ugc_schema(
     executed_statements: List[str] = []
 
     with _connection_from(engine_or_connection) as connection:
+        # Guard against pooled connections left in failed transactions.
+        # This avoids "InFailedSqlTransaction" when running SET LOCAL.
+        try:
+            connection.rollback()
+        except Exception:
+            pass
         inspector = inspect(connection)
         effective_schema = schema or inspector.default_schema_name
         dialect = connection.dialect.name.lower()
@@ -296,6 +302,10 @@ CREATE TABLE IF NOT EXISTS {video_tasks_table} (
     model_id BIGINT NOT NULL,
     base_inputs {base_inputs_type} NOT NULL,
     result_video_url VARCHAR(512),
+    billed_credits NUMERIC(12, 6),
+    billed_at {dt_type},
+    free_retry_until {dt_type},
+    last_trigger_at {dt_type},
     progress_percent {progress_percent_type} NOT NULL DEFAULT 0,
     last_progress_at {dt_type},
     closed_at {dt_type},
@@ -314,6 +324,24 @@ CREATE TABLE IF NOT EXISTS {video_tasks_table} (
             existing_cols = _column_names(inspect_video_table)
             dt_type = _datetime_type()
             progress_percent_type = _tinyint_type()
+
+            # Billing / retry policy fields (UGC charging at script stage + cooldown/free-retry window).
+            if "billed_credits" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {video_tasks_table} ADD COLUMN billed_credits NUMERIC(12, 6)"
+                )
+            if "billed_at" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {video_tasks_table} ADD COLUMN billed_at {dt_type}"
+                )
+            if "free_retry_until" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {video_tasks_table} ADD COLUMN free_retry_until {dt_type}"
+                )
+            if "last_trigger_at" not in existing_cols:
+                statements.append(
+                    f"ALTER TABLE {video_tasks_table} ADD COLUMN last_trigger_at {dt_type}"
+                )
 
             if "progress_percent" not in existing_cols:
                 statements.append(
@@ -355,15 +383,35 @@ CREATE TABLE IF NOT EXISTS {video_tasks_table} (
 
         if inspect_video_table:
             # Backfill best-effort for older rows.
-            statements.append(
-                f"""
+            def _has_rows(sql: str) -> bool:
+                try:
+                    return bool(connection.execute(text(sql)).first())
+                except Exception:
+                    return False
+
+            if _has_rows(f"SELECT 1 FROM {video_tasks_table} WHERE last_progress_at IS NULL LIMIT 1"):
+                statements.append(
+                    f"""
 UPDATE {video_tasks_table}
 SET last_progress_at = COALESCE(last_progress_at, updated_at, created_at)
 WHERE last_progress_at IS NULL
-                """.strip()
-            )
-            statements.append(
-                f"""
+                    """.strip()
+                )
+
+            if _has_rows(f"SELECT 1 FROM {video_tasks_table} WHERE last_trigger_at IS NULL LIMIT 1"):
+                statements.append(
+                    f"""
+UPDATE {video_tasks_table}
+SET last_trigger_at = COALESCE(last_trigger_at, created_at, updated_at)
+WHERE last_trigger_at IS NULL
+                    """.strip()
+                )
+
+            if _has_rows(
+                f"SELECT 1 FROM {video_tasks_table} WHERE COALESCE(progress_percent, 0) = 0 AND status IN (-2, -1, 0, 1, 2, 3, 4, 5, 6) LIMIT 1"
+            ):
+                statements.append(
+                    f"""
 UPDATE {video_tasks_table}
 SET progress_percent = CASE
     WHEN status = 0 THEN 5
@@ -376,8 +424,8 @@ SET progress_percent = CASE
     ELSE 0
 END
 WHERE COALESCE(progress_percent, 0) = 0 AND status IN (-2, -1, 0, 1, 2, 3, 4, 5, 6)
-                """.strip()
-            )
+                    """.strip()
+                )
 
         # 3. hsai_ugc_task_scenes (分镜明细表)
         if not task_scenes_exists:

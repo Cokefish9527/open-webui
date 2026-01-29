@@ -154,7 +154,10 @@ def test_merge_uses_selections_and_triggers_hs004(monkeypatch):
     async def ok_post_json(url, payload):
         calls["post_json"] += 1
         assert url == hsai_ugc.URL_HS004
-        assert payload["shot_video_list"] == ["v0b", "v1a"]
+        assert payload["shot_list"] == [
+            {"shot_id": 0, "shot_video_url": "v0b"},
+            {"shot_id": 1, "shot_video_url": "v1a"},
+        ]
         return 200, {}, ""
 
     monkeypatch.setattr(hsai_ugc, "post_json", ok_post_json)

@@ -148,6 +148,7 @@ def test_retry_step2_sends_hs003_shot_list(monkeypatch):
     monkeypatch.setattr(hsai_ugc, "_require_env", lambda name: "k")
     monkeypatch.setattr(hsai_ugc, "_get_sharded_api_key", lambda idx: "k")
     monkeypatch.setattr(hsai_ugc, "_resolve_minimax_credentials", lambda *a, **k: {"api_key": "m", "group_id": "g"})
+    monkeypatch.setenv("JARVIS_API_KEY_SPARE", "spare-k")
 
     monkeypatch.setattr(
         hsai_ugc.VideoTasks,
@@ -177,6 +178,7 @@ def test_retry_step2_sends_hs003_shot_list(monkeypatch):
         assert payload["voice_id"] == "voice-1"
         assert isinstance(payload.get("shot_list"), list) and len(payload["shot_list"]) == 2
         assert payload["shot_list"][0]["shot_id"] == 0
+        assert payload.get("sparekey") == "spare-k"
         return 200, {}, ""
 
     monkeypatch.setattr(hsai_ugc, "post_json", ok_post_json)
